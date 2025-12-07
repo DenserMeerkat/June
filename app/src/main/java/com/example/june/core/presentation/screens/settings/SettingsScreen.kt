@@ -15,6 +15,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.june.R
+import com.example.june.core.navigation.AppNavigator
+import com.example.june.core.navigation.Route
+import org.koin.compose.koinInject
 
 import com.example.june.core.presentation.screens.settings.section.AppearnceSection
 import com.example.june.core.presentation.screens.settings.section.SettingSection
@@ -25,9 +28,8 @@ import com.example.june.core.presentation.screens.settings.section.SettingsItem
 fun SettingsScreen(
     state: SettingsState,
     onAction: (SettingsAction) -> Unit,
-    onNavigateBack: () -> Unit,
-    onNavigateToAboutLibraries: () -> Unit
 ) {
+    val navigator = koinInject<AppNavigator>()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
@@ -46,7 +48,7 @@ fun SettingsScreen(
                 ),
                 navigationIcon = {
                     FilledIconButton(
-                        onClick = onNavigateBack,
+                        onClick = { navigator.navigateBack() },
                         colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
                     ) {
                         Icon(
@@ -86,7 +88,7 @@ fun SettingsScreen(
                         },
                         trailingContent = {
                             FilledTonalIconButton(
-                                onClick = { onNavigateToAboutLibraries() }
+                                onClick = { navigator.navigateTo(Route.AboutLibraries) }
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
@@ -95,7 +97,7 @@ fun SettingsScreen(
                                 )
                             }
                         },
-                        onClick = { onNavigateToAboutLibraries() }
+                        onClick = { navigator.navigateTo(Route.AboutLibraries) }
                     )
                 }
             }

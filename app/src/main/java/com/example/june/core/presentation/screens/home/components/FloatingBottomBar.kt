@@ -1,11 +1,11 @@
 package com.example.june.core.presentation.screens.home.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.june.core.presentation.screens.home.NavItem
@@ -32,33 +33,44 @@ fun FloatingBottomBar(
     onFabClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth().padding(bottom = 16.dp)
+
+    val gradientBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color.Transparent,
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+            MaterialTheme.colorScheme.surface
+        )
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(gradientBrush)
+            .padding(vertical = 24.dp),
+        contentAlignment = Alignment.BottomCenter
     ) {
         Row(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
-
         ) {
+
             Surface(
                 modifier = Modifier
-                    .height(64.dp)
                     .shadow(
-                        elevation = 8.dp,
+                        elevation = 4.dp,
                         shape = RoundedCornerShape(32.dp),
-                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                        spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                        ambientColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                     ),
                 shape = RoundedCornerShape(32.dp),
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 tonalElevation = 3.dp
             ) {
                 Row(
-                    modifier = Modifier
-                        .padding(horizontal = 14.dp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(
                         space = 6.dp,
                         alignment = Alignment.CenterHorizontally
@@ -74,17 +86,18 @@ fun FloatingBottomBar(
                     }
                 }
             }
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             Surface(
                 onClick = onFabClick,
                 modifier = Modifier
                     .size(64.dp)
                     .shadow(
-                        elevation = 8.dp,
-                        shape = RoundedCornerShape(22.dp),
-                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                        elevation = 6.dp,
+                        shape = RoundedCornerShape(20.dp),
+                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
+                        ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     ),
-                shape = RoundedCornerShape(22.dp),
+                shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
@@ -121,15 +134,14 @@ fun NavigationBarItem(
     }
 
     Box(
-        modifier = Modifier
-            .size(44.dp),
+        modifier = Modifier.size(44.dp),
         contentAlignment = Alignment.Center
     ) {
         Surface(
             onClick = onClick,
             shape = CircleShape,
             color = containerColor,
-            modifier = Modifier.size(if(isSelected) 48.dp else 40.dp)
+            modifier = Modifier.size(if (isSelected) 48.dp else 40.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(

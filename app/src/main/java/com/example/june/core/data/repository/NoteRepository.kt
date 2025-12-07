@@ -21,7 +21,7 @@ class NoteRepository(
         }
     }
 
-    override suspend fun getNotes(): Flow<List<Note>> {
+    override fun getNotes(): Flow<List<Note>> {
         return localDao.getAllNotes().map { entities ->
             entities.map { it.toNote() }
         }
