@@ -7,4 +7,5 @@ sealed interface NoteAction {
     data class ChangeCoverImageUri(val uri: String?) : NoteAction
     data object SaveNote : NoteAction
     data object NavigateBack : NoteAction
+    data object DeleteNote : NoteAction
 }

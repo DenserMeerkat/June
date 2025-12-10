@@ -3,39 +3,28 @@ package com.example.june.core.presentation.screens.note
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.june.core.domain.utils.toFullDateWithDay
+import com.example.june.core.presentation.screens.note.components.NoteDatePickerDialog
 import com.example.june.viewmodels.NoteVM
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -49,91 +38,206 @@ fun NoteScreen() {
     val contentFocusRequester = remember { FocusRequester() }
     val interactionSource = remember { MutableInteractionSource() }
 
-    BackHandler {
-        viewModel.onAction(NoteAction.SaveNote)
+    var showExitDialog by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val displayDateMillis = state.dateTime ?: state.createdAt
+
+    val formattedDate = remember { displayDateMillis.toFullDateWithDay() }
+
+    val onBack = {
+        if (viewModel.hasUnsavedChanges()) {
+            showExitDialog = true
+        } else {
+            viewModel.onAction(NoteAction.NavigateBack)
+        }
     }
+
+    BackHandler { onBack() }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {}, navigationIcon = {
+                title = {},
+                navigationIcon = {
                     FilledIconButton(
+                        onClick = { onBack() },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = "Close"
+                        )
+                    }
+                },
+                actions = {
+                    FilledTonalButton(
                         onClick = { viewModel.onAction(NoteAction.SaveNote) },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        )
+                        enabled = !state.isEmpty
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Back"
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Save")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Box {
+                        FilledTonalIconButton(
+                            onClick = { showMenu = true },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.MoreVert,
+                                contentDescription = "Options"
+                            )
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        shape = RoundedCornerShape(24.dp),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        tonalElevation = 3.dp,
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        offset = androidx.compose.ui.unit.DpOffset(x = 0.dp, y = 4.dp)
+                    ) {
+                        DropdownMenuItem(
+                            modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                            text = { Text("Delete") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Delete,
+                                    contentDescription = "Delete"
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                viewModel.onAction(NoteAction.DeleteNote)
+                            },
                         )
                     }
-                }, actions = {
-                    FilledTonalIconButton(
-                        onClick = { /* TODO */ },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.MoreVert, contentDescription = "Options"
-                        )
-                    }
-                }, colors = TopAppBarDefaults.topAppBarColors(
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface,
                 )
             )
-        }, containerColor = MaterialTheme.colorScheme.surface
+        },
+        containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
-
-        Column(
+        Box(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
-                .imePadding()
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
                     onClick = { contentFocusRequester.requestFocus() }
                 )
-                .verticalScroll(scrollState)
         ) {
-            TextField(
-                value = state.title,
-                onValueChange = { viewModel.onAction(NoteAction.ChangeTitle(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = {
-                    Text(
-                        "Title",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
-                },
-                textStyle = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                colors = transparentTextFieldColors()
-            )
-
-            TextField(
-                value = state.content,
-                onValueChange = { viewModel.onAction(NoteAction.ChangeContent(it)) },
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(contentFocusRequester)
-                    .fillMaxHeight(),
-                placeholder = {
-                    Text(
-                        "Note",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(scrollState)
+                    .imePadding()
+            ) {
+                TextField(
+                    value = state.title,
+                    onValueChange = { viewModel.onAction(NoteAction.ChangeTitle(it)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = {
+                        Text(
+                            "Add title",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                    },
+                    textStyle = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    colors = transparentTextFieldColors()
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDatePicker = true }
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.CalendarToday,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                },
-                colors = transparentTextFieldColors()
-            )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = formattedDate,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                TextField(
+                    value = state.content,
+                    onValueChange = { viewModel.onAction(NoteAction.ChangeContent(it)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(contentFocusRequester),
+                    placeholder = {
+                        Text(
+                            "What's on your mind?",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                    },
+                    colors = transparentTextFieldColors()
+                )
+            }
         }
+    }
+
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = { Text("Unsaved Changes") },
+            text = { Text("You have unsaved changes. Do you want to save them before exiting?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExitDialog = false
+                        viewModel.onAction(NoteAction.SaveNote)
+                    }
+                ) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showExitDialog = false
+                        viewModel.onAction(NoteAction.NavigateBack)
+                    }
+                ) { Text("Discard") }
+            }
+        )
+    }
+
+    if (showDatePicker) {
+        NoteDatePickerDialog(
+            initialDateMillis = displayDateMillis,
+            onDateSelected = { millis ->
+                viewModel.onAction(NoteAction.ChangeDateTime(millis))
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false }
+        )
     }
 }
 

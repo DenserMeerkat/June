@@ -37,25 +37,29 @@ class NoteVM(
 
     fun onAction(action: NoteAction) {
         when (action) {
-            is NoteAction.ChangeTitle -> {
-                _state.update { it.copy(title = action.title) }
-            }
-            is NoteAction.ChangeContent -> {
-                _state.update { it.copy(content = action.content) }
-            }
-            is NoteAction.ChangeDateTime -> {
-                _state.update { it.copy(dateTime = action.dateTime) }
-            }
-            is NoteAction.ChangeCoverImageUri -> {
-                _state.update { it.copy(coverImageUri = action.uri) }
-            }
-            is NoteAction.SaveNote -> {
-                saveNote()
-            }
-            is NoteAction.NavigateBack -> {
-                saveNote()
-            }
+            is NoteAction.ChangeTitle -> _state.update { it.copy(title = action.title) }
+            is NoteAction.ChangeContent -> _state.update { it.copy(content = action.content) }
+            is NoteAction.ChangeDateTime -> _state.update { it.copy(dateTime = action.dateTime) }
+            is NoteAction.ChangeCoverImageUri -> _state.update { it.copy(coverImageUri = action.uri) }
+            is NoteAction.SaveNote -> saveNote()
+            is NoteAction.NavigateBack -> navigator.navigateBack()
+            is NoteAction.DeleteNote -> deleteNote()
         }
+    }
+
+    fun hasUnsavedChanges(): Boolean {
+        val currentState = _state.value
+
+        if (currentNoteId == null) {
+            return currentState.title.isNotBlank() || currentState.content.isNotBlank()
+        }
+
+        return existingNote?.let { original ->
+            original.title != currentState.title ||
+                    original.content != currentState.content ||
+                    original.coverImageUri != currentState.coverImageUri ||
+                    original.dateTime != currentState.dateTime
+        } ?: false
     }
 
     private fun loadNote(id: Long) {
@@ -65,7 +69,6 @@ class NoteVM(
 
             if (note != null) {
                 existingNote = note
-
                 _state.update {
                     it.copy(
                         title = note.title,
@@ -95,24 +98,15 @@ class NoteVM(
             val currentTime = System.currentTimeMillis()
 
             if (currentNoteId != null && existingNote != null) {
-                val hasChanged = existingNote!!.title != currentState.title ||
-                        existingNote!!.content != currentState.content ||
-                        existingNote!!.coverImageUri != currentState.coverImageUri ||
-                        existingNote!!.dateTime != currentState.dateTime
-
-                if (hasChanged) {
-                    val updatedNote = existingNote!!.copy(
-                        title = currentState.title,
-                        content = currentState.content,
-                        coverImageUri = currentState.coverImageUri,
-                        dateTime = currentState.dateTime,
-                        updatedAt = currentTime
-                    )
-                    noteRepo.updateNote(updatedNote)
-                }
-            }
-
-            else {
+                val updatedNote = existingNote!!.copy(
+                    title = currentState.title,
+                    content = currentState.content,
+                    coverImageUri = currentState.coverImageUri,
+                    dateTime = currentState.dateTime,
+                    updatedAt = currentTime
+                )
+                noteRepo.updateNote(updatedNote)
+            } else {
                 val newNote = Note(
                     id = 0L,
                     title = currentState.title,
@@ -124,7 +118,15 @@ class NoteVM(
                 )
                 noteRepo.insertNote(newNote)
             }
+            navigator.navigateBack()
+        }
+    }
 
+    private fun deleteNote() {
+        viewModelScope.launch {
+            if (currentNoteId != null) {
+                noteRepo.deleteNote(currentNoteId)
+            }
             navigator.navigateBack()
         }
     }

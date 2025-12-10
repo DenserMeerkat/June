@@ -23,6 +23,7 @@ import com.example.june.core.domain.data_classes.Note
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.screens.home.components.FloatingBottomBar
+import com.example.june.core.presentation.screens.home.notes.NotesPage
 import com.example.june.viewmodels.HomeVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -87,7 +88,7 @@ fun HomeScreen() {
             ) {
 
                 when (selectedNavItem) {
-                    NavItem.NOTES -> NotesContent(
+                    NavItem.NOTES -> NotesPage(
                         notes = notes,
                         onNoteClick = { noteId -> navigator.navigateTo(Route.Note(noteId)) }
                     )
@@ -103,85 +104,6 @@ fun HomeScreen() {
             onFabClick = { navigator.navigateTo(Route.Note(null)) },
         )
 
-    }
-}
-
-@Composable
-fun NotesContent(
-    notes: List<Note>,
-    onNoteClick: (Long) -> Unit
-) {
-    if (notes.isEmpty()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = NavItem.NOTES.icon,
-                contentDescription = null,
-                modifier = Modifier.size(120.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "No notes yet",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(notes, key = { it.id }) { note ->
-                NoteItem(note = note, onClick = { onNoteClick(note.id) })
-            }
-            item { Spacer(modifier = Modifier.height(80.dp)) }
-        }
-    }
-}
-
-@Composable
-fun NoteItem(
-    note: Note,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        ),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            if (note.title.isNotBlank()) {
-                Text(
-                    text = note.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-
-            val contentText = note.content.ifBlank { "No content" }
-
-            Text(
-                text = contentText,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
     }
 }
 

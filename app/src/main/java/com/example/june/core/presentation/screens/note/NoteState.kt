@@ -8,4 +8,7 @@ data class NoteState(
     val updatedAt: Long? = null,
     val dateTime: Long? = null,
     val isLoading: Boolean = false
-)
+ ){
+    val isEmpty: Boolean
+        get() = title.isBlank() && content.isBlank()
+}
