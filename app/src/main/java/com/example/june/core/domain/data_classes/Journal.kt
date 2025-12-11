@@ -1,6 +1,6 @@
 package com.example.june.core.domain.data_classes
 
-data class Note(
+data class Journal(
     val id: Long,
     val title: String,
     val content: String,

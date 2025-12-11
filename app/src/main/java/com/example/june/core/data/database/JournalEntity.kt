@@ -3,8 +3,8 @@ package com.example.june.core.data.database
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "notes")
-data class NoteEntity(
+@Entity(tableName = "journals")
+data class JournalEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long,
     val title: String,

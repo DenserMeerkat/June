@@ -1,4 +1,4 @@
-package com.example.june.core.presentation.screens.home.notes.components
+package com.example.june.core.presentation.screens.home.journals.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.TextSnippet
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Card
@@ -32,13 +31,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.june.core.domain.data_classes.Note
+import com.example.june.core.domain.data_classes.Journal
 import com.example.june.core.domain.utils.toFullDate
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun NoteItem(
-    note: Note,
+fun JournalItem(
+    journal: Journal,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
@@ -82,7 +81,7 @@ fun NoteItem(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
-                val displayDate = note.dateTime ?: note.createdAt
+                val displayDate = journal.dateTime ?: journal.createdAt
                 Text(
                     text = displayDate.toFullDate(),
                     style = MaterialTheme.typography.labelMedium,
@@ -92,7 +91,7 @@ fun NoteItem(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = note.title.ifBlank { "Untitled Note" },
+                    text = journal.title.ifBlank { "Untitled Journal" },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,

@@ -2,7 +2,7 @@ package com.example.june.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.june.core.data.repository.NoteRepository
+import com.example.june.core.data.repository.JournalRepository
 import com.example.june.core.domain.AppPreferences
 import com.example.june.core.domain.backup.ExportRepo
 import com.example.june.core.domain.backup.ExportState
@@ -10,7 +10,6 @@ import com.example.june.core.domain.backup.RestoreRepo
 import com.example.june.core.domain.backup.RestoreResult
 import com.example.june.core.domain.backup.RestoreState
 import com.example.june.core.domain.enums.AppTheme
-import com.example.june.core.domain.enums.Fonts
 import com.example.june.core.presentation.screens.settings.SettingsAction
 import com.example.june.core.presentation.screens.settings.SettingsState
 import com.materialkolor.PaletteStyle
@@ -22,7 +21,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SettingsVM(
-    private val repo: NoteRepository,
+    private val repo: JournalRepository,
     private val prefs: AppPreferences,
     private val exportRepo: ExportRepo,
     private val restoreRepo: RestoreRepo
@@ -68,9 +67,9 @@ class SettingsVM(
     fun onAction(action: SettingsAction) {
         viewModelScope.launch {
             when (action) {
-                SettingsAction.OnDeleteNotes -> repo.deleteAllNotes()
+                SettingsAction.OnDeleteJournals -> repo.deleteAllJournals()
 
-                SettingsAction.OnExportNotes -> {
+                SettingsAction.OnExportJournals -> {
                     _localState.update { it.copy(exportState = ExportState.Exporting) }
                     val result = exportRepo.exportToJson()
                     _localState.update {
@@ -82,9 +81,9 @@ class SettingsVM(
                     }
                 }
 
-                is SettingsAction.OnRestoreNotes -> {
+                is SettingsAction.OnRestoreJournals -> {
                     _localState.update { it.copy(restoreState = RestoreState.Restoring) }
-                    when (val res = restoreRepo.restoreNotes(action.path)) {
+                    when (val res = restoreRepo.restoreJournals(action.path)) {
                         is RestoreResult.Failure -> {
                             _localState.update {
                                 it.copy(restoreState = RestoreState.Failure(res.exceptionType))

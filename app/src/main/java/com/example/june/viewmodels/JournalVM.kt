@@ -4,57 +4,57 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.example.june.core.domain.NoteRepo
-import com.example.june.core.domain.data_classes.Note
+import com.example.june.core.domain.JournalRepo
+import com.example.june.core.domain.data_classes.Journal
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
-import com.example.june.core.presentation.screens.note.NoteAction
-import com.example.june.core.presentation.screens.note.NoteState
+import com.example.june.core.presentation.screens.journal.JournalAction
+import com.example.june.core.presentation.screens.journal.JournalState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class NoteVM(
+class JournalVM(
     savedStateHandle: SavedStateHandle,
-    private val noteRepo: NoteRepo,
+    private val journalRepo: JournalRepo,
     private val navigator: AppNavigator
 ) : ViewModel() {
 
-    private val routeArgs = savedStateHandle.toRoute<Route.Note>()
-    private val currentNoteId = routeArgs.noteId
+    private val routeArgs = savedStateHandle.toRoute<Route.Journal>()
+    private val currentJournalId = routeArgs.journalId
 
-    private var existingNote: Note? = null
+    private var existingJournal: Journal? = null
 
-    private val _state = MutableStateFlow(NoteState())
+    private val _state = MutableStateFlow(JournalState())
     val state = _state.asStateFlow()
 
     init {
-        if (currentNoteId != null) {
-            loadNote(currentNoteId)
+        if (currentJournalId != null) {
+            loadJournal(currentJournalId)
         }
     }
 
-    fun onAction(action: NoteAction) {
+    fun onAction(action: JournalAction) {
         when (action) {
-            is NoteAction.ChangeTitle -> _state.update { it.copy(title = action.title) }
-            is NoteAction.ChangeContent -> _state.update { it.copy(content = action.content) }
-            is NoteAction.ChangeDateTime -> _state.update { it.copy(dateTime = action.dateTime) }
-            is NoteAction.ChangeCoverImageUri -> _state.update { it.copy(coverImageUri = action.uri) }
-            is NoteAction.SaveNote -> saveNote()
-            is NoteAction.NavigateBack -> navigator.navigateBack()
-            is NoteAction.DeleteNote -> deleteNote()
+            is JournalAction.ChangeTitle -> _state.update { it.copy(title = action.title) }
+            is JournalAction.ChangeContent -> _state.update { it.copy(content = action.content) }
+            is JournalAction.ChangeDateTime -> _state.update { it.copy(dateTime = action.dateTime) }
+            is JournalAction.ChangeCoverImageUri -> _state.update { it.copy(coverImageUri = action.uri) }
+            is JournalAction.SaveJournal -> saveJournal()
+            is JournalAction.NavigateBack -> navigator.navigateBack()
+            is JournalAction.DeleteJournal -> deleteJournal()
         }
     }
 
     fun hasUnsavedChanges(): Boolean {
         val currentState = _state.value
 
-        if (currentNoteId == null) {
+        if (currentJournalId == null) {
             return currentState.title.isNotBlank() || currentState.content.isNotBlank()
         }
 
-        return existingNote?.let { original ->
+        return existingJournal?.let { original ->
             original.title != currentState.title ||
                     original.content != currentState.content ||
                     original.coverImageUri != currentState.coverImageUri ||
@@ -62,21 +62,21 @@ class NoteVM(
         } ?: false
     }
 
-    private fun loadNote(id: Long) {
+    private fun loadJournal(id: Long) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
-            val note = noteRepo.getNoteById(id)
+            val journal = journalRepo.getJournalById(id)
 
-            if (note != null) {
-                existingNote = note
+            if (journal != null) {
+                existingJournal = journal
                 _state.update {
                     it.copy(
-                        title = note.title,
-                        content = note.content,
-                        coverImageUri = note.coverImageUri,
-                        createdAt = note.createdAt,
-                        updatedAt = note.updatedAt,
-                        dateTime = note.dateTime,
+                        title = journal.title,
+                        content = journal.content,
+                        coverImageUri = journal.coverImageUri,
+                        createdAt = journal.createdAt,
+                        updatedAt = journal.updatedAt,
+                        dateTime = journal.dateTime,
                         isLoading = false
                     )
                 }
@@ -86,7 +86,7 @@ class NoteVM(
         }
     }
 
-    private fun saveNote() {
+    private fun saveJournal() {
         viewModelScope.launch {
             val currentState = _state.value
 
@@ -97,17 +97,17 @@ class NoteVM(
 
             val currentTime = System.currentTimeMillis()
 
-            if (currentNoteId != null && existingNote != null) {
-                val updatedNote = existingNote!!.copy(
+            if (currentJournalId != null && existingJournal != null) {
+                val updatedJournal = existingJournal!!.copy(
                     title = currentState.title,
                     content = currentState.content,
                     coverImageUri = currentState.coverImageUri,
                     dateTime = currentState.dateTime,
                     updatedAt = currentTime
                 )
-                noteRepo.updateNote(updatedNote)
+                journalRepo.updateJournal(updatedJournal)
             } else {
-                val newNote = Note(
+                val newJournal = Journal(
                     id = 0L,
                     title = currentState.title,
                     content = currentState.content,
@@ -116,16 +116,16 @@ class NoteVM(
                     updatedAt = currentTime,
                     dateTime = currentState.dateTime
                 )
-                noteRepo.insertNote(newNote)
+                journalRepo.insertJournal(newJournal)
             }
             navigator.navigateBack()
         }
     }
 
-    private fun deleteNote() {
+    private fun deleteJournal() {
         viewModelScope.launch {
-            if (currentNoteId != null) {
-                noteRepo.deleteNote(currentNoteId)
+            if (currentJournalId != null) {
+                journalRepo.deleteJournal(currentJournalId)
             }
             navigator.navigateBack()
         }

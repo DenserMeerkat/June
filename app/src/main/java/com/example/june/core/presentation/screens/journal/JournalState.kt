@@ -1,6 +1,6 @@
-package com.example.june.core.presentation.screens.note
+package com.example.june.core.presentation.screens.journal
 
-data class NoteState(
+data class JournalState(
     val title: String = "",
     val content: String = "",
     val coverImageUri: String? = null,

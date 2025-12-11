@@ -3,8 +3,8 @@ package com.example.june.core.data.backup
 import android.content.Context
 import android.util.Log
 import androidx.core.net.toUri
-import com.example.june.core.data.mappers.toNote
-import com.example.june.core.domain.NoteRepo
+import com.example.june.core.data.mappers.toJournal
+import com.example.june.core.domain.JournalRepo
 import com.example.june.core.domain.backup.ExportSchema
 import com.example.june.core.domain.backup.RestoreFailedException
 import com.example.june.core.domain.backup.RestoreRepo
@@ -20,7 +20,7 @@ import kotlin.io.path.readText
 
 
 class RestoreImpl(
-    private val noteRepo: NoteRepo,
+    private val journalRepo: JournalRepo,
     private val context: Context
 ) : RestoreRepo {
 
@@ -28,7 +28,7 @@ class RestoreImpl(
         private const val TAG = "RestoreImpl"
     }
 
-    override suspend fun restoreNotes(path: String): RestoreResult = withContext(Dispatchers.IO) {
+    override suspend fun restoreJournals(path: String): RestoreResult = withContext(Dispatchers.IO) {
         return@withContext try {
             val file = createTempFile()
 
@@ -45,9 +45,9 @@ class RestoreImpl(
 
                 val jsonDeserialized = json.decodeFromString<ExportSchema>(file.readText())
 
-                jsonDeserialized.notes
-                    .map { it.toNote() }
-                    .forEach { noteRepo.insertNote(it) }
+                jsonDeserialized.journals
+                    .map { it.toJournal() }
+                    .forEach { journalRepo.insertJournal(it) }
             } finally {
                 file.deleteIfExists()
             }

@@ -5,5 +5,5 @@ interface ExportRepo {
 }
 
 interface RestoreRepo {
-    suspend fun restoreNotes(path: String): RestoreResult
+    suspend fun restoreJournals(path: String): RestoreResult
 }

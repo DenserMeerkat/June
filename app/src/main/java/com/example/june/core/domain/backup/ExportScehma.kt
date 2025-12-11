@@ -7,5 +7,5 @@ import kotlinx.serialization.Serializable
 @SerialName("Export")
 data class ExportSchema(
     val schemaVersion: Int = 1,
-    val notes: List<NoteSchema>
+    val journals: List<JournalSchema>
 )

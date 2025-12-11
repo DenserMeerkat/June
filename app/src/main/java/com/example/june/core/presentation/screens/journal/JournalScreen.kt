@@ -1,4 +1,4 @@
-package com.example.june.core.presentation.screens.note
+package com.example.june.core.presentation.screens.journal
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
@@ -24,14 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.june.core.domain.utils.toFullDateWithDay
-import com.example.june.core.presentation.screens.note.components.NoteDatePickerDialog
-import com.example.june.viewmodels.NoteVM
+import com.example.june.core.presentation.screens.journal.components.JournalDatePickerDialog
+import com.example.june.viewmodels.JournalVM
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun NoteScreen() {
-    val viewModel: NoteVM = koinViewModel()
+fun JournalScreen() {
+    val viewModel: JournalVM = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
 
@@ -50,7 +50,7 @@ fun NoteScreen() {
         if (viewModel.hasUnsavedChanges()) {
             showExitDialog = true
         } else {
-            viewModel.onAction(NoteAction.NavigateBack)
+            viewModel.onAction(JournalAction.NavigateBack)
         }
     }
 
@@ -75,7 +75,7 @@ fun NoteScreen() {
                 },
                 actions = {
                     FilledTonalButton(
-                        onClick = { viewModel.onAction(NoteAction.SaveNote) },
+                        onClick = { viewModel.onAction(JournalAction.SaveJournal) },
                         enabled = !state.isEmpty
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -118,7 +118,7 @@ fun NoteScreen() {
                             },
                             onClick = {
                                 showMenu = false
-                                viewModel.onAction(NoteAction.DeleteNote)
+                                viewModel.onAction(JournalAction.DeleteJournal)
                             },
                         )
                     }
@@ -149,7 +149,7 @@ fun NoteScreen() {
             ) {
                 TextField(
                     value = state.title,
-                    onValueChange = { viewModel.onAction(NoteAction.ChangeTitle(it)) },
+                    onValueChange = { viewModel.onAction(JournalAction.ChangeTitle(it)) },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = {
                         Text(
@@ -188,7 +188,7 @@ fun NoteScreen() {
 
                 TextField(
                     value = state.content,
-                    onValueChange = { viewModel.onAction(NoteAction.ChangeContent(it)) },
+                    onValueChange = { viewModel.onAction(JournalAction.ChangeContent(it)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(contentFocusRequester),
@@ -214,7 +214,7 @@ fun NoteScreen() {
                 Button(
                     onClick = {
                         showExitDialog = false
-                        viewModel.onAction(NoteAction.SaveNote)
+                        viewModel.onAction(JournalAction.SaveJournal)
                     }
                 ) { Text("Save") }
             },
@@ -222,7 +222,7 @@ fun NoteScreen() {
                 TextButton(
                     onClick = {
                         showExitDialog = false
-                        viewModel.onAction(NoteAction.NavigateBack)
+                        viewModel.onAction(JournalAction.NavigateBack)
                     }
                 ) { Text("Discard") }
             }
@@ -230,10 +230,10 @@ fun NoteScreen() {
     }
 
     if (showDatePicker) {
-        NoteDatePickerDialog(
+        JournalDatePickerDialog(
             initialDateMillis = displayDateMillis,
             onDateSelected = { millis ->
-                viewModel.onAction(NoteAction.ChangeDateTime(millis))
+                viewModel.onAction(JournalAction.ChangeDateTime(millis))
                 showDatePicker = false
             },
             onDismiss = { showDatePicker = false }

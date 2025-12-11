@@ -1,4 +1,4 @@
-package com.example.june.core.presentation.screens.note.components
+package com.example.june.core.presentation.screens.journal.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -37,7 +37,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun NoteDatePickerDialog(
+fun JournalDatePickerDialog(
     initialDateMillis: Long, onDateSelected: (Long) -> Unit, onDismiss: () -> Unit
 ) {
     val initialDate = remember(initialDateMillis) {

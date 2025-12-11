@@ -1,12 +1,12 @@
 package com.example.june.core.data.mappers
 
-import com.example.june.core.data.database.NoteEntity
-import com.example.june.core.domain.data_classes.Note
-import com.example.june.core.domain.backup.NoteSchema
+import com.example.june.core.data.database.JournalEntity
+import com.example.june.core.domain.data_classes.Journal
+import com.example.june.core.domain.backup.JournalSchema
 
 
-fun NoteEntity.toNote(): Note {
-    return Note(
+fun JournalEntity.toJournal(): Journal {
+    return Journal(
         id = id,
         title = title,
         content = content,
@@ -17,8 +17,8 @@ fun NoteEntity.toNote(): Note {
     )
 }
 
-fun Note.toEntity(): NoteEntity {
-    return NoteEntity(
+fun Journal.toEntity(): JournalEntity {
+    return JournalEntity(
         id = id,
         title = title,
         content = content,
@@ -29,8 +29,8 @@ fun Note.toEntity(): NoteEntity {
     )
 }
 
-fun Note.toNoteSchema(): NoteSchema {
-    return NoteSchema(
+fun Journal.toJournalSchema(): JournalSchema {
+    return JournalSchema(
         id = id,
         title = title,
         content = content,
@@ -41,8 +41,8 @@ fun Note.toNoteSchema(): NoteSchema {
     )
 }
 
-fun NoteSchema.toNote(): Note {
-    return Note(
+fun JournalSchema.toJournal(): Journal {
+    return Journal(
         id = id,
         title = title,
         content = content,

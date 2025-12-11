@@ -4,8 +4,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-@SerialName("Note")
-data class NoteSchema(
+@SerialName("Journal")
+data class JournalSchema(
     val id: Long,
     val title: String,
     val content: String,

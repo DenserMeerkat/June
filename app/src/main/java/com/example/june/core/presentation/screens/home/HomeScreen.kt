@@ -1,8 +1,6 @@
 package com.example.june.core.presentation.screens.home
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.Note
@@ -16,14 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.june.core.domain.data_classes.Note
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.screens.home.components.FloatingBottomBar
-import com.example.june.core.presentation.screens.home.notes.NotesPage
+import com.example.june.core.presentation.screens.home.journals.JournalsPage
 import com.example.june.viewmodels.HomeVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -33,7 +29,7 @@ enum class NavItem(
     val icon: ImageVector,
     val selectedIcon: ImageVector
 ) {
-    NOTES("Notes", Icons.AutoMirrored.Outlined.Note, Icons.AutoMirrored.Filled.Note),
+    JOURNALS("Journals", Icons.AutoMirrored.Outlined.Note, Icons.AutoMirrored.Filled.Note),
     CHATS("Chats", Icons.AutoMirrored.Outlined.Chat, Icons.AutoMirrored.Filled.Chat),
     ARCHIVE("Archive", Icons.Outlined.Archive, Icons.Filled.Archive)
 }
@@ -44,9 +40,9 @@ fun HomeScreen() {
     val navigator = koinInject<AppNavigator>()
 
     val viewModel: HomeVM = koinViewModel()
-    val notes by viewModel.notes.collectAsStateWithLifecycle()
+    val journals by viewModel.journals.collectAsStateWithLifecycle()
 
-    var selectedNavItem by remember { mutableStateOf(NavItem.NOTES) }
+    var selectedNavItem by remember { mutableStateOf(NavItem.JOURNALS) }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -88,9 +84,9 @@ fun HomeScreen() {
             ) {
 
                 when (selectedNavItem) {
-                    NavItem.NOTES -> NotesPage(
-                        notes = notes,
-                        onNoteClick = { noteId -> navigator.navigateTo(Route.Note(noteId)) }
+                    NavItem.JOURNALS -> JournalsPage(
+                        journals = journals,
+                        onJournalClick = { journalId -> navigator.navigateTo(Route.Journal(journalId)) }
                     )
 
                     NavItem.CHATS -> ChatsContent()
@@ -101,7 +97,7 @@ fun HomeScreen() {
         FloatingBottomBar(
             selectedItem = selectedNavItem,
             onItemSelected = { selectedNavItem = it },
-            onFabClick = { navigator.navigateTo(Route.Note(null)) },
+            onFabClick = { navigator.navigateTo(Route.Journal(null)) },
         )
 
     }

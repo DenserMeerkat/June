@@ -1,4 +1,4 @@
-package com.example.june.core.presentation.screens.home.notes.components
+package com.example.june.core.presentation.screens.home.journals.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -9,14 +9,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.june.core.domain.data_classes.Note
+import com.example.june.core.domain.data_classes.Journal
 import com.example.june.core.domain.utils.toFullDateTime
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NoteOptionsSheet(
-    note: Note,
+fun JournalOptionsSheet(
+    journal: Journal,
     onDismiss: () -> Unit,
     onDelete: () -> Unit,
     onEdit: () -> Unit
@@ -28,7 +28,7 @@ fun NoteOptionsSheet(
                 .padding(bottom = 48.dp)
         ) {
             Text(
-                text = "Note Details",
+                text = "Journal Details",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -41,15 +41,15 @@ fun NoteOptionsSheet(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    MetaRow(label = "Created", value = note.createdAt.toFullDateTime())
+                    MetaRow(label = "Created", value = journal.createdAt.toFullDateTime())
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(0.5f))
 
-                    note.updatedAt?.let {
+                    journal.updatedAt?.let {
                         MetaRow(label = "Last Edited", value = it.toFullDateTime())
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(0.5f))
                     }
 
-                    val wordCount = if(note.content.isBlank()) 0 else note.content.split("\\s+".toRegex()).size
+                    val wordCount = if(journal.content.isBlank()) 0 else journal.content.split("\\s+".toRegex()).size
                     MetaRow(label = "Word Count", value = "$wordCount words")
                 }
             }

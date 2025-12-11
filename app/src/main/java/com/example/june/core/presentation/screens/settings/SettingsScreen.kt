@@ -19,7 +19,7 @@ import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
 import org.koin.compose.koinInject
 
-import com.example.june.core.presentation.screens.settings.section.AppearnceSection
+import com.example.june.core.presentation.screens.settings.section.AppearanceSection
 import com.example.june.core.presentation.screens.settings.section.SettingSection
 import com.example.june.core.presentation.screens.settings.section.SettingsItem
 
@@ -67,7 +67,7 @@ fun SettingsScreen(
                 .clip(RoundedCornerShape(24.dp))
         ) {
             item(key = "appearance_section") {
-                AppearnceSection(
+                AppearanceSection(
                     state = state,
                     onAction = onAction
                 )

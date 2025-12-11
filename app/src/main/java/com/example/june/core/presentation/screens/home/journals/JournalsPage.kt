@@ -1,4 +1,4 @@
-package com.example.june.core.presentation.screens.home.notes
+package com.example.june.core.presentation.screens.home.journals
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,15 +12,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.example.june.core.domain.data_classes.Note
-import com.example.june.core.presentation.screens.home.notes.components.NoteItem
+import com.example.june.core.domain.data_classes.Journal
+import com.example.june.core.presentation.screens.home.journals.components.JournalItem
 
 @Composable
-fun NotesPage(
-    notes: List<Note>,
-    onNoteClick: (Long) -> Unit
+fun JournalsPage(
+    journals: List<Journal>,
+    onJournalClick: (Long) -> Unit
 ) {
-    if (notes.isEmpty()) {
+    if (journals.isEmpty()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -36,7 +36,7 @@ fun NotesPage(
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "No notes yet",
+                text = "No journals yet",
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -56,10 +56,10 @@ fun NotesPage(
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(notes, key = { it.id }) { note ->
-                    NoteItem(
-                        note = note,
-                        onClick = { onNoteClick(note.id) },
+                items(journals, key = { it.id }) { journal ->
+                    JournalItem(
+                        journal = journal,
+                        onClick = { onJournalClick(journal.id) },
                         onLongClick = {}
                     )
                 }
