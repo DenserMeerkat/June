@@ -12,7 +12,9 @@ data class JournalEntity(
     val coverImageUri: String? = null,
     val createdAt: Long = 0,
     val updatedAt: Long? = null,
-    val dateTime: Long? = null,
+    val dateTime: Long,
+    val isBookmarked: Boolean = false,
+    val isArchived: Boolean = false
 )
 
 

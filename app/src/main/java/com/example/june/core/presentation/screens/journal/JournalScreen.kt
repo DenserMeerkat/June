@@ -8,6 +8,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkAdded
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
@@ -42,12 +44,12 @@ fun JournalScreen() {
     var showMenu by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    val displayDateMillis = state.dateTime ?: state.createdAt
-
-    val formattedDate = remember { displayDateMillis.toFullDateWithDay() }
+    val formattedDate = remember(state.dateTime) {
+        state.dateTime.toFullDateWithDay()
+    }
 
     val onBack = {
-        if (viewModel.hasUnsavedChanges()) {
+        if (state.isDirty) {
             showExitDialog = true
         } else {
             viewModel.onAction(JournalAction.NavigateBack)
@@ -61,22 +63,38 @@ fun JournalScreen() {
             TopAppBar(
                 title = {},
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { onBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Close,
-                            contentDescription = "Close"
-                        )
+                    Row {
+                        FilledIconButton(
+                            onClick = { onBack() },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Close,
+                                contentDescription = "Close"
+                            )
+                        }
+
+                        FilledTonalIconButton(
+                            onClick = { viewModel.onAction(JournalAction.ToggleBookmark) },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = if (state.isBookmarked) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                                contentColor = if (state.isBookmarked) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+
+                            )
+                        ) {
+                            Icon(
+                                imageVector = if (state.isBookmarked) Icons.Filled.BookmarkAdded else Icons.Outlined.BookmarkBorder,
+                                contentDescription = "Bookmark"
+                            )
+                        }
                     }
                 },
                 actions = {
                     FilledTonalButton(
                         onClick = { viewModel.onAction(JournalAction.SaveJournal) },
-                        enabled = !state.isEmpty
+                        enabled = !state.isEmpty && state.isDirty && !state.isLoading,
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Save")
@@ -85,19 +103,18 @@ fun JournalScreen() {
 
                     Spacer(modifier = Modifier.width(4.dp))
 
-                    Box {
-                        FilledTonalIconButton(
-                            onClick = { showMenu = true },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.MoreVert,
-                                contentDescription = "Options"
-                            )
-                        }
+                    FilledTonalIconButton(
+                        onClick = { showMenu = true },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.MoreVert,
+                            contentDescription = "Options"
+                        )
                     }
+
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false },
@@ -231,7 +248,7 @@ fun JournalScreen() {
 
     if (showDatePicker) {
         JournalDatePickerDialog(
-            initialDateMillis = displayDateMillis,
+            initialDateMillis = state.dateTime,
             onDateSelected = { millis ->
                 viewModel.onAction(JournalAction.ChangeDateTime(millis))
                 showDatePicker = false

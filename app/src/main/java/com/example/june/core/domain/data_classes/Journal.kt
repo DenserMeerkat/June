@@ -7,5 +7,7 @@ data class Journal(
     val coverImageUri: String?,
     val createdAt: Long,
     val updatedAt: Long?,
-    val dateTime: Long?,
+    val dateTime: Long,
+    val isBookmarked: Boolean = false,
+    val isArchived: Boolean = false
 )

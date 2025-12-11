@@ -15,12 +15,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BookmarkAdded
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,22 +35,29 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.june.core.domain.data_classes.Journal
 import com.example.june.core.domain.utils.toFullDate
+import com.example.june.core.navigation.AppNavigator
+import com.example.june.core.navigation.Route
+import com.example.june.viewmodels.HomeVM
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun JournalItem(
     journal: Journal,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit
+    modifier: Modifier
 ) {
+    val viewModel: HomeVM = koinViewModel()
+    val navigator = koinInject<AppNavigator>()
+
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(88.dp)
             .clip(RoundedCornerShape(24.dp))
             .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
+                onClick = { navigator.navigateTo(Route.Journal(journal.id), isSingleTop = true) },
+                onLongClick = {}
             ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -81,7 +90,7 @@ fun JournalItem(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
-                val displayDate = journal.dateTime ?: journal.createdAt
+                val displayDate = journal.dateTime
                 Text(
                     text = displayDate.toFullDate(),
                     style = MaterialTheme.typography.labelMedium,
@@ -101,11 +110,15 @@ fun JournalItem(
             }
 
             IconButton(
-                onClick = onLongClick
+                onClick = { viewModel.toggleBookmark(journal.id) },
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+
+                )
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.MoreVert,
-                    contentDescription = "Options",
+                    imageVector = if (journal.isBookmarked) Icons.Filled.BookmarkAdded else Icons.Outlined.BookmarkBorder,
+                    contentDescription = "Bookmark",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

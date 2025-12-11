@@ -1,5 +1,6 @@
 package com.example.june.core.presentation.screens.home.journals
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,11 +16,16 @@ import androidx.compose.ui.unit.dp
 import com.example.june.core.domain.data_classes.Journal
 import com.example.june.core.presentation.screens.home.journals.components.JournalItem
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun JournalsPage(
-    journals: List<Journal>,
-    onJournalClick: (Long) -> Unit
+    journals: List<Journal>
 ) {
+    val sortedJournals = remember(journals) { journals.sortedByDescending { it.dateTime } }
+    val recentJournal = remember(sortedJournals) { sortedJournals.firstOrNull() }
+    val pastJournals = remember(sortedJournals) { sortedJournals.drop(1) }
+    val bookmarkedJournals = remember(journals) { journals.filter { it.isBookmarked } }
+
     if (journals.isEmpty()) {
         Column(
             modifier = Modifier
@@ -52,19 +58,74 @@ fun JournalsPage(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp)
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                contentPadding = PaddingValues(top = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(journals, key = { it.id }) { journal ->
-                    JournalItem(
-                        journal = journal,
-                        onClick = { onJournalClick(journal.id) },
-                        onLongClick = {}
-                    )
+                if (recentJournal != null) {
+                    item(key = "header_recent") { 
+                        SectionHeader(
+                            title = "Recent",
+                            modifier = Modifier.animateItem() 
+                        )
+                    }
+                    item(key = "recent_${recentJournal.id}") {
+                        JournalItem(
+                            journal = recentJournal,
+                            modifier = Modifier.animateItem() 
+                        )
+                    }
                 }
+
+                if (bookmarkedJournals.isNotEmpty()) {
+                    item(key = "header_bookmarks") {
+                        SectionHeader(
+                            title = "Bookmarks",
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .animateItem() 
+                        )
+                    }
+                    items(bookmarkedJournals, key = { "bm_${it.id}" }) { journal ->
+                        JournalItem(
+                            journal = journal,
+                            modifier = Modifier.animateItem() 
+                        )
+                    }
+                }
+
+                if (pastJournals.isNotEmpty()) {
+                    item(key = "header_past") {
+                        SectionHeader(
+                            title = "Past entries",
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .animateItem() 
+                        )
+                    }
+                    items(pastJournals, key = { "past_${it.id}" }) { journal ->
+                        JournalItem(
+                            journal = journal,
+                            modifier = Modifier.animateItem() 
+                        )
+                    }
+                }
+
                 item { Spacer(modifier = Modifier.height(100.dp)) }
             }
         }
     }
+}
+
+@Composable
+fun SectionHeader(
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.padding(vertical = 4.dp, horizontal = 4.dp)
+    )
 }

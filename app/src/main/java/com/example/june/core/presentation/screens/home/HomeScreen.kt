@@ -85,8 +85,7 @@ fun HomeScreen() {
 
                 when (selectedNavItem) {
                     NavItem.JOURNALS -> JournalsPage(
-                        journals = journals,
-                        onJournalClick = { journalId -> navigator.navigateTo(Route.Journal(journalId)) }
+                        journals = journals
                     )
 
                     NavItem.CHATS -> ChatsContent()

@@ -13,7 +13,9 @@ fun JournalEntity.toJournal(): Journal {
         coverImageUri = coverImageUri,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        dateTime = dateTime
+        dateTime = dateTime,
+        isBookmarked = isBookmarked,
+        isArchived = isArchived
     )
 }
 
@@ -25,7 +27,9 @@ fun Journal.toEntity(): JournalEntity {
         coverImageUri = coverImageUri,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        dateTime = dateTime
+        dateTime = dateTime,
+        isBookmarked = isBookmarked,
+        isArchived = isArchived
     )
 }
 
@@ -37,7 +41,9 @@ fun Journal.toJournalSchema(): JournalSchema {
         coverImageUri = coverImageUri,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        dateTime = dateTime
+        dateTime = dateTime,
+        isBookmarked = isBookmarked,
+        isArchived = isArchived
     )
 }
 
@@ -49,6 +55,8 @@ fun JournalSchema.toJournal(): Journal {
         coverImageUri = coverImageUri,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        dateTime = dateTime
+        dateTime = dateTime,
+        isBookmarked = isBookmarked,
+        isArchived = isArchived
     )
 }

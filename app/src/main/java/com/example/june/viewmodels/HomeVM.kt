@@ -25,4 +25,22 @@ class HomeVM(
             journalRepo.deleteJournal(id)
         }
     }
+
+    fun toggleBookmark(id: Long) {
+        viewModelScope.launch {
+            val journal = journalRepo.getJournalById(id)
+            journal?.let {
+                journalRepo.updateJournal(it.copy(isBookmarked = !it.isBookmarked))
+            }
+        }
+    }
+
+    fun toggleArchive(id: Long) {
+        viewModelScope.launch {
+            val journal = journalRepo.getJournalById(id)
+            journal?.let {
+                journalRepo.updateJournal(it.copy(isArchived = !it.isArchived))
+            }
+        }
+    }
 }
