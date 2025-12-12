@@ -16,9 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -37,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -84,6 +82,15 @@ fun ColorPickerSheet(
                             )
                     )
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    Icon(
+                        painter = painterResource(R.drawable.colors_24px),
+                        contentDescription = "Select Seed Color",
+                        modifier = Modifier.size(32.dp)
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
                     Text(
                         text = "Select Seed Color",
                         style = MaterialTheme.typography.headlineSmall,
@@ -236,7 +243,7 @@ fun ColorPickerBottombar(
 
                 ExtendedFloatingActionButton(
                     onClick = onClose,
-                    icon = { Icon(Icons.Rounded.Close, contentDescription = null) },
+                    icon = { Icon(painterResource(R.drawable.close_24px), contentDescription = null) },
                     text = { Text(stringResource(R.string.close)) },
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -247,7 +254,7 @@ fun ColorPickerBottombar(
 
                 ExtendedFloatingActionButton(
                     onClick = onDone,
-                    icon = { Icon(Icons.Rounded.Check, contentDescription = null) },
+                    icon = { Icon(painterResource(R.drawable.check_24px), contentDescription = null) },
                     text = { Text(stringResource(R.string.done)) },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,

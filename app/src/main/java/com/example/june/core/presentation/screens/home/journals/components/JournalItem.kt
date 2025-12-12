@@ -14,10 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BookmarkAdded
-import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -30,14 +26,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.june.R
 import com.example.june.core.domain.data_classes.Journal
 import com.example.june.core.domain.utils.toFullDate
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
-import com.example.june.viewmodels.HomeVM
+import com.example.june.viewmodels.HomeJournalVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -47,7 +45,7 @@ fun JournalItem(
     journal: Journal,
     modifier: Modifier
 ) {
-    val viewModel: HomeVM = koinViewModel()
+    val viewModel: HomeJournalVM = koinViewModel()
     val navigator = koinInject<AppNavigator>()
 
     Card(
@@ -73,11 +71,11 @@ fun JournalItem(
             Surface(
                 modifier = Modifier.size(96.dp, 60.dp),
                 shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHighest
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6F),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Outlined.PhotoAlbum,
+                        painter = painterResource(R.drawable.book_5_24px),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -117,9 +115,8 @@ fun JournalItem(
                 )
             ) {
                 Icon(
-                    imageVector = if (journal.isBookmarked) Icons.Filled.BookmarkAdded else Icons.Outlined.BookmarkBorder,
+                    painter = if (journal.isBookmarked) painterResource(R.drawable.bookmark_added_24px_fill) else painterResource(R.drawable.bookmark_24px),
                     contentDescription = "Bookmark",
-                    modifier = Modifier.size(20.dp)
                 )
             }
         }

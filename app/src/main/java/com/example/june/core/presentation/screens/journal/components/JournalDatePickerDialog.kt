@@ -11,16 +11,13 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
@@ -34,6 +31,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+
+import com.example.june.R
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -104,7 +103,7 @@ fun JournalDatePickerDialog(
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
-                                Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
+                                painter = painterResource(R.drawable.chevron_left_24px),
                                 contentDescription = "Previous Month",
                                 modifier = Modifier.size(16.dp)
                             )
@@ -114,7 +113,7 @@ fun JournalDatePickerDialog(
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
-                                Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                                painter = painterResource(R.drawable.chevron_right_24px),
                                 contentDescription = "Next Month",
                                 modifier = Modifier.size(16.dp)
                             )
@@ -150,10 +149,9 @@ fun JournalDatePickerDialog(
                         modifier = Modifier.align(Alignment.CenterEnd)
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.CalendarToday,
+                            painter = painterResource(R.drawable.today_24px),
                             contentDescription = "Jump to today",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -210,7 +208,7 @@ fun JournalDatePickerDialog(
                                         when {
                                             isToday -> BorderStroke(
                                                 1.dp,
-                                                MaterialTheme.colorScheme.tertiaryContainer
+                                                MaterialTheme.colorScheme.secondaryContainer
                                             )
 
                                             else -> BorderStroke(0.dp, Color.Transparent)

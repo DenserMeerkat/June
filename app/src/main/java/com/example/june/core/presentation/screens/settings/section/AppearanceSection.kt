@@ -5,13 +5,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.outlined.Brightness4
-import androidx.compose.material.icons.outlined.Colorize
-import androidx.compose.material.icons.outlined.DarkMode
-import androidx.compose.material.icons.outlined.ImagesearchRoller
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
@@ -23,11 +16,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.example.june.R
 import com.example.june.core.presentation.screens.settings.SettingsAction
 import com.example.june.core.presentation.screens.settings.SettingsState
@@ -35,9 +27,6 @@ import com.example.june.core.presentation.screens.settings.components.ColorPicke
 import com.example.june.core.presentation.screens.settings.components.ThemePickerDialog
 import com.example.june.core.presentation.screens.settings.components.FontPickerDialog
 import com.example.june.core.presentation.screens.settings.components.PaletteSelectionSettingsItem
-import compose.icons.FontAwesomeIcons
-import compose.icons.fontawesomeicons.Solid
-import compose.icons.fontawesomeicons.solid.Font
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -56,7 +45,7 @@ fun AppearanceSection(
             subtitle = stringResource(state.theme.appTheme.stringRes),
             leadingContent = {
                 Icon(
-                    imageVector = Icons.Outlined.Brightness4,
+                    painter = painterResource(R.drawable.routine_24px),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.secondary
                 )
@@ -66,9 +55,8 @@ fun AppearanceSection(
                     onClick = { showThemePickerDialog = true }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Create,
-                        contentDescription = "Pick Theme",
-                        modifier = Modifier.size(20.dp)
+                        painter = painterResource(R.drawable.edit_24px),
+                        contentDescription = "Pick Theme"
                     )
                 }
             },
@@ -79,7 +67,7 @@ fun AppearanceSection(
             subtitle = state.theme.font.fullName,
             leadingContent = {
                 Icon(
-                    imageVector = FontAwesomeIcons.Solid.Font,
+                    painter = painterResource(R.drawable.format_size_24px),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.secondary
                 )
@@ -89,9 +77,8 @@ fun AppearanceSection(
                     onClick = { showFontPickerDialog = true },
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Create,
+                        painter = painterResource(R.drawable.edit_24px),
                         contentDescription = "Pick Font",
-                        modifier = Modifier.size(20.dp)
                     )
                 }
             },
@@ -102,7 +89,7 @@ fun AppearanceSection(
             subtitle = stringResource(R.string.amoled_desc),
             leadingContent = {
                 Icon(
-                    imageVector = Icons.Outlined.DarkMode,
+                    painter = painterResource(R.drawable.partly_cloudy_night_24px),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.secondary
                 )
@@ -130,7 +117,7 @@ fun AppearanceSection(
                 subtitle = stringResource(R.string.material_theme_desc),
                 leadingContent = {
                     Icon(
-                        imageVector = Icons.Outlined.ImagesearchRoller,
+                        painter = painterResource(R.drawable.imagesearch_roller_24px),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.secondary
                     )
@@ -162,7 +149,7 @@ fun AppearanceSection(
                 subtitle = stringResource(R.string.seed_color_desc),
                 leadingContent = {
                     Icon(
-                        imageVector = Icons.Outlined.Colorize,
+                        painter = painterResource(R.drawable.colors_24px),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.secondary
                     )
@@ -172,9 +159,8 @@ fun AppearanceSection(
                         onClick = { showColorPickerSheet = true }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Create,
+                            painter = painterResource(R.drawable.edit_24px),
                             contentDescription = "Pick Color",
-                            modifier = Modifier.size(20.dp)
                         )
                     }
                 },

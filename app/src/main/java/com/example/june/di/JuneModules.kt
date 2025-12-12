@@ -13,7 +13,7 @@ import com.example.june.core.domain.backup.ExportRepo
 import com.example.june.core.domain.backup.RestoreRepo
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.AppNavigatorImpl
-import com.example.june.viewmodels.HomeVM
+import com.example.june.viewmodels.HomeJournalVM
 import com.example.june.viewmodels.JournalVM
 import com.example.june.viewmodels.SettingsVM
 import org.koin.core.module.dsl.singleOf
@@ -41,7 +41,7 @@ val juneModules = module {
 
     viewModelOf(::SettingsVM)
     viewModelOf(::JournalVM)
-    viewModelOf(::HomeVM)
+    viewModelOf(::HomeJournalVM)
 
     singleOf(::AppNavigatorImpl)
     single<AppNavigator> { get<AppNavigatorImpl>() }

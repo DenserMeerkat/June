@@ -12,15 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BookmarkAdded
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.CalendarToday
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.SaveAs
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,6 +28,8 @@ import com.example.june.core.domain.utils.toDateWithDay
 import com.example.june.core.presentation.screens.journal.components.JournalDatePickerDialog
 import com.example.june.viewmodels.JournalVM
 import org.koin.compose.viewmodel.koinViewModel
+
+import com.example.june.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -90,8 +84,8 @@ fun JournalScreen() {
                         )
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Close,
-                            contentDescription = "Close"
+                            painter = painterResource(R.drawable.close_24px),
+                            contentDescription = "Close",
                         )
                     }
                 },
@@ -101,8 +95,10 @@ fun JournalScreen() {
                             onClick = { viewModel.onAction(JournalAction.ToggleBookmark) }
                         ) {
                             Icon(
-                                imageVector = if (state.isBookmarked) Icons.Filled.BookmarkAdded else Icons.Outlined.BookmarkBorder,
-                                contentDescription = "Bookmark"
+                                painter = if (state.isBookmarked) painterResource(R.drawable.bookmark_added_24px_fill) else painterResource(
+                                    R.drawable.bookmark_24px
+                                ),
+                                contentDescription = "Bookmark",
                             )
                         }
                     }
@@ -127,7 +123,7 @@ fun JournalScreen() {
                             onClick = { showMenu = true }
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.MoreVert,
+                                painter = painterResource(R.drawable.more_vert_24px),
                                 contentDescription = "Options"
                             )
                         }
@@ -146,7 +142,7 @@ fun JournalScreen() {
                                 text = { Text("Delete") },
                                 leadingIcon = {
                                     Icon(
-                                        imageVector = Icons.Outlined.Delete,
+                                        painter = painterResource(R.drawable.delete_24px),
                                         contentDescription = "Delete"
                                     )
                                 },
@@ -176,7 +172,10 @@ fun JournalScreen() {
                         contentFocusRequester.requestFocus()
                     }
                 ) {
-                    Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit")
+                    Icon(
+                        painter = painterResource(R.drawable.edit_24px_fill),
+                        contentDescription = "Edit"
+                    )
                 }
             }
         },
@@ -235,7 +234,7 @@ fun JournalScreen() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.CalendarToday,
+                        painter = painterResource(R.drawable.today_24px),
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -274,7 +273,13 @@ fun JournalScreen() {
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = { showExitDialog = false },
-            icon = { Icon(imageVector = Icons.Outlined.SaveAs, contentDescription = "Save Entry") },
+            icon = {
+                Icon(
+                    painter = painterResource(R.drawable.file_save_24px),
+                    contentDescription = "Save Entry",
+                    modifier = Modifier.size(24.dp)
+                )
+            },
             title = { Text("Save Entry?") },
             text = { Text("Save this journal to revisit these thoughts anytime") },
             confirmButton = {

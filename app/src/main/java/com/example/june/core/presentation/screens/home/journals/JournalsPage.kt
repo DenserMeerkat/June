@@ -4,23 +4,26 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Note
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.june.core.domain.data_classes.Journal
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.june.core.presentation.screens.home.journals.components.JournalItem
+import com.example.june.viewmodels.HomeJournalVM
+import org.koin.compose.viewmodel.koinViewModel
+
+import com.example.june.R
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun JournalsPage(
-    journals: List<Journal>
-) {
+fun JournalsPage() {
+    val viewModel: HomeJournalVM = koinViewModel()
+    val journals by viewModel.journals.collectAsStateWithLifecycle()
+
     val draftJournals =
         remember(journals) { journals.filter { it.isDraft }.sortedByDescending { it.dateTime } }
     val bookmarkedJournals = remember(journals) { journals.filter { it.isBookmarked } }
@@ -44,9 +47,8 @@ fun JournalsPage(
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.Note,
+                painter = painterResource(R.drawable.auto_stories_off_24px),
                 contentDescription = null,
-                modifier = Modifier.size(120.dp),
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
             )
             Spacer(modifier = Modifier.height(24.dp))
