@@ -17,7 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkAdded
 import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.PhotoAlbum
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -53,31 +53,31 @@ fun JournalItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(88.dp)
+            .height(84.dp)
             .clip(RoundedCornerShape(24.dp))
             .combinedClickable(
                 onClick = { navigator.navigateTo(Route.Journal(journal.id), isSingleTop = true) },
                 onLongClick = {}
             ),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         ),
         shape = RoundedCornerShape(24.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(56.dp),
+                modifier = Modifier.size(96.dp, 60.dp),
                 shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh
+                color = MaterialTheme.colorScheme.surfaceContainerHighest
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Outlined.Description,
+                        imageVector = Icons.Outlined.PhotoAlbum,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -100,7 +100,7 @@ fun JournalItem(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = journal.title.ifBlank { "Untitled Journal" },
+                    text = journal.title.ifBlank { journal.content.ifBlank { "Add title" } },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -112,14 +112,14 @@ fun JournalItem(
             IconButton(
                 onClick = { viewModel.toggleBookmark(journal.id) },
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
 
                 )
             ) {
                 Icon(
                     imageVector = if (journal.isBookmarked) Icons.Filled.BookmarkAdded else Icons.Outlined.BookmarkBorder,
                     contentDescription = "Bookmark",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }

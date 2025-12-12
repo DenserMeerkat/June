@@ -22,7 +22,7 @@ class JournalVM(
 ) : ViewModel() {
 
     private val routeArgs = savedStateHandle.toRoute<Route.Journal>()
-    private val currentJournalId = routeArgs.journalId
+    private val initialJournalId = routeArgs.journalId
 
     private var existingJournal: Journal? = null
 
@@ -30,8 +30,8 @@ class JournalVM(
     val state = _state.asStateFlow()
 
     init {
-        if (currentJournalId != null) {
-            loadJournal(currentJournalId)
+        if (initialJournalId != null) {
+            loadJournal(initialJournalId)
         }
     }
 
@@ -39,18 +39,22 @@ class JournalVM(
         when (action) {
             is JournalAction.ChangeTitle -> _state.update {
                 val newState = it.copy(title = action.title)
+                if (isDirtyCheck(newState)) saveDraft(newState)
                 newState.copy(isDirty = isDirtyCheck(newState))
             }
             is JournalAction.ChangeContent -> _state.update {
                 val newState = it.copy(content = action.content)
+                if (isDirtyCheck(newState)) saveDraft(newState)
                 newState.copy(isDirty = isDirtyCheck(newState))
             }
             is JournalAction.ChangeDateTime -> _state.update {
                 val newState = it.copy(dateTime = action.dateTime)
+                if (isDirtyCheck(newState)) saveDraft(newState)
                 newState.copy(isDirty = isDirtyCheck(newState))
             }
             is JournalAction.ChangeCoverImageUri -> _state.update {
                 val newState = it.copy(coverImageUri = action.uri)
+                if (isDirtyCheck(newState)) saveDraft(newState)
                 newState.copy(isDirty = isDirtyCheck(newState))
             }
             is JournalAction.ToggleBookmark -> toggleBookmark()
@@ -62,16 +66,13 @@ class JournalVM(
         }
     }
 
-    fun isDirtyCheck(currentState: JournalState): Boolean {
-        if (currentJournalId == null) {
-            return currentState.title.isNotBlank() || currentState.content.isNotBlank()
-        }
-        return existingJournal?.let { original ->
-            original.title != currentState.title ||
-                    original.content != currentState.content ||
-                    original.coverImageUri != currentState.coverImageUri ||
-                    original.dateTime != currentState.dateTime
-        } ?: false
+    private fun isDirtyCheck(currentState: JournalState): Boolean {
+        val original = existingJournal ?: return true
+
+        return original.title != currentState.title ||
+                original.content != currentState.content ||
+                original.coverImageUri != currentState.coverImageUri ||
+                original.dateTime != currentState.dateTime
     }
 
     private fun toggleBookmark() {
@@ -81,7 +82,7 @@ class JournalVM(
 
             _state.update { it.copy(isBookmarked = newBookmarkState) }
 
-            if (currentJournalId != null && existingJournal != null) {
+            if (existingJournal != null) {
                 val updatedJournal = existingJournal!!.copy(
                     isBookmarked = newBookmarkState,
                     updatedAt = System.currentTimeMillis()
@@ -99,7 +100,7 @@ class JournalVM(
 
             _state.update { it.copy(isArchived = newArchiveState) }
 
-            if (currentJournalId != null && existingJournal != null) {
+            if (existingJournal != null) {
                 val updatedJournal = existingJournal!!.copy(
                     isArchived = newArchiveState,
                     updatedAt = System.currentTimeMillis()
@@ -123,6 +124,7 @@ class JournalVM(
                 existingJournal = journal
                 _state.update {
                     it.copy(
+                        noteId = journal.id,
                         title = journal.title,
                         content = journal.content,
                         coverImageUri = journal.coverImageUri,
@@ -131,6 +133,7 @@ class JournalVM(
                         dateTime = journal.dateTime,
                         isBookmarked = journal.isBookmarked,
                         isArchived = journal.isArchived,
+                        isDraft = journal.isDraft,
                         isLoading = false,
                         isDirty = false
                     )
@@ -141,48 +144,82 @@ class JournalVM(
         }
     }
 
+    private fun saveDraft(currentState: JournalState) {
+        viewModelScope.launch {
+            if (existingJournal != null && !existingJournal!!.isDraft) {
+                return@launch
+            }
+
+            if (!(currentState.title.isBlank() && currentState.content.isBlank())) {
+
+                val currentTime = System.currentTimeMillis()
+                val isNewEntry = existingJournal == null
+
+                val journalToSave = Journal(
+                    id = existingJournal?.id ?: 0L,
+                    title = currentState.title,
+                    content = currentState.content,
+                    coverImageUri = currentState.coverImageUri,
+                    createdAt = existingJournal?.createdAt ?: currentTime,
+                    updatedAt = currentTime,
+                    dateTime = currentState.dateTime,
+                    isBookmarked = currentState.isBookmarked,
+                    isArchived = currentState.isArchived,
+                    isDraft = true
+                )
+
+                if (isNewEntry) {
+                    val newId = journalRepo.insertJournal(journalToSave)
+                    val savedDraft = journalToSave.copy(id = newId)
+                    existingJournal = savedDraft
+
+                    _state.update { it.copy(noteId = newId, isDirty = false, isDraft = true) }
+                } else {
+                    journalRepo.updateJournal(journalToSave)
+                    existingJournal = journalToSave
+                    _state.update { it.copy(isDirty = false) }
+                }
+            }
+        }
+    }
+
     private fun saveJournal() {
         viewModelScope.launch {
             val currentState = _state.value
 
-            if (currentState.title.isBlank() && currentState.content.isBlank()) {
-                navigator.navigateBack()
-                return@launch
-            }
-
             val currentTime = System.currentTimeMillis()
 
-            if (currentJournalId != null && existingJournal != null) {
-                val updatedJournal = existingJournal!!.copy(
-                    title = currentState.title,
-                    content = currentState.content,
-                    coverImageUri = currentState.coverImageUri,
-                    dateTime = currentState.dateTime,
-                    updatedAt = currentTime
-                )
-                journalRepo.updateJournal(updatedJournal)
-                existingJournal = updatedJournal
+            val journalToSave = Journal(
+                id = existingJournal?.id ?: 0L,
+                title = currentState.title,
+                content = currentState.content,
+                coverImageUri = currentState.coverImageUri,
+                createdAt = existingJournal?.createdAt ?: currentTime,
+                updatedAt = currentTime,
+                dateTime = currentState.dateTime,
+                isBookmarked = currentState.isBookmarked,
+                isArchived = currentState.isArchived,
+                isDraft = false
+            )
+
+            if (existingJournal != null) {
+                journalRepo.updateJournal(journalToSave)
+                existingJournal = journalToSave
             } else {
-                val newJournal = Journal(
-                    id = 0L,
-                    title = currentState.title,
-                    content = currentState.content,
-                    coverImageUri = currentState.coverImageUri,
-                    createdAt = currentTime,
-                    updatedAt = currentTime,
-                    dateTime = currentState.dateTime,
-                )
-                journalRepo.insertJournal(newJournal)
+                val newId = journalRepo.insertJournal(journalToSave)
+                existingJournal = journalToSave.copy(id = newId)
+                _state.update { it.copy(noteId = newId) }
             }
-            _state.update { it.copy(isDirty = false) }
+
+            _state.update { it.copy(isDirty = false, isDraft = false) }
             navigator.navigateBack()
         }
     }
 
     private fun deleteJournal() {
         viewModelScope.launch {
-            if (currentJournalId != null) {
-                journalRepo.deleteJournal(currentJournalId)
+            if (existingJournal != null) {
+                journalRepo.deleteJournal(existingJournal!!.id)
             }
             navigator.navigateBack()
         }

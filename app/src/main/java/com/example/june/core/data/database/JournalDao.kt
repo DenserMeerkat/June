@@ -2,6 +2,7 @@ package com.example.june.core.data.database
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
@@ -11,8 +12,8 @@ interface JournalDao {
     @Query("SELECT * FROM journals")
     fun getAllJournals(): Flow<List<JournalEntity>>
 
-    @Insert
-    suspend fun insertJournal(journal: JournalEntity)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertJournal(journal: JournalEntity): Long
 
     @Query("DELETE FROM journals WHERE id = :id")
     suspend fun deleteJournal(id: Long)

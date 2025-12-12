@@ -4,7 +4,7 @@ import com.example.june.core.domain.data_classes.Journal
 import kotlinx.coroutines.flow.Flow
 
 interface JournalRepo {
-    suspend fun insertJournal(journal: Journal)
+    suspend fun insertJournal(journal: Journal): Long
     fun getJournals(): Flow<List<Journal>>
     suspend fun getAllJournals(): List<Journal>
     suspend fun getJournalById(id: Long): Journal?

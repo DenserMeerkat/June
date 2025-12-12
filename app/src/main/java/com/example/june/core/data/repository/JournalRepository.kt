@@ -15,8 +15,8 @@ class JournalRepository(
     private val localDao: JournalDao
 ) : JournalRepo {
 
-    override suspend fun insertJournal(journal: Journal) {
-        withContext(Dispatchers.IO) {
+    override suspend fun insertJournal(journal: Journal): Long {
+        return withContext(Dispatchers.IO) {
             localDao.insertJournal(journal.toEntity())
         }
     }

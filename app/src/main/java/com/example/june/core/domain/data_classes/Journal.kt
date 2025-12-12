@@ -9,5 +9,6 @@ data class Journal(
     val updatedAt: Long?,
     val dateTime: Long,
     val isBookmarked: Boolean = false,
-    val isArchived: Boolean = false
+    val isArchived: Boolean = false,
+    val isDraft: Boolean = true,
 )

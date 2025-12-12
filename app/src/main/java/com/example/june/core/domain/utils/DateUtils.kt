@@ -4,13 +4,13 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-fun Long.toFullDateWithDay(): String {
+fun Long.toDateWithDay(): String {
     val sdf = SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault())
     return sdf.format(Date(this))
 }
 
 fun Long.toFullDate(): String {
-    val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    val sdf = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
     return sdf.format(Date(this))
 }
 

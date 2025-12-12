@@ -15,7 +15,8 @@ fun JournalEntity.toJournal(): Journal {
         updatedAt = updatedAt,
         dateTime = dateTime,
         isBookmarked = isBookmarked,
-        isArchived = isArchived
+        isArchived = isArchived,
+        isDraft = isDraft
     )
 }
 
@@ -29,7 +30,8 @@ fun Journal.toEntity(): JournalEntity {
         updatedAt = updatedAt,
         dateTime = dateTime,
         isBookmarked = isBookmarked,
-        isArchived = isArchived
+        isArchived = isArchived,
+        isDraft = isDraft
     )
 }
 
@@ -43,7 +45,8 @@ fun Journal.toJournalSchema(): JournalSchema {
         updatedAt = updatedAt,
         dateTime = dateTime,
         isBookmarked = isBookmarked,
-        isArchived = isArchived
+        isArchived = isArchived,
+        isDraft = isDraft
     )
 }
 
@@ -57,6 +60,7 @@ fun JournalSchema.toJournal(): Journal {
         updatedAt = updatedAt,
         dateTime = dateTime,
         isBookmarked = isBookmarked,
-        isArchived = isArchived
+        isArchived = isArchived,
+        isDraft = isDraft
     )
 }

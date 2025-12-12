@@ -38,6 +38,7 @@ fun FloatingBottomBar(
         colors = listOf(
             Color.Transparent,
             MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
             MaterialTheme.colorScheme.surface
         )
     )
@@ -46,7 +47,7 @@ fun FloatingBottomBar(
         modifier = modifier
             .fillMaxWidth()
             .background(gradientBrush)
-            .padding(vertical = 24.dp),
+            .padding(top = 24.dp, bottom = 16.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
         Row(
@@ -86,20 +87,23 @@ fun FloatingBottomBar(
                     }
                 }
             }
+
             Spacer(modifier = Modifier.width(16.dp))
+
             Surface(
                 onClick = onFabClick,
                 modifier = Modifier
                     .size(64.dp)
                     .shadow(
                         elevation = 6.dp,
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(16.dp),
                         spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
                         ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     ),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                tonalElevation = 6.dp
             ) {
                 Box(
                     contentAlignment = Alignment.Center
@@ -107,7 +111,7 @@ fun FloatingBottomBar(
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "New Action",
-                        modifier = Modifier.size(26.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }

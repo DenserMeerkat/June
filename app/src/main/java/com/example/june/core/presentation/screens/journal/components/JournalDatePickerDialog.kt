@@ -50,6 +50,7 @@ fun JournalDatePickerDialog(
     val headerFormatter =
         remember { DateTimeFormatter.ofPattern("MMMM dd, yyyy", Locale.getDefault()) }
     val monthTitleFormatter = remember { DateTimeFormatter.ofPattern("MMMM", Locale.getDefault()) }
+    val yearFormatter = remember { DateTimeFormatter.ofPattern("yyyy", Locale.getDefault()) }
 
     val daysInMonth = remember(currentMonth) {
         val firstDayOfMonth = currentMonth.atDay(1)
@@ -120,31 +121,43 @@ fun JournalDatePickerDialog(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = monthTitleFormatter.format(currentMonth),
-                            style = MaterialTheme.typography.titleLargeEmphasized,
-                            fontWeight = FontWeight.SemiBold,
-                            letterSpacing = TextUnit(1.5F, TextUnitType.Sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = yearFormatter.format(currentMonth),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    )
+
+                    Text(
+                        text = monthTitleFormatter.format(currentMonth),
+                        style = MaterialTheme.typography.titleLargeEmphasized,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = TextUnit(1.5F, TextUnitType.Sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+
+                    IconButton(
+                        onClick = {
+                            val today = LocalDate.now()
+                            selectedDate = today
+                            currentMonth = YearMonth.from(today)
+                        },
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) {
                         Icon(
-                            Icons.Rounded.CalendarToday,
-                            contentDescription = null,
+                            imageVector = Icons.Rounded.CalendarToday,
+                            contentDescription = "Jump to today",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .size(20.dp)
-                                .align(Alignment.CenterEnd)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row(modifier = Modifier.fillMaxWidth()) {

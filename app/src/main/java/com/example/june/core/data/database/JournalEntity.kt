@@ -14,7 +14,8 @@ data class JournalEntity(
     val updatedAt: Long? = null,
     val dateTime: Long,
     val isBookmarked: Boolean = false,
-    val isArchived: Boolean = false
+    val isArchived: Boolean = false,
+    val isDraft: Boolean = true,
 )
 
 

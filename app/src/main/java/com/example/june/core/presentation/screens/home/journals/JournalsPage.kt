@@ -21,10 +21,19 @@ import com.example.june.core.presentation.screens.home.journals.components.Journ
 fun JournalsPage(
     journals: List<Journal>
 ) {
-    val sortedJournals = remember(journals) { journals.sortedByDescending { it.dateTime } }
-    val recentJournal = remember(sortedJournals) { sortedJournals.firstOrNull() }
-    val pastJournals = remember(sortedJournals) { sortedJournals.drop(1) }
+    val draftJournals =
+        remember(journals) { journals.filter { it.isDraft }.sortedByDescending { it.dateTime } }
     val bookmarkedJournals = remember(journals) { journals.filter { it.isBookmarked } }
+
+    val nonDrafts = remember(journals) {
+        journals
+            .filter { !it.isDraft }
+            .sortedByDescending { it.dateTime }
+    }
+
+    val recentJournal = remember(nonDrafts) { nonDrafts.firstOrNull() }
+    val pastJournals = remember(nonDrafts) { nonDrafts.drop(1) }
+
 
     if (journals.isEmpty()) {
         Column(
@@ -49,30 +58,44 @@ fun JournalsPage(
         }
     } else {
         Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)),
-            color = MaterialTheme.colorScheme.surfaceContainerLowest
+            modifier = Modifier.fillMaxSize()
         ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                    .padding(horizontal = 16.dp),
                 contentPadding = PaddingValues(top = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+
                 if (recentJournal != null) {
-                    item(key = "header_recent") { 
+                    item(key = "header_recent") {
                         SectionHeader(
                             title = "Recent",
-                            modifier = Modifier.animateItem() 
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .animateItem()
                         )
                     }
                     item(key = "recent_${recentJournal.id}") {
                         JournalItem(
                             journal = recentJournal,
-                            modifier = Modifier.animateItem() 
+                            modifier = Modifier.animateItem()
+                        )
+                    }
+                }
+
+                if (draftJournals.isNotEmpty()) {
+                    item(key = "header_drafts") {
+                        SectionHeader(
+                            title = "Drafts",
+                            modifier = Modifier.animateItem()
+                        )
+                    }
+                    items(draftJournals, key = { "draft_${it.id}" }) { journal ->
+                        JournalItem(
+                            journal = journal,
+                            modifier = Modifier.animateItem()
                         )
                     }
                 }
@@ -83,13 +106,13 @@ fun JournalsPage(
                             title = "Bookmarks",
                             modifier = Modifier
                                 .padding(top = 8.dp)
-                                .animateItem() 
+                                .animateItem()
                         )
                     }
                     items(bookmarkedJournals, key = { "bm_${it.id}" }) { journal ->
                         JournalItem(
                             journal = journal,
-                            modifier = Modifier.animateItem() 
+                            modifier = Modifier.animateItem()
                         )
                     }
                 }
@@ -100,13 +123,13 @@ fun JournalsPage(
                             title = "Past entries",
                             modifier = Modifier
                                 .padding(top = 8.dp)
-                                .animateItem() 
+                                .animateItem()
                         )
                     }
                     items(pastJournals, key = { "past_${it.id}" }) { journal ->
                         JournalItem(
                             journal = journal,
-                            modifier = Modifier.animateItem() 
+                            modifier = Modifier.animateItem()
                         )
                     }
                 }
