@@ -53,9 +53,9 @@ fun JournalScreen() {
         state.dateTime.toDateWithDay()
     }
 
-    LaunchedEffect(state.isLoading, state.noteId) {
+    LaunchedEffect(state.isLoading, state.journalId) {
         if (isInitialLoad && !state.isLoading) {
-            if (state.noteId != null) {
+            if (state.journalId != null) {
                 isEditMode = false
             }
             isInitialLoad = false

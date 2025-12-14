@@ -45,7 +45,10 @@ fun SettingsScreen(
                 ),
                 navigationIcon = {
                     IconButton(
-                        onClick = { navigator.navigateBack() }
+                        onClick = { navigator.navigateBack() },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                        )
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.arrow_back_24px),
@@ -89,6 +92,7 @@ fun SettingsScreen(
                                 Icon(
                                     painter = painterResource(R.drawable.arrow_forward_ios_24px),
                                     contentDescription = "Pick Theme",
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         },

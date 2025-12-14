@@ -83,14 +83,6 @@ fun ColorPickerSheet(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Icon(
-                        painter = painterResource(R.drawable.colors_24px),
-                        contentDescription = "Select Seed Color",
-                        modifier = Modifier.size(32.dp)
-                    )
-
-                    Spacer(Modifier.height(16.dp))
-
                     Text(
                         text = "Select Seed Color",
                         style = MaterialTheme.typography.headlineSmall,

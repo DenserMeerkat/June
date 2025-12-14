@@ -1,6 +1,6 @@
 package com.example.june.core.data.mappers
 
-import com.example.june.core.data.database.JournalEntity
+import com.example.june.core.data.database.journal.JournalEntity
 import com.example.june.core.domain.data_classes.Journal
 import com.example.june.core.domain.backup.JournalSchema
 

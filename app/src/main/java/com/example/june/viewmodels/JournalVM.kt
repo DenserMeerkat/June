@@ -124,7 +124,7 @@ class JournalVM(
                 existingJournal = journal
                 _state.update {
                     it.copy(
-                        noteId = journal.id,
+                        journalId = journal.id,
                         title = journal.title,
                         content = journal.content,
                         coverImageUri = journal.coverImageUri,
@@ -173,7 +173,7 @@ class JournalVM(
                     val savedDraft = journalToSave.copy(id = newId)
                     existingJournal = savedDraft
 
-                    _state.update { it.copy(noteId = newId, isDirty = false, isDraft = true) }
+                    _state.update { it.copy(journalId = newId, isDirty = false, isDraft = true) }
                 } else {
                     journalRepo.updateJournal(journalToSave)
                     existingJournal = journalToSave
@@ -208,7 +208,7 @@ class JournalVM(
             } else {
                 val newId = journalRepo.insertJournal(journalToSave)
                 existingJournal = journalToSave.copy(id = newId)
-                _state.update { it.copy(noteId = newId) }
+                _state.update { it.copy(journalId = newId) }
             }
 
             _state.update { it.copy(isDirty = false, isDraft = false) }

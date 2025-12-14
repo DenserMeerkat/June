@@ -1,6 +1,6 @@
 package com.example.june.core.data.repository
 
-import com.example.june.core.data.database.JournalDao
+import com.example.june.core.data.database.journal.JournalDao
 import com.example.june.core.data.mappers.toEntity
 import com.example.june.core.data.mappers.toJournal
 import com.example.june.core.domain.data_classes.Journal

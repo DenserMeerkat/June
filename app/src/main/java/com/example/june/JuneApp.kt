@@ -19,6 +19,7 @@ import com.example.june.core.navigation.AppNavigatorImpl
 import com.example.june.core.navigation.NavigationIntent
 import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.screens.home.HomeScreen
+import com.example.june.core.presentation.screens.chat.ChatScreen
 import com.example.june.core.presentation.screens.journal.JournalScreen
 import com.example.june.core.presentation.screens.settings.SettingsScreen
 import com.example.june.core.presentation.screens.settings.section.AboutLibrariesPage
@@ -93,6 +94,10 @@ fun JuneApp() {
 
                 composable<Route.AboutLibraries> {
                     AboutLibrariesPage()
+                }
+
+                composable<Route.Chat> {
+                    ChatScreen()
                 }
             }
         }

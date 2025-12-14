@@ -1,4 +1,4 @@
-package com.example.june.core.data.database
+package com.example.june.core.data.database.journal
 
 import androidx.room.Dao
 import androidx.room.Insert

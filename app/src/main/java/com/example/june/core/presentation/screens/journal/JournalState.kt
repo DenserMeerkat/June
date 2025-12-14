@@ -1,7 +1,7 @@
 package com.example.june.core.presentation.screens.journal
 
 data class JournalState(
-    val noteId: Long? = null,
+    val journalId: Long? = null,
     val title: String = "",
     val content: String = "",
     val coverImageUri: String? = null,

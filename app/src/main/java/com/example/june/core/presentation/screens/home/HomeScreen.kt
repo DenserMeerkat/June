@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -18,6 +17,9 @@ import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.screens.home.components.FloatingBottomBar
 import com.example.june.core.presentation.screens.home.journals.JournalsPage
+import com.example.june.core.presentation.screens.home.chats.ChatsPage
+import com.example.june.core.presentation.screens.settings.components.EditChatSheet
+import com.example.june.viewmodels.HomeChatVM
 import org.koin.compose.koinInject
 
 import com.example.june.R
@@ -37,10 +39,13 @@ enum class HomeNavItem(
 @Composable
 fun HomeScreen() {
     val navigator = koinInject<AppNavigator>()
+    val chatViewModel = koinInject<HomeChatVM>()
 
     val homeNavController = rememberNavController()
     val navBackStackEntry by homeNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    var showCreateChatSheet by remember { mutableStateOf(false) }
 
     fun getRouteIndex(route: String?): Int {
         return when (route) {
@@ -90,45 +95,26 @@ fun HomeScreen() {
                 enterTransition = {
                     val fromIndex = getRouteIndex(initialState.destination.route)
                     val toIndex = getRouteIndex(targetState.destination.route)
-
-                    if (toIndex > fromIndex) {
-                        slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
-                    } else {
-                        slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
-                    }
+                    if (toIndex > fromIndex) slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
+                    else slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
                 },
-
                 exitTransition = {
                     val fromIndex = getRouteIndex(initialState.destination.route)
                     val toIndex = getRouteIndex(targetState.destination.route)
-
-                    if (toIndex > fromIndex) {
-                        slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
-                    } else {
-                        slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
-                    }
+                    if (toIndex > fromIndex) slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
+                    else slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
                 },
-
                 popEnterTransition = {
                     val fromIndex = getRouteIndex(initialState.destination.route)
                     val toIndex = getRouteIndex(targetState.destination.route)
-
-                    if (toIndex > fromIndex) {
-                        slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
-                    } else {
-                        slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
-                    }
+                    if (toIndex > fromIndex) slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
+                    else slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
                 },
-
                 popExitTransition = {
                     val fromIndex = getRouteIndex(initialState.destination.route)
                     val toIndex = getRouteIndex(targetState.destination.route)
-
-                    if (toIndex > fromIndex) {
-                        slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
-                    } else {
-                        slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
-                    }
+                    if (toIndex > fromIndex) slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
+                    else slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
                 }
             ) {
                 composable(HomeNavItem.JOURNALS.route) {
@@ -140,7 +126,7 @@ fun HomeScreen() {
                 }
 
                 composable(HomeNavItem.CHATS.route) {
-                    ChatsContent()
+                    ChatsPage()
                 }
             }
         }
@@ -154,7 +140,26 @@ fun HomeScreen() {
                     restoreState = true
                 }
             },
-            onFabClick = { navigator.navigateTo(Route.Journal(null)) },
+            onFabClick = {
+                when(currentRoute) {
+                    HomeNavItem.JOURNALS.route -> {
+                        navigator.navigateTo(Route.Journal(null))
+                    }
+                    HomeNavItem.CHATS.route -> {
+                        showCreateChatSheet = true
+                    }
+                    else -> {}
+                }
+            },
+        )
+    }
+
+    if (showCreateChatSheet) {
+        EditChatSheet(
+            onDismiss = { showCreateChatSheet = false },
+            onSave = { name, uri ->
+                chatViewModel.createChat(name, uri?.toString())
+            }
         )
     }
 }
@@ -177,30 +182,6 @@ fun RewindContent() {
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = "Rewind your memories",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-fun ChatsContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.forum_24px),
-            contentDescription = null,
-            modifier = Modifier.size(120.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = "No chats yet",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

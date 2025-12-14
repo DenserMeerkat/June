@@ -51,14 +51,14 @@ fun FloatingBottomBar(
             Surface(
                 modifier = Modifier
                     .shadow(
-                        elevation = 6.dp,
+                        elevation = 6.dp, // Standard FAB elevation
                         shape = RoundedCornerShape(32.dp),
-                        spotColor = Color.Black.copy(alpha = 0.35f),
-                        ambientColor = Color.Black.copy(alpha = 0.35f)
+                        spotColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.8f),
+                        ambientColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.8f)
                     ),
                 shape = RoundedCornerShape(32.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                tonalElevation = 3.dp
+                tonalElevation = 6.dp
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
