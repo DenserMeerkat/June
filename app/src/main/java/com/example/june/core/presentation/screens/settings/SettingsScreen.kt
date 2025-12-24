@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import com.example.june.R
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
+import com.example.june.core.presentation.components.JuneAppBarType
+import com.example.june.core.presentation.components.JuneTopAppBar
 import org.koin.compose.koinInject
 
 import com.example.june.core.presentation.screens.settings.section.AppearanceSection
@@ -32,7 +34,8 @@ fun SettingsScreen(
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
+            JuneTopAppBar(
+                type = JuneAppBarType.Large,
                 scrollBehavior = scrollBehavior,
                 title = {
                     Text(

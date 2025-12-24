@@ -49,6 +49,7 @@ fun JournalsPage() {
             Icon(
                 painter = painterResource(R.drawable.auto_stories_off_24px),
                 contentDescription = null,
+                modifier = Modifier.size(120.dp),
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
             )
             Spacer(modifier = Modifier.height(24.dp))

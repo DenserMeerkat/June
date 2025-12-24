@@ -1,6 +1,5 @@
 package com.example.june.core.presentation.screens.chat
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -20,6 +18,7 @@ import com.example.june.R
 import com.example.june.core.domain.data_classes.Message
 import com.example.june.core.domain.utils.formatTime
 import com.example.june.core.navigation.AppNavigator
+import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.core.presentation.screens.settings.components.EditChatSheet
 import com.example.june.viewmodels.ChatVM
 import org.koin.compose.koinInject
@@ -40,7 +39,7 @@ fun ChatScreen() {
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            JuneTopAppBar(
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

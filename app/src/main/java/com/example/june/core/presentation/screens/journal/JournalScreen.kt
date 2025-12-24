@@ -25,11 +25,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.june.core.domain.utils.toDateWithDay
+import com.example.june.core.presentation.screens.journal.components.AddItemSheet
 import com.example.june.core.presentation.screens.journal.components.JournalDatePickerDialog
 import com.example.june.viewmodels.JournalVM
 import org.koin.compose.viewmodel.koinViewModel
 
 import com.example.june.R
+import com.example.june.core.presentation.components.JuneTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -44,9 +46,9 @@ fun JournalScreen() {
     var showExitDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showAddItemSheet by remember { mutableStateOf(false) }
 
     var isEditMode by remember { mutableStateOf(true) }
-
     var isInitialLoad by remember { mutableStateOf(true) }
 
     val formattedDate = remember(state.dateTime) {
@@ -74,19 +76,39 @@ fun JournalScreen() {
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            JuneTopAppBar(
                 title = {},
                 navigationIcon = {
-                    IconButton(
-                        onClick = { onBack() },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.close_24px),
-                            contentDescription = "Close",
-                        )
+                        IconButton(
+                            onClick = { onBack() },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.close_24px),
+                                contentDescription = "Close",
+                            )
+                        }
+
+                        if (isEditMode) {
+                            IconButton(
+                                onClick = { showAddItemSheet = true },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                                )
+                            ) {
+                                Icon(
+                                    painter = if (showAddItemSheet) painterResource(R.drawable.add_circle_24px_fill) else painterResource(
+                                        R.drawable.add_circle_24px
+                                    ),
+                                    contentDescription = "Add Attachment"
+                                )
+                            }
+                        }
                     }
                 },
                 actions = {
@@ -310,6 +332,21 @@ fun JournalScreen() {
                 showDatePicker = false
             },
             onDismiss = { showDatePicker = false }
+        )
+    }
+
+    if (showAddItemSheet) {
+        AddItemSheet(
+            onDismiss = { showAddItemSheet = false },
+            onTakePhotoClick = {
+                // TODO: Handle Take Photo Action
+            },
+            onAddPhotoClick = {
+                // TODO: Handle Add Photo Action
+            },
+            onAddLocationClick = {
+                // TODO: Handle Add Location Action
+            }
         )
     }
 }

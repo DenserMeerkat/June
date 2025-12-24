@@ -19,6 +19,7 @@ import com.example.june.core.presentation.screens.home.components.FloatingBottom
 import com.example.june.core.presentation.screens.home.journals.JournalsPage
 import com.example.june.core.presentation.screens.home.chats.ChatsPage
 import com.example.june.core.presentation.screens.settings.components.EditChatSheet
+import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.viewmodels.HomeChatVM
 import org.koin.compose.koinInject
 
@@ -63,7 +64,7 @@ fun HomeScreen() {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
-                TopAppBar(
+                JuneTopAppBar(
                     title = {
                         Text(text = "June")
                     },
