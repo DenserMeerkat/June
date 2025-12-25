@@ -120,6 +120,7 @@ dependencies {
     implementation(libs.aboutLibraries.compose.m3)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.compose)
+    implementation(libs.coil.video)
 
     implementation(libs.koin.core)
     implementation(libs.koin.compose)

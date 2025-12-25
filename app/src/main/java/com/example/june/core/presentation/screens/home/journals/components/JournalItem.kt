@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,6 +34,7 @@ import com.example.june.core.domain.data_classes.Journal
 import com.example.june.core.domain.utils.toFullDate
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
+import com.example.june.core.presentation.components.JuneIconButton
 import com.example.june.viewmodels.HomeJournalVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -107,18 +107,16 @@ fun JournalItem(
                 )
             }
 
-            IconButton(
+            JuneIconButton(
                 onClick = { viewModel.toggleBookmark(journal.id) },
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-
-                )
-            ) {
-                Icon(
-                    painter = if (journal.isBookmarked) painterResource(R.drawable.bookmark_added_24px_fill) else painterResource(R.drawable.bookmark_24px),
-                    contentDescription = "Bookmark",
-                )
-            }
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                icon =  if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px,
+                contentDescription = "Toggle Bookmark",
+                iconSize = 20.dp
+            )
         }
     }
 }

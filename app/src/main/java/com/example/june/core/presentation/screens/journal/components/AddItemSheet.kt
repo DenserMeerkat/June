@@ -35,6 +35,7 @@ fun AddItemSheet(
     onDismiss: () -> Unit,
     onTakePhotoClick: () -> Unit,
     onAddPhotoClick: () -> Unit,
+    onAddSongClick: () -> Unit,
     onAddLocationClick: () -> Unit
 ) {
 
@@ -78,13 +79,18 @@ fun AddItemSheet(
             ) {
                 AddItem(
                     icon = R.drawable.add_a_photo_24px,
-                    text = "Take photo or video",
+                    text = "Take photo / video",
                     onClick = { onTakePhotoClick(); onDismiss() }
                 )
                 AddItem(
                     icon = R.drawable.add_photo_alternate_24px,
                     text = "Add photo",
                     onClick = { onAddPhotoClick(); onDismiss() }
+                )
+                AddItem(
+                    icon = R.drawable.music_note_add_24px,
+                    text = "Add song link",
+                    onClick = { onAddSongClick(); onDismiss() }
                 )
                 AddItem(
                     icon = R.drawable.add_location_24px,

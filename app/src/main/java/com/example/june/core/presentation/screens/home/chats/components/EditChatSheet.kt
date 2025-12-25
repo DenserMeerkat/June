@@ -130,7 +130,6 @@ fun EditChatSheet(
                                 )
                             }
                     ) {
-                        // 1. Avatar Image or Initials
                         if (avatarUri != null) {
                             AsyncImage(
                                 model = avatarUri,

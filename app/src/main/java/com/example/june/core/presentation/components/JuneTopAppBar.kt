@@ -24,12 +24,13 @@ fun JuneTopAppBar(
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface,
+        scrolledContainerColor = MaterialTheme.colorScheme.surface
     ),
     scrollBehavior: TopAppBarScrollBehavior? = null,
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
 ) {
-    val globalModifier = modifier.padding(horizontal = 8.dp)
+    val globalModifier = modifier.padding(horizontal = 12.dp)
 
     when (type) {
         JuneAppBarType.Small -> {

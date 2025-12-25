@@ -1,17 +1,15 @@
 package com.example.june.core.presentation.screens.journal
 
+import android.net.Uri
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,18 +18,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.ImageLoader
+import coil.decode.VideoFrameDecoder
+import com.example.june.R
+import com.example.june.core.domain.utils.FileUtils
 import com.example.june.core.domain.utils.toDateWithDay
+import com.example.june.core.presentation.components.JuneIconButton
+import com.example.june.core.presentation.components.JuneIconButtonType
+import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.core.presentation.screens.journal.components.AddItemSheet
 import com.example.june.core.presentation.screens.journal.components.JournalDatePickerDialog
+import com.example.june.core.presentation.screens.journal.components.JournalMediaPreview
 import com.example.june.viewmodels.JournalVM
 import org.koin.compose.viewmodel.koinViewModel
-
-import com.example.june.R
-import com.example.june.core.presentation.components.JuneTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -39,6 +43,13 @@ fun JournalScreen() {
     val viewModel: JournalVM = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+
+    val imageLoader = remember {
+        ImageLoader.Builder(context)
+            .components { add(VideoFrameDecoder.Factory()) }
+            .build()
+    }
 
     val contentFocusRequester = remember { FocusRequester() }
     val interactionSource = remember { MutableInteractionSource() }
@@ -47,9 +58,46 @@ fun JournalScreen() {
     var showMenu by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showAddItemSheet by remember { mutableStateOf(false) }
+    var showCameraSelectionDialog by remember { mutableStateOf(false) }
 
     var isEditMode by remember { mutableStateOf(true) }
     var isInitialLoad by remember { mutableStateOf(true) }
+
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var tempVideoUri by remember { mutableStateOf<Uri?>(null) }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia()
+    ) { uris ->
+        uris.forEach { uri ->
+            val internalPath = FileUtils.persistMedia(context, uri)
+            if (internalPath != null) {
+                viewModel.onAction(JournalAction.AddImage(internalPath))
+            }
+        }
+    }
+
+    val photoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempCameraUri != null) {
+            val internalPath = FileUtils.persistMedia(context, tempCameraUri!!)
+            if (internalPath != null) {
+                viewModel.onAction(JournalAction.AddImage(internalPath))
+            }
+        }
+    }
+
+    val videoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CaptureVideo()
+    ) { success ->
+        if (success && tempVideoUri != null) {
+            val internalPath = FileUtils.persistMedia(context, tempVideoUri!!)
+            if (internalPath != null) {
+                viewModel.onAction(JournalAction.AddImage(internalPath))
+            }
+        }
+    }
 
     val formattedDate = remember(state.dateTime) {
         state.dateTime.toDateWithDay()
@@ -80,49 +128,34 @@ fun JournalScreen() {
                 title = {},
                 navigationIcon = {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(
+                        JuneIconButton(
                             onClick = { onBack() },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                            )
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.close_24px),
-                                contentDescription = "Close",
-                            )
-                        }
+                            icon = R.drawable.close_24px,
+                            contentDescription = "Close",
+                        )
 
                         if (isEditMode) {
-                            IconButton(
+                            Spacer(modifier = Modifier.width(2.dp))
+                            JuneIconButton(
                                 onClick = { showAddItemSheet = true },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                                )
-                            ) {
-                                Icon(
-                                    painter = if (showAddItemSheet) painterResource(R.drawable.add_circle_24px_fill) else painterResource(
-                                        R.drawable.add_circle_24px
-                                    ),
-                                    contentDescription = "Add Attachment"
-                                )
-                            }
+                                icon = if (showAddItemSheet) R.drawable.add_circle_24px_fill else R.drawable.add_circle_24px,
+                                contentDescription = "Add Attachment"
+                            )
                         }
                     }
                 },
                 actions = {
                     if (!isEditMode) {
-                        IconButton(
-                            onClick = { viewModel.onAction(JournalAction.ToggleBookmark) }
-                        ) {
-                            Icon(
-                                painter = if (state.isBookmarked) painterResource(R.drawable.bookmark_added_24px_fill) else painterResource(
-                                    R.drawable.bookmark_24px
-                                ),
-                                contentDescription = "Bookmark",
-                            )
-                        }
+                        JuneIconButton(
+                            onClick = { viewModel.onAction(JournalAction.ToggleBookmark) },
+                            type = JuneIconButtonType.Ghost,
+                            icon = if (state.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px,
+                            contentDescription = "Toggle Bookmark"
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
 
                     if (isEditMode) {
@@ -133,23 +166,18 @@ fun JournalScreen() {
                             },
                             enabled = !state.isLoading,
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Save")
-                            }
+                            Text("Save")
                         }
-                        Spacer(modifier = Modifier.width(2.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                     }
 
                     Box {
-                        IconButton(
-                            onClick = { showMenu = true }
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.more_vert_24px),
-                                contentDescription = "Options"
-                            )
-                        }
-
+                        JuneIconButton(
+                            onClick = { showMenu = true },
+                            type = JuneIconButtonType.Ghost,
+                            icon = R.drawable.more_vert_24px,
+                            contentDescription = "Options"
+                        )
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
@@ -162,24 +190,20 @@ fun JournalScreen() {
                             DropdownMenuItem(
                                 modifier = Modifier.clip(RoundedCornerShape(16.dp)),
                                 text = { Text("Delete") },
-                                leadingIcon = {
-                                    Icon(
-                                        painter = painterResource(R.drawable.delete_24px),
-                                        contentDescription = "Delete"
-                                    )
-                                },
                                 onClick = {
                                     showMenu = false
                                     viewModel.onAction(JournalAction.DeleteJournal)
                                 },
+                                leadingIcon = {
+                                    Icon(
+                                        painterResource(R.drawable.delete_24px),
+                                        null
+                                    )
+                                }
                             )
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                )
+                }
             )
         },
         floatingActionButton = {
@@ -220,6 +244,18 @@ fun JournalScreen() {
                     .verticalScroll(scrollState)
                     .imePadding()
             ) {
+                if (state.images.isNotEmpty()) {
+                    JournalMediaPreview(
+                        mediaPaths = state.images,
+                        isEditMode = isEditMode,
+                        imageLoader = imageLoader,
+                        onRemoveMedia = { path ->
+                            viewModel.onAction(JournalAction.RemoveImage(path))
+                        },
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
                 TextField(
                     value = state.title,
                     onValueChange = { viewModel.onAction(JournalAction.ChangeTitle(it)) },
@@ -292,34 +328,59 @@ fun JournalScreen() {
         }
     }
 
+    if (showCameraSelectionDialog) {
+        AlertDialog(
+            onDismissRequest = { showCameraSelectionDialog = false },
+            icon = {
+                Icon(
+                    painterResource(R.drawable.add_a_photo_24px),
+                    null
+                )
+            },
+            title = { Text("Capture Media") },
+            text = { Text("Would you like to take a photo or record a video?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showCameraSelectionDialog = false
+                    val uri = FileUtils.createTempVideoUri(context)
+                    tempVideoUri = uri
+                    videoLauncher.launch(uri)
+                }) { Text("Record Video") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showCameraSelectionDialog = false
+                    val uri = FileUtils.createTempPictureUri(context)
+                    tempCameraUri = uri
+                    photoLauncher.launch(uri)
+                }) { Text("Take Photo") }
+            }
+        )
+    }
+
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = { showExitDialog = false },
             icon = {
                 Icon(
-                    painter = painterResource(R.drawable.file_save_24px),
-                    contentDescription = "Save Entry",
-                    modifier = Modifier.size(24.dp)
+                    painterResource(R.drawable.file_save_24px),
+                    null
                 )
             },
             title = { Text("Save Entry?") },
             text = { Text("Save this journal to revisit these thoughts anytime") },
             confirmButton = {
-                Button(
-                    onClick = {
-                        showExitDialog = false
-                        viewModel.onAction(JournalAction.SaveJournal)
-                        isEditMode = false
-                    }
-                ) { Text("Save") }
+                Button(onClick = {
+                    showExitDialog = false
+                    viewModel.onAction(JournalAction.SaveJournal)
+                    isEditMode = false
+                }) { Text("Save") }
             },
             dismissButton = {
-                OutlinedButton(
-                    onClick = {
-                        showExitDialog = false
-                        viewModel.onAction(JournalAction.NavigateBack)
-                    }
-                ) { Text("No Thanks") }
+                OutlinedButton(onClick = {
+                    showExitDialog = false
+                    viewModel.onAction(JournalAction.NavigateBack)
+                }) { Text("No Thanks") }
             }
         )
     }
@@ -339,13 +400,18 @@ fun JournalScreen() {
         AddItemSheet(
             onDismiss = { showAddItemSheet = false },
             onTakePhotoClick = {
-                // TODO: Handle Take Photo Action
+                showCameraSelectionDialog = true
             },
             onAddPhotoClick = {
-                // TODO: Handle Add Photo Action
+                galleryLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                )
+            },
+            onAddSongClick = {
+                // TODO: Handle Song
             },
             onAddLocationClick = {
-                // TODO: Handle Add Location Action
+                // TODO: Handle Location
             }
         )
     }

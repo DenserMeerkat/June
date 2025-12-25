@@ -67,7 +67,7 @@ fun formatTimestamp(
             seconds < 60 -> options.labels.justNow
             minutes < 60 -> "$minutes ${if (minutes == 1L) options.labels.minAgo else options.labels.minsAgo}"
             hours < 24 -> "$hours ${if (hours == 1L) options.labels.hrAgo else options.labels.hrsAgo}"
-            else -> options.labels.yesterday // Should only be reached if threshold is > 24h
+            else -> options.labels.yesterday
         }
     }
 

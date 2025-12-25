@@ -51,7 +51,7 @@ fun FloatingBottomBar(
             Surface(
                 modifier = Modifier
                     .shadow(
-                        elevation = 6.dp, // Standard FAB elevation
+                        elevation = 6.dp,
                         shape = RoundedCornerShape(32.dp),
                         spotColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.8f),
                         ambientColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.8f)

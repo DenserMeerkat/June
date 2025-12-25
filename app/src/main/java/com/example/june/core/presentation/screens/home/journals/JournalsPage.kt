@@ -35,7 +35,7 @@ fun JournalsPage() {
     }
 
     val recentJournal = remember(nonDrafts) { nonDrafts.firstOrNull() }
-    val pastJournals = remember(nonDrafts) { nonDrafts.drop(1) }
+    val moreJournals = remember(nonDrafts) { nonDrafts.drop(1) }
 
 
     if (journals.isEmpty()) {
@@ -120,16 +120,16 @@ fun JournalsPage() {
                     }
                 }
 
-                if (pastJournals.isNotEmpty()) {
-                    item(key = "header_past") {
+                if (moreJournals.isNotEmpty()) {
+                    item(key = "header_more") {
                         SectionHeader(
-                            title = "Past entries",
+                            title = "More entries",
                             modifier = Modifier
                                 .padding(top = 8.dp)
                                 .animateItem()
                         )
                     }
-                    items(pastJournals, key = { "past_${it.id}" }) { journal ->
+                    items(moreJournals, key = { "more_${it.id}" }) { journal ->
                         JournalItem(
                             journal = journal,
                             modifier = Modifier.animateItem()

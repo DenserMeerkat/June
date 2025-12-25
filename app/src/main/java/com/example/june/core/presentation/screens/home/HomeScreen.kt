@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,6 +25,7 @@ import com.example.june.viewmodels.HomeChatVM
 import org.koin.compose.koinInject
 
 import com.example.june.R
+import com.example.june.core.presentation.components.JuneIconButton
 
 enum class HomeNavItem(
     val route: String,
@@ -32,7 +34,12 @@ enum class HomeNavItem(
     val selectedIcon: Int
 ) {
     JOURNALS("journals", "Journals", R.drawable.list_alt_24px, R.drawable.list_alt_24px_fill),
-    REWIND("rewind", "Rewind", R.drawable.calendar_view_day_24px, R.drawable.calendar_view_day_24px_fill),
+    REWIND(
+        "rewind",
+        "Rewind",
+        R.drawable.calendar_view_day_24px,
+        R.drawable.calendar_view_day_24px_fill
+    ),
     CHATS("chats", "Chats", R.drawable.forum_24px, R.drawable.forum_24px_fill),
 }
 
@@ -66,23 +73,18 @@ fun HomeScreen() {
             topBar = {
                 JuneTopAppBar(
                     title = {
-                        Text(text = "June")
+                        Text(
+                            text = "June",
+                            fontWeight = FontWeight.Bold,
+                        )
                     },
                     actions = {
-                        FilledTonalIconButton(
+                        JuneIconButton(
                             onClick = { navigator.navigateTo(Route.Settings) },
-                            colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.settings_24px),
-                                contentDescription = "Settings"
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                    )
+                            icon = R.drawable.settings_24px,
+                            contentDescription = "Settings"
+                        )
+                    }
                 )
             }
         ) { innerPadding ->
@@ -96,26 +98,50 @@ fun HomeScreen() {
                 enterTransition = {
                     val fromIndex = getRouteIndex(initialState.destination.route)
                     val toIndex = getRouteIndex(targetState.destination.route)
-                    if (toIndex > fromIndex) slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
-                    else slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
+                    if (toIndex > fromIndex) slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Left,
+                        tween(300)
+                    )
+                    else slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
                 },
                 exitTransition = {
                     val fromIndex = getRouteIndex(initialState.destination.route)
                     val toIndex = getRouteIndex(targetState.destination.route)
-                    if (toIndex > fromIndex) slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
-                    else slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
+                    if (toIndex > fromIndex) slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Left,
+                        tween(300)
+                    )
+                    else slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
                 },
                 popEnterTransition = {
                     val fromIndex = getRouteIndex(initialState.destination.route)
                     val toIndex = getRouteIndex(targetState.destination.route)
-                    if (toIndex > fromIndex) slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
-                    else slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
+                    if (toIndex > fromIndex) slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Left,
+                        tween(300)
+                    )
+                    else slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
                 },
                 popExitTransition = {
                     val fromIndex = getRouteIndex(initialState.destination.route)
                     val toIndex = getRouteIndex(targetState.destination.route)
-                    if (toIndex > fromIndex) slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
-                    else slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
+                    if (toIndex > fromIndex) slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Left,
+                        tween(300)
+                    )
+                    else slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(300)
+                    )
                 }
             ) {
                 composable(HomeNavItem.JOURNALS.route) {
@@ -142,13 +168,15 @@ fun HomeScreen() {
                 }
             },
             onFabClick = {
-                when(currentRoute) {
+                when (currentRoute) {
                     HomeNavItem.JOURNALS.route -> {
                         navigator.navigateTo(Route.Journal(null))
                     }
+
                     HomeNavItem.CHATS.route -> {
                         showCreateChatSheet = true
                     }
+
                     else -> {}
                 }
             },

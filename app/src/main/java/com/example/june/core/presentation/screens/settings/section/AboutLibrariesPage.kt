@@ -4,15 +4,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
@@ -20,6 +16,7 @@ import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 
 import com.example.june.R
 import com.example.june.core.navigation.AppNavigator
+import com.example.june.core.presentation.components.JuneIconButton
 import com.example.june.core.presentation.components.JuneTopAppBar
 import org.koin.compose.koinInject
 
@@ -31,19 +28,15 @@ fun AboutLibrariesPage() {
 
     Scaffold(
         modifier = Modifier.widthIn(max = 1000.dp), topBar = {
-            JuneTopAppBar(title = { Text(stringResource(R.string.about_libraries)) }, navigationIcon = {
-                IconButton(
-                    onClick = { navigator.navigateBack() },
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            JuneTopAppBar(
+                title = { Text(stringResource(R.string.about_libraries)) },
+                navigationIcon = {
+                    JuneIconButton(
+                        onClick = { navigator.navigateBack() },
+                        icon = R.drawable.arrow_back_24px,
+                        contentDescription = "Back",
                     )
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.arrow_back_24px),
-                        contentDescription = "Back"
-                    )
-                }
-            })
+                })
         }) { padding ->
         LibrariesContainer(
             libraries = libraries,

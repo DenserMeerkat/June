@@ -1,10 +1,15 @@
 package com.example.june.core.presentation.screens.journal
 
+import com.example.june.core.domain.data_classes.JournalLocation
+import com.example.june.core.domain.data_classes.SongDetails
+
 data class JournalState(
     val journalId: Long? = null,
     val title: String = "",
     val content: String = "",
-    val coverImageUri: String? = null,
+    val images: List<String> = emptyList(),
+    val location: JournalLocation? = null,
+    val songDetails: SongDetails? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long? = null,
     val dateTime: Long = System.currentTimeMillis(),
