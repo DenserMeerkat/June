@@ -33,7 +33,7 @@ import com.example.june.core.presentation.components.JuneIconButtonType
 import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.core.presentation.screens.journal.components.AddItemSheet
 import com.example.june.core.presentation.screens.journal.components.JournalDatePickerDialog
-import com.example.june.core.presentation.screens.journal.components.JournalMediaPreview
+import com.example.june.core.presentation.screens.journal.components.JournalItemsPreview
 import com.example.june.viewmodels.JournalVM
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -245,7 +245,7 @@ fun JournalScreen() {
                     .imePadding()
             ) {
                 if (state.images.isNotEmpty()) {
-                    JournalMediaPreview(
+                    JournalItemsPreview(
                         mediaPaths = state.images,
                         isEditMode = isEditMode,
                         imageLoader = imageLoader,
