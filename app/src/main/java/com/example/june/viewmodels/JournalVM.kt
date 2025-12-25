@@ -42,6 +42,13 @@ class JournalVM(
             is JournalAction.ChangeDateTime -> updateState { it.copy(dateTime = action.dateTime) }
             is JournalAction.AddImage -> updateState { it.copy(images = it.images + action.uri) }
             is JournalAction.RemoveImage -> updateState { it.copy(images = it.images - action.uri) }
+            is JournalAction.MoveImageToFront -> {
+                val currentImages = _state.value.images.toMutableList()
+                if (currentImages.remove(action.uri)) {
+                    currentImages.add(action.uri)
+                    updateState { it.copy(images = currentImages) }
+                }
+            }
             is JournalAction.SetLocation -> updateState { it.copy(location = action.location) }
             is JournalAction.ToggleBookmark -> toggleBookmark()
             is JournalAction.ToggleArchive -> toggleArchive()

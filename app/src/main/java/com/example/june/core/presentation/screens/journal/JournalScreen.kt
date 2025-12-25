@@ -249,8 +249,11 @@ fun JournalScreen() {
                         mediaPaths = state.images,
                         isEditMode = isEditMode,
                         imageLoader = imageLoader,
-                        onRemoveMedia = { path ->
-                            viewModel.onAction(JournalAction.RemoveImage(path))
+                        onRemoveMedia = {
+                            viewModel.onAction(JournalAction.RemoveImage(it))
+                        },
+                        onMoveToFront = {
+                            viewModel.onAction(JournalAction.MoveImageToFront(it))
                         },
                         modifier = Modifier.padding(bottom = 16.dp)
                     )

@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.june.core.presentation.screens.home.journals.components.JournalItem
@@ -151,7 +152,8 @@ fun SectionHeader(
     Text(
         text = title,
         style = MaterialTheme.typography.bodyLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = modifier.padding(vertical = 4.dp, horizontal = 4.dp)
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8F),
+        modifier = modifier.padding(vertical = 4.dp, horizontal = 16.dp)
     )
 }
