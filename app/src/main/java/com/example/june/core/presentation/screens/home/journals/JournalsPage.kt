@@ -13,11 +13,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.june.core.presentation.screens.home.journals.components.JournalItem
+import com.example.june.core.presentation.screens.home.journals.components.JournalCard
 import com.example.june.viewmodels.HomeJournalVM
 import org.koin.compose.viewmodel.koinViewModel
 
 import com.example.june.R
+import com.example.june.core.presentation.screens.home.journals.components.RecentJournalCard
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -82,7 +83,7 @@ fun JournalsPage() {
                         )
                     }
                     item(key = "recent_${recentJournal.id}") {
-                        JournalItem(
+                        RecentJournalCard(
                             journal = recentJournal,
                             modifier = Modifier.animateItem()
                         )
@@ -97,7 +98,7 @@ fun JournalsPage() {
                         )
                     }
                     items(draftJournals, key = { "draft_${it.id}" }) { journal ->
-                        JournalItem(
+                        JournalCard(
                             journal = journal,
                             modifier = Modifier.animateItem()
                         )
@@ -114,7 +115,7 @@ fun JournalsPage() {
                         )
                     }
                     items(bookmarkedJournals, key = { "bm_${it.id}" }) { journal ->
-                        JournalItem(
+                        JournalCard(
                             journal = journal,
                             modifier = Modifier.animateItem()
                         )
@@ -131,7 +132,7 @@ fun JournalsPage() {
                         )
                     }
                     items(moreJournals, key = { "more_${it.id}" }) { journal ->
-                        JournalItem(
+                        JournalCard(
                             journal = journal,
                             modifier = Modifier.animateItem()
                         )

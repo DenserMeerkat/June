@@ -23,8 +23,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.ImageLoader
-import coil.decode.VideoFrameDecoder
 import com.example.june.R
 import com.example.june.core.domain.utils.FileUtils
 import com.example.june.core.domain.utils.toDateWithDay
@@ -44,12 +42,6 @@ fun JournalScreen() {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     val context = LocalContext.current
-
-    val imageLoader = remember {
-        ImageLoader.Builder(context)
-            .components { add(VideoFrameDecoder.Factory()) }
-            .build()
-    }
 
     val contentFocusRequester = remember { FocusRequester() }
     val interactionSource = remember { MutableInteractionSource() }
@@ -245,10 +237,10 @@ fun JournalScreen() {
                     .imePadding()
             ) {
                 if (state.images.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
                     JournalItemsPreview(
                         mediaPaths = state.images,
                         isEditMode = isEditMode,
-                        imageLoader = imageLoader,
                         onRemoveMedia = {
                             viewModel.onAction(JournalAction.RemoveImage(it))
                         },

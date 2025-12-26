@@ -5,6 +5,16 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
+fun Long.toShortMonth(): String {
+    val sdf = SimpleDateFormat("MMM", Locale.getDefault())
+    return sdf.format(Date(this))
+}
+
+fun Long.toDayOfMonth(): String {
+    val sdf = SimpleDateFormat("dd", Locale.getDefault())
+    return sdf.format(Date(this))
+}
+
 fun Long.toDateWithDay(): String {
     val sdf = SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault())
     return sdf.format(Date(this))

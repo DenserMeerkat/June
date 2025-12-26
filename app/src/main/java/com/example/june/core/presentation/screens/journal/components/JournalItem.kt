@@ -1,10 +1,9 @@
 package com.example.june.core.presentation.screens.journal.components
 
 import android.net.Uri
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.annotation.OptIn
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -45,7 +44,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -55,24 +53,25 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.ImageLoader
 import coil.compose.AsyncImage
+import coil.decode.VideoFrameDecoder
 import com.example.june.R
 import com.example.june.core.domain.utils.formatDuration
 import kotlinx.coroutines.delay
 import java.io.File
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun JournalItem(
     path: String,
     modifier: Modifier,
     isEditMode: Boolean,
     isLargeItem: Boolean,
-    imageLoader: ImageLoader,
-    onRemove: (String) -> Unit,
-    onMoveToFront: (String) -> Unit,
-    showMoveToFront: Boolean
+    onRemove: (String) -> Unit = {},
+    onMoveToFront: (String) -> Unit = {},
+    showMoveToFront: Boolean = false,
+    enablePlayback: Boolean = true
 ) {
     val density = LocalDensity.current
+    val context = LocalContext.current
     val interactionSource = remember { MutableInteractionSource() }
 
     var showMenu by remember { mutableStateOf(false) }
@@ -84,29 +83,35 @@ fun JournalItem(
     var isMuted by remember { mutableStateOf(false) }
     var currentTimestamp by remember { mutableLongStateOf(0L) }
 
+    val imageLoader = remember {
+        ImageLoader.Builder(context)
+            .components { add(VideoFrameDecoder.Factory()) }
+            .build()
+    }
+
     Box(
         modifier = modifier
             .onSizeChanged { itemHeight = with(density) { it.height.toDp() } }
             .clip(RoundedCornerShape(4.dp))
             .indication(interactionSource, LocalIndication.current)
             .pointerInput(isEditMode) {
-                detectTapGestures(
-                    onLongPress = { offset ->
-                        if (isEditMode) {
+                if (isEditMode) {
+                    detectTapGestures(
+                        onLongPress = { offset ->
                             showMenu = true
                             pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                        },
+                        onPress = { offset ->
+                            val press = PressInteraction.Press(offset)
+                            interactionSource.emit(press)
+                            tryAwaitRelease()
+                            interactionSource.emit(PressInteraction.Release(press))
                         }
-                    },
-                    onPress = { offset ->
-                        val press = PressInteraction.Press(offset)
-                        interactionSource.emit(press)
-                        tryAwaitRelease()
-                        interactionSource.emit(PressInteraction.Release(press))
-                    }
-                )
+                    )
+                }
             }
     ) {
-        if (isVideo) {
+        if (enablePlayback && isVideo) {
             VideoPlayer(
                 uri = Uri.fromFile(File(path)),
                 isMuted = isMuted,
@@ -128,12 +133,16 @@ fun JournalItem(
 
         if (isVideo) {
             PlayPauseOverlay(
-                isPlaying = isPlaying,
-                onClick = { isPlaying = !isPlaying }
+                isPlaying = if (enablePlayback) isPlaying else false,
+                onClick = {
+                    if (enablePlayback) {
+                        isPlaying = !isPlaying
+                    }
+                }
             )
         }
 
-        if (isPlaying && isLargeItem && isVideo) {
+        if (enablePlayback && isLargeItem && isVideo) {
             MuteTimeChip(
                 isMuted = isMuted,
                 timestamp = currentTimestamp.formatDuration(),
@@ -144,39 +153,35 @@ fun JournalItem(
             )
         }
 
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false },
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            shape = RoundedCornerShape(24.dp),
-            tonalElevation = 3.dp,
-            offset = pressOffset.copy(y = pressOffset.y - itemHeight)
-        ) {
-            DropdownMenuItem(
-                text = { Text("Delete") },
-                onClick = { isPlaying = false; onRemove(path); showMenu = false },
-                leadingIcon = { Icon(painterResource(R.drawable.delete_24px), null) }
-            )
-            if (showMoveToFront) {
+        if (isEditMode) {
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false },
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                shape = RoundedCornerShape(24.dp),
+                tonalElevation = 3.dp,
+                offset = pressOffset.copy(y = pressOffset.y - itemHeight)
+            ) {
                 DropdownMenuItem(
-                    text = { Text("Move to Front") },
-                    onClick = { onMoveToFront(path); showMenu = false },
-                    leadingIcon = { Icon(painterResource(R.drawable.turn_left_24px), null) }
+                    text = { Text("Delete") },
+                    onClick = { isPlaying = false; onRemove(path); showMenu = false },
+                    leadingIcon = { Icon(painterResource(R.drawable.delete_24px), null) }
                 )
+                if (showMoveToFront) {
+                    DropdownMenuItem(
+                        text = { Text("Move to Front") },
+                        onClick = { onMoveToFront(path); showMenu = false },
+                        leadingIcon = { Icon(painterResource(R.drawable.turn_left_24px), null) }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun PlayPauseOverlay(
-    isPlaying: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+private fun PlayPauseOverlay(isPlaying: Boolean, onClick: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         IconButton(
             onClick = onClick,
             modifier = Modifier
@@ -184,9 +189,7 @@ private fun PlayPauseOverlay(
                 .background(Color.Black.copy(0.4f), CircleShape)
         ) {
             Icon(
-                painter = painterResource(
-                    if (isPlaying) R.drawable.pause_24px else R.drawable.play_arrow_24px
-                ),
+                painter = painterResource(if (isPlaying) R.drawable.pause_24px else R.drawable.play_arrow_24px),
                 contentDescription = if (isPlaying) "Pause" else "Play",
                 tint = Color.White
             )
@@ -214,14 +217,12 @@ private fun MuteTimeChip(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Icon(
-                painter = painterResource(
-                    if (isMuted) R.drawable.volume_off_24px else R.drawable.volume_up_24px
-                ),
+                painter = painterResource(if (isMuted) R.drawable.volume_off_24px else R.drawable.volume_up_24px),
                 contentDescription = null,
                 modifier = Modifier.size(16.dp)
             )
             Text(
-                text = timestamp,
+                timestamp,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -229,7 +230,7 @@ private fun MuteTimeChip(
     }
 }
 
-@androidx.annotation.OptIn(UnstableApi::class)
+@OptIn(UnstableApi::class)
 @Composable
 fun VideoPlayer(
     uri: Uri,
@@ -247,26 +248,15 @@ fun VideoPlayer(
         }
     }
 
-    LaunchedEffect(isPlaying) {
-        exoPlayer.playWhenReady = isPlaying
-    }
-
-    LaunchedEffect(isMuted) {
-        exoPlayer.volume = if (isMuted) 0f else 1f
-    }
-
+    LaunchedEffect(isPlaying) { exoPlayer.playWhenReady = isPlaying }
+    LaunchedEffect(isMuted) { exoPlayer.volume = if (isMuted) 0f else 1f }
     LaunchedEffect(exoPlayer) {
         while (true) {
-            if (exoPlayer.isPlaying) {
-                onTimestampChanged(exoPlayer.currentPosition)
-            }
+            if (exoPlayer.isPlaying) onTimestampChanged(exoPlayer.currentPosition)
             delay(500)
         }
     }
-
-    DisposableEffect(Unit) {
-        onDispose { exoPlayer.release() }
-    }
+    DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
 
     AndroidView(
         factory = {
