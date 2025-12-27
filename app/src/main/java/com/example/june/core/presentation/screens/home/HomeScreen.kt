@@ -25,6 +25,7 @@ import com.example.june.viewmodels.HomeChatVM
 import org.koin.compose.koinInject
 
 import com.example.june.R
+import com.example.june.core.presentation.components.JuneAppBarType
 import com.example.june.core.presentation.components.JuneIconButton
 
 enum class HomeNavItem(
@@ -34,12 +35,7 @@ enum class HomeNavItem(
     val selectedIcon: Int
 ) {
     JOURNALS("journals", "Journals", R.drawable.list_alt_24px, R.drawable.list_alt_24px_fill),
-    REWIND(
-        "rewind",
-        "Rewind",
-        R.drawable.calendar_view_day_24px,
-        R.drawable.calendar_view_day_24px_fill
-    ),
+    REWIND("rewind", "Rewind", R.drawable.calendar_view_day_24px, R.drawable.calendar_view_day_24px_fill),
     CHATS("chats", "Chats", R.drawable.forum_24px, R.drawable.forum_24px_fill),
 }
 
@@ -72,6 +68,7 @@ fun HomeScreen() {
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 JuneTopAppBar(
+                    type = JuneAppBarType.CenterAligned,
                     title = {
                         Text(
                             text = "June",
@@ -86,101 +83,118 @@ fun HomeScreen() {
                         )
                     }
                 )
+            },
+            floatingActionButton = {
+                MediumFloatingActionButton(
+                    onClick = { navigator.navigateTo(Route.Journal(null)) }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.add_2_24px),
+                        contentDescription = "Add Journal"
+                    )
+                }
             }
         ) { innerPadding ->
-            NavHost(
-                navController = homeNavController,
-                startDestination = HomeNavItem.JOURNALS.route,
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-
-                enterTransition = {
-                    val fromIndex = getRouteIndex(initialState.destination.route)
-                    val toIndex = getRouteIndex(targetState.destination.route)
-                    if (toIndex > fromIndex) slideIntoContainer(
-                        AnimatedContentTransitionScope.SlideDirection.Left,
-                        tween(300)
-                    )
-                    else slideIntoContainer(
-                        AnimatedContentTransitionScope.SlideDirection.Right,
-                        tween(300)
-                    )
-                },
-                exitTransition = {
-                    val fromIndex = getRouteIndex(initialState.destination.route)
-                    val toIndex = getRouteIndex(targetState.destination.route)
-                    if (toIndex > fromIndex) slideOutOfContainer(
-                        AnimatedContentTransitionScope.SlideDirection.Left,
-                        tween(300)
-                    )
-                    else slideOutOfContainer(
-                        AnimatedContentTransitionScope.SlideDirection.Right,
-                        tween(300)
-                    )
-                },
-                popEnterTransition = {
-                    val fromIndex = getRouteIndex(initialState.destination.route)
-                    val toIndex = getRouteIndex(targetState.destination.route)
-                    if (toIndex > fromIndex) slideIntoContainer(
-                        AnimatedContentTransitionScope.SlideDirection.Left,
-                        tween(300)
-                    )
-                    else slideIntoContainer(
-                        AnimatedContentTransitionScope.SlideDirection.Right,
-                        tween(300)
-                    )
-                },
-                popExitTransition = {
-                    val fromIndex = getRouteIndex(initialState.destination.route)
-                    val toIndex = getRouteIndex(targetState.destination.route)
-                    if (toIndex > fromIndex) slideOutOfContainer(
-                        AnimatedContentTransitionScope.SlideDirection.Left,
-                        tween(300)
-                    )
-                    else slideOutOfContainer(
-                        AnimatedContentTransitionScope.SlideDirection.Right,
-                        tween(300)
-                    )
-                }
             ) {
-                composable(HomeNavItem.JOURNALS.route) {
-                    JournalsPage()
-                }
-
-                composable(HomeNavItem.REWIND.route) {
-                    RewindContent()
-                }
-
-                composable(HomeNavItem.CHATS.route) {
-                    ChatsPage()
-                }
+                JournalsPage()
             }
+//            NavHost(
+//                navController = homeNavController,
+//                startDestination = HomeNavItem.JOURNALS.route,
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(innerPadding),
+//
+//                enterTransition = {
+//                    val fromIndex = getRouteIndex(initialState.destination.route)
+//                    val toIndex = getRouteIndex(targetState.destination.route)
+//                    if (toIndex > fromIndex) slideIntoContainer(
+//                        AnimatedContentTransitionScope.SlideDirection.Left,
+//                        tween(300)
+//                    )
+//                    else slideIntoContainer(
+//                        AnimatedContentTransitionScope.SlideDirection.Right,
+//                        tween(300)
+//                    )
+//                },
+//                exitTransition = {
+//                    val fromIndex = getRouteIndex(initialState.destination.route)
+//                    val toIndex = getRouteIndex(targetState.destination.route)
+//                    if (toIndex > fromIndex) slideOutOfContainer(
+//                        AnimatedContentTransitionScope.SlideDirection.Left,
+//                        tween(300)
+//                    )
+//                    else slideOutOfContainer(
+//                        AnimatedContentTransitionScope.SlideDirection.Right,
+//                        tween(300)
+//                    )
+//                },
+//                popEnterTransition = {
+//                    val fromIndex = getRouteIndex(initialState.destination.route)
+//                    val toIndex = getRouteIndex(targetState.destination.route)
+//                    if (toIndex > fromIndex) slideIntoContainer(
+//                        AnimatedContentTransitionScope.SlideDirection.Left,
+//                        tween(300)
+//                    )
+//                    else slideIntoContainer(
+//                        AnimatedContentTransitionScope.SlideDirection.Right,
+//                        tween(300)
+//                    )
+//                },
+//                popExitTransition = {
+//                    val fromIndex = getRouteIndex(initialState.destination.route)
+//                    val toIndex = getRouteIndex(targetState.destination.route)
+//                    if (toIndex > fromIndex) slideOutOfContainer(
+//                        AnimatedContentTransitionScope.SlideDirection.Left,
+//                        tween(300)
+//                    )
+//                    else slideOutOfContainer(
+//                        AnimatedContentTransitionScope.SlideDirection.Right,
+//                        tween(300)
+//                    )
+//                }
+//            ) {
+//                composable(HomeNavItem.JOURNALS.route) {
+//                    JournalsPage()
+//                }
+//
+//                composable(HomeNavItem.REWIND.route) {
+//                    RewindContent()
+//                }
+//
+//                composable(HomeNavItem.CHATS.route) {
+//                    ChatsPage()
+//                }
+//            }
         }
 
-        FloatingBottomBar(
-            currentRoute = currentRoute ?: HomeNavItem.JOURNALS.route,
-            onItemSelected = { route ->
-                homeNavController.navigate(route) {
-                    popUpTo(homeNavController.graph.startDestinationId) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
-            onFabClick = {
-                when (currentRoute) {
-                    HomeNavItem.JOURNALS.route -> {
-                        navigator.navigateTo(Route.Journal(null))
-                    }
-
-                    HomeNavItem.CHATS.route -> {
-                        showCreateChatSheet = true
-                    }
-
-                    else -> {}
-                }
-            },
-        )
+//        FloatingBottomBar(
+//            currentRoute = currentRoute ?: HomeNavItem.JOURNALS.route,
+//            onItemSelected = { route ->
+//                homeNavController.navigate(route) {
+//                    popUpTo(homeNavController.graph.startDestinationId) { saveState = true }
+//                    launchSingleTop = true
+//                    restoreState = true
+//                }
+//            },
+//            onFabClick = {
+//                when (currentRoute) {
+//                    HomeNavItem.JOURNALS.route -> {
+//                        navigator.navigateTo(Route.Journal(null))
+//                    }
+//
+//                    HomeNavItem.CHATS.route -> {
+//                        showCreateChatSheet = true
+//                    }
+//
+//                    else -> {}
+//                }
+//            },
+//        )
     }
 
     if (showCreateChatSheet) {

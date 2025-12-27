@@ -204,7 +204,7 @@ fun JournalScreen() {
                 enter = scaleIn() + fadeIn(),
                 exit = scaleOut() + fadeOut()
             ) {
-                LargeFloatingActionButton(
+                MediumFloatingActionButton(
                     onClick = {
                         isEditMode = true
                         contentFocusRequester.requestFocus()
