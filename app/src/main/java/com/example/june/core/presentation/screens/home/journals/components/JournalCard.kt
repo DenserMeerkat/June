@@ -67,6 +67,7 @@ fun JournalCard(
                         isEditMode = false,
                         enablePlayback = false,
                         modifier = Modifier.fillMaxSize(),
+                        onMediaClick = null,
                         roundedCornerShape = RoundedCornerShape(16.dp)
                     )
                 } else {
@@ -203,6 +204,7 @@ fun RecentJournalCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(210.dp),
+                    onMediaClick = null,
                     roundedCornerShape = RoundedCornerShape(16.dp)
                 )
             }

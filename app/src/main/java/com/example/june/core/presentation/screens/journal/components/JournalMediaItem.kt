@@ -2,6 +2,7 @@ package com.example.june.core.presentation.screens.journal.components
 
 import android.net.Uri
 import androidx.annotation.OptIn
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -60,15 +61,16 @@ import kotlinx.coroutines.delay
 import java.io.File
 
 @Composable
-fun JournalItem(
+fun JournalMediaItem(
     path: String,
     modifier: Modifier,
     isEditMode: Boolean,
     isLargeItem: Boolean,
+    showMoveToFront: Boolean = false,
+    enablePlayback: Boolean = true,
+    onTap: (() -> Unit)? = null,
     onRemove: (String) -> Unit = {},
     onMoveToFront: (String) -> Unit = {},
-    showMoveToFront: Boolean = false,
-    enablePlayback: Boolean = true
 ) {
     val density = LocalDensity.current
     val context = LocalContext.current
@@ -89,27 +91,34 @@ fun JournalItem(
             .build()
     }
 
+    val shouldCaptureTouches = isEditMode || onTap != null
+
     Box(
         modifier = modifier
             .onSizeChanged { itemHeight = with(density) { it.height.toDp() } }
             .clip(RoundedCornerShape(4.dp))
             .indication(interactionSource, LocalIndication.current)
-            .pointerInput(isEditMode) {
-                if (isEditMode) {
-                    detectTapGestures(
-                        onLongPress = { offset ->
-                            showMenu = true
-                            pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
-                        },
-                        onPress = { offset ->
-                            val press = PressInteraction.Press(offset)
-                            interactionSource.emit(press)
-                            tryAwaitRelease()
-                            interactionSource.emit(PressInteraction.Release(press))
-                        }
-                    )
-                }
-            }
+            .then(
+                if (shouldCaptureTouches) {
+                    Modifier.pointerInput(isEditMode, onTap) {
+                        detectTapGestures(
+                            onTap = { onTap?.invoke() },
+                            onLongPress = { offset ->
+                                if (isEditMode) {
+                                    showMenu = true
+                                    pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                                }
+                            },
+                            onPress = { offset ->
+                                val press = PressInteraction.Press(offset)
+                                interactionSource.emit(press)
+                                tryAwaitRelease()
+                                interactionSource.emit(PressInteraction.Release(press))
+                            }
+                        )
+                    }
+                } else Modifier
+            )
     ) {
         if (enablePlayback && isVideo) {
             VideoPlayer(
@@ -129,16 +138,29 @@ fun JournalItem(
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentScale = ContentScale.Crop
             )
+
+            if (isVideo) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.play_arrow_24px),
+                        contentDescription = "Video",
+                        tint = Color.White.copy(alpha = 0.8f),
+                        modifier = Modifier
+                            .size(32.dp) // Smaller icon for thumbnails
+                            .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+                            .padding(4.dp)
+                    )
+                }
+            }
         }
 
-        if (isVideo) {
+        if (isVideo && enablePlayback) {
             PlayPauseOverlay(
-                isPlaying = if (enablePlayback) isPlaying else false,
-                onClick = {
-                    if (enablePlayback) {
-                        isPlaying = !isPlaying
-                    }
-                }
+                isPlaying = isPlaying,
+                onClick = { isPlaying = !isPlaying }
             )
         }
 
@@ -198,12 +220,7 @@ private fun PlayPauseOverlay(isPlaying: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun MuteTimeChip(
-    isMuted: Boolean,
-    timestamp: String,
-    onToggleMute: () -> Unit,
-    modifier: Modifier
-) {
+private fun MuteTimeChip(isMuted: Boolean, timestamp: String, onToggleMute: () -> Unit, modifier: Modifier) {
     Surface(
         onClick = onToggleMute,
         modifier = modifier,
@@ -221,24 +238,14 @@ private fun MuteTimeChip(
                 contentDescription = null,
                 modifier = Modifier.size(16.dp)
             )
-            Text(
-                timestamp,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Text(timestamp, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
         }
     }
 }
 
 @OptIn(UnstableApi::class)
 @Composable
-fun VideoPlayer(
-    uri: Uri,
-    isMuted: Boolean,
-    isPlaying: Boolean,
-    onTimestampChanged: (Long) -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun VideoPlayer(uri: Uri, isMuted: Boolean, isPlaying: Boolean, onTimestampChanged: (Long) -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
@@ -247,7 +254,6 @@ fun VideoPlayer(
             repeatMode = Player.REPEAT_MODE_ONE
         }
     }
-
     LaunchedEffect(isPlaying) { exoPlayer.playWhenReady = isPlaying }
     LaunchedEffect(isMuted) { exoPlayer.volume = if (isMuted) 0f else 1f }
     LaunchedEffect(exoPlayer) {
@@ -257,7 +263,6 @@ fun VideoPlayer(
         }
     }
     DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
-
     AndroidView(
         factory = {
             PlayerView(context).apply {

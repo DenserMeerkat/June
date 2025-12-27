@@ -10,6 +10,7 @@ sealed interface JournalAction {
     data class RemoveImage(val uri: String) : JournalAction
     data class MoveImageToFront(val uri: String) : JournalAction
     data class SetLocation(val location: JournalLocation?) : JournalAction
+    data class SetEditMode(val isEdit: Boolean) : JournalAction // Added
     data object ToggleBookmark : JournalAction
     data object ToggleArchive : JournalAction
     data object SaveJournal : JournalAction

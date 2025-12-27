@@ -18,4 +18,5 @@ data class JournalState(
     val isLoading: Boolean = false,
     val isDirty: Boolean = false,
     val isDraft: Boolean = true,
+    val isEditMode: Boolean = true
 )

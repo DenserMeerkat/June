@@ -20,10 +20,7 @@ class JournalVM(
     private val journalRepo: JournalRepo,
     private val navigator: AppNavigator
 ) : ViewModel() {
-
-    private val routeArgs = savedStateHandle.toRoute<Route.Journal>()
-    private val initialJournalId = routeArgs.journalId
-
+    private val initialJournalId: Long? = savedStateHandle.getJournalIdFromRoutes()
     private var existingJournal: Journal? = null
 
     private val _state = MutableStateFlow(JournalState())
@@ -32,6 +29,20 @@ class JournalVM(
     init {
         if (initialJournalId != null) {
             loadJournal(initialJournalId)
+        }
+    }
+
+    private fun SavedStateHandle.getJournalIdFromRoutes(): Long? {
+        return tryRoute<Route.Journal>()?.journalId
+            ?: tryRoute<Route.JournalMedia>()?.journalId
+            ?: tryRoute<Route.JournalMediaDetail>()?.journalId
+    }
+
+    private inline fun <reified T : Any> SavedStateHandle.tryRoute(): T? {
+        return try {
+            toRoute<T>()
+        } catch (e: Exception) {
+            null
         }
     }
 
@@ -50,6 +61,7 @@ class JournalVM(
                 }
             }
             is JournalAction.SetLocation -> updateState { it.copy(location = action.location) }
+            is JournalAction.SetEditMode -> updateState { it.copy(isEditMode = action.isEdit) } // Handle new action
             is JournalAction.ToggleBookmark -> toggleBookmark()
             is JournalAction.ToggleArchive -> toggleArchive()
             is JournalAction.SaveJournal -> saveJournal()
@@ -134,6 +146,7 @@ class JournalVM(
                         isBookmarked = journal.isBookmarked,
                         isArchived = journal.isArchived,
                         isDraft = journal.isDraft,
+                        isEditMode = false,
                         isLoading = false,
                         isDirty = false
                     )
@@ -210,7 +223,7 @@ class JournalVM(
                 _state.update { it.copy(journalId = newId) }
             }
 
-            _state.update { it.copy(isDirty = false, isDraft = false) }
+            _state.update { it.copy(isDirty = false, isDraft = false, isEditMode = false) }
             navigator.navigateBack()
         }
     }

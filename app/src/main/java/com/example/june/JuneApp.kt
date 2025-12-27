@@ -10,20 +10,25 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.june.core.navigation.AppNavigatorImpl
 import com.example.june.core.navigation.NavigationIntent
 import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.screens.home.HomeScreen
 import com.example.june.core.presentation.screens.chat.ChatScreen
 import com.example.june.core.presentation.screens.journal.JournalScreen
+import com.example.june.core.presentation.screens.journal.journalmedia.JournalMediaDetailScreen
+import com.example.june.core.presentation.screens.journal.journalmedia.JournalMediaGalleryScreen
 import com.example.june.core.presentation.screens.settings.SettingsScreen
 import com.example.june.core.presentation.screens.settings.section.AboutLibrariesPage
 import com.example.june.core.presentation.theme.JuneTheme
+import com.example.june.viewmodels.JournalVM
 import com.example.june.viewmodels.SettingsVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -90,6 +95,28 @@ fun JuneApp() {
 
                 composable<Route.Journal> {
                     JournalScreen()
+                }
+
+                composable<Route.JournalMedia> { backStackEntry ->
+                    val parentEntry = remember (backStackEntry) {
+                        navController.getBackStackEntry<Route.Journal>()
+                    }
+                    val viewModel: JournalVM = koinViewModel(viewModelStoreOwner = parentEntry)
+
+                    JournalMediaGalleryScreen(viewModel = viewModel)
+                }
+
+                composable<Route.JournalMediaDetail> { backStackEntry ->
+                    val args = backStackEntry.toRoute<Route.JournalMediaDetail>()
+                    val parentEntry = remember(backStackEntry) {
+                        navController.getBackStackEntry<Route.Journal>()
+                    }
+                    val viewModel: JournalVM = koinViewModel(viewModelStoreOwner = parentEntry)
+
+                    JournalMediaDetailScreen(
+                        initialIndex = args.initialIndex,
+                        viewModel = viewModel
+                    )
                 }
 
                 composable<Route.AboutLibraries> {

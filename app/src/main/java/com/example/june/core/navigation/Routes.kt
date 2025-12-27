@@ -11,6 +11,15 @@ sealed interface Route {
     data class Journal(val journalId: Long? = null) : Route
 
     @Serializable
+    data class JournalMedia(val journalId: Long) : Route
+
+    @Serializable
+    data class JournalMediaDetail(
+        val journalId: Long,
+        val initialIndex: Int
+    ) : Route
+
+    @Serializable
     data class Chat(val chatId: Long? = null) : Route
 
     @Serializable

@@ -26,6 +26,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.june.R
 import com.example.june.core.domain.utils.FileUtils
 import com.example.june.core.domain.utils.toDateWithDay
+import com.example.june.core.navigation.AppNavigator
+import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.components.JuneIconButton
 import com.example.june.core.presentation.components.JuneIconButtonType
 import com.example.june.core.presentation.components.JuneTopAppBar
@@ -33,12 +35,14 @@ import com.example.june.core.presentation.screens.journal.components.AddItemShee
 import com.example.june.core.presentation.screens.journal.components.JournalDatePickerDialog
 import com.example.june.core.presentation.screens.journal.components.JournalItemsPreview
 import com.example.june.viewmodels.JournalVM
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun JournalScreen() {
     val viewModel: JournalVM = koinViewModel()
+    val navigator = koinInject<AppNavigator>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -51,9 +55,6 @@ fun JournalScreen() {
     var showDatePicker by remember { mutableStateOf(false) }
     var showAddItemSheet by remember { mutableStateOf(false) }
     var showCameraSelectionDialog by remember { mutableStateOf(false) }
-
-    var isEditMode by remember { mutableStateOf(true) }
-    var isInitialLoad by remember { mutableStateOf(true) }
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var tempVideoUri by remember { mutableStateOf<Uri?>(null) }
@@ -95,17 +96,8 @@ fun JournalScreen() {
         state.dateTime.toDateWithDay()
     }
 
-    LaunchedEffect(state.isLoading, state.journalId) {
-        if (isInitialLoad && !state.isLoading) {
-            if (state.journalId != null) {
-                isEditMode = false
-            }
-            isInitialLoad = false
-        }
-    }
-
     val onBack = {
-        if (isEditMode && !state.isDraft && state.isDirty) {
+        if (state.isEditMode && !state.isDraft && state.isDirty) {
             showExitDialog = true
         } else {
             viewModel.onAction(JournalAction.NavigateBack)
@@ -129,7 +121,7 @@ fun JournalScreen() {
                             contentDescription = "Close",
                         )
 
-                        if (isEditMode) {
+                        if (state.isEditMode) {
                             Spacer(modifier = Modifier.width(2.dp))
                             JuneIconButton(
                                 onClick = { showAddItemSheet = true },
@@ -140,7 +132,7 @@ fun JournalScreen() {
                     }
                 },
                 actions = {
-                    if (!isEditMode) {
+                    if (!state.isEditMode) {
                         JuneIconButton(
                             onClick = { viewModel.onAction(JournalAction.ToggleBookmark) },
                             type = JuneIconButtonType.Ghost,
@@ -150,11 +142,10 @@ fun JournalScreen() {
                         Spacer(modifier = Modifier.width(8.dp))
                     }
 
-                    if (isEditMode) {
+                    if (state.isEditMode) {
                         Button(
                             onClick = {
                                 viewModel.onAction(JournalAction.SaveJournal)
-                                isEditMode = false
                             },
                             enabled = !state.isLoading,
                         ) {
@@ -200,13 +191,13 @@ fun JournalScreen() {
         },
         floatingActionButton = {
             AnimatedVisibility(
-                visible = !isEditMode,
+                visible = !state.isEditMode,
                 enter = scaleIn() + fadeIn(),
                 exit = scaleOut() + fadeOut()
             ) {
                 MediumFloatingActionButton(
                     onClick = {
-                        isEditMode = true
+                        viewModel.onAction(JournalAction.SetEditMode(!state.isEditMode))
                         contentFocusRequester.requestFocus()
                     }
                 ) {
@@ -226,7 +217,7 @@ fun JournalScreen() {
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
-                    enabled = isEditMode,
+                    enabled = state.isEditMode,
                     onClick = { contentFocusRequester.requestFocus() }
                 )
         ) {
@@ -240,24 +231,30 @@ fun JournalScreen() {
                     Spacer(modifier = Modifier.height(8.dp))
                     JournalItemsPreview(
                         mediaPaths = state.images,
-                        isEditMode = isEditMode,
+                        isEditMode = state.isEditMode,
                         onRemoveMedia = {
                             viewModel.onAction(JournalAction.RemoveImage(it))
                         },
                         onMoveToFront = {
                             viewModel.onAction(JournalAction.MoveImageToFront(it))
                         },
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        onShowAllClick = {
+                            navigator.navigateTo(
+                                Route.JournalMedia(
+                                    journalId = state.journalId ?: 0L
+                                )
+                            )
+                        }
                     )
                 }
 
                 TextField(
                     value = state.title,
                     onValueChange = { viewModel.onAction(JournalAction.ChangeTitle(it)) },
-                    readOnly = !isEditMode,
-                    enabled = isEditMode,
+                    readOnly = !state.isEditMode,
+                    enabled = state.isEditMode,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = if (isEditMode) {
+                    placeholder = if (state.isEditMode) {
                         {
                             Text(
                                 "Add title",
@@ -277,7 +274,7 @@ fun JournalScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(
-                            if (isEditMode) {
+                            if (state.isEditMode) {
                                 Modifier.clickable { showDatePicker = true }
                             } else {
                                 Modifier
@@ -303,12 +300,12 @@ fun JournalScreen() {
                 TextField(
                     value = state.content,
                     onValueChange = { viewModel.onAction(JournalAction.ChangeContent(it)) },
-                    readOnly = !isEditMode,
-                    enabled = isEditMode,
+                    readOnly = !state.isEditMode,
+                    enabled = state.isEditMode,
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(contentFocusRequester),
-                    placeholder = if (isEditMode) {
+                    placeholder = if (state.isEditMode) {
                         {
                             Text(
                                 "What's on your mind?",
@@ -368,7 +365,6 @@ fun JournalScreen() {
                 Button(onClick = {
                     showExitDialog = false
                     viewModel.onAction(JournalAction.SaveJournal)
-                    isEditMode = false
                 }) { Text("Save") }
             },
             dismissButton = {
