@@ -34,6 +34,7 @@ import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.core.presentation.screens.journal.components.AddItemSheet
 import com.example.june.core.presentation.screens.journal.components.JournalDatePickerDialog
 import com.example.june.core.presentation.screens.journal.components.JournalItemsPreview
+import com.example.june.core.presentation.screens.journal.components.MediaOperations
 import com.example.june.viewmodels.JournalVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -105,6 +106,23 @@ fun JournalScreen() {
     }
 
     BackHandler { onBack() }
+
+    val mediaOperations = remember(state.isEditMode, state.images) {
+        MediaOperations(
+            onRemove = { viewModel.onAction(JournalAction.RemoveImage(it)) },
+            onMoveToFront = { viewModel.onAction(JournalAction.MoveImageToFront(it)) },
+            onMediaClick = { path ->
+                navigator.navigateTo(
+                    Route.JournalMediaDetail(
+                        journalId = state.journalId ?: 0L,
+                        initialIndex = state.images.reversed().indexOf(path)
+                    )
+                )
+            },
+            isEditMode = state.isEditMode,
+            frontMediaPath = state.images.lastOrNull()
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -231,18 +249,10 @@ fun JournalScreen() {
                     Spacer(modifier = Modifier.height(8.dp))
                     JournalItemsPreview(
                         mediaPaths = state.images,
-                        isEditMode = state.isEditMode,
-                        onRemoveMedia = {
-                            viewModel.onAction(JournalAction.RemoveImage(it))
-                        },
-                        onMoveToFront = {
-                            viewModel.onAction(JournalAction.MoveImageToFront(it))
-                        },
+                        mediaOperations = mediaOperations,
                         onShowAllClick = {
                             navigator.navigateTo(
-                                Route.JournalMedia(
-                                    journalId = state.journalId ?: 0L
-                                )
+                                Route.JournalMedia(journalId = state.journalId ?: 0L)
                             )
                         }
                     )

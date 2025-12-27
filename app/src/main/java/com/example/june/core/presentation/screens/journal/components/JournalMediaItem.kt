@@ -2,7 +2,6 @@ package com.example.june.core.presentation.screens.journal.components
 
 import android.net.Uri
 import androidx.annotation.OptIn
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -12,6 +11,7 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -64,13 +64,9 @@ import java.io.File
 fun JournalMediaItem(
     path: String,
     modifier: Modifier,
-    isEditMode: Boolean,
+    operations : MediaOperations,
     isLargeItem: Boolean,
-    showMoveToFront: Boolean = false,
     enablePlayback: Boolean = true,
-    onTap: (() -> Unit)? = null,
-    onRemove: (String) -> Unit = {},
-    onMoveToFront: (String) -> Unit = {},
 ) {
     val density = LocalDensity.current
     val context = LocalContext.current
@@ -90,8 +86,8 @@ fun JournalMediaItem(
             .components { add(VideoFrameDecoder.Factory()) }
             .build()
     }
-
-    val shouldCaptureTouches = isEditMode || onTap != null
+    val shouldShowMoveToFront = path != operations.frontMediaPath
+    val shouldCaptureTouches = operations.isEditMode || operations.onMediaClick != null
 
     Box(
         modifier = modifier
@@ -100,11 +96,11 @@ fun JournalMediaItem(
             .indication(interactionSource, LocalIndication.current)
             .then(
                 if (shouldCaptureTouches) {
-                    Modifier.pointerInput(isEditMode, onTap) {
+                    Modifier.pointerInput(operations.isEditMode, operations.onMediaClick) {
                         detectTapGestures(
-                            onTap = { onTap?.invoke() },
+                            onTap = { operations.onMediaClick?.invoke(path) },
                             onLongPress = { offset ->
-                                if (isEditMode) {
+                                if (operations.isEditMode) {
                                     showMenu = true
                                     pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
                                 }
@@ -149,7 +145,7 @@ fun JournalMediaItem(
                         contentDescription = "Video",
                         tint = Color.White.copy(alpha = 0.8f),
                         modifier = Modifier
-                            .size(32.dp) // Smaller icon for thumbnails
+                            .size(32.dp)
                             .background(Color.Black.copy(alpha = 0.3f), CircleShape)
                             .padding(4.dp)
                     )
@@ -175,8 +171,9 @@ fun JournalMediaItem(
             )
         }
 
-        if (isEditMode) {
+        if (operations.isEditMode) {
             DropdownMenu(
+                modifier = Modifier.defaultMinSize(minWidth = 200.dp),
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false },
                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -186,13 +183,20 @@ fun JournalMediaItem(
             ) {
                 DropdownMenuItem(
                     text = { Text("Delete") },
-                    onClick = { isPlaying = false; onRemove(path); showMenu = false },
+                    onClick = {
+                        isPlaying = false
+                        operations.onRemove(path)
+                        showMenu = false
+                    },
                     leadingIcon = { Icon(painterResource(R.drawable.delete_24px), null) }
                 )
-                if (showMoveToFront) {
+                if (shouldShowMoveToFront) {
                     DropdownMenuItem(
                         text = { Text("Move to Front") },
-                        onClick = { onMoveToFront(path); showMenu = false },
+                        onClick = {
+                            operations.onMoveToFront(path)
+                            showMenu = false
+                        },
                         leadingIcon = { Icon(painterResource(R.drawable.turn_left_24px), null) }
                     )
                 }

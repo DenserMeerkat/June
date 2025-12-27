@@ -23,6 +23,7 @@ import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.components.JuneIconButton
 import com.example.june.core.presentation.screens.journal.components.JournalMosaicCard
+import com.example.june.core.presentation.screens.journal.components.MediaOperations
 import com.example.june.viewmodels.HomeJournalVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -35,6 +36,14 @@ fun JournalCard(
 ) {
     val viewModel: HomeJournalVM = koinViewModel()
     val navigator = koinInject<AppNavigator>()
+
+    val mediaOperations = MediaOperations(
+        onRemove = { },
+        onMoveToFront = { },
+        onMediaClick = null,
+        isEditMode = false,
+        frontMediaPath = null
+    )
 
     Card(
         modifier = modifier
@@ -64,10 +73,9 @@ fun JournalCard(
                 if (journal.images.isNotEmpty()) {
                     JournalMosaicCard(
                         mediaList = listOf(journal.images.last()),
-                        isEditMode = false,
                         enablePlayback = false,
                         modifier = Modifier.fillMaxSize(),
-                        onMediaClick = null,
+                        operations = mediaOperations,
                         roundedCornerShape = RoundedCornerShape(16.dp)
                     )
                 } else {
@@ -117,6 +125,7 @@ fun JournalCard(
         }
     }
 }
+
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun RecentJournalCard(
@@ -136,12 +145,25 @@ fun RecentJournalCard(
             journal.images.reversed().take(3)
         }
 
+        val mediaOperations = MediaOperations(
+            onRemove = { },
+            onMoveToFront = { },
+            onMediaClick = null,
+            isEditMode = false,
+            frontMediaPath = null
+        )
+
         Card(
             modifier = modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
                 .combinedClickable(
-                    onClick = { navigator.navigateTo(Route.Journal(journal.id), isSingleTop = true) },
+                    onClick = {
+                        navigator.navigateTo(
+                            Route.Journal(journal.id),
+                            isSingleTop = true
+                        )
+                    },
                     onLongClick = {}
                 ),
             colors = CardDefaults.cardColors(
@@ -199,12 +221,11 @@ fun RecentJournalCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 JournalMosaicCard(
                     mediaList = displayImages,
-                    isEditMode = false,
                     enablePlayback = false,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(210.dp),
-                    onMediaClick = null,
+                    operations = mediaOperations,
                     roundedCornerShape = RoundedCornerShape(16.dp)
                 )
             }

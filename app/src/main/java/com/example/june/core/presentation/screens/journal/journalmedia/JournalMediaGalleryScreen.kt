@@ -14,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import com.example.june.core.presentation.components.JuneIconButton
 import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.core.presentation.screens.journal.JournalAction
 import com.example.june.core.presentation.screens.journal.components.JournalMediaItem
+import com.example.june.core.presentation.screens.journal.components.MediaOperations
 import com.example.june.viewmodels.JournalVM
 import org.koin.compose.koinInject
 
@@ -35,6 +37,23 @@ fun JournalMediaGalleryScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val navigator = koinInject<AppNavigator>()
+
+    val mediaOperations = remember(state.isEditMode, state.images) {
+        MediaOperations(
+            onRemove = { viewModel.onAction(JournalAction.RemoveImage(it)) },
+            onMoveToFront = { viewModel.onAction(JournalAction.MoveImageToFront(it)) },
+            onMediaClick = { path ->
+                navigator.navigateTo(
+                    Route.JournalMediaDetail(
+                        journalId = state.journalId ?: 0L,
+                        initialIndex = state.images.reversed().indexOf(path)
+                    )
+                )
+            },
+            isEditMode = state.isEditMode,
+            frontMediaPath = state.images.lastOrNull()
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -64,20 +83,9 @@ fun JournalMediaGalleryScreen(
                     path = path,
                     modifier = Modifier.aspectRatio(1f)
                     .clip(RoundedCornerShape(16.dp)),
-                    isEditMode = state.isEditMode,
+                    operations = mediaOperations,
                     isLargeItem = false,
                     enablePlayback = false,
-                    showMoveToFront = index != 0,
-                    onTap = {
-                        navigator.navigateTo(
-                            Route.JournalMediaDetail(
-                                journalId = state.journalId ?: 0L,
-                                initialIndex = index
-                            )
-                        )
-                    },
-                    onRemove = { viewModel.onAction(JournalAction.RemoveImage(it)) },
-                    onMoveToFront = { viewModel.onAction(JournalAction.MoveImageToFront(it)) },
                 )
             }
         }

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -131,7 +130,6 @@ private fun DetailVideoPlayer(
         }
     }
 
-    // Auto-pause when user swipes to a different page
     LaunchedEffect(playWhenReady) {
         exoPlayer.playWhenReady = playWhenReady
         if (!playWhenReady) {

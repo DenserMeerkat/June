@@ -14,42 +14,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.june.core.navigation.AppNavigator
-import com.example.june.core.navigation.Route
-import com.example.june.viewmodels.JournalVM
-import org.koin.compose.koinInject
-import org.koin.compose.viewmodel.koinViewModel
+
+data class MediaOperations(
+    val onRemove: (String) -> Unit,
+    val onMoveToFront: (String) -> Unit,
+    val onMediaClick: ((String) -> Unit)? = null,
+    val isEditMode: Boolean,
+    val frontMediaPath: String?
+)
 
 @Composable
 fun JournalItemsPreview(
     modifier: Modifier = Modifier,
     mediaPaths: List<String>,
-    isEditMode: Boolean,
-    onRemoveMedia: (String) -> Unit,
-    onMoveToFront: (String) -> Unit,
+    mediaOperations: MediaOperations,
     onShowAllClick: () -> Unit = {}
 ) {
-    val viewModel: JournalVM = koinViewModel()
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    val navigator = koinInject<AppNavigator>()
-    val itemAtDataFront = mediaPaths.lastOrNull()
-
     val chunks = remember(mediaPaths) {
         mediaPaths.reversed().chunked(3)
-    }
-
-    fun openLightBox(path: String) {
-        navigator.navigateTo(
-            Route.JournalMediaDetail(
-                journalId = state.journalId ?: 0L,
-                initialIndex = mediaPaths.reversed().indexOf(path)
-            )
-        )
     }
 
     Column(
@@ -67,11 +52,7 @@ fun JournalItemsPreview(
                 JournalMosaicCard(
                     modifier = Modifier.fillParentMaxWidth(widthFraction),
                     mediaList = chunk,
-                    isEditMode = isEditMode,
-                    onRemoveMedia = onRemoveMedia,
-                    onMoveToFront = onMoveToFront,
-                    itemAtDataFront = itemAtDataFront,
-                    onMediaClick = { openLightBox(it) }
+                    operations = mediaOperations,
                 )
             }
         }
