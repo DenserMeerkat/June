@@ -27,7 +27,7 @@ retrofit = "2.11.0"
 okhttp = "4.12.0"
 jsoup = "1.18.1"
 jsonPath = "2.9.0"
-squigglySlider = "1.0.0"
+wavySlider = "2.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -74,7 +74,7 @@ okhttp-core = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
 json-path = { group = "com.jayway.jsonpath", name = "json-path", version.ref = "jsonPath" }
-squiggly-slider = { module = "me.saket.squigglyslider:squigglyslider", version.ref = "squigglySlider" }
+wavy-slider = { group = "ir.mahozad.multiplatform", name = "wavy-slider", version.ref = "wavySlider" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

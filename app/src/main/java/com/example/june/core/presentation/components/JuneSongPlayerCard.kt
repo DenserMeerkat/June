@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -35,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.june.R
 import com.example.june.core.domain.data_classes.SongDetails
-import me.saket.squiggles.SquigglySlider
+import ir.mahozad.multiplatform.wavyslider.material3.WavySlider
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -84,7 +86,11 @@ fun SongPlayerCard(
                                 .shadow(4.dp, RoundedCornerShape(12.dp))
                         )
                         Spacer(Modifier.weight(1f))
-                        Icon(painterResource(R.drawable.spotify), contentDescription = null, modifier = Modifier.alpha(0.8F))
+                        Icon(
+                            painterResource(R.drawable.spotify),
+                            contentDescription = null,
+                            modifier = Modifier.alpha(0.8F)
+                        )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Column(
@@ -111,13 +117,23 @@ fun SongPlayerCard(
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalAlignment = Alignment.Bottom,
                     ) {
-                        SquigglySlider(
+                        Spacer(Modifier.width(8.dp))
+                        WavySlider(
                             value = sliderValue,
                             onValueChange = onSeek,
                             onValueChangeFinished = onSeekFinished,
+                            trackThickness = 6.dp,
+                            waveThickness = 3.dp,
+                            thumb = {
+                                Surface(
+                                    modifier = Modifier
+                                        .size(width = 4.dp, height = 24.dp),
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                ) {}
+                            },
                             colors = SliderDefaults.colors(
                                 thumbColor = MaterialTheme.colorScheme.onSurface,
                                 activeTrackColor = MaterialTheme.colorScheme.onSurface,
@@ -125,12 +141,12 @@ fun SongPlayerCard(
                             ),
                             modifier = Modifier.weight(1f)
                         )
-                        if (details.previewUrl != null) {
-                            PlayPauseButton(
-                                isPlaying = isPlaying,
-                                onClick = onPlayPause
-                            )
-                        }
+                        Spacer(Modifier.width(12.dp))
+                        PlayPauseButton(
+                            isPlaying = isPlaying,
+                            enabled = details.previewUrl != null,
+                            onClick = onPlayPause
+                        )
                     }
                 }
             }
@@ -143,11 +159,13 @@ fun SongPlayerCard(
 @Composable
 private fun PlayPauseButton(
     isPlaying: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit
 ) {
     FilledIconToggleButton(
         checked = isPlaying,
         onCheckedChange = { onClick() },
+        enabled = enabled,
         modifier = Modifier
             .size(width = 64.dp, height = 48.dp),
         shapes = IconButtonDefaults.toggleableShapes(),

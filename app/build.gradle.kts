@@ -130,7 +130,7 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.jsoup)
     implementation(libs.json.path)
-    implementation(libs.squiggly.slider)
+    implementation(libs.wavy.slider)
 
     implementation(libs.koin.core)
     implementation(libs.koin.compose)
