@@ -60,8 +60,9 @@ class JournalVM(
                     updateState { it.copy(images = currentImages) }
                 }
             }
+
             is JournalAction.SetLocation -> updateState { it.copy(location = action.location) }
-            is JournalAction.SetEditMode -> updateState { it.copy(isEditMode = action.isEdit) } // Handle new action
+            is JournalAction.SetEditMode -> updateState { it.copy(isEditMode = action.isEdit) }
             is JournalAction.ToggleBookmark -> toggleBookmark()
             is JournalAction.ToggleArchive -> toggleArchive()
             is JournalAction.SaveJournal -> saveJournal()

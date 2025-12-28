@@ -35,7 +35,7 @@ fun Long.toFullDateTime(): String {
     return sdf.format(Date(this))
 }
 
-fun Long.formatDuration(): String {
+fun Long.toHoursMinutesSeconds(): String {
     val totalSeconds = this / 1000
     val hours = totalSeconds / 3600
     val minutes = (totalSeconds % 3600) / 60

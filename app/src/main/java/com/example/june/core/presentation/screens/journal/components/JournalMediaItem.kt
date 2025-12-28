@@ -25,7 +25,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -46,17 +45,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.VideoFrameDecoder
 import com.example.june.R
-import com.example.june.core.domain.utils.formatDuration
+import com.example.june.core.domain.utils.toHoursMinutesSeconds
+import com.example.june.core.presentation.utils.rememberManagedExoPlayer
 import kotlinx.coroutines.delay
 import java.io.File
 
@@ -64,7 +61,7 @@ import java.io.File
 fun JournalMediaItem(
     path: String,
     modifier: Modifier,
-    operations : MediaOperations,
+    operations: MediaOperations,
     isLargeItem: Boolean,
     enablePlayback: Boolean = true,
 ) {
@@ -78,7 +75,7 @@ fun JournalMediaItem(
 
     val isVideo = remember(path) { path.endsWith("mp4", ignoreCase = true) }
     var isPlaying by remember { mutableStateOf(false) }
-    var isMuted by remember { mutableStateOf(false) }
+    var isMuted by remember { mutableStateOf(true) }
     var currentTimestamp by remember { mutableLongStateOf(0L) }
 
     val imageLoader = remember {
@@ -121,6 +118,7 @@ fun JournalMediaItem(
                 uri = Uri.fromFile(File(path)),
                 isMuted = isMuted,
                 isPlaying = isPlaying,
+                onPlayingChanged = { isPlaying = it },
                 onTimestampChanged = { currentTimestamp = it },
                 modifier = Modifier.fillMaxSize()
             )
@@ -163,11 +161,11 @@ fun JournalMediaItem(
         if (enablePlayback && isLargeItem && isVideo) {
             MuteTimeChip(
                 isMuted = isMuted,
-                timestamp = currentTimestamp.formatDuration(),
+                timestamp = currentTimestamp.toHoursMinutesSeconds(),
                 onToggleMute = { isMuted = !isMuted },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(8.dp)
+                    .padding(horizontal = 8.dp)
             )
         }
 
@@ -224,7 +222,12 @@ private fun PlayPauseOverlay(isPlaying: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun MuteTimeChip(isMuted: Boolean, timestamp: String, onToggleMute: () -> Unit, modifier: Modifier) {
+private fun MuteTimeChip(
+    isMuted: Boolean,
+    timestamp: String,
+    onToggleMute: () -> Unit,
+    modifier: Modifier
+) {
     Surface(
         onClick = onToggleMute,
         modifier = modifier,
@@ -242,23 +245,34 @@ private fun MuteTimeChip(isMuted: Boolean, timestamp: String, onToggleMute: () -
                 contentDescription = null,
                 modifier = Modifier.size(16.dp)
             )
-            Text(timestamp, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            Text(
+                timestamp,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
 
 @OptIn(UnstableApi::class)
 @Composable
-fun VideoPlayer(uri: Uri, isMuted: Boolean, isPlaying: Boolean, onTimestampChanged: (Long) -> Unit, modifier: Modifier = Modifier) {
+fun VideoPlayer(
+    uri: Uri,
+    isMuted: Boolean,
+    isPlaying: Boolean,
+    onPlayingChanged: (Boolean) -> Unit,
+    onTimestampChanged: (Long) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(uri))
-            prepare()
-            repeatMode = Player.REPEAT_MODE_ONE
-        }
+    val exoPlayer = rememberManagedExoPlayer(
+        uri = uri,
+        onIsPlayingChanged = onPlayingChanged
+    )
+
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) exoPlayer.play() else exoPlayer.pause()
     }
-    LaunchedEffect(isPlaying) { exoPlayer.playWhenReady = isPlaying }
     LaunchedEffect(isMuted) { exoPlayer.volume = if (isMuted) 0f else 1f }
     LaunchedEffect(exoPlayer) {
         while (true) {
@@ -266,13 +280,13 @@ fun VideoPlayer(uri: Uri, isMuted: Boolean, isPlaying: Boolean, onTimestampChang
             delay(500)
         }
     }
-    DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
+
     AndroidView(
         factory = {
             PlayerView(context).apply {
-                player = exoPlayer
                 useController = false
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                player = exoPlayer
             }
         },
         modifier = modifier
