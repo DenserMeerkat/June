@@ -231,12 +231,12 @@ private fun MuteTimeChip(
     Surface(
         onClick = onToggleMute,
         modifier = modifier,
-        color = Color.Black.copy(alpha = 0.6f),
-        contentColor = Color.White,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         shape = CircleShape
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -248,7 +248,7 @@ private fun MuteTimeChip(
             Text(
                 timestamp,
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
