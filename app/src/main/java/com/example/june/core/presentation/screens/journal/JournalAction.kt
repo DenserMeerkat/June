@@ -16,4 +16,6 @@ sealed interface JournalAction {
     data object SaveJournal : JournalAction
     data object NavigateBack : JournalAction
     data object DeleteJournal : JournalAction
+    data class FetchSong(val url: String) : JournalAction
+    data object RemoveSong : JournalAction
 }

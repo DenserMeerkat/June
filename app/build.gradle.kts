@@ -124,6 +124,13 @@ dependencies {
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.media3.common)
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.kotlin.serialization)
+    implementation(libs.okhttp.core)
+    implementation(libs.okhttp.logging)
+    implementation(libs.jsoup)
+    implementation(libs.json.path)
+    implementation(libs.squiggly.slider)
 
     implementation(libs.koin.core)
     implementation(libs.koin.compose)

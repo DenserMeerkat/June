@@ -7,6 +7,7 @@ data class SongDetails(
     val title: String,
     val artistName: String,
     val thumbnailUrl: String?,
+    val previewUrl: String? = null,
     val links: PlatformLinks
 )
 

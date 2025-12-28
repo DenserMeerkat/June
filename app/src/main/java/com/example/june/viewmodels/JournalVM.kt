@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.june.core.domain.JournalRepo
+import com.example.june.core.domain.SongRepo
 import com.example.june.core.domain.data_classes.Journal
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 class JournalVM(
     savedStateHandle: SavedStateHandle,
     private val journalRepo: JournalRepo,
+    private val songRepo: SongRepo,
     private val navigator: AppNavigator
 ) : ViewModel() {
     private val initialJournalId: Long? = savedStateHandle.getJournalIdFromRoutes()
@@ -68,6 +70,8 @@ class JournalVM(
             is JournalAction.SaveJournal -> saveJournal()
             is JournalAction.NavigateBack -> navigator.navigateBack()
             is JournalAction.DeleteJournal -> deleteJournal()
+            is JournalAction.FetchSong -> fetchSongDetails(action.url)
+            is JournalAction.RemoveSong -> updateState { it.copy(songDetails = null) }
         }
     }
 
@@ -88,7 +92,8 @@ class JournalVM(
                 original.content != currentState.content ||
                 original.images != currentState.images ||
                 original.location != currentState.location ||
-                original.dateTime != currentState.dateTime
+                original.dateTime != currentState.dateTime ||
+                original.songDetails != currentState.songDetails
     }
 
     private fun toggleBookmark() {
@@ -162,7 +167,11 @@ class JournalVM(
         viewModelScope.launch {
             if (existingJournal != null && !existingJournal!!.isDraft) return@launch
 
-            if (currentState.title.isBlank() && currentState.content.isBlank() && currentState.images.isEmpty()) return@launch
+            if (currentState.title.isBlank() &&
+                currentState.content.isBlank() &&
+                currentState.images.isEmpty() &&
+                currentState.songDetails == null
+            ) return@launch
 
             val currentTime = System.currentTimeMillis()
             val isNewEntry = existingJournal == null
@@ -233,6 +242,18 @@ class JournalVM(
         viewModelScope.launch {
             existingJournal?.let { journalRepo.deleteJournal(it.id) }
             navigator.navigateBack()
+        }
+    }
+
+    fun fetchSongDetails(url: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isFetchingSong = true) }
+            songRepo.fetchSongDetails(url).onSuccess { details ->
+                _state.update { it.copy(songDetails = details, isFetchingSong = false) }
+            }.onFailure {
+                _state.update { it.copy(isFetchingSong = false) }
+                // TODO: Handle error
+            }
         }
     }
 }

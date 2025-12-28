@@ -1,17 +1,21 @@
 package com.example.june.di
 
 import com.example.june.core.data.AppPreferencesImpl
+import com.example.june.core.data.SongRepoImpl
 import com.example.june.core.data.backup.ExportImpl
 import com.example.june.core.data.backup.RestoreImpl
 import com.example.june.core.data.database.DatabaseFactory
 import com.example.june.core.data.database.chat.ChatDatabase
 import com.example.june.core.data.database.journal.JournalDatabase
 import com.example.june.core.data.datastore.DatastoreFactory
+import com.example.june.core.data.remote.SonglinkApiService
+import com.example.june.core.data.remote.SpotifyScraper
 import com.example.june.core.data.repository.ChatRepository
 import com.example.june.core.data.repository.JournalRepository
 import com.example.june.core.domain.AppPreferences
 import com.example.june.core.domain.ChatRepo
 import com.example.june.core.domain.JournalRepo
+import com.example.june.core.domain.SongRepo
 import com.example.june.core.domain.backup.ExportRepo
 import com.example.june.core.domain.backup.RestoreRepo
 import com.example.june.core.navigation.AppNavigator
@@ -21,11 +25,16 @@ import com.example.june.viewmodels.HomeChatVM
 import com.example.june.viewmodels.HomeJournalVM
 import com.example.june.viewmodels.JournalVM
 import com.example.june.viewmodels.SettingsVM
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 
 val juneModules = module {
@@ -55,4 +64,23 @@ val juneModules = module {
 
     singleOf(::AppNavigatorImpl)
     single<AppNavigator> { get<AppNavigatorImpl>() }
+
+    single { OkHttpClient() }
+    single {
+        val json = Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+        }
+        val contentType = "application/json".toMediaType()
+
+        Retrofit.Builder()
+            .baseUrl("https://api.song.link/")
+            .addConverterFactory(json.asConverterFactory(contentType))
+            .client(get<OkHttpClient>())
+            .build()
+    }
+
+    single { get<Retrofit>().create(SonglinkApiService::class.java) }
+    singleOf(::SpotifyScraper)
+    singleOf(::SongRepoImpl).bind<SongRepo>()
 }

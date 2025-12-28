@@ -32,6 +32,7 @@ import com.example.june.core.presentation.components.JuneIconButton
 import com.example.june.core.presentation.components.JuneIconButtonType
 import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.core.presentation.screens.journal.components.AddItemSheet
+import com.example.june.core.presentation.screens.journal.components.AddSongSheet
 import com.example.june.core.presentation.screens.journal.components.JournalDatePickerDialog
 import com.example.june.core.presentation.screens.journal.components.JournalItemsPreview
 import com.example.june.core.presentation.screens.journal.components.MediaOperations
@@ -56,6 +57,7 @@ fun JournalScreen() {
     var showDatePicker by remember { mutableStateOf(false) }
     var showAddItemSheet by remember { mutableStateOf(false) }
     var showCameraSelectionDialog by remember { mutableStateOf(false) }
+    var showSongSheet by remember { mutableStateOf(false) }
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var tempVideoUri by remember { mutableStateOf<Uri?>(null) }
@@ -397,6 +399,20 @@ fun JournalScreen() {
         )
     }
 
+    if (showSongSheet) {
+        AddSongSheet(
+            songDetails = state.songDetails,
+            isFetching = state.isFetchingSong,
+            onFetchDetails = { link ->
+                viewModel.onAction(JournalAction.FetchSong(link))
+            },
+            onRemoveSong = {
+                viewModel.onAction(JournalAction.RemoveSong)
+            },
+            onDismiss = { showSongSheet = false }
+        )
+    }
+
     if (showAddItemSheet) {
         AddItemSheet(
             onDismiss = { showAddItemSheet = false },
@@ -409,7 +425,8 @@ fun JournalScreen() {
                 )
             },
             onAddSongClick = {
-                // TODO: Handle Song
+                showAddItemSheet = false
+                showSongSheet = true
             },
             onAddLocationClick = {
                 // TODO: Handle Location
