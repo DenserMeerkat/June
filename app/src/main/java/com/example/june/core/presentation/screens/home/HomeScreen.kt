@@ -26,7 +26,6 @@ import org.koin.compose.koinInject
 
 import com.example.june.R
 import com.example.june.core.presentation.components.JuneAppBarType
-import com.example.june.core.presentation.components.JuneIconButton
 
 enum class HomeNavItem(
     val route: String,
@@ -76,11 +75,18 @@ fun HomeScreen() {
                         )
                     },
                     actions = {
-                        JuneIconButton(
+                        FilledIconButton(
                             onClick = { navigator.navigateTo(Route.Settings) },
-                            icon = R.drawable.settings_24px,
-                            contentDescription = "Settings"
-                        )
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                            ),
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.settings_24px),
+                                contentDescription = "Settings"
+                            )
+                        }
                     }
                 )
             },

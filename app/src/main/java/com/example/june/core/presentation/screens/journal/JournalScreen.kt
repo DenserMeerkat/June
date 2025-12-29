@@ -28,8 +28,6 @@ import com.example.june.core.domain.utils.FileUtils
 import com.example.june.core.domain.utils.toDateWithDay
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
-import com.example.june.core.presentation.components.JuneIconButton
-import com.example.june.core.presentation.components.JuneIconButtonType
 import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.core.presentation.screens.journal.components.AddItemSheet
 import com.example.june.core.presentation.screens.journal.components.AddSongSheet
@@ -135,30 +133,51 @@ fun JournalScreen() {
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        JuneIconButton(
+                        FilledIconButton(
                             onClick = { onBack() },
-                            icon = R.drawable.close_24px,
-                            contentDescription = "Close",
-                        )
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                            ),
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.close_24px),
+                                contentDescription = "Close",
 
+                                )
+                        }
                         if (state.isEditMode) {
                             Spacer(modifier = Modifier.width(2.dp))
-                            JuneIconButton(
+                            FilledIconButton(
                                 onClick = { showAddItemSheet = true },
-                                icon = if (showAddItemSheet) R.drawable.add_circle_24px_fill else R.drawable.add_circle_24px,
-                                contentDescription = "Add Attachment"
-                            )
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                        alpha = 0.75F
+                                    )
+                                ),
+                            ) {
+                                Icon(
+                                    painter = painterResource(if (showAddItemSheet) R.drawable.add_circle_24px_fill else R.drawable.add_circle_24px),
+                                    contentDescription = "Add Attachment"
+                                )
+                            }
                         }
                     }
                 },
                 actions = {
                     if (!state.isEditMode) {
-                        JuneIconButton(
+                        IconButton(
                             onClick = { viewModel.onAction(JournalAction.ToggleBookmark) },
-                            type = JuneIconButtonType.Ghost,
-                            icon = if (state.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px,
-                            contentDescription = "Toggle Bookmark"
-                        )
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                            ),
+                        ) {
+                            Icon(
+                                painter = painterResource(if (state.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px),
+                                contentDescription = "Toggle Bookmark"
+                            )
+                        }
                         Spacer(modifier = Modifier.width(8.dp))
                     }
 
@@ -175,12 +194,17 @@ fun JournalScreen() {
                     }
 
                     Box {
-                        JuneIconButton(
+                        IconButton(
                             onClick = { showMenu = true },
-                            type = JuneIconButtonType.Ghost,
-                            icon = R.drawable.more_vert_24px,
-                            contentDescription = "Options"
-                        )
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                            ),
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.more_vert_24px,),
+                                contentDescription = "Options"
+                            )
+                        }
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
@@ -252,6 +276,7 @@ fun JournalScreen() {
                     JournalItemsPreview(
                         mediaPaths = state.images,
                         mediaOperations = mediaOperations,
+                        songDetails = state.songDetails,
                         onShowAllClick = {
                             navigator.navigateTo(
                                 Route.JournalMedia(journalId = state.journalId ?: 0L)

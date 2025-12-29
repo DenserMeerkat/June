@@ -1,5 +1,6 @@
 package com.example.june.core.presentation.screens.journal.journalmedia
 
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
@@ -10,6 +11,9 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,12 +21,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.june.R
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
-import com.example.june.core.presentation.components.JuneIconButton
 import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.core.presentation.screens.journal.JournalAction
 import com.example.june.core.presentation.screens.journal.components.JournalMediaItem
@@ -60,11 +64,19 @@ fun JournalMediaGalleryScreen(
             JuneTopAppBar(
                 title = { Text("Media Gallery") },
                 navigationIcon = {
-                    JuneIconButton(
+                    FilledIconButton(
                         onClick = { navigator.navigateBack() },
-                        icon = R.drawable.arrow_back_24px,
-                        contentDescription = "Back"
-                    )
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                        ),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.arrow_back_24px),
+                            contentDescription = "Back",
+
+                            )
+                    }
                 }
             )
         }

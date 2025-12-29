@@ -15,7 +15,6 @@ import com.example.june.R
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.components.JuneAppBarType
-import com.example.june.core.presentation.components.JuneIconButton
 import com.example.june.core.presentation.components.JuneTopAppBar
 import org.koin.compose.koinInject
 
@@ -40,11 +39,19 @@ fun SettingsScreen(
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = "Settings") },
                 navigationIcon = {
-                    JuneIconButton(
+                    FilledIconButton(
                         onClick = { navigator.navigateBack() },
-                        icon = R.drawable.arrow_back_24px,
-                        contentDescription = "Back"
-                    )
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                        ),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.arrow_back_24px),
+                            contentDescription = "Back",
+
+                            )
+                    }
                 }
             )
         }

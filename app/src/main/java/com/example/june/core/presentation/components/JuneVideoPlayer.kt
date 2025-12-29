@@ -1,4 +1,4 @@
-@file:kotlin.OptIn(ExperimentalMaterial3Api::class)
+@file:kotlin.OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 
 package com.example.june.core.presentation.components
 
@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -36,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.util.UnstableApi
@@ -142,39 +146,41 @@ fun JuneVideoPlayer(
                             verticalAlignment = Alignment.Bottom,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            JuneIconButton(
+                            IconButton(
                                 onClick = {
                                     if (isPlaying) exoPlayer.pause() else exoPlayer.play()
                                     onVisibilityChange(true)
                                 },
-                                buttonSize = 44.dp,
-                                iconSize = 32.dp,
-                                icon = if (isPlaying) R.drawable.pause_24px else R.drawable.play_arrow_24px,
-                                contentDescription = if (isPlaying) "Pause" else "Play",
+                                shape = IconButtonDefaults.smallRoundShape,
                                 colors = IconButtonDefaults.iconButtonColors(
                                     contentColor = Color.White
                                 )
-                            )
-
+                            ) {
+                                Icon(
+                                    painter = painterResource(if (isPlaying) R.drawable.pause_24px else R.drawable.play_arrow_24px),
+                                    contentDescription = if (isPlaying) "Pause" else "Play"
+                                )
+                            }
                             Text(
                                 text = "${currentTime.toHoursMinutesSeconds()} / ${totalDuration.toHoursMinutesSeconds()}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White
                             )
-
-                            JuneIconButton(
+                            IconButton(
                                 onClick = {
                                     isMuted = !isMuted
                                     onVisibilityChange(true)
                                 },
-                                buttonSize = 44.dp,
-                                iconSize = 32.dp,
-                                icon = if (isMuted) R.drawable.volume_off_24px else R.drawable.volume_up_24px,
-                                contentDescription = if (isMuted) "Unmute" else "Mute",
+                                shape = IconButtonDefaults.smallRoundShape,
                                 colors = IconButtonDefaults.iconButtonColors(
                                     contentColor = Color.White
                                 )
-                            )
+                            ) {
+                                Icon(
+                                    painter = painterResource(if (isMuted) R.drawable.volume_off_24px else R.drawable.volume_up_24px),
+                                    contentDescription = if (isMuted) "Unmute" else "Mute",
+                                )
+                            }
                         }
                         val sliderColors = SliderDefaults.colors(
                             thumbColor = Color.White,

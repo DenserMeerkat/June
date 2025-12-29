@@ -21,14 +21,13 @@ import com.example.june.core.domain.utils.toFullDate
 import com.example.june.core.domain.utils.toShortMonth
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
-import com.example.june.core.presentation.components.JuneIconButton
 import com.example.june.core.presentation.screens.journal.components.JournalMosaicCard
 import com.example.june.core.presentation.screens.journal.components.MediaOperations
 import com.example.june.viewmodels.HomeJournalVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun JournalCard(
     journal: Journal,
@@ -110,17 +109,19 @@ fun JournalCard(
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
-
-            JuneIconButton(
+            FilledIconButton(
                 onClick = { viewModel.toggleBookmark(journal.id) },
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
-                icon = if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px,
-                contentDescription = "Toggle Bookmark",
-                iconSize = 20.dp
-            )
+                shape = IconButtonDefaults.smallRoundShape
+            ) {
+                Icon(
+                    painter = painterResource(if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px),
+                    contentDescription = "Toggle Bookmark",
+                )
+            }
             Spacer(modifier = Modifier.width(4.dp))
         }
     }
@@ -206,16 +207,19 @@ fun RecentJournalCard(
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    JuneIconButton(
+                    FilledIconButton(
                         onClick = { viewModel.toggleBookmark(journal.id) },
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
-                        icon = if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px,
-                        contentDescription = "Toggle Bookmark",
-                        iconSize = 20.dp
-                    )
+                        shape = IconButtonDefaults.smallRoundShape
+                    ) {
+                        Icon(
+                            painter = painterResource(if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px),
+                            contentDescription = "Toggle Bookmark",
+                        )
+                    }
                     Spacer(modifier = Modifier.width(4.dp))
                 }
                 Spacer(modifier = Modifier.height(8.dp))

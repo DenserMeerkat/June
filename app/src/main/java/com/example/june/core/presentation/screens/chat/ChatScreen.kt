@@ -18,7 +18,6 @@ import com.example.june.R
 import com.example.june.core.domain.data_classes.Message
 import com.example.june.core.domain.utils.formatTime
 import com.example.june.core.navigation.AppNavigator
-import com.example.june.core.presentation.components.JuneIconButton
 import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.core.presentation.screens.settings.components.EditChatSheet
 import com.example.june.viewmodels.ChatVM
@@ -79,11 +78,18 @@ fun ChatScreen() {
                     }
                 },
                 navigationIcon = {
-                    JuneIconButton(
+                    FilledIconButton(
                         onClick = { navigator.navigateBack() },
-                        icon = R.drawable.arrow_back_24px,
-                        contentDescription = "Back"
-                    )
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                        ),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.arrow_back_24px,),
+                            contentDescription = "Back"
+                        )
+                    }
                 },
                 actions = {
                     if (chat != null) {

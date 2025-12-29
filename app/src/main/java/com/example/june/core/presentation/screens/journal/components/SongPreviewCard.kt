@@ -1,67 +1,26 @@
 package com.example.june.core.presentation.screens.journal.components
 
-import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.Player
-import com.example.june.core.domain.data_classes.SongDetails
-import com.example.june.core.presentation.components.SongPlayerCard
-import com.example.june.core.presentation.utils.rememberManagedExoPlayer
-import kotlinx.coroutines.delay
 import com.example.june.R
+import com.example.june.core.domain.data_classes.SongDetails
+import com.example.june.core.presentation.components.JuneSongPlayerCard
+import com.example.june.core.presentation.utils.rememberSongPlayerState
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SongPreviewCard(
     details: SongDetails?,
     isFetching: Boolean,
     onRemove: () -> Unit
 ) {
-    val exoPlayer = details?.previewUrl?.let {
-        rememberManagedExoPlayer(uri = Uri.parse(it), repeatMode = Player.REPEAT_MODE_OFF)
-    }
-
-    var isPlaying by remember { mutableStateOf(false) }
-    var sliderValue by remember { mutableFloatStateOf(0f) }
-    var isSeeking by remember { mutableStateOf(false) }
-
-    if (details != null) {
-        DisposableEffect(exoPlayer) {
-            val listener = object : Player.Listener {
-                override fun onIsPlayingChanged(playing: Boolean) {
-                    isPlaying = playing
-                }
-
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    if (playbackState == Player.STATE_ENDED) {
-                        isPlaying = false
-                        sliderValue = 0f
-                        exoPlayer?.seekTo(0)
-                    }
-                }
-            }
-            exoPlayer?.addListener(listener)
-            onDispose { exoPlayer?.removeListener(listener) }
-        }
-
-        LaunchedEffect(isPlaying, isSeeking) {
-            while (isPlaying && !isSeeking) {
-                exoPlayer?.let { player ->
-                    val duration = player.duration.coerceAtLeast(1)
-                    val position = player.currentPosition
-                    sliderValue = position.toFloat() / duration.toFloat()
-                }
-                delay(100)
-            }
-        }
-    }
+    val playerState = rememberSongPlayerState(previewUrl = details?.previewUrl)
 
     when {
         isFetching -> {
@@ -70,24 +29,20 @@ fun SongPreviewCard(
 
         details != null -> {
             Box(modifier = Modifier.fillMaxWidth()) {
-                SongPlayerCard(
+                JuneSongPlayerCard(
                     details = details,
-                    isPlaying = isPlaying,
-                    sliderValue = sliderValue,
-                    onPlayPause = { if (isPlaying) exoPlayer?.pause() else exoPlayer?.play() },
-                    onSeek = { newVal ->
-                        isSeeking = true
-                        sliderValue = newVal
-                        exoPlayer?.let { player ->
-                            player.seekTo((newVal * player.duration).toLong())
-                        }
-                    },
-                    onSeekFinished = { isSeeking = false },
+                    isPlaying = playerState.isPlaying,
+                    sliderValue = playerState.sliderValue,
+                    onPlayPause = playerState.onPlayPause,
+                    onSeek = playerState.onSeek,
+                    onSeekFinished = playerState.onSeekFinished,
                 )
                 Box(
-                    modifier = Modifier.align(Alignment.TopCenter)
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 16.dp, bottom = 36.dp)
                 ) {
-                    RemoveChip(onRemove)
+                    RemoveButton(onRemove)
                 }
             }
         }
@@ -98,36 +53,27 @@ fun SongPreviewCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun RemoveChip(
+fun RemoveButton(
     onRemove: () -> Unit
 ) {
-    Surface(
+    FilledIconButton(
         onClick = onRemove,
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.errorContainer,
-        contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        shadowElevation = 4.dp
+        shape = IconButtonDefaults.largePressedShape,
+        modifier = Modifier.size(56.dp).alpha(0.8F),
+        colors = IconButtonDefaults.iconButtonColors().copy(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer
+        )
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.close_24px),
-                contentDescription = null,
-                modifier = Modifier.size(14.dp)
-            )
-            Text(
-                text = "Remove",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
+        Icon(
+            painter = painterResource(R.drawable.delete_24px),
+            contentDescription = "Remove Song",
+            modifier = Modifier.size(32.dp)
+        )
     }
 }
-
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

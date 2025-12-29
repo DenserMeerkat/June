@@ -21,6 +21,10 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.ImageLoader
@@ -38,7 +43,6 @@ import coil.compose.AsyncImage
 import coil.decode.VideoFrameDecoder
 import com.example.june.R
 import com.example.june.core.navigation.AppNavigator
-import com.example.june.core.presentation.components.JuneIconButton
 import com.example.june.core.presentation.components.JuneVideoPlayer
 import com.example.june.viewmodels.JournalVM
 import org.koin.compose.koinInject
@@ -65,9 +69,11 @@ fun JournalMediaDetailScreen(
 
     var showUI by remember { mutableStateOf(true) }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(Color.Black)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
@@ -117,11 +123,19 @@ fun JournalMediaDetailScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.width(4.dp))
-                    JuneIconButton(
+                    FilledIconButton(
                         onClick = { navigator.navigateBack() },
-                        icon = R.drawable.arrow_back_24px,
-                        contentDescription = "Back",
-                    )
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                        ),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.arrow_back_24px),
+                            contentDescription = "Back",
+
+                            )
+                    }
                 }
             }
         }

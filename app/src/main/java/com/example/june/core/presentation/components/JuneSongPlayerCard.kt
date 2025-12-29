@@ -41,7 +41,7 @@ import ir.mahozad.multiplatform.wavyslider.material3.WavySlider
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun SongPlayerCard(
+fun JuneSongPlayerCard(
     details: SongDetails,
     isPlaying: Boolean,
     sliderValue: Float,
@@ -55,7 +55,7 @@ fun SongPlayerCard(
             shape = RoundedCornerShape(32.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(220.dp)
+                .height(240.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 AsyncImage(
@@ -70,8 +70,7 @@ fun SongPlayerCard(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.SpaceBetween
+                        .padding(16.dp, 16.dp, 16.dp, 8.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth()
@@ -81,7 +80,7 @@ fun SongPlayerCard(
                             contentDescription = "Album Art",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
-                                .size(80.dp)
+                                .size(108.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .shadow(4.dp, RoundedCornerShape(12.dp))
                         )
@@ -92,16 +91,15 @@ fun SongPlayerCard(
                             modifier = Modifier.alpha(0.8F)
                         )
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(Modifier.weight(1F))
                     Column(
                         modifier = Modifier
-                            .padding(start = 8.dp)
-                            .widthIn(max = 240.dp),
+                            .padding(horizontal = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
                             text = details.title,
-                            style = MaterialTheme.typography.titleSmall,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -109,7 +107,7 @@ fun SongPlayerCard(
                         )
                         Text(
                             text = details.artistName,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -117,19 +115,20 @@ fun SongPlayerCard(
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Bottom,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(4.dp))
                         WavySlider(
                             value = sliderValue,
                             onValueChange = onSeek,
                             onValueChangeFinished = onSeekFinished,
-                            trackThickness = 6.dp,
-                            waveThickness = 3.dp,
+                            trackThickness = 4.dp,
+                            waveThickness = 2.dp,
+                            waveHeight = 4.dp,
                             thumb = {
                                 Surface(
                                     modifier = Modifier
-                                        .size(width = 4.dp, height = 24.dp),
+                                        .size(width = 4.dp, height = 16.dp),
                                     shape = CircleShape,
                                     color = MaterialTheme.colorScheme.onSurface
                                 ) {}
@@ -141,7 +140,7 @@ fun SongPlayerCard(
                             ),
                             modifier = Modifier.weight(1f)
                         )
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(16.dp))
                         PlayPauseButton(
                             isPlaying = isPlaying,
                             enabled = details.previewUrl != null,
@@ -167,7 +166,7 @@ private fun PlayPauseButton(
         onCheckedChange = { onClick() },
         enabled = enabled,
         modifier = Modifier
-            .size(width = 64.dp, height = 48.dp),
+            .size(width = 56.dp, height = 40.dp),
         shapes = IconButtonDefaults.toggleableShapes(),
     ) {
         Icon(

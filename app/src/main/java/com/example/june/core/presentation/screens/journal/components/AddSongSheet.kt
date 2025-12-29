@@ -17,8 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.june.R
 import com.example.june.core.domain.data_classes.SongDetails
-import com.example.june.core.presentation.components.JuneIconButton
-import com.example.june.core.presentation.components.JuneIconButtonType
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -139,14 +137,16 @@ fun SongInputCard(
                             color = MaterialTheme.colorScheme.primary
                         )
                     } else if (songLink.isNotBlank()) {
-                        JuneIconButton(
-                            type = JuneIconButtonType.FilledTonal,
+                        FilledTonalIconButton(
                             onClick = onFetchClick,
-                            icon = R.drawable.arrow_forward_24px,
-                            contentDescription = "Fetch Song",
-                            buttonSize = 32.dp,
-                            iconSize = 16.dp,
-                        )
+                            shape = IconButtonDefaults.extraSmallRoundShape,
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.arrow_forward_24px),
+                                contentDescription = "Fetch Song",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 },
                 colors = TextFieldDefaults.colors(
