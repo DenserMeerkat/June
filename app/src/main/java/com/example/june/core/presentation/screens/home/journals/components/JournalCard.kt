@@ -40,8 +40,10 @@ fun JournalCard(
         onRemove = { },
         onMoveToFront = { },
         onMediaClick = null,
+        frontMediaPath = null,
+        onRemoveSong = { },
+        onEditSong = { },
         isEditMode = false,
-        frontMediaPath = null
     )
 
     Card(
@@ -67,7 +69,7 @@ fun JournalCard(
             Surface(
                 modifier = Modifier.size(96.dp, 60.dp),
                 shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6F),
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
             ) {
                 if (journal.images.isNotEmpty()) {
                     JournalMosaicCard(
@@ -97,7 +99,7 @@ fun JournalCard(
                 Text(
                     text = journal.dateTime.toFullDate(),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8F)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -150,8 +152,10 @@ fun RecentJournalCard(
             onRemove = { },
             onMoveToFront = { },
             onMediaClick = null,
+            frontMediaPath = null,
+            onRemoveSong = { },
+            onEditSong = { },
             isEditMode = false,
-            frontMediaPath = null
         )
 
         Card(
@@ -187,7 +191,7 @@ fun RecentJournalCard(
                         Text(
                             text = journal.dateTime.toShortMonth(),
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8F)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(

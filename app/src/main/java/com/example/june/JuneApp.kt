@@ -23,8 +23,8 @@ import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.screens.home.HomeScreen
 import com.example.june.core.presentation.screens.chat.ChatScreen
 import com.example.june.core.presentation.screens.journal.JournalScreen
-import com.example.june.core.presentation.screens.journal.journalmedia.JournalMediaDetailScreen
-import com.example.june.core.presentation.screens.journal.journalmedia.JournalMediaGalleryScreen
+import com.example.june.core.presentation.screens.journal.journalitem.MediaDetailScreen
+import com.example.june.core.presentation.screens.journal.journalitem.ItemGalleryScreen
 import com.example.june.core.presentation.screens.settings.SettingsScreen
 import com.example.june.core.presentation.screens.settings.section.AboutLibrariesPage
 import com.example.june.core.presentation.theme.JuneTheme
@@ -103,7 +103,7 @@ fun JuneApp() {
                     }
                     val viewModel: JournalVM = koinViewModel(viewModelStoreOwner = parentEntry)
 
-                    JournalMediaGalleryScreen(viewModel = viewModel)
+                    ItemGalleryScreen(viewModel = viewModel)
                 }
 
                 composable<Route.JournalMediaDetail> { backStackEntry ->
@@ -113,7 +113,7 @@ fun JuneApp() {
                     }
                     val viewModel: JournalVM = koinViewModel(viewModelStoreOwner = parentEntry)
 
-                    JournalMediaDetailScreen(
+                    MediaDetailScreen(
                         initialIndex = args.initialIndex,
                         viewModel = viewModel
                     )

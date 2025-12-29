@@ -1,4 +1,4 @@
-package com.example.june.core.presentation.screens.journal.journalmedia
+package com.example.june.core.presentation.screens.journal.journalitem
 
 import android.net.Uri
 import androidx.annotation.OptIn
@@ -50,7 +50,7 @@ import java.io.File
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun JournalMediaDetailScreen(
+fun MediaDetailScreen(
     initialIndex: Int,
     viewModel: JournalVM
 ) {
@@ -127,7 +127,7 @@ fun JournalMediaDetailScreen(
                         onClick = { navigator.navigateBack() },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                         ),
                     ) {
                         Icon(

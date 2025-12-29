@@ -119,8 +119,10 @@ fun JournalScreen() {
                     )
                 )
             },
+            frontMediaPath = state.images.lastOrNull(),
+            onRemoveSong = { viewModel.onAction(JournalAction.RemoveSong) },
+            onEditSong = { showSongSheet = true },
             isEditMode = state.isEditMode,
-            frontMediaPath = state.images.lastOrNull()
         )
     }
 
@@ -137,7 +139,7 @@ fun JournalScreen() {
                             onClick = { onBack() },
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                             ),
                         ) {
                             Icon(
@@ -170,7 +172,7 @@ fun JournalScreen() {
                         IconButton(
                             onClick = { viewModel.onAction(JournalAction.ToggleBookmark) },
                             colors = IconButtonDefaults.iconButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                             ),
                         ) {
                             Icon(
@@ -197,7 +199,7 @@ fun JournalScreen() {
                         IconButton(
                             onClick = { showMenu = true },
                             colors = IconButtonDefaults.iconButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                             ),
                         ) {
                             Icon(

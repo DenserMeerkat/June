@@ -154,7 +154,7 @@ fun SectionHeader(
         text = title,
         style = MaterialTheme.typography.bodyLarge,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8F),
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
         modifier = modifier.padding(vertical = 4.dp, horizontal = 16.dp)
     )
 }

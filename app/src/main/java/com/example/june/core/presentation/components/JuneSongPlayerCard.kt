@@ -1,17 +1,21 @@
 package com.example.june.core.presentation.components
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,12 +28,17 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,6 +58,22 @@ fun JuneSongPlayerCard(
     onSeek: (Float) -> Unit,
     onSeekFinished: () -> Unit
 ) {
+    val context = LocalContext.current
+    var showLinksMenu by remember { mutableStateOf(false) }
+
+    val availableLinks = remember(details.links) {
+        listOf(
+            "Spotify" to details.links.spotify,
+            "Apple Music" to details.links.appleMusic,
+            "YouTube Music" to details.links.youtubeMusic,
+            "YouTube" to details.links.youtube,
+            "Deezer" to details.links.deezer,
+            "SoundCloud" to details.links.soundcloud,
+            "Tidal" to details.links.tidal,
+            "Amazon Music" to details.links.amazonMusic
+        ).filter { it.second != null }
+    }
+
     Box(modifier = Modifier.fillMaxWidth()) {
         Surface(
             color = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -85,13 +110,46 @@ fun JuneSongPlayerCard(
                                 .shadow(4.dp, RoundedCornerShape(12.dp))
                         )
                         Spacer(Modifier.weight(1f))
+                        Box(
+                            modifier = Modifier.offset(y = (-12).dp),
+                        ) {
+                            ListenChip(onClick = { showLinksMenu = true })
+                            DropdownMenu(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                expanded = showLinksMenu,
+                                onDismissRequest = { showLinksMenu = false },
+                                shape = RoundedCornerShape(24.dp),
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                offset = androidx.compose.ui.unit.DpOffset(x = 0.dp, y = 4.dp)
+                            ) {
+                                availableLinks.forEach { (platform, url) ->
+                                    DropdownMenuItem(
+                                        modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                                        text = { Text(platform) },
+                                        onClick = {
+                                            showLinksMenu = false
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                            context.startActivity(intent)
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                painter = painterResource(getPlatformIcon(platform)),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp),
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(Modifier.width(12.dp))
                         Icon(
                             painterResource(R.drawable.spotify),
                             contentDescription = null,
-                            modifier = Modifier.alpha(0.8F)
+                            modifier = Modifier.alpha(0.8f)
                         )
                     }
-                    Spacer(Modifier.weight(1F))
+                    Spacer(Modifier.weight(1f))
                     Column(
                         modifier = Modifier
                             .padding(horizontal = 4.dp),
@@ -175,5 +233,46 @@ private fun PlayPauseButton(
             ),
             contentDescription = if (isPlaying) "Pause" else "Play",
         )
+    }
+}
+
+@Composable
+fun ListenChip(onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 8.dp, top = 6.dp, end = 12.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.music_note_24px),
+                contentDescription = null,
+                modifier = Modifier.size(14.dp)
+            )
+            Text(
+                text = "Listen",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+private fun getPlatformIcon(platform: String): Int {
+    return when (platform) {
+        "Spotify" -> R.drawable.spotify
+        "Apple Music" -> R.drawable.applemusic
+        "YouTube Music" -> R.drawable.youtubemusic
+        "YouTube" -> R.drawable.youtube
+        "SoundCloud" -> R.drawable.soundcloud
+        "Deezer" -> R.drawable.deezer
+        "Tidal" -> R.drawable.tidal
+        "Amazon Music" -> R.drawable.amazonmusic
+        else -> R.drawable.music_note_2_24px
     }
 }

@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
@@ -79,9 +80,9 @@ fun AddSongSheet(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 SongPreviewCard(
-                    details = songDetails,
+                    songDetails = songDetails,
                     isFetching = isFetching,
-                    onRemove = onRemoveSong
+                    onRemoveSong = onRemoveSong
                 )
                 Spacer(modifier = Modifier.height(100.dp))
             }
@@ -119,6 +120,12 @@ fun SongInputCard(
                     Icon(painterResource(R.drawable.youtubemusic), null, Modifier.size(12.dp))
                     Spacer(Modifier.width(6.dp))
                     Icon(painterResource(R.drawable.soundcloud), null, Modifier.size(14.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Icon(painterResource(R.drawable.amazonmusic), null, Modifier.size(12.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Icon(painterResource(R.drawable.deezer), null, Modifier.size(12.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Icon(painterResource(R.drawable.tidal), null, Modifier.size(12.dp))
                 }
             }
 
@@ -160,6 +167,49 @@ fun SongInputCard(
                 textStyle = MaterialTheme.typography.bodyLarge,
                 singleLine = true
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun SongPreviewCard(
+    songDetails: SongDetails?,
+    isFetching: Boolean,
+    onRemoveSong: () -> Unit
+) {
+    Box {
+        JournalSongItem(
+            details = songDetails,
+            isFetching = isFetching,
+            onRemove = onRemoveSong,
+            onEdit = { },
+            isEditMode = false
+        )
+        if (!isFetching && songDetails != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 16.dp, bottom = 36.dp)
+            ) {
+                FilledIconButton(
+                    onClick = onRemoveSong,
+                    shape = IconButtonDefaults.largePressedShape,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .alpha(0.8f),
+                    colors = IconButtonDefaults.iconButtonColors().copy(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.delete_24px),
+                        contentDescription = "Remove Song",
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
         }
     }
 }

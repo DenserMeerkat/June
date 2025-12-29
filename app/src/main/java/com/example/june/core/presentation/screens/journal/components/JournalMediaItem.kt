@@ -171,7 +171,7 @@ fun JournalMediaItem(
 
         if (operations.isEditMode) {
             DropdownMenu(
-                modifier = Modifier.defaultMinSize(minWidth = 200.dp),
+                modifier = Modifier.defaultMinSize(minWidth = 200.dp).padding(horizontal = 8.dp),
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false },
                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -180,6 +180,7 @@ fun JournalMediaItem(
                 offset = pressOffset.copy(y = pressOffset.y - itemHeight)
             ) {
                 DropdownMenuItem(
+                    modifier = Modifier.clip(RoundedCornerShape(16.dp)),
                     text = { Text("Delete") },
                     onClick = {
                         isPlaying = false
@@ -190,6 +191,7 @@ fun JournalMediaItem(
                 )
                 if (shouldShowMoveToFront) {
                     DropdownMenuItem(
+                        modifier = Modifier.clip(RoundedCornerShape(16.dp)),
                         text = { Text("Move to Front") },
                         onClick = {
                             operations.onMoveToFront(path)

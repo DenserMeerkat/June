@@ -1,4 +1,4 @@
-package com.example.june.core.presentation.screens.journal.journalmedia
+package com.example.june.core.presentation.screens.journal.journalitem
 
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.Arrangement
@@ -36,7 +36,7 @@ import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JournalMediaGalleryScreen(
+fun ItemGalleryScreen(
     viewModel: JournalVM
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -54,8 +54,10 @@ fun JournalMediaGalleryScreen(
                     )
                 )
             },
+            frontMediaPath = state.images.lastOrNull(),
+            onRemoveSong = { viewModel.onAction(JournalAction.RemoveSong) },
+            onEditSong = { viewModel.onAction(JournalAction.SetEditMode(!state.isEditMode)) },
             isEditMode = state.isEditMode,
-            frontMediaPath = state.images.lastOrNull()
         )
     }
 
@@ -68,7 +70,7 @@ fun JournalMediaGalleryScreen(
                         onClick = { navigator.navigateBack() },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75F)
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                         ),
                     ) {
                         Icon(
