@@ -131,6 +131,7 @@ dependencies {
     implementation(libs.jsoup)
     implementation(libs.json.path)
     implementation(libs.wavy.slider)
+    implementation(libs.androidx.palette)
 
     implementation(libs.koin.core)
     implementation(libs.koin.compose)

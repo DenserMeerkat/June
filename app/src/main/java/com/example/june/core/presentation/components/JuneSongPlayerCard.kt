@@ -1,14 +1,12 @@
 package com.example.june.core.presentation.components
 
 import android.content.Intent
-import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconToggleButton
@@ -28,15 +29,16 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -47,12 +49,15 @@ import coil.compose.AsyncImage
 import com.example.june.R
 import com.example.june.core.domain.data_classes.SongDetails
 import ir.mahozad.multiplatform.wavyslider.material3.WavySlider
+import androidx.core.net.toUri
+import com.example.june.core.presentation.utils.rememberDynamicThemeColors
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun JuneSongPlayerCard(
     details: SongDetails,
     isPlaying: Boolean,
+    isLoading: Boolean,
     sliderValue: Float,
     onPlayPause: () -> Unit,
     onSeek: (Float) -> Unit,
@@ -60,6 +65,8 @@ fun JuneSongPlayerCard(
 ) {
     val context = LocalContext.current
     var showLinksMenu by remember { mutableStateOf(false) }
+
+    val themeColors = rememberDynamicThemeColors(details.thumbnailUrl)
 
     val availableLinks = remember(details.links) {
         listOf(
@@ -76,7 +83,8 @@ fun JuneSongPlayerCard(
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Surface(
-            color = MaterialTheme.colorScheme.surfaceContainerLowest,
+            color = themeColors.surface,
+            contentColor = themeColors.onSurface,
             shape = RoundedCornerShape(32.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -89,7 +97,7 @@ fun JuneSongPlayerCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
-                        .alpha(0.2f)
+                        .alpha(0.25f)
                 )
 
                 Column(
@@ -106,29 +114,38 @@ fun JuneSongPlayerCard(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(108.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .shadow(4.dp, RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(16.dp))
+                                .shadow(8.dp, RoundedCornerShape(16.dp))
                         )
                         Spacer(Modifier.weight(1f))
                         Box(
                             modifier = Modifier.offset(y = (-12).dp),
                         ) {
-                            ListenChip(onClick = { showLinksMenu = true })
+                            ListenChip(
+                                onClick = { showLinksMenu = true },
+                                containerColor = themeColors.primaryContainer, 
+                                contentColor = themeColors.onPrimaryContainer
+                            )
+
                             DropdownMenu(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                 expanded = showLinksMenu,
                                 onDismissRequest = { showLinksMenu = false },
                                 shape = RoundedCornerShape(24.dp),
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
                                 offset = androidx.compose.ui.unit.DpOffset(x = 0.dp, y = 4.dp)
                             ) {
                                 availableLinks.forEach { (platform, url) ->
                                     DropdownMenuItem(
                                         modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                        text = { Text(platform) },
+                                        text = {
+                                            Text(
+                                                text = platform,
+                                                color = Color.White
+                                            )
+                                        },
                                         onClick = {
                                             showLinksMenu = false
-                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                            val intent = Intent(Intent.ACTION_VIEW, url?.toUri())
                                             context.startActivity(intent)
                                         },
                                         leadingIcon = {
@@ -143,16 +160,34 @@ fun JuneSongPlayerCard(
                             }
                         }
                         Spacer(Modifier.width(12.dp))
-                        Icon(
-                            painterResource(R.drawable.spotify),
-                            contentDescription = null,
-                            modifier = Modifier.alpha(0.8f)
-                        )
+                        val spotifyUrl = details.links.spotify
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .clickable {
+                                    val intent = Intent(Intent.ACTION_VIEW, spotifyUrl?.toUri())
+                                    context.startActivity(intent)
+                                }
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(20.dp),
+                                shape = CircleShape,
+                                color = themeColors.onPrimaryContainer,
+                                content = {}
+                            )
+                            Icon(
+                                painter = painterResource(R.drawable.spotify),
+                                contentDescription = "Open Spotify",
+                                modifier = Modifier.size(24.dp),
+                                tint = themeColors.primaryContainer
+                            )
+                        }
                     }
                     Spacer(Modifier.weight(1f))
                     Column(
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp),
+                        modifier = Modifier.padding(horizontal = 4.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
@@ -161,12 +196,12 @@ fun JuneSongPlayerCard(
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = themeColors.onSurface 
                         )
                         Text(
                             text = details.artistName,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            color = themeColors.onSurfaceVariant, 
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -184,25 +219,30 @@ fun JuneSongPlayerCard(
                             waveThickness = 2.dp,
                             waveHeight = 4.dp,
                             thumb = {
-                                Surface(
-                                    modifier = Modifier
-                                        .size(width = 4.dp, height = 16.dp),
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                ) {}
+                                if (!isLoading && details.previewUrl != null) {
+                                    Surface(
+                                        modifier = Modifier
+                                            .size(width = 4.dp, height = 16.dp),
+                                        shape = CircleShape,
+                                        color = themeColors.onSurface 
+                                    ) {}
+                                }
                             },
                             colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.onSurface,
-                                activeTrackColor = MaterialTheme.colorScheme.onSurface,
-                                inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                thumbColor = themeColors.onSurface,
+                                activeTrackColor = themeColors.onSurface, 
+                                inactiveTrackColor = themeColors.onSurface.copy(alpha = 0.2f),
                             ),
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(Modifier.width(16.dp))
                         PlayPauseButton(
                             isPlaying = isPlaying,
+                            isLoading = isLoading,
                             enabled = details.previewUrl != null,
-                            onClick = onPlayPause
+                            onClick = onPlayPause,
+                            containerColor = themeColors.primaryContainer, 
+                            contentColor = themeColors.onPrimaryContainer 
                         )
                     }
                 }
@@ -216,33 +256,56 @@ fun JuneSongPlayerCard(
 @Composable
 private fun PlayPauseButton(
     isPlaying: Boolean,
+    isLoading: Boolean,
     enabled: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    containerColor: Color,
+    contentColor: Color
 ) {
     FilledIconToggleButton(
         checked = isPlaying,
-        onCheckedChange = { onClick() },
+        onCheckedChange = { if (!isLoading) onClick() },
         enabled = enabled,
         modifier = Modifier
             .size(width = 56.dp, height = 40.dp),
         shapes = IconButtonDefaults.toggleableShapes(),
-    ) {
-        Icon(
-            painter = painterResource(
-                if (isPlaying) R.drawable.pause_24px else R.drawable.play_arrow_24px
-            ),
-            contentDescription = if (isPlaying) "Pause" else "Play",
+
+        colors = IconButtonDefaults.filledIconToggleButtonColors(
+            containerColor = containerColor,
+            contentColor = contentColor,
+            checkedContainerColor = containerColor,
+            checkedContentColor = contentColor,
+            disabledContainerColor = containerColor.copy(alpha = 0.5f),
+            disabledContentColor = contentColor.copy(alpha = 0.5f)
         )
+    ) {
+        if (isLoading) {
+            CircularWavyProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                color = contentColor,
+            )
+        } else {
+            Icon(
+                painter = painterResource(
+                    if (isPlaying) R.drawable.pause_24px else R.drawable.play_arrow_24px
+                ),
+                contentDescription = if (isPlaying) "Pause" else "Play",
+            )
+        }
     }
 }
 
 @Composable
-fun ListenChip(onClick: () -> Unit) {
+fun ListenChip(
+    onClick: () -> Unit,
+    containerColor: Color,
+    contentColor: Color
+) {
     Surface(
         onClick = onClick,
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        color = containerColor,
+        contentColor = contentColor
     ) {
         Row(
             modifier = Modifier.padding(start = 8.dp, top = 6.dp, end = 12.dp, bottom = 6.dp),

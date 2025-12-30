@@ -28,6 +28,7 @@ okhttp = "4.12.0"
 jsoup = "1.18.1"
 jsonPath = "2.9.0"
 wavySlider = "2.2.0"
+palette = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -61,7 +62,7 @@ koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin-core" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin-core" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin-core" }
 koin-compose-viewmodel-navigation = { module = "io.insert-koin:koin-compose-viewmodel-navigation", version.ref = "koin-core" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization"}
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 composeIcons-fontAwesome = { module = "br.com.devsrsouza.compose.icons:font-awesome", version.ref = "composeIcons" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 coil-video = { group = "io.coil-kt", name = "coil-video", version.ref = "coil" }
@@ -75,6 +76,7 @@ okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor",
 jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
 json-path = { group = "com.jayway.jsonpath", name = "json-path", version.ref = "jsonPath" }
 wavy-slider = { group = "ir.mahozad.multiplatform", name = "wavy-slider", version.ref = "wavySlider" }
+androidx-palette = { group = "androidx.palette", name = "palette", version.ref = "palette" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

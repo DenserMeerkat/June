@@ -13,8 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -22,6 +20,7 @@ import com.example.june.R
 import com.example.june.core.domain.data_classes.SongDetails
 import com.example.june.core.presentation.components.JuneSongPlayerCard
 import com.example.june.core.presentation.utils.rememberSongPlayerState
+
 @Composable
 fun JournalSongItem(
     details: SongDetails?,
@@ -71,6 +70,7 @@ fun JournalSongItem(
                     JuneSongPlayerCard(
                         details = details,
                         isPlaying = playerState.isPlaying,
+                        isLoading = playerState.isLoading,
                         sliderValue = playerState.sliderValue,
                         onPlayPause = playerState.onPlayPause,
                         onSeek = playerState.onSeek,

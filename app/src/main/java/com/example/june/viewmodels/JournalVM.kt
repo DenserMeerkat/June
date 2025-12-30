@@ -62,7 +62,6 @@ class JournalVM(
                     updateState { it.copy(images = currentImages) }
                 }
             }
-
             is JournalAction.SetLocation -> updateState { it.copy(location = action.location) }
             is JournalAction.SetEditMode -> updateState { it.copy(isEditMode = action.isEdit) }
             is JournalAction.ToggleBookmark -> toggleBookmark()
@@ -249,7 +248,7 @@ class JournalVM(
         viewModelScope.launch {
             _state.update { it.copy(isFetchingSong = true) }
             songRepo.fetchSongDetails(url).onSuccess { details ->
-                _state.update { it.copy(songDetails = details, isFetchingSong = false) }
+                updateState { it.copy(songDetails = details, isFetchingSong = false) }
             }.onFailure {
                 _state.update { it.copy(isFetchingSong = false) }
                 // TODO: Handle error
