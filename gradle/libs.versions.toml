@@ -29,6 +29,7 @@ jsoup = "1.18.1"
 jsonPath = "2.9.0"
 wavySlider = "2.2.0"
 palette = "1.0.0"
+osmdroid = "6.1.18"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -77,6 +78,7 @@ jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
 json-path = { group = "com.jayway.jsonpath", name = "json-path", version.ref = "jsonPath" }
 wavy-slider = { group = "ir.mahozad.multiplatform", name = "wavy-slider", version.ref = "wavySlider" }
 androidx-palette = { group = "androidx.palette", name = "palette", version.ref = "palette" }
+osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -21,5 +21,7 @@ data class Journal(
 data class JournalLocation(
     val latitude: Double,
     val longitude: Double,
-    val address: String? = null
+    val address: String? = null,
+    val name: String? = null,
+    val locality: String? = null
 )

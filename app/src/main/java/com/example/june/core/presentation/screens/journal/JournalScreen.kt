@@ -30,6 +30,7 @@ import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.core.presentation.screens.journal.components.AddItemSheet
+import com.example.june.core.presentation.screens.journal.components.AddLocationDialog
 import com.example.june.core.presentation.screens.journal.components.AddSongSheet
 import com.example.june.core.presentation.screens.journal.components.JournalDatePickerDialog
 import com.example.june.core.presentation.screens.journal.components.JournalItemsPreview
@@ -56,6 +57,7 @@ fun JournalScreen() {
     var showAddItemSheet by remember { mutableStateOf(false) }
     var showCameraSelectionDialog by remember { mutableStateOf(false) }
     var showSongSheet by remember { mutableStateOf(false) }
+    var showLocationDialog by remember { mutableStateOf(false) }
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var tempVideoUri by remember { mutableStateOf<Uri?>(null) }
@@ -440,6 +442,16 @@ fun JournalScreen() {
         )
     }
 
+    if (showLocationDialog) {
+        AddLocationDialog(
+            existingLocation = state.location,
+            onLocationSelected = { loc ->
+                viewModel.onAction(JournalAction.SetLocation(loc))
+            },
+            onDismiss = { showLocationDialog = false }
+        )
+    }
+
     if (showAddItemSheet) {
         AddItemSheet(
             onDismiss = { showAddItemSheet = false },
@@ -456,7 +468,8 @@ fun JournalScreen() {
                 showSongSheet = true
             },
             onAddLocationClick = {
-                // TODO: Handle Location
+                showAddItemSheet = false
+                showLocationDialog = true
             }
         )
     }
