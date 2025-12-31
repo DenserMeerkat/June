@@ -44,7 +44,7 @@ fun ItemGalleryScreen(
 
     val mediaOperations = remember(state.isEditMode, state.images) {
         MediaOperations(
-            onRemove = { viewModel.onAction(JournalAction.RemoveImage(it)) },
+            onRemoveMedia = { viewModel.onAction(JournalAction.RemoveImage(it)) },
             onMoveToFront = { viewModel.onAction(JournalAction.MoveImageToFront(it)) },
             onMediaClick = { path ->
                 navigator.navigateTo(
@@ -57,6 +57,8 @@ fun ItemGalleryScreen(
             frontMediaPath = state.images.lastOrNull(),
             onRemoveSong = { viewModel.onAction(JournalAction.RemoveSong) },
             onEditSong = { viewModel.onAction(JournalAction.SetEditMode(!state.isEditMode)) },
+            onRemoveLocation = { viewModel.onAction(JournalAction.RemoveLocation) },
+            onLocationClick = { viewModel.onAction(JournalAction.SetEditMode(!state.isEditMode)) },
             isEditMode = state.isEditMode,
         )
     }

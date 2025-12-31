@@ -1,5 +1,11 @@
 package com.example.june.core.presentation.screens.journal.components
 
+import android.Manifest
+import android.content.IntentSender
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -21,89 +27,132 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
 import com.example.june.R
 import com.example.june.core.domain.data_classes.JournalLocation
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import com.example.june.core.presentation.utils.OsmMapUtils
+import com.example.june.core.presentation.utils.rememberManagedOsmMapView
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.osmdroid.config.Configuration
-import org.osmdroid.events.MapListener
-import org.osmdroid.events.ScrollEvent
-import org.osmdroid.events.ZoomEvent
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import java.net.URL
 
 @Composable
 fun AddLocationDialog(
     existingLocation: JournalLocation? = null,
-    onLocationSelected: (JournalLocation) -> Unit,
+    isEditMode: Boolean = true,
+    onLocationSelected: (JournalLocation) -> Unit = {},
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(Unit) {
-        Configuration.getInstance().userAgentValue = context.packageName
-    }
+    var isDarkMode by remember { mutableStateOf(false) }
+    var isTerrainMode by remember { mutableStateOf(false) }
 
     var searchQuery by remember { mutableStateOf("") }
     var isSearching by remember { mutableStateOf(false) }
     var isMapMoving by remember { mutableStateOf(false) }
-    var reverseGeocodeJob by remember { mutableStateOf<Job?>(null) }
-
+    var isFetchingLocation by remember { mutableStateOf(false) }
     var currentLocation by remember {
-        mutableStateOf(existingLocation ?: JournalLocation(0.0, 0.0, name = "Searching..."))
+        mutableStateOf(existingLocation ?: JournalLocation(0.0, 0.0, name = "Move map to select"))
     }
 
-    val mapView = remember {
-        MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
-            setMultiTouchControls(true)
-            isHorizontalMapRepetitionEnabled = false
-            isVerticalMapRepetitionEnabled = false
-            controller.setZoom(if (existingLocation != null) 17.0 else 3.0)
-            minZoomLevel = 3.0
-        }
-    }
-
-    DisposableEffect(mapView) {
-        val listener = object : MapListener {
-            override fun onScroll(event: ScrollEvent?): Boolean {
-                isMapMoving = true
-                reverseGeocodeJob?.cancel()
-
-                reverseGeocodeJob = scope.launch {
-                    delay(800)
-                    isMapMoving = false
-                    updateLocationFromCenter(mapView.mapCenter as GeoPoint) { loc ->
-                        currentLocation = loc
-                    }
+    val mapView = rememberManagedOsmMapView(
+        initialLocation = existingLocation,
+        context = context,
+        isDarkMode = isDarkMode,
+        isTerrainMode = isTerrainMode,
+        onMapStateChange = { moving ->
+            if (isEditMode) isMapMoving = moving
+        },
+        onCenterChanged = { center ->
+            if (isEditMode) {
+                scope.launch {
+                    currentLocation = OsmMapUtils.updateLocationFromCenter(center)
                 }
-                return true
             }
-            override fun onZoom(event: ZoomEvent?): Boolean = true
         }
-        mapView.addMapListener(listener)
-        onDispose {
-            mapView.removeMapListener(listener)
-            mapView.onDetach()
+    )
+
+    fun performLocationFetch() {
+        isFetchingLocation = true
+        scope.launch {
+            delay(500)
+            val location = OsmMapUtils.fetchCurrentLocation(context)
+            if (location != null && (location.latitude != 0.0 || location.longitude != 0.0)) {
+                currentLocation = location
+                mapView.controller.animateTo(GeoPoint(location.latitude, location.longitude))
+                mapView.controller.setZoom(17.0)
+            }
+            isFetchingLocation = false
+        }
+    }
+
+    val locationSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            performLocationFetch()
+        } else {
+            isFetchingLocation = false
+        }
+    }
+
+    fun checkSettingsAndFetch() {
+        val locationRequest =
+            LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000).build()
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val client = LocationServices.getSettingsClient(context)
+
+        client.checkLocationSettings(builder.build())
+            .addOnSuccessListener { performLocationFetch() }
+            .addOnFailureListener { exception ->
+                if (exception is ResolvableApiException) {
+                    try {
+                        locationSettingsLauncher.launch(
+                            IntentSenderRequest.Builder(exception.resolution).build()
+                        )
+                    } catch (e: IntentSender.SendIntentException) {
+                        isFetchingLocation = false
+                    }
+                } else {
+                    isFetchingLocation = false
+                }
+            }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            checkSettingsAndFetch()
+        } else {
+            isFetchingLocation = false
+        }
+    }
+
+    val onMyLocationClick = {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            checkSettingsAndFetch()
+        } else {
+            isFetchingLocation = true
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
     LaunchedEffect(Unit) {
-        val startPoint = existingLocation?.let { GeoPoint(it.latitude, it.longitude) }
-            ?: GeoPoint(0.0, 0.0)
-
-        mapView.controller.setCenter(startPoint)
-
-        if (existingLocation == null) {
-            currentLocation = JournalLocation(0.0, 0.0, name = "Move map to select")
+        if (existingLocation == null && isEditMode) {
+            onMyLocationClick()
         }
     }
 
@@ -119,56 +168,112 @@ fun AddLocationDialog(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            AndroidView(
-                factory = { mapView },
-                modifier = Modifier.fillMaxSize()
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                OsmSearchBar(
-                    query = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    onSearch = {
-                        focusManager.clearFocus()
-                        scope.launch {
-                            isSearching = true
-                            val result = searchNominatim(searchQuery)
-                            if (result != null) {
-                                mapView.controller.animateTo(result)
-                                mapView.controller.setZoom(17.0)
-                                updateLocationFromCenter(result) { currentLocation = it }
-                            }
-                            isSearching = false
-                        }
-                    },
-                    isSearching = isSearching,
-                    onBack = onDismiss
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .offset(y = (-24).dp)
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.location_on_24px_fill),
-                    contentDescription = null,
-                    tint = Color.Black.copy(alpha = 0.25f),
+            AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
+
+            if (isEditMode) {
+                Box(
                     modifier = Modifier
-                        .size(64.dp)
-                        .offset(y = 4.dp)
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    OsmSearchBar(
+                        query = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        onSearch = {
+                            focusManager.clearFocus()
+                            scope.launch {
+                                isSearching = true
+                                OsmMapUtils.searchNominatim(searchQuery)?.let { result ->
+                                    mapView.controller.animateTo(result)
+                                    mapView.controller.setZoom(17.0)
+                                    currentLocation = OsmMapUtils.updateLocationFromCenter(result)
+                                }
+                                isSearching = false
+                            }
+                        },
+                        isSearching = isSearching,
+                        onBack = onDismiss
+                    )
+                }
+
+                MapControlColumn(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .statusBarsPadding()
+                        .padding(top = 80.dp, end = 16.dp),
+                    isDarkMode = isDarkMode,
+                    onToggleDarkMode = { isDarkMode = !isDarkMode },
+                    isTerrainMode = isTerrainMode,
+                    onToggleTerrain = { isTerrainMode = !isTerrainMode },
+                    isFetchingLocation = isFetchingLocation,
+                    onMyLocationClick = onMyLocationClick,
+                    onZoomIn = { mapView.controller.zoomIn() },
+                    onZoomOut = { mapView.controller.zoomOut() }
                 )
-                Icon(
-                    painter = painterResource(R.drawable.location_on_24px_fill),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(64.dp)
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .offset(y = (-24).dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.location_on_24px_fill),
+                        contentDescription = null,
+                        tint = Color.Black.copy(alpha = 0.25f),
+                        modifier = Modifier
+                            .size(64.dp)
+                            .offset(y = 4.dp)
+                    )
+                    Icon(
+                        painter = painterResource(R.drawable.location_on_24px_fill),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .statusBarsPadding()
+                        .padding(16.dp)
+                ) {
+                    FilledIconButton(
+                        onClick = onDismiss,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        Icon(painterResource(R.drawable.close_24px), "Close")
+                    }
+                }
+
+                MapControlColumn(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .statusBarsPadding()
+                        .padding(top = 16.dp, end = 16.dp),
+                    isDarkMode = isDarkMode,
+                    onToggleDarkMode = { isDarkMode = !isDarkMode },
+                    isTerrainMode = isTerrainMode,
+                    onToggleTerrain = { isTerrainMode = !isTerrainMode },
+                    isFetchingLocation = false,
+                    onMyLocationClick = null,
+                    onZoomIn = { mapView.controller.zoomIn() },
+                    onZoomOut = { mapView.controller.zoomOut() }
                 )
+                Box(modifier = Modifier.align(Alignment.Center)) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    ) {}
+                }
             }
+
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -179,11 +284,115 @@ fun AddLocationDialog(
                 OsmLocationCard(
                     location = currentLocation,
                     isLoading = isMapMoving,
+                    isEditMode = isEditMode,
                     onConfirm = {
                         onLocationSelected(currentLocation)
                         onDismiss()
                     }
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun MapControlColumn(
+    isDarkMode: Boolean,
+    onToggleDarkMode: () -> Unit,
+    isTerrainMode: Boolean,
+    onToggleTerrain: () -> Unit,
+    isFetchingLocation: Boolean,
+    onMyLocationClick: (() -> Unit)?,
+    onZoomIn: () -> Unit,
+    onZoomOut: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        FilledIconButton(
+            onClick = onToggleDarkMode,
+            shape = RoundedCornerShape(16.dp),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ),
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                painter = painterResource(if (isDarkMode) R.drawable.light_mode_24px else R.drawable.dark_mode_24px),
+                contentDescription = "Toggle Dark Mode",
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            FilledIconButton(
+                onClick = onZoomIn,
+                shape = RoundedCornerShape(
+                    topStart = 16.dp, topEnd = 16.dp,
+                    bottomStart = 4.dp, bottomEnd = 4.dp
+                ),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.add_24px),
+                    contentDescription = "Zoom In",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            FilledIconButton(
+                onClick = onZoomOut,
+                shape = RoundedCornerShape(
+                    topStart = 4.dp, topEnd = 4.dp,
+                    bottomStart = 16.dp, bottomEnd = 16.dp
+                ),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.remove_24px),
+                    contentDescription = "Zoom Out",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        if (onMyLocationClick != null) {
+            FilledIconButton(
+                onClick = onMyLocationClick,
+                enabled = !isFetchingLocation,
+                shape = RoundedCornerShape(16.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                ),
+                modifier = Modifier.size(56.dp)
+            ) {
+                if (isFetchingLocation) {
+                    CircularWavyProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(R.drawable.my_location_24px_fill),
+                        contentDescription = "Current Location",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
@@ -268,6 +477,7 @@ fun OsmSearchBar(
 fun OsmLocationCard(
     location: JournalLocation,
     isLoading: Boolean,
+    isEditMode: Boolean,
     onConfirm: () -> Unit
 ) {
     Surface(
@@ -282,15 +492,15 @@ fun OsmLocationCard(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Surface(
-                    modifier = Modifier.size(56.dp),
+                    modifier = Modifier.size(48.dp),
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        if (isLoading) {
+                        if (isLoading && isEditMode) {
                             CircularWavyProgressIndicator(
                                 modifier = Modifier.size(32.dp),
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -308,109 +518,53 @@ fun OsmLocationCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (isLoading) "Locating..." else (location.name ?: "Pinned Location"),
-                        style = MaterialTheme.typography.headlineSmall,
+                        text = if (isLoading && isEditMode) "Locating..." else (location.name
+                            ?: "Selected Location"),
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Text(
-                        text = if (isLoading) "Fetching address..." else (location.locality ?: location.address ?: "No address"),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+
+                    if (!isLoading || !isEditMode) {
+                        location.locality?.let { locality ->
+                            Text(
+                                text = locality,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Fetching address...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
 
-            Button(
-                onClick = onConfirm,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                enabled = !isLoading
-            ) {
-                Text(
-                    "Confirm Location",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+            if (isEditMode) {
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    enabled = !isLoading
+                ) {
+                    Text(
+                        "Confirm Location",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
-        }
-    }
-}
-
-private suspend fun searchNominatim(query: String): GeoPoint? = withContext(Dispatchers.IO) {
-    try {
-        val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
-        val url = "https://nominatim.openstreetmap.org/search?q=$encodedQuery&format=json&limit=1"
-        val connection = URL(url).openConnection()
-        connection.setRequestProperty("User-Agent", "JuneApp/1.0")
-        connection.connectTimeout = 5000
-        val response = connection.getInputStream().bufferedReader().readText()
-        val jsonArray = JSONArray(response)
-        if (jsonArray.length() > 0) {
-            val obj = jsonArray.getJSONObject(0)
-            GeoPoint(obj.getDouble("lat"), obj.getDouble("lon"))
-        } else null
-    } catch (e: Exception) {
-        null
-    }
-}
-
-private suspend fun updateLocationFromCenter(
-    center: GeoPoint,
-    onResult: (JournalLocation) -> Unit
-) = withContext(Dispatchers.IO) {
-    try {
-        val url = "https://nominatim.openstreetmap.org/reverse?lat=${center.latitude}&lon=${center.longitude}&format=json"
-        val connection = URL(url).openConnection()
-        connection.setRequestProperty("User-Agent", "JuneApp/1.0")
-        connection.connectTimeout = 5000
-        val response = connection.getInputStream().bufferedReader().readText()
-        val json = org.json.JSONObject(response)
-
-        val addressObj = json.optJSONObject("address")
-        val displayName = json.optString("display_name", "Unknown Location")
-
-        val city = addressObj?.optString("city")
-            ?: addressObj?.optString("town")
-            ?: addressObj?.optString("village")
-            ?: addressObj?.optString("state")
-
-        val specificName = addressObj?.optString("road")
-            ?: addressObj?.optString("suburb")
-            ?: addressObj?.optString("neighbourhood")
-            ?: "Pinned Location"
-
-        withContext(Dispatchers.Main) {
-            onResult(
-                JournalLocation(
-                    latitude = center.latitude,
-                    longitude = center.longitude,
-                    name = specificName,
-                    address = displayName,
-                    locality = city
-                )
-            )
-        }
-    } catch (e: Exception) {
-        withContext(Dispatchers.Main) {
-            onResult(
-                JournalLocation(
-                    latitude = center.latitude,
-                    longitude = center.longitude,
-                    name = "Pinned Location",
-                    address = "Lat: ${String.format("%.4f", center.latitude)}, Lon: ${String.format("%.4f", center.longitude)}"
-                )
-            )
         }
     }
 }

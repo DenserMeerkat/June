@@ -184,7 +184,7 @@ fun JournalMediaItem(
                     text = { Text("Delete") },
                     onClick = {
                         isPlaying = false
-                        operations.onRemove(path)
+                        operations.onRemoveMedia(path)
                         showMenu = false
                     },
                     leadingIcon = { Icon(painterResource(R.drawable.delete_24px), null) }

@@ -53,6 +53,7 @@ class JournalVM(
             is JournalAction.ChangeTitle -> updateState { it.copy(title = action.title) }
             is JournalAction.ChangeContent -> updateState { it.copy(content = action.content) }
             is JournalAction.ChangeDateTime -> updateState { it.copy(dateTime = action.dateTime) }
+
             is JournalAction.AddImage -> updateState { it.copy(images = it.images + action.uri) }
             is JournalAction.RemoveImage -> updateState { it.copy(images = it.images - action.uri) }
             is JournalAction.MoveImageToFront -> {
@@ -62,15 +63,19 @@ class JournalVM(
                     updateState { it.copy(images = currentImages) }
                 }
             }
+
+            is JournalAction.FetchSong -> fetchSongDetails(action.url)
+            is JournalAction.RemoveSong -> updateState { it.copy(songDetails = null) }
+
             is JournalAction.SetLocation -> updateState { it.copy(location = action.location) }
+            is JournalAction.RemoveLocation -> updateState { it.copy(location = null) }
+
             is JournalAction.SetEditMode -> updateState { it.copy(isEditMode = action.isEdit) }
             is JournalAction.ToggleBookmark -> toggleBookmark()
             is JournalAction.ToggleArchive -> toggleArchive()
             is JournalAction.SaveJournal -> saveJournal()
             is JournalAction.NavigateBack -> navigator.navigateBack()
             is JournalAction.DeleteJournal -> deleteJournal()
-            is JournalAction.FetchSong -> fetchSongDetails(action.url)
-            is JournalAction.RemoveSong -> updateState { it.copy(songDetails = null) }
         }
     }
 
@@ -169,7 +174,8 @@ class JournalVM(
             if (currentState.title.isBlank() &&
                 currentState.content.isBlank() &&
                 currentState.images.isEmpty() &&
-                currentState.songDetails == null
+                currentState.songDetails == null &&
+                currentState.location == null
             ) return@launch
 
             val currentTime = System.currentTimeMillis()

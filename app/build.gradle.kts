@@ -133,6 +133,8 @@ dependencies {
     implementation(libs.wavy.slider)
     implementation(libs.androidx.palette)
     implementation(libs.osmdroid)
+    implementation(libs.gms.location)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     implementation(libs.koin.core)
     implementation(libs.koin.compose)

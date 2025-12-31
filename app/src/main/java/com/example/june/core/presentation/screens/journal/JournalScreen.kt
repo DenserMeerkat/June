@@ -111,7 +111,7 @@ fun JournalScreen() {
 
     val mediaOperations = remember(state.isEditMode, state.images) {
         MediaOperations(
-            onRemove = { viewModel.onAction(JournalAction.RemoveImage(it)) },
+            onRemoveMedia = { viewModel.onAction(JournalAction.RemoveImage(it)) },
             onMoveToFront = { viewModel.onAction(JournalAction.MoveImageToFront(it)) },
             onMediaClick = { path ->
                 navigator.navigateTo(
@@ -124,6 +124,8 @@ fun JournalScreen() {
             frontMediaPath = state.images.lastOrNull(),
             onRemoveSong = { viewModel.onAction(JournalAction.RemoveSong) },
             onEditSong = { showSongSheet = true },
+            onRemoveLocation = { viewModel.onAction(JournalAction.RemoveLocation) },
+            onLocationClick = { showLocationDialog = true },
             isEditMode = state.isEditMode,
         )
     }
@@ -281,6 +283,7 @@ fun JournalScreen() {
                         mediaPaths = state.images,
                         mediaOperations = mediaOperations,
                         songDetails = state.songDetails,
+                        location = state.location,
                         onShowAllClick = {
                             navigator.navigateTo(
                                 Route.JournalMedia(journalId = state.journalId ?: 0L)
@@ -448,7 +451,8 @@ fun JournalScreen() {
             onLocationSelected = { loc ->
                 viewModel.onAction(JournalAction.SetLocation(loc))
             },
-            onDismiss = { showLocationDialog = false }
+            onDismiss = { showLocationDialog = false },
+            isEditMode = state.isEditMode
         )
     }
 
