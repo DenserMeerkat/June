@@ -36,17 +36,7 @@ fun JournalCard(
     val viewModel: HomeJournalVM = koinViewModel()
     val navigator = koinInject<AppNavigator>()
 
-    val mediaOperations = MediaOperations(
-        onRemoveMedia = { },
-        onMoveToFront = { },
-        onMediaClick = null,
-        frontMediaPath = null,
-        onRemoveSong = { },
-        onEditSong = { },
-        onRemoveLocation = { },
-        onLocationClick = { },
-        isEditMode = false,
-    )
+    val mediaOperations = MediaOperations(isEditMode = false)
 
     Card(
         modifier = modifier
@@ -150,17 +140,7 @@ fun RecentJournalCard(
             journal.images.reversed().take(3)
         }
 
-        val mediaOperations = MediaOperations(
-            onRemoveMedia = { },
-            onMoveToFront = { },
-            onMediaClick = null,
-            frontMediaPath = null,
-            onRemoveSong = { },
-            onEditSong = { },
-            onRemoveLocation = { },
-            onLocationClick = { },
-            isEditMode = false,
-        )
+        val mediaOperations = MediaOperations(isEditMode = false)
 
         Card(
             modifier = modifier

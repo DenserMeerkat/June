@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
@@ -37,9 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
@@ -65,13 +65,11 @@ fun JournalMediaItem(
     isLargeItem: Boolean,
     enablePlayback: Boolean = true,
 ) {
-    val density = LocalDensity.current
     val context = LocalContext.current
     val interactionSource = remember { MutableInteractionSource() }
 
     var showMenu by remember { mutableStateOf(false) }
     var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
-    var itemHeight by remember { mutableStateOf(0.dp) }
 
     val isVideo = remember(path) { path.endsWith("mp4", ignoreCase = true) }
     var isPlaying by remember { mutableStateOf(false) }
@@ -84,33 +82,29 @@ fun JournalMediaItem(
             .build()
     }
     val shouldShowMoveToFront = path != operations.frontMediaPath
-    val shouldCaptureTouches = operations.isEditMode || operations.onMediaClick != null
 
     Box(
         modifier = modifier
-            .onSizeChanged { itemHeight = with(density) { it.height.toDp() } }
             .clip(RoundedCornerShape(4.dp))
             .indication(interactionSource, LocalIndication.current)
             .then(
-                if (shouldCaptureTouches) {
-                    Modifier.pointerInput(operations.isEditMode, operations.onMediaClick) {
-                        detectTapGestures(
-                            onTap = { operations.onMediaClick?.invoke(path) },
-                            onLongPress = { offset ->
-                                if (operations.isEditMode) {
-                                    showMenu = true
-                                    pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
-                                }
-                            },
-                            onPress = { offset ->
-                                val press = PressInteraction.Press(offset)
-                                interactionSource.emit(press)
-                                tryAwaitRelease()
-                                interactionSource.emit(PressInteraction.Release(press))
+                Modifier.pointerInput(operations.isEditMode, operations.onMediaClick) {
+                    detectTapGestures(
+                        onTap = { operations.onMediaClick?.invoke(path) },
+                        onLongPress = { offset ->
+                            if (operations.isEditMode) {
+                                showMenu = true
+                                pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
                             }
-                        )
-                    }
-                } else Modifier
+                        },
+                        onPress = { offset ->
+                            val press = PressInteraction.Press(offset)
+                            interactionSource.emit(press)
+                            tryAwaitRelease()
+                            interactionSource.emit(PressInteraction.Release(press))
+                        }
+                    )
+                }
             )
     ) {
         if (enablePlayback && isVideo) {
@@ -169,36 +163,45 @@ fun JournalMediaItem(
             )
         }
 
-        if (operations.isEditMode) {
-            DropdownMenu(
-                modifier = Modifier.defaultMinSize(minWidth = 200.dp).padding(horizontal = 8.dp),
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false },
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                shape = RoundedCornerShape(24.dp),
-                tonalElevation = 3.dp,
-                offset = pressOffset.copy(y = pressOffset.y - itemHeight)
+        if (operations.isEditMode && showMenu) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentSize(align = Alignment.TopStart)
+                    .offset(x = pressOffset.x, y = pressOffset.y)
+                    .size(1.dp)
             ) {
-                DropdownMenuItem(
-                    modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                    text = { Text("Delete") },
-                    onClick = {
-                        isPlaying = false
-                        operations.onRemoveMedia(path)
-                        showMenu = false
-                    },
-                    leadingIcon = { Icon(painterResource(R.drawable.delete_24px), null) }
-                )
-                if (shouldShowMoveToFront) {
+                DropdownMenu(
+                    modifier = Modifier
+                        .defaultMinSize(minWidth = 200.dp)
+                        .padding(horizontal = 8.dp),
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false },
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = RoundedCornerShape(24.dp),
+                    tonalElevation = 3.dp
+                ) {
                     DropdownMenuItem(
                         modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                        text = { Text("Move to Front") },
+                        text = { Text("Delete") },
                         onClick = {
-                            operations.onMoveToFront(path)
+                            isPlaying = false
+                            operations.onRemoveMedia(path)
                             showMenu = false
                         },
-                        leadingIcon = { Icon(painterResource(R.drawable.turn_left_24px), null) }
+                        leadingIcon = { Icon(painterResource(R.drawable.delete_24px), null) }
                     )
+                    if (shouldShowMoveToFront) {
+                        DropdownMenuItem(
+                            modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                            text = { Text("Move to Front") },
+                            onClick = {
+                                operations.onMoveToFront(path)
+                                showMenu = false
+                            },
+                            leadingIcon = { Icon(painterResource(R.drawable.turn_left_24px), null) }
+                        )
+                    }
                 }
             }
         }

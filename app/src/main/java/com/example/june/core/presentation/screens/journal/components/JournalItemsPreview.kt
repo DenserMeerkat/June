@@ -10,21 +10,30 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.june.R
 import com.example.june.core.domain.data_classes.JournalLocation
 import com.example.june.core.domain.data_classes.SongDetails
+import kotlinx.coroutines.launch
 
 sealed interface JournalPreviewItem {
     data class Images(val paths: List<String>) : JournalPreviewItem
@@ -33,17 +42,19 @@ sealed interface JournalPreviewItem {
 }
 
 data class MediaOperations(
-    val onRemoveMedia: (String) -> Unit,
-    val onMoveToFront: (String) -> Unit,
-    val onMediaClick: ((String) -> Unit)? = null,
-    val frontMediaPath: String?,
-    val onRemoveSong: () -> Unit,
-    val onEditSong: () -> Unit,
-    val onRemoveLocation: () -> Unit,
-    val onLocationClick: () -> Unit,
+    val onItemSheetToggle: (Boolean) -> Unit = {},
+    val onRemoveMedia: (String) -> Unit = {},
+    val onMoveToFront: (String) -> Unit = {},
+    val onMediaClick: (String) -> Unit = {},
+    val frontMediaPath: String? = null,
+    val onRemoveSong: () -> Unit = {},
+    val onSongSheetToggle: (Boolean) -> Unit = {},
+    val onRemoveLocation: () -> Unit = {},
+    val onLocationDialogToggle: (Boolean) -> Unit = {},
     val isEditMode: Boolean,
 )
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun JournalItemsPreview(
     mediaPaths: List<String>,
@@ -52,6 +63,8 @@ fun JournalItemsPreview(
     mediaOperations: MediaOperations,
     onShowAllClick: () -> Unit = {}
 ) {
+    val scope = rememberCoroutineScope()
+
     val verticalSlides = remember(mediaPaths, songDetails, location) {
         val list = mutableListOf<JournalPreviewItem>()
         if (songDetails != null) list.add(JournalPreviewItem.Song(songDetails))
@@ -60,9 +73,18 @@ fun JournalItemsPreview(
         list
     }
 
-    if (verticalSlides.isEmpty()) return
+    val songIndex = verticalSlides.indexOfFirst { it is JournalPreviewItem.Song }
+    val imagesIndex = verticalSlides.indexOfFirst { it is JournalPreviewItem.Images }
+    val mapIndex = verticalSlides.indexOfFirst { it is JournalPreviewItem.Map }
 
     val pagerState = rememberPagerState(pageCount = { verticalSlides.size })
+
+    val currentItem =
+        if (verticalSlides.isNotEmpty()) verticalSlides.getOrNull(pagerState.currentPage) else null
+
+    val onAddSong = { mediaOperations.onSongSheetToggle(true) }
+    val onAddMedia = { mediaOperations.onItemSheetToggle(true) }
+    val onAddLocation = { mediaOperations.onLocationDialogToggle(true) }
 
     Column {
         VerticalPager(
@@ -74,8 +96,7 @@ fun JournalItemsPreview(
             beyondViewportPageCount = 2
         ) { pageIndex ->
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             ) {
                 when (val slide = verticalSlides[pageIndex]) {
                     is JournalPreviewItem.Song -> {
@@ -84,7 +105,7 @@ fun JournalItemsPreview(
                                 details = slide.details,
                                 isFetching = false,
                                 onRemove = mediaOperations.onRemoveSong,
-                                onEdit = mediaOperations.onEditSong,
+                                onEdit = { mediaOperations.onSongSheetToggle(true) },
                                 isEditMode = mediaOperations.isEditMode
                             )
                         }
@@ -94,7 +115,7 @@ fun JournalItemsPreview(
                         Box(Modifier.padding(horizontal = 16.dp)) {
                             JournalMapItem(
                                 location = slide.location,
-                                onMapClick = mediaOperations.onLocationClick,
+                                onMapClick = { mediaOperations.onLocationDialogToggle(true) },
                                 onRemove = mediaOperations.onRemoveLocation,
                                 isEditMode = mediaOperations.isEditMode
                             )
@@ -137,19 +158,57 @@ fun JournalItemsPreview(
                 }
             }
         }
-        if (mediaPaths.isNotEmpty()) {
+
+        if (mediaPaths.isNotEmpty() || songDetails != null || location != null) {
             Spacer(modifier = Modifier.height(4.dp))
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+//                ButtonGroup(
+//                    modifier = Modifier.padding(start = 0.dp),
+//                    overflowIndicator = {},
+//                    horizontalArrangement = ButtonGroupDefaults.HorizontalArrangement,
+//                ) {
+//                    val items = listOf(
+//                        Triple("🎵", songIndex, onAddSong),
+//                        Triple("🖼️", imagesIndex, onAddMedia),
+//                        Triple("🗺️", mapIndex, onAddLocation)
+//                    )
+//
+//                    items.forEachIndexed { index, (iconRes, slideIndex, addAction) ->
+//                        val isSelected = when (index) {
+//                            0 -> currentItem is JournalPreviewItem.Song
+//                            1 -> currentItem is JournalPreviewItem.Images
+//                            2 -> currentItem is JournalPreviewItem.Map
+//                            else -> false
+//                        }
+//
+//                        toggleableItem(
+//                            checked = isSelected,
+//                            label = iconRes,
+//                            onCheckedChange = {
+//                                if (slideIndex != -1) {
+//                                    scope.launch { pagerState.animateScrollToPage(slideIndex) }
+//                                } else {
+//                                    addAction()
+//                                }
+//                            }
+//                        )
+//                    }
+//                }
                 Spacer(modifier = Modifier.weight(1f))
-                TextButton(
-                    onClick = onShowAllClick,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                ) {
-                    Text(text = "Show all", style = MaterialTheme.typography.labelMedium)
+
+                if (mediaPaths.isNotEmpty()) {
+                    TextButton(
+                        onClick = onShowAllClick,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    ) {
+                        Text(text = "Show all", style = MaterialTheme.typography.labelMedium)
+                    }
                 }
             }
         }
