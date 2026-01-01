@@ -20,9 +20,6 @@ sealed interface Route {
     ) : Route
 
     @Serializable
-    data class Chat(val chatId: Long? = null) : Route
-
-    @Serializable
     data object Settings : Route
 
     @Serializable
