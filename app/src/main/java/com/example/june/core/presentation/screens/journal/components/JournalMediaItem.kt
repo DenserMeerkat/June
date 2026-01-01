@@ -82,29 +82,32 @@ fun JournalMediaItem(
             .build()
     }
     val shouldShowMoveToFront = path != operations.frontMediaPath
+    val shouldCaptureTouches = operations.isEditMode || operations.onMediaClick != null
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
             .indication(interactionSource, LocalIndication.current)
             .then(
-                Modifier.pointerInput(operations.isEditMode, operations.onMediaClick) {
-                    detectTapGestures(
-                        onTap = { operations.onMediaClick?.invoke(path) },
-                        onLongPress = { offset ->
-                            if (operations.isEditMode) {
-                                showMenu = true
-                                pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                if(shouldCaptureTouches) {
+                    Modifier.pointerInput(operations.isEditMode, operations.onMediaClick) {
+                        detectTapGestures(
+                            onTap = { operations.onMediaClick?.invoke(path) },
+                            onLongPress = { offset ->
+                                if (operations.isEditMode) {
+                                    showMenu = true
+                                    pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                                }
+                            },
+                            onPress = { offset ->
+                                val press = PressInteraction.Press(offset)
+                                interactionSource.emit(press)
+                                tryAwaitRelease()
+                                interactionSource.emit(PressInteraction.Release(press))
                             }
-                        },
-                        onPress = { offset ->
-                            val press = PressInteraction.Press(offset)
-                            interactionSource.emit(press)
-                            tryAwaitRelease()
-                            interactionSource.emit(PressInteraction.Release(press))
-                        }
-                    )
-                }
+                        )
+                    }
+                } else Modifier
             )
     ) {
         if (enablePlayback && isVideo) {

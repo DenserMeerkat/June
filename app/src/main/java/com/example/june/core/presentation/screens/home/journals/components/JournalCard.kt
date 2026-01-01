@@ -36,7 +36,10 @@ fun JournalCard(
     val viewModel: HomeJournalVM = koinViewModel()
     val navigator = koinInject<AppNavigator>()
 
-    val mediaOperations = MediaOperations(isEditMode = false)
+    val mediaOperations = MediaOperations(
+        onMediaClick = null,
+        isEditMode = false,
+    )
 
     Card(
         modifier = modifier
@@ -140,7 +143,10 @@ fun RecentJournalCard(
             journal.images.reversed().take(3)
         }
 
-        val mediaOperations = MediaOperations(isEditMode = false)
+        val mediaOperations = MediaOperations(
+            onMediaClick = null,
+            isEditMode = false,
+        )
 
         Card(
             modifier = modifier

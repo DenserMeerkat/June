@@ -10,20 +10,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -45,7 +45,7 @@ data class MediaOperations(
     val onItemSheetToggle: (Boolean) -> Unit = {},
     val onRemoveMedia: (String) -> Unit = {},
     val onMoveToFront: (String) -> Unit = {},
-    val onMediaClick: (String) -> Unit = {},
+    val onMediaClick: ((String) -> Unit)? = {},
     val frontMediaPath: String? = null,
     val onRemoveSong: () -> Unit = {},
     val onSongSheetToggle: (Boolean) -> Unit = {},
@@ -131,7 +131,7 @@ fun JournalItemsPreview(
                         LazyRow(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(if (chunks.size == 1) 16.dp else 0.dp),
+                                .padding(horizontal = if (chunks.size == 1) 16.dp else 0.dp),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             if (chunks.size > 1) {
@@ -166,49 +166,94 @@ fun JournalItemsPreview(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
-//                ButtonGroup(
-//                    modifier = Modifier.padding(start = 0.dp),
-//                    overflowIndicator = {},
-//                    horizontalArrangement = ButtonGroupDefaults.HorizontalArrangement,
-//                ) {
-//                    val items = listOf(
-//                        Triple("🎵", songIndex, onAddSong),
-//                        Triple("🖼️", imagesIndex, onAddMedia),
-//                        Triple("🗺️", mapIndex, onAddLocation)
-//                    )
-//
-//                    items.forEachIndexed { index, (iconRes, slideIndex, addAction) ->
-//                        val isSelected = when (index) {
-//                            0 -> currentItem is JournalPreviewItem.Song
-//                            1 -> currentItem is JournalPreviewItem.Images
-//                            2 -> currentItem is JournalPreviewItem.Map
-//                            else -> false
-//                        }
-//
-//                        toggleableItem(
-//                            checked = isSelected,
-//                            label = iconRes,
-//                            onCheckedChange = {
-//                                if (slideIndex != -1) {
-//                                    scope.launch { pagerState.animateScrollToPage(slideIndex) }
-//                                } else {
-//                                    addAction()
-//                                }
-//                            }
-//                        )
-//                    }
-//                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+                ) {
+                    val isSongSelected = currentItem is JournalPreviewItem.Song
+                    val songExists = songIndex != -1
+                    ToggleButton(
+                        checked = isSongSelected,
+                        enabled = songExists || mediaOperations.isEditMode,
+                        onCheckedChange = {
+                            if (songExists) {
+                                scope.launch { pagerState.animateScrollToPage(songIndex) }
+                            } else {
+                                onAddSong()
+                            }
+                        },
+                        colors = ToggleButtonDefaults.toggleButtonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            checkedContainerColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.tertiaryContainer
+                        ),
+                        shapes = ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    ) {
+                        Icon(
+                            painter = painterResource(if (isSongSelected) R.drawable.music_video_24px_fill else R.drawable.music_video_24px),
+                            contentDescription = "Song",
+                        )
+                    }
+                    val isImagesSelected = currentItem is JournalPreviewItem.Images
+                    val imagesExist = imagesIndex != -1
+                    ToggleButton(
+                        checked = isImagesSelected,
+                        enabled = imagesIndex != -1 || mediaOperations.isEditMode,
+                        onCheckedChange = {
+                            if (imagesExist) {
+                                scope.launch { pagerState.animateScrollToPage(imagesIndex) }
+                            } else {
+                                onAddMedia()
+                            }
+                        },
+                        colors = ToggleButtonDefaults.toggleButtonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            checkedContainerColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.tertiaryContainer
+                        ),
+                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    ) {
+                        Icon(
+                            painter = painterResource(if (isImagesSelected) R.drawable.art_track_24px_fill else R.drawable.art_track_24px),
+                            contentDescription = "Images",
+                        )
+                    }
+                    val isMapSelected = currentItem is JournalPreviewItem.Map
+                    val mapExists = mapIndex != -1
+                    ToggleButton(
+                        checked = isMapSelected,
+                        enabled = mapExists || mediaOperations.isEditMode,
+                        onCheckedChange = {
+                            if (mapExists) {
+                                scope.launch { pagerState.animateScrollToPage(mapIndex) }
+                            } else {
+                                onAddLocation()
+                            }
+                        },
+                        colors = ToggleButtonDefaults.toggleButtonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            checkedContainerColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.tertiaryContainer
+                        ),
+                        shapes = ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    ) {
+                        Icon(
+                            painter = painterResource(if (isMapSelected) R.drawable.location_chip_24px_fill else R.drawable.location_chip_24px),
+                            contentDescription = "Location",
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.weight(1f))
 
-                if (mediaPaths.isNotEmpty()) {
-                    TextButton(
-                        onClick = onShowAllClick,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    ) {
-                        Text(text = "Show all", style = MaterialTheme.typography.labelMedium)
-                    }
+                TextButton(
+                    onClick = onShowAllClick,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                ) {
+                    Text(text = "Show all", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
