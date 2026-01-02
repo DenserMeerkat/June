@@ -12,4 +12,11 @@ interface JournalRepo {
     suspend fun updateJournal(journal: Journal)
     suspend fun deleteJournal(id: Long)
     suspend fun deleteAllJournals()
+    fun getFilteredJournals(
+        query: String = "",
+        isBookmarked: Boolean? = null,
+        isDraft: Boolean? = null,
+        hasLocation: Boolean? = null,
+        hasSong: Boolean? = null
+    ): Flow<List<Journal>>
 }

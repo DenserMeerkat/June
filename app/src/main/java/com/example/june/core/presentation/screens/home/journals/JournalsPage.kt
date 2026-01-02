@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.june.core.presentation.screens.home.journals.components.JournalCard
-import com.example.june.viewmodels.HomeJournalVM
+import com.example.june.viewmodels.HomeVM
 import org.koin.compose.viewmodel.koinViewModel
 
 import com.example.june.R
@@ -23,7 +23,7 @@ import com.example.june.core.presentation.screens.home.journals.components.Recen
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun JournalsPage() {
-    val viewModel: HomeJournalVM = koinViewModel()
+    val viewModel: HomeVM = koinViewModel()
     val journals by viewModel.journals.collectAsStateWithLifecycle()
 
     val draftJournals =

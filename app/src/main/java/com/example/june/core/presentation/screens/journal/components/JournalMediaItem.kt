@@ -76,20 +76,21 @@ fun JournalMediaItem(
     var isMuted by remember { mutableStateOf(true) }
     var currentTimestamp by remember { mutableLongStateOf(0L) }
 
+    val showVideoPlayer = isVideo && enablePlayback
+
     val imageLoader = remember {
         ImageLoader.Builder(context)
             .components { add(VideoFrameDecoder.Factory()) }
             .build()
     }
     val shouldShowMoveToFront = path != operations.frontMediaPath
-    val shouldCaptureTouches = operations.isEditMode || operations.onMediaClick != null
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
             .indication(interactionSource, LocalIndication.current)
             .then(
-                if(shouldCaptureTouches) {
+                if (enablePlayback) {
                     Modifier.pointerInput(operations.isEditMode, operations.onMediaClick) {
                         detectTapGestures(
                             onTap = { operations.onMediaClick?.invoke(path) },
@@ -110,7 +111,7 @@ fun JournalMediaItem(
                 } else Modifier
             )
     ) {
-        if (enablePlayback && isVideo) {
+        if (showVideoPlayer) {
             VideoPlayer(
                 uri = Uri.fromFile(File(path)),
                 isMuted = isMuted,
@@ -148,14 +149,14 @@ fun JournalMediaItem(
             }
         }
 
-        if (isVideo && enablePlayback) {
+        if (showVideoPlayer) {
             PlayPauseOverlay(
                 isPlaying = isPlaying,
                 onClick = { isPlaying = !isPlaying }
             )
         }
 
-        if (enablePlayback && isLargeItem && isVideo) {
+        if (showVideoPlayer && isLargeItem) {
             MuteTimeChip(
                 isMuted = isMuted,
                 timestamp = currentTimestamp.toHoursMinutesSeconds(),
@@ -278,9 +279,7 @@ fun VideoPlayer(
         onIsPlayingChanged = onPlayingChanged
     )
 
-    LaunchedEffect(isPlaying) {
-        if (isPlaying) exoPlayer.play() else exoPlayer.pause()
-    }
+    LaunchedEffect(isPlaying) { if (isPlaying) exoPlayer.play() else exoPlayer.pause() }
     LaunchedEffect(isMuted) { exoPlayer.volume = if (isMuted) 0f else 1f }
     LaunchedEffect(exoPlayer) {
         while (true) {

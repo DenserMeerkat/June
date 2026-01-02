@@ -36,6 +36,20 @@ fun HomeScreen() {
                             fontWeight = FontWeight.Bold,
                         )
                     },
+                    navigationIcon = {
+                        FilledIconButton(
+                            onClick = { navigator.navigateTo(Route.Search) },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                            ),
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.search_24px),
+                                contentDescription = "Search"
+                            )
+                        }
+                    },
                     actions = {
                         FilledIconButton(
                             onClick = { navigator.navigateTo(Route.Settings) },

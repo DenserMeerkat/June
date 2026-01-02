@@ -17,8 +17,9 @@ import com.example.june.core.domain.backup.ExportRepo
 import com.example.june.core.domain.backup.RestoreRepo
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.AppNavigatorImpl
-import com.example.june.viewmodels.HomeJournalVM
+import com.example.june.viewmodels.HomeVM
 import com.example.june.viewmodels.JournalVM
+import com.example.june.viewmodels.SearchVM
 import com.example.june.viewmodels.SettingsVM
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -49,7 +50,8 @@ val juneModules = module {
 
     viewModelOf(::SettingsVM)
     viewModelOf(::JournalVM)
-    viewModelOf(::HomeJournalVM)
+    viewModelOf(::HomeVM)
+    viewModelOf(::SearchVM)
 
     singleOf(::AppNavigatorImpl)
     single<AppNavigator> { get<AppNavigatorImpl>() }

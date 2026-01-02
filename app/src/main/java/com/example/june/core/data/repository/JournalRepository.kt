@@ -60,4 +60,22 @@ class JournalRepository(
             localDao.deleteAllJournals()
         }
     }
+
+    override fun getFilteredJournals(
+        query: String,
+        isBookmarked: Boolean?,
+        isDraft: Boolean?,
+        hasLocation: Boolean?,
+        hasSong: Boolean?
+    ): Flow<List<Journal>> {
+        return localDao.getJournals(
+            query,
+            isBookmarked,
+            isDraft,
+            hasLocation,
+            hasSong
+        ).map { entities ->
+            entities.map { it.toJournal() }
+        }
+    }
 }

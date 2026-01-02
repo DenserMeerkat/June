@@ -24,6 +24,7 @@ import com.example.june.core.presentation.screens.home.HomeScreen
 import com.example.june.core.presentation.screens.journal.JournalScreen
 import com.example.june.core.presentation.screens.journal.journalitem.MediaDetailScreen
 import com.example.june.core.presentation.screens.journal.journalitem.ItemGalleryScreen
+import com.example.june.core.presentation.screens.search.SearchScreen
 import com.example.june.core.presentation.screens.settings.SettingsScreen
 import com.example.june.core.presentation.screens.settings.section.AboutLibrariesPage
 import com.example.june.core.presentation.theme.JuneTheme
@@ -90,6 +91,10 @@ fun JuneApp() {
                         state = settingsState,
                         onAction = settingsVM::onAction
                     )
+                }
+
+                composable<Route.Search> {
+                    SearchScreen()
                 }
 
                 composable<Route.Journal> {

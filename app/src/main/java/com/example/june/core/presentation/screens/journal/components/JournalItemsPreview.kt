@@ -67,8 +67,8 @@ fun JournalItemsPreview(
 
     val verticalSlides = remember(mediaPaths, songDetails, location) {
         val list = mutableListOf<JournalPreviewItem>()
-        if (songDetails != null) list.add(JournalPreviewItem.Song(songDetails))
         if (mediaPaths.isNotEmpty()) list.add(JournalPreviewItem.Images(mediaPaths))
+        if (songDetails != null) list.add(JournalPreviewItem.Song(songDetails))
         if (location != null) list.add(JournalPreviewItem.Map(location))
         list
     }
@@ -169,31 +169,6 @@ fun JournalItemsPreview(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
                 ) {
-                    val isSongSelected = currentItem is JournalPreviewItem.Song
-                    val songExists = songIndex != -1
-                    ToggleButton(
-                        checked = isSongSelected,
-                        enabled = songExists || mediaOperations.isEditMode,
-                        onCheckedChange = {
-                            if (songExists) {
-                                scope.launch { pagerState.animateScrollToPage(songIndex) }
-                            } else {
-                                onAddSong()
-                            }
-                        },
-                        colors = ToggleButtonDefaults.toggleButtonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                            checkedContainerColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                            checkedContentColor = MaterialTheme.colorScheme.tertiaryContainer
-                        ),
-                        shapes = ButtonGroupDefaults.connectedLeadingButtonShapes()
-                    ) {
-                        Icon(
-                            painter = painterResource(if (isSongSelected) R.drawable.music_video_24px_fill else R.drawable.music_video_24px),
-                            contentDescription = "Song",
-                        )
-                    }
                     val isImagesSelected = currentItem is JournalPreviewItem.Images
                     val imagesExist = imagesIndex != -1
                     ToggleButton(
@@ -212,11 +187,36 @@ fun JournalItemsPreview(
                             checkedContainerColor = MaterialTheme.colorScheme.onTertiaryContainer,
                             checkedContentColor = MaterialTheme.colorScheme.tertiaryContainer
                         ),
-                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        shapes = ButtonGroupDefaults.connectedLeadingButtonShapes()
                     ) {
                         Icon(
                             painter = painterResource(if (isImagesSelected) R.drawable.art_track_24px_fill else R.drawable.art_track_24px),
                             contentDescription = "Images",
+                        )
+                    }
+                    val isSongSelected = currentItem is JournalPreviewItem.Song
+                    val songExists = songIndex != -1
+                    ToggleButton(
+                        checked = isSongSelected,
+                        enabled = songExists || mediaOperations.isEditMode,
+                        onCheckedChange = {
+                            if (songExists) {
+                                scope.launch { pagerState.animateScrollToPage(songIndex) }
+                            } else {
+                                onAddSong()
+                            }
+                        },
+                        colors = ToggleButtonDefaults.toggleButtonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            checkedContainerColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.tertiaryContainer
+                        ),
+                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    ) {
+                        Icon(
+                            painter = painterResource(if (isSongSelected) R.drawable.music_video_24px_fill else R.drawable.music_video_24px),
+                            contentDescription = "Song",
                         )
                     }
                     val isMapSelected = currentItem is JournalPreviewItem.Map

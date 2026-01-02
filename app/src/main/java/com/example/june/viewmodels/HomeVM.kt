@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class HomeJournalVM(
+class HomeVM(
     private val journalRepo: JournalRepository
 ) : ViewModel() {
 
