@@ -14,6 +14,7 @@ data class JournalEntity(
     val id: Long,
     val title: String,
     val content: String,
+    val emoji: String? = null,
     val images: List<String> = emptyList(),
     val location: JournalLocation? = null,
     val songDetails: SongDetails? = null,

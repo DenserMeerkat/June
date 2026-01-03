@@ -2,7 +2,6 @@ package com.example.june.core.data.mappers
 
 import com.example.june.core.data.database.journal.JournalEntity
 import com.example.june.core.domain.data_classes.Journal
-import com.example.june.core.domain.backup.JournalSchema
 
 
 fun JournalEntity.toJournal(): Journal {
@@ -10,9 +9,10 @@ fun JournalEntity.toJournal(): Journal {
         id = id,
         title = title,
         content = content,
-        images = images,           
-        location = location,       
-        songDetails = songDetails, 
+        emoji = emoji,
+        images = images,
+        location = location,
+        songDetails = songDetails,
         createdAt = createdAt,
         updatedAt = updatedAt,
         dateTime = dateTime,
@@ -27,43 +27,10 @@ fun Journal.toEntity(): JournalEntity {
         id = id,
         title = title,
         content = content,
-        images = images,           
-        location = location,       
-        songDetails = songDetails, 
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        dateTime = dateTime,
-        isBookmarked = isBookmarked,
-        isArchived = isArchived,
-        isDraft = isDraft
-    )
-}
-
-fun Journal.toJournalSchema(): JournalSchema {
-    return JournalSchema(
-        id = id,
-        title = title,
-        content = content,
-        images = images,           
-        location = location,       
-        songDetails = songDetails, 
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        dateTime = dateTime,
-        isBookmarked = isBookmarked,
-        isArchived = isArchived,
-        isDraft = isDraft
-    )
-}
-
-fun JournalSchema.toJournal(): Journal {
-    return Journal(
-        id = id,
-        title = title,
-        content = content,
-        images = images,           
-        location = location,       
-        songDetails = songDetails, 
+        emoji = emoji,
+        images = images,
+        location = location,
+        songDetails = songDetails,
         createdAt = createdAt,
         updatedAt = updatedAt,
         dateTime = dateTime,

@@ -1,11 +1,15 @@
 package com.example.june.core.domain.data_classes
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Serializable
+@SerialName("Journal")
 data class Journal(
     val id: Long,
     val title: String,
     val content: String,
+    val emoji: String? = null,
     val images: List<String> = emptyList(),
     val location: JournalLocation? = null,
     val songDetails: SongDetails? = null,

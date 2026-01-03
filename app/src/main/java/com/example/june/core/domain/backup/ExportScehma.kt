@@ -1,5 +1,6 @@
 package com.example.june.core.domain.backup
 
+import com.example.june.core.domain.data_classes.Journal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -7,5 +8,5 @@ import kotlinx.serialization.Serializable
 @SerialName("Export")
 data class ExportSchema(
     val schemaVersion: Int = 1,
-    val journals: List<JournalSchema>
+    val journals: List<Journal>
 )

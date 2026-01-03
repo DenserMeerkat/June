@@ -3,7 +3,6 @@ package com.example.june.core.data.backup
 import android.content.Context
 import android.util.Log
 import androidx.core.net.toUri
-import com.example.june.core.data.mappers.toJournal
 import com.example.june.core.domain.JournalRepo
 import com.example.june.core.domain.backup.ExportSchema
 import com.example.june.core.domain.backup.RestoreFailedException
@@ -28,39 +27,39 @@ class RestoreImpl(
         private const val TAG = "RestoreImpl"
     }
 
-    override suspend fun restoreJournals(path: String): RestoreResult = withContext(Dispatchers.IO) {
-        return@withContext try {
-            val file = createTempFile()
+    override suspend fun restoreJournals(path: String): RestoreResult =
+        withContext(Dispatchers.IO) {
+            return@withContext try {
+                val file = createTempFile()
 
-            try {
-                context.contentResolver.openInputStream(path.toUri()).use { input ->
-                    file.outputStream().use { output ->
-                        input?.copyTo(output)
+                try {
+                    context.contentResolver.openInputStream(path.toUri()).use { input ->
+                        file.outputStream().use { output ->
+                            input?.copyTo(output)
+                        }
                     }
+
+                    val json = Json {
+                        ignoreUnknownKeys = true
+                    }
+
+                    val jsonDeserialized = json.decodeFromString<ExportSchema>(file.readText())
+
+                    jsonDeserialized.journals
+                        .forEach { journalRepo.insertJournal(it) }
+                } finally {
+                    file.deleteIfExists()
                 }
 
-                val json = Json {
-                    ignoreUnknownKeys = true
-                }
+                RestoreResult.Success
+            } catch (e: IllegalArgumentException) {
+                Log.wtf(TAG, e)
 
-                val jsonDeserialized = json.decodeFromString<ExportSchema>(file.readText())
+                RestoreResult.Failure(RestoreFailedException.InvalidFile)
+            } catch (e: SerializationException) {
+                Log.wtf(TAG, e)
 
-                jsonDeserialized.journals
-                    .map { it.toJournal() }
-                    .forEach { journalRepo.insertJournal(it) }
-            } finally {
-                file.deleteIfExists()
+                RestoreResult.Failure(RestoreFailedException.OldSchema)
             }
-
-            RestoreResult.Success
-        } catch (e: IllegalArgumentException) {
-            Log.wtf(TAG, e)
-
-            RestoreResult.Failure(RestoreFailedException.InvalidFile)
-        } catch (e: SerializationException) {
-            Log.wtf(TAG, e)
-
-            RestoreResult.Failure(RestoreFailedException.OldSchema)
         }
-    }
 }
