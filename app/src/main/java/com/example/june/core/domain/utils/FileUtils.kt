@@ -22,8 +22,9 @@ object FileUtils {
 
             val inputStream = contentResolver.openInputStream(uri) ?: return null
 
+            val mediaDir = File(context.filesDir, "journal_media").apply { if (!exists()) mkdirs() }
             val fileName = "media_${System.currentTimeMillis()}_${(0..999).random()}.$extension"
-            val file = File(context.filesDir, fileName)
+            val file = File(mediaDir, fileName)
 
             file.outputStream().use { output ->
                 inputStream.copyTo(output)
@@ -32,6 +33,30 @@ object FileUtils {
         } catch (e: Exception) {
             e.printStackTrace()
             null
+        }
+    }
+
+    fun deleteMedia(path: String?): Boolean {
+        if (path == null) return false
+        return try {
+            val file = File(path)
+            if (file.exists()) file.delete() else false
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun cleanOrphanedFiles(context: Context, activePaths: List<String>) {
+        val mediaDir = File(context.filesDir, "journal_media")
+        if (!mediaDir.exists()) return
+
+        val activeFileNames = activePaths.map { File(it).name }.toSet()
+
+        mediaDir.listFiles()?.forEach { file ->
+            if (file.name !in activeFileNames) {
+                file.delete()
+            }
         }
     }
 

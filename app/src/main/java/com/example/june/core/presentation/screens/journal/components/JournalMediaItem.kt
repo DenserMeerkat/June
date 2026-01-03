@@ -84,13 +84,14 @@ fun JournalMediaItem(
             .build()
     }
     val shouldShowMoveToFront = path != operations.frontMediaPath
+    val shouldCaptureTouch = enablePlayback || operations.onMediaClick != null
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
             .indication(interactionSource, LocalIndication.current)
             .then(
-                if (enablePlayback) {
+                if (shouldCaptureTouch) {
                     Modifier.pointerInput(operations.isEditMode, operations.onMediaClick) {
                         detectTapGestures(
                             onTap = { operations.onMediaClick?.invoke(path) },

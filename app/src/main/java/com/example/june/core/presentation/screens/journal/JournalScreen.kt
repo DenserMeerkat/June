@@ -66,11 +66,11 @@ fun JournalScreen() {
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia()
     ) { uris ->
-        uris.forEach { uri ->
-            val internalPath = FileUtils.persistMedia(context, uri)
-            if (internalPath != null) {
-                viewModel.onAction(JournalAction.AddImage(internalPath))
-            }
+        val newPaths = uris.mapNotNull { uri ->
+            FileUtils.persistMedia(context, uri)
+        }
+        if (newPaths.isNotEmpty()) {
+            viewModel.onAction(JournalAction.AddImages(newPaths))
         }
     }
 
@@ -209,7 +209,7 @@ fun JournalScreen() {
                             ),
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.more_vert_24px,),
+                                painter = painterResource(R.drawable.more_vert_24px),
                                 contentDescription = "Options"
                             )
                         }

@@ -8,6 +8,7 @@ sealed interface JournalAction {
     data class ChangeDateTime(val dateTime: Long) : JournalAction
 
     data class AddImage(val uri: String) : JournalAction
+    data class AddImages(val uris: List<String>) : JournalAction
     data class RemoveImage(val uri: String) : JournalAction
     data class MoveImageToFront(val uri: String) : JournalAction
 

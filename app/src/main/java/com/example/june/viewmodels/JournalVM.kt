@@ -7,6 +7,7 @@ import androidx.navigation.toRoute
 import com.example.june.core.domain.JournalRepo
 import com.example.june.core.domain.SongRepo
 import com.example.june.core.domain.data_classes.Journal
+import com.example.june.core.domain.utils.FileUtils
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.screens.journal.JournalAction
@@ -55,7 +56,13 @@ class JournalVM(
             is JournalAction.ChangeDateTime -> updateState { it.copy(dateTime = action.dateTime) }
 
             is JournalAction.AddImage -> updateState { it.copy(images = it.images + action.uri) }
-            is JournalAction.RemoveImage -> updateState { it.copy(images = it.images - action.uri) }
+            is JournalAction.AddImages -> {
+                updateState { it.copy(images = it.images + action.uris) }
+            }
+            is JournalAction.RemoveImage -> {
+                FileUtils.deleteMedia(action.uri)
+                updateState { it.copy(images = it.images - action.uri) }
+            }
             is JournalAction.MoveImageToFront -> {
                 val currentImages = _state.value.images.toMutableList()
                 if (currentImages.remove(action.uri)) {
@@ -245,7 +252,12 @@ class JournalVM(
 
     private fun deleteJournal() {
         viewModelScope.launch {
-            existingJournal?.let { journalRepo.deleteJournal(it.id) }
+            existingJournal?.let { journal ->
+                journal.images.forEach { path ->
+                    FileUtils.deleteMedia(path)
+                }
+                journalRepo.deleteJournal(journal.id)
+            }
             navigator.navigateBack()
         }
     }
