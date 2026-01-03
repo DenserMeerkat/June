@@ -52,6 +52,7 @@ fun JournalScreen() {
     val interactionSource = remember { MutableInteractionSource() }
 
     var showExitDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showAddItemSheet by remember { mutableStateOf(false) }
@@ -226,7 +227,7 @@ fun JournalScreen() {
                                 text = { Text("Delete") },
                                 onClick = {
                                     showMenu = false
-                                    viewModel.onAction(JournalAction.DeleteJournal)
+                                    showDeleteConfirmDialog = true
                                 },
                                 leadingIcon = {
                                     Icon(
@@ -417,6 +418,40 @@ fun JournalScreen() {
                     showExitDialog = false
                     viewModel.onAction(JournalAction.NavigateBack)
                 }) { Text("No Thanks") }
+            }
+        )
+    }
+
+    if (showDeleteConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            icon = {
+                Icon(
+                    painterResource(R.drawable.delete_24px),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = { Text("Delete Journal?") },
+            text = { Text("This action cannot be undone. Are you sure you want to delete this entry?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirmDialog = false
+                        viewModel.onAction(JournalAction.DeleteJournal)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text("Cancel")
+                }
             }
         )
     }

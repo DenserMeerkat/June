@@ -118,7 +118,7 @@ fun ItemGalleryScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (state.songDetails != null) {
-                item(span = { GridItemSpan(2) }) {
+                item(key = "song_card", span = { GridItemSpan(2) }) {
                     JournalSongItem(
                         details = state.songDetails!!,
                         isFetching = state.isFetchingSong,
@@ -129,7 +129,7 @@ fun ItemGalleryScreen(
                 }
             }
             if (state.location != null) {
-                item(span = { GridItemSpan(2) }) {
+                item(key = "map_card", span = { GridItemSpan(2) }) {
                     JournalMapItem(
                         location = state.location!!,
                         onMapClick = { mediaOperations.onLocationDialogToggle(true) },
