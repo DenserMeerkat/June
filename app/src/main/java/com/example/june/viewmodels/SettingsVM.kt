@@ -10,15 +10,18 @@ import com.example.june.core.domain.backup.RestoreRepo
 import com.example.june.core.domain.backup.RestoreResult
 import com.example.june.core.domain.backup.RestoreState
 import com.example.june.core.domain.enums.AppTheme
+import com.example.june.core.domain.utils.FileUtils
 import com.example.june.core.presentation.screens.settings.SettingsAction
 import com.example.june.core.presentation.screens.settings.SettingsState
 import com.materialkolor.PaletteStyle
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SettingsVM(
     private val repo: JournalRepository,
@@ -66,7 +69,15 @@ class SettingsVM(
     fun onAction(action: SettingsAction) {
         viewModelScope.launch {
             when (action) {
-                SettingsAction.OnDeleteJournals -> repo.deleteAllJournals()
+                SettingsAction.OnDeleteJournals -> {
+                    withContext(Dispatchers.IO) {
+                        val allJournals = repo.getAllJournals()
+                        allJournals.flatMap { it.images }.forEach { path ->
+                            FileUtils.deleteMedia(path)
+                        }
+                        repo.deleteAllJournals()
+                    }
+                }
 
                 is SettingsAction.OnExportJournals -> {
                     _localState.update { it.copy(exportState = ExportState.Exporting) }
