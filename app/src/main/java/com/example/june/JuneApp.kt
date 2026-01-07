@@ -26,7 +26,8 @@ import com.example.june.core.presentation.screens.journal.journalitem.MediaDetai
 import com.example.june.core.presentation.screens.journal.journalitem.ItemGalleryScreen
 import com.example.june.core.presentation.screens.search.SearchScreen
 import com.example.june.core.presentation.screens.settings.SettingsScreen
-import com.example.june.core.presentation.screens.settings.section.AboutLibrariesPage
+import com.example.june.core.presentation.screens.settings.section.AboutLibrariesScreen
+import com.example.june.core.presentation.screens.settings.section.BackupScreen
 import com.example.june.core.presentation.theme.JuneTheme
 import com.example.june.viewmodels.JournalVM
 import com.example.june.viewmodels.SettingsVM
@@ -48,6 +49,7 @@ fun JuneApp() {
                 is NavigationIntent.NavigateBack -> {
                     navController.navigateUp()
                 }
+
                 is NavigationIntent.NavigateTo -> {
                     navController.navigate(intent.route) {
                         intent.popUpToRoute?.let { popUpRoute ->
@@ -86,13 +88,6 @@ fun JuneApp() {
                     HomeScreen()
                 }
 
-                composable<Route.Settings> {
-                    SettingsScreen(
-                        state = settingsState,
-                        onAction = settingsVM::onAction
-                    )
-                }
-
                 composable<Route.Search> {
                     SearchScreen()
                 }
@@ -102,7 +97,7 @@ fun JuneApp() {
                 }
 
                 composable<Route.JournalMedia> { backStackEntry ->
-                    val parentEntry = remember (backStackEntry) {
+                    val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry<Route.Journal>()
                     }
                     val viewModel: JournalVM = koinViewModel(viewModelStoreOwner = parentEntry)
@@ -123,8 +118,22 @@ fun JuneApp() {
                     )
                 }
 
+                composable<Route.Settings> {
+                    SettingsScreen(
+                        state = settingsState,
+                        onAction = settingsVM::onAction
+                    )
+                }
+
+                composable<Route.Backup> {
+                    BackupScreen(
+                        state = settingsState,
+                        onAction = settingsVM::onAction
+                    )
+                }
+
                 composable<Route.AboutLibraries> {
-                    AboutLibrariesPage()
+                    AboutLibrariesScreen()
                 }
             }
         }

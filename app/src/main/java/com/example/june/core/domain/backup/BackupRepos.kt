@@ -1,9 +1,11 @@
 package com.example.june.core.domain.backup
 
+import java.io.File
+
 interface ExportRepo {
-    suspend fun exportToJson(): String?
+    suspend fun exportData(includeMedia: Boolean = true): File?
 }
 
 interface RestoreRepo {
-    suspend fun restoreJournals(path: String): RestoreResult
+    suspend fun restoreData(path: String): RestoreResult
 }

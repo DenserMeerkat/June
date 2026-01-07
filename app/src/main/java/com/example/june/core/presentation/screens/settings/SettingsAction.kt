@@ -15,5 +15,5 @@ sealed interface SettingsAction {
     data object OnDeleteJournals: SettingsAction
     data object ResetBackup: SettingsAction
     data class OnRestoreJournals(val path: String): SettingsAction
-    data object OnExportJournals: SettingsAction
+    data class OnExportJournals(val includeMedia: Boolean = true) : SettingsAction
 }

@@ -39,7 +39,6 @@ class SettingsVM(
         ThemeFlow(seed, appTheme, amoled, style, materialYou)
     }
 
-
     val state = combine(
         _localState,
         prefs.getOnboardingDoneFlow(),
@@ -69,9 +68,9 @@ class SettingsVM(
             when (action) {
                 SettingsAction.OnDeleteJournals -> repo.deleteAllJournals()
 
-                SettingsAction.OnExportJournals -> {
+                is SettingsAction.OnExportJournals -> {
                     _localState.update { it.copy(exportState = ExportState.Exporting) }
-                    val result = exportRepo.exportToJson()
+                    val result = exportRepo.exportData(includeMedia = action.includeMedia)
                     _localState.update {
                         it.copy(
                             exportState = if (result != null)
@@ -80,16 +79,14 @@ class SettingsVM(
                         )
                     }
                 }
-
                 is SettingsAction.OnRestoreJournals -> {
                     _localState.update { it.copy(restoreState = RestoreState.Restoring) }
-                    when (val res = restoreRepo.restoreJournals(action.path)) {
+                    when (val res = restoreRepo.restoreData(action.path)) {
                         is RestoreResult.Failure -> {
                             _localState.update {
                                 it.copy(restoreState = RestoreState.Failure(res.exceptionType))
                             }
                         }
-
                         RestoreResult.Success -> {
                             _localState.update {
                                 it.copy(restoreState = RestoreState.Restored)
@@ -100,7 +97,7 @@ class SettingsVM(
 
                 SettingsAction.ResetBackup -> {
                     _localState.update {
-                        it.copy(restoreState = RestoreState.Idle, exportState = ExportState.Exporting)
+                        it.copy(restoreState = RestoreState.Idle, exportState = ExportState.Idle)
                     }
                 }
 

@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keepattributes *Annotation*, EnclosingMethod, Signature
+-keepclassmembers class * {
+    @kotlinx.serialization.SerialName <fields>;
+}
+-keep class com.example.june.core.domain.backup.** { *; }
+-keep class com.example.june.core.domain.data_classes.** { *; }

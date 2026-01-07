@@ -11,7 +11,7 @@ import com.example.june.core.domain.data_classes.Theme
 data class SettingsState(
     val theme: Theme = Theme(),
     val deleteButtonEnabled: Boolean = true,
-    val exportState: ExportState = ExportState.Exporting,
+    val exportState: ExportState = ExportState.Idle,
     val restoreState: RestoreState = RestoreState.Idle,
     val onBoardingDone: Boolean = true,
 )

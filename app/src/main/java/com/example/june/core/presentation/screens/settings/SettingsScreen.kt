@@ -19,6 +19,7 @@ import com.example.june.core.presentation.components.JuneTopAppBar
 import org.koin.compose.koinInject
 
 import com.example.june.core.presentation.screens.settings.section.AppearanceSection
+import com.example.june.core.presentation.screens.settings.section.GeneralSection
 import com.example.june.core.presentation.screens.settings.section.SettingSection
 import com.example.june.core.presentation.screens.settings.section.SettingsItem
 
@@ -62,6 +63,12 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .clip(RoundedCornerShape(24.dp))
         ) {
+            item(key = "general_section") {
+                GeneralSection(
+                    state = state,
+                    onAction = onAction
+                )
+            }
             item(key = "appearance_section") {
                 AppearanceSection(
                     state = state,
@@ -81,17 +88,6 @@ fun SettingsScreen(
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.secondary
                             )
-                        },
-                        trailingContent = {
-                            FilledTonalIconButton(
-                                onClick = { navigator.navigateTo(Route.AboutLibraries) }
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.arrow_forward_ios_24px),
-                                    contentDescription = "Pick Theme",
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
                         },
                         onClick = { navigator.navigateTo(Route.AboutLibraries) }
                     )

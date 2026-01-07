@@ -25,7 +25,7 @@ import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutLibrariesPage() {
+fun AboutLibrariesScreen() {
     val navigator = koinInject<AppNavigator>()
     val libraries = produceLibraries().value
 

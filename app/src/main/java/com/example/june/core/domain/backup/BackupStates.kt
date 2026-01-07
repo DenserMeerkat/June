@@ -1,9 +1,12 @@
 package com.example.june.core.domain.backup
 
+import java.io.File
+
 sealed interface ExportState {
+    data object Idle: ExportState
     data object Exporting: ExportState
-    data class ExportReady(val data: String): ExportState
     data object Error: ExportState
+    data class ExportReady(val file: File): ExportState
 }
 
 sealed interface RestoreState {
