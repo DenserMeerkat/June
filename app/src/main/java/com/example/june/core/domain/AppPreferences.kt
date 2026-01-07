@@ -28,4 +28,7 @@ interface AppPreferences {
 
     fun getOnboardingDoneFlow(): Flow<Boolean>
     suspend fun updateOnboardingDone(done: Boolean)
+
+    fun getAppLockFlow(): Flow<Boolean>
+    suspend fun updateAppLock(enabled: Boolean)
 }

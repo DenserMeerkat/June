@@ -135,6 +135,8 @@ dependencies {
     implementation(libs.osmdroid)
     implementation(libs.gms.location)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.core.splashscreen)
 
     implementation(libs.koin.core)
     implementation(libs.koin.compose)

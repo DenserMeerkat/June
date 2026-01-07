@@ -38,6 +38,7 @@ class AppPreferencesImpl(
         private val materialTheme = booleanPreferencesKey("material_theme")
         private val onboardingDone = booleanPreferencesKey("onboarding_done")
         private val selectedFont = stringPreferencesKey("font")
+        private val appLock = booleanPreferencesKey("app_lock")
     }
 
     override fun getAppThemePrefFlow(): Flow<AppTheme> = dataStore.data
@@ -111,4 +112,12 @@ class AppPreferencesImpl(
         }
     }
 
+    override fun getAppLockFlow(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[appLock] == true }
+
+    override suspend fun updateAppLock(enabled: Boolean) {
+        dataStore.edit { settings ->
+            settings[appLock] = enabled
+        }
+    }
 }

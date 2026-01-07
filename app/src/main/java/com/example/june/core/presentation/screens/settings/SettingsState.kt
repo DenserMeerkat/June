@@ -14,4 +14,5 @@ data class SettingsState(
     val exportState: ExportState = ExportState.Idle,
     val restoreState: RestoreState = RestoreState.Idle,
     val onBoardingDone: Boolean = true,
+    val isAppLockEnabled: Boolean = false,
 )

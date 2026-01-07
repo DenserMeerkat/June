@@ -10,6 +10,7 @@ import com.example.june.core.domain.backup.RestoreRepo
 import com.example.june.core.domain.backup.RestoreResult
 import com.example.june.core.domain.backup.RestoreState
 import com.example.june.core.domain.enums.AppTheme
+import com.example.june.core.domain.enums.Fonts
 import com.example.june.core.domain.utils.FileUtils
 import com.example.june.core.presentation.screens.settings.SettingsAction
 import com.example.june.core.presentation.screens.settings.SettingsState
@@ -32,32 +33,39 @@ class SettingsVM(
 
     private val _localState = MutableStateFlow(SettingsState())
 
-    private val themeParamsFlow = combine(
+    private val colorPrefsFlow = combine(
         prefs.getSeedColorFlow(),
         prefs.getAppThemePrefFlow(),
         prefs.getAmoledPrefFlow(),
-        prefs.getPaletteStyle(),
+        prefs.getPaletteStyle()
+    ) { seed, appTheme, amoled, style ->
+        ColorPrefs(seed, appTheme, amoled, style)
+    }
+
+    private val miscPrefsFlow = combine(
         prefs.getMaterialYouFlow(),
-    ) { seed, appTheme, amoled, style, materialYou ->
-        ThemeFlow(seed, appTheme, amoled, style, materialYou)
+        prefs.getFontFlow(),
+        prefs.getOnboardingDoneFlow(),
+        prefs.getAppLockFlow() 
+    ) { matYou, font, onboarding, appLock ->
+        MiscPrefs(matYou, font, onboarding, appLock)
     }
 
     val state = combine(
         _localState,
-        prefs.getOnboardingDoneFlow(),
-        prefs.getMaterialYouFlow(),
-        prefs.getFontFlow(),
-        themeParamsFlow
-    ) { local, onboarding, matYou, font, themeParams ->
+        colorPrefsFlow,
+        miscPrefsFlow
+    ) { local, colors, misc ->
         local.copy(
-            onBoardingDone = onboarding,
+            onBoardingDone = misc.onboardingDone,
+            isAppLockEnabled = misc.appLock, 
             theme = local.theme.copy(
-                seedColor = themeParams.seed,
-                appTheme = themeParams.appTheme,
-                withAmoled = themeParams.amoled,
-                style = themeParams.style,
-                materialTheme = matYou,
-                font = font,
+                seedColor = colors.seed,
+                appTheme = colors.appTheme,
+                withAmoled = colors.amoled,
+                style = colors.style,
+                materialTheme = misc.matYou,
+                font = misc.font,
             )
         )
     }.stateIn(
@@ -90,6 +98,7 @@ class SettingsVM(
                         )
                     }
                 }
+
                 is SettingsAction.OnRestoreJournals -> {
                     _localState.update { it.copy(restoreState = RestoreState.Restoring) }
                     when (val res = restoreRepo.restoreData(action.path)) {
@@ -98,6 +107,7 @@ class SettingsVM(
                                 it.copy(restoreState = RestoreState.Failure(res.exceptionType))
                             }
                         }
+
                         RestoreResult.Success -> {
                             _localState.update {
                                 it.copy(restoreState = RestoreState.Restored)
@@ -119,15 +129,22 @@ class SettingsVM(
                 is SettingsAction.OnPaletteChange -> prefs.updatePaletteStyle(action.style)
                 is SettingsAction.OnFontChange -> prefs.updateFont(action.fonts)
                 is SettingsAction.OnMaterialThemeToggle -> prefs.updateMaterialTheme(action.pref)
+                is SettingsAction.OnAppLockToggle -> prefs.updateAppLock(action.enabled)
             }
         }
     }
 
-    private data class ThemeFlow(
+    private data class ColorPrefs(
         val seed: Int,
         val appTheme: AppTheme,
         val amoled: Boolean,
-        val style: PaletteStyle,
-        val materialYou: Boolean
+        val style: PaletteStyle
+    )
+
+    private data class MiscPrefs(
+        val matYou: Boolean,
+        val font: Fonts,
+        val onboardingDone: Boolean,
+        val appLock: Boolean
     )
 }

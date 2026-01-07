@@ -2,6 +2,7 @@ package com.example.june.core.presentation.screens.settings.section
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +28,29 @@ fun GeneralSection(
     var showPermissionsSheet by remember { mutableStateOf(false) }
 
     SettingSection(title = "General") {
+        SettingsItem(
+            title = "App Lock",
+            subtitle = if (state.isAppLockEnabled) "Enabled" else "Disabled",
+            leadingContent = {
+                Icon(
+                    painter = painterResource(R.drawable.password_24px),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+            },
+            trailingContent = {
+                Switch(
+                    checked = state.isAppLockEnabled,
+                    onCheckedChange = { isChecked ->
+                        onAction(SettingsAction.OnAppLockToggle(isChecked))
+                    }
+                )
+            },
+            onClick = {
+                onAction(SettingsAction.OnAppLockToggle(!state.isAppLockEnabled))
+            }
+        )
+
         SettingsItem(
             title = "Permissions",
             subtitle = "Manage app permissions",

@@ -32,6 +32,8 @@ palette = "1.0.0"
 osmdroid = "6.1.18"
 gmsLocation = "21.3.0"
 coroutinesPlayServices = "1.7.3"
+biometric = "1.2.0-alpha05"
+core-splashscreen = "1.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -83,6 +85,8 @@ androidx-palette = { group = "androidx.palette", name = "palette", version.ref =
 osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
 gms-location = { module = "com.google.android.gms:play-services-location", version.ref = "gmsLocation" }
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "core-splashscreen" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
