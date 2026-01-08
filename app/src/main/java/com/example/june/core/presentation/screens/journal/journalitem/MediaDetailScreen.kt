@@ -44,7 +44,7 @@ import coil.decode.VideoFrameDecoder
 import com.example.june.R
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.presentation.components.JuneVideoPlayer
-import com.example.june.viewmodels.JournalVM
+import com.example.june.viewmodels.EditorVM
 import org.koin.compose.koinInject
 import java.io.File
 
@@ -52,7 +52,7 @@ import java.io.File
 @Composable
 fun MediaDetailScreen(
     initialIndex: Int,
-    viewModel: JournalVM
+    viewModel: EditorVM
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val navigator = koinInject<AppNavigator>()

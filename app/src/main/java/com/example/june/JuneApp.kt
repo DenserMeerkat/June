@@ -29,7 +29,7 @@ import com.example.june.core.presentation.screens.settings.SettingsScreen
 import com.example.june.core.presentation.screens.settings.section.AboutLibrariesScreen
 import com.example.june.core.presentation.screens.settings.section.BackupScreen
 import com.example.june.core.presentation.theme.JuneTheme
-import com.example.june.viewmodels.JournalVM
+import com.example.june.viewmodels.EditorVM
 import com.example.june.viewmodels.SettingsVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -100,7 +100,7 @@ fun JuneApp() {
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry<Route.Journal>()
                     }
-                    val viewModel: JournalVM = koinViewModel(viewModelStoreOwner = parentEntry)
+                    val viewModel: EditorVM = koinViewModel(viewModelStoreOwner = parentEntry)
 
                     ItemGalleryScreen(viewModel = viewModel)
                 }
@@ -110,7 +110,7 @@ fun JuneApp() {
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry<Route.Journal>()
                     }
-                    val viewModel: JournalVM = koinViewModel(viewModelStoreOwner = parentEntry)
+                    val viewModel: EditorVM = koinViewModel(viewModelStoreOwner = parentEntry)
 
                     MediaDetailScreen(
                         initialIndex = args.initialIndex,

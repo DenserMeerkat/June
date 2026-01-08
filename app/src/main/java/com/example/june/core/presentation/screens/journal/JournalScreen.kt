@@ -35,14 +35,14 @@ import com.example.june.core.presentation.screens.journal.components.AddSongShee
 import com.example.june.core.presentation.screens.journal.components.JournalDatePickerDialog
 import com.example.june.core.presentation.screens.journal.components.JournalItemsPreview
 import com.example.june.core.presentation.screens.journal.components.MediaOperations
-import com.example.june.viewmodels.JournalVM
+import com.example.june.viewmodels.EditorVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun JournalScreen() {
-    val viewModel: JournalVM = koinViewModel()
+    val viewModel: EditorVM = koinViewModel()
     val navigator = koinInject<AppNavigator>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()

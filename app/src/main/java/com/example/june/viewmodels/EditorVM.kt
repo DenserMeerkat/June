@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class JournalVM(
+class EditorVM(
     savedStateHandle: SavedStateHandle,
     private val journalRepo: JournalRepo,
     private val songRepo: SongRepo,

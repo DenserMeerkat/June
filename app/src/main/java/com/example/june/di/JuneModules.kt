@@ -17,10 +17,11 @@ import com.example.june.core.domain.backup.ExportRepo
 import com.example.june.core.domain.backup.RestoreRepo
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.AppNavigatorImpl
-import com.example.june.viewmodels.HomeVM
-import com.example.june.viewmodels.JournalVM
+import com.example.june.viewmodels.JournalsVM
+import com.example.june.viewmodels.EditorVM
 import com.example.june.viewmodels.SearchVM
 import com.example.june.viewmodels.SettingsVM
+import com.example.june.viewmodels.TimelineVM
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -49,8 +50,9 @@ val juneModules = module {
     single { AppPreferencesImpl(get(named("AppPreferences"))) }.bind<AppPreferences>()
 
     viewModelOf(::SettingsVM)
-    viewModelOf(::JournalVM)
-    viewModelOf(::HomeVM)
+    viewModelOf(::EditorVM)
+    viewModelOf(::JournalsVM)
+    viewModelOf(::TimelineVM)
     viewModelOf(::SearchVM)
 
     singleOf(::AppNavigatorImpl)

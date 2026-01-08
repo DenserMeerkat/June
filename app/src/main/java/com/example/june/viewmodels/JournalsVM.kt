@@ -4,12 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.june.core.data.repository.JournalRepository
 import com.example.june.core.domain.data_classes.Journal
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class HomeVM(
+class JournalsVM(
     private val journalRepo: JournalRepository
 ) : ViewModel() {
 
@@ -21,9 +19,7 @@ class HomeVM(
         )
 
     fun deleteJournal(id: Long) {
-        viewModelScope.launch {
-            journalRepo.deleteJournal(id)
-        }
+        viewModelScope.launch { journalRepo.deleteJournal(id) }
     }
 
     fun toggleBookmark(id: Long) {
@@ -31,15 +27,6 @@ class HomeVM(
             val journal = journalRepo.getJournalById(id)
             journal?.let {
                 journalRepo.updateJournal(it.copy(isBookmarked = !it.isBookmarked))
-            }
-        }
-    }
-
-    fun toggleArchive(id: Long) {
-        viewModelScope.launch {
-            val journal = journalRepo.getJournalById(id)
-            journal?.let {
-                journalRepo.updateJournal(it.copy(isArchived = !it.isArchived))
             }
         }
     }

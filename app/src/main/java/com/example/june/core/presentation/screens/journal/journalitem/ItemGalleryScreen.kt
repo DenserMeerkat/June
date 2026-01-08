@@ -40,13 +40,13 @@ import com.example.june.core.presentation.screens.journal.components.JournalMapI
 import com.example.june.core.presentation.screens.journal.components.JournalMediaItem
 import com.example.june.core.presentation.screens.journal.components.JournalSongItem
 import com.example.june.core.presentation.screens.journal.components.MediaOperations
-import com.example.june.viewmodels.JournalVM
+import com.example.june.viewmodels.EditorVM
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemGalleryScreen(
-    viewModel: JournalVM
+    viewModel: EditorVM
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val navigator = koinInject<AppNavigator>()

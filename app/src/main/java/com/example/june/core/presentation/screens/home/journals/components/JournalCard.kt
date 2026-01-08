@@ -23,7 +23,7 @@ import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.screens.journal.components.JournalMosaicCard
 import com.example.june.core.presentation.screens.journal.components.MediaOperations
-import com.example.june.viewmodels.HomeVM
+import com.example.june.viewmodels.JournalsVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -33,7 +33,7 @@ fun JournalCard(
     journal: Journal,
     modifier: Modifier
 ) {
-    val viewModel: HomeVM = koinViewModel()
+    val viewModel: JournalsVM = koinViewModel()
     val navigator = koinInject<AppNavigator>()
 
     val mediaOperations = MediaOperations(
@@ -136,7 +136,7 @@ fun RecentJournalCard(
             modifier = modifier
         )
     } else {
-        val viewModel: HomeVM = koinViewModel()
+        val viewModel: JournalsVM = koinViewModel()
         val navigator = koinInject<AppNavigator>()
 
         val displayImages = remember(journal.images) {
