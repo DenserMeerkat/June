@@ -12,6 +12,7 @@ interface JournalRepo {
     suspend fun updateJournal(journal: Journal)
     suspend fun deleteJournal(id: Long)
     suspend fun deleteAllJournals()
+    fun getJournalsByDateRange(startDate: Long, endDate: Long): Flow<List<Journal>>
     fun getFilteredJournals(
         query: String = "",
         isBookmarked: Boolean? = null,

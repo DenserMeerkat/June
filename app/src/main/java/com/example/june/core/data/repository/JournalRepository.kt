@@ -61,6 +61,12 @@ class JournalRepository(
         }
     }
 
+    override fun getJournalsByDateRange(startDate: Long, endDate: Long): Flow<List<Journal>> {
+        return localDao.getJournalsByDateRange(startDate, endDate).map { entities ->
+            entities.map { it.toJournal() }
+        }
+    }
+
     override fun getFilteredJournals(
         query: String,
         isBookmarked: Boolean?,

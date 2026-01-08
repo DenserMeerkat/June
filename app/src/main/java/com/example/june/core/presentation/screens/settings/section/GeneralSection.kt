@@ -30,7 +30,7 @@ fun GeneralSection(
     SettingSection(title = "General") {
         SettingsItem(
             title = "App Lock",
-            subtitle = if (state.isAppLockEnabled) "Enabled" else "Disabled",
+            subtitle = "Uses system biometric authentication",
             leadingContent = {
                 Icon(
                     painter = painterResource(R.drawable.password_24px),

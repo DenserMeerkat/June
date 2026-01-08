@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface JournalDao {
+
     @Query("""
         SELECT * FROM journals 
         WHERE (
@@ -16,12 +17,24 @@ interface JournalDao {
             title LIKE '%' || :query || '%' OR 
             content LIKE '%' || :query || '%' OR
             
-            json_extract(location, '$.name') LIKE '%' || :query || '%' OR
-            json_extract(location, '$.address') LIKE '%' || :query || '%' OR
-            json_extract(location, '$.locality') LIKE '%' || :query || '%' OR 
-            
-            json_extract(songDetails, '$.title') LIKE '%' || :query || '%' OR 
-            json_extract(songDetails, '$.artistName') LIKE '%' || :query || '%'
+            (
+            (CASE strftime('%m', dateTime / 1000, 'unixepoch')
+                WHEN '01' THEN 'January' WHEN '02' THEN 'February' WHEN '03' THEN 'March'
+                WHEN '04' THEN 'April'   WHEN '05' THEN 'May'      WHEN '06' THEN 'June'
+                WHEN '07' THEN 'July'    WHEN '08' THEN 'August'   WHEN '09' THEN 'September'
+                WHEN '10' THEN 'October' WHEN '11' THEN 'November' WHEN '12' THEN 'December'
+            END LIKE '%' || REPLACE(:query, ',', '') || '%')
+            OR
+            (strftime('%Y', dateTime / 1000, 'unixepoch') LIKE '%' || REPLACE(:query, ',', '') || '%')
+            OR
+            (strftime('%d', dateTime / 1000, 'unixepoch') LIKE '%' || REPLACE(:query, ',', '') || '%')
+        ) OR
+        
+            (location LIKE '%"name":"%' || :query || '%') OR
+            (location LIKE '%"address":"%' || :query || '%') OR
+            (location LIKE '%"locality":"%' || :query || '%') OR
+            (songDetails LIKE '%"title":"%' || :query || '%') OR
+            (songDetails LIKE '%"artistName":"%' || :query || '%')
         )
         AND (:isBookmarked IS NULL OR isBookmarked = :isBookmarked)
         AND (:isDraft IS NULL OR isDraft = :isDraft)
@@ -39,6 +52,13 @@ interface JournalDao {
         hasLocation: Boolean? = null,
         hasSong: Boolean? = null
     ): Flow<List<JournalEntity>>
+
+    @Query("""
+        SELECT * FROM journals 
+        WHERE dateTime >= :startDate AND dateTime <= :endDate
+        ORDER BY dateTime DESC
+    """)
+    fun getJournalsByDateRange(startDate: Long, endDate: Long): Flow<List<JournalEntity>>
 
     @Query("SELECT * FROM journals")
     fun getAllJournals(): Flow<List<JournalEntity>>
