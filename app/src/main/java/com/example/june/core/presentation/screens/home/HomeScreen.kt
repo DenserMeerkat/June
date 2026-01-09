@@ -1,24 +1,15 @@
 package com.example.june.core.presentation.screens.home
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.example.june.R
 import com.example.june.core.navigation.AppNavigator
 import com.example.june.core.navigation.Route
@@ -31,7 +22,7 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 enum class HomeTab(val label: String, val iconRes: Int, val enabled: Boolean = true) {
-    Journals("Journals", R.drawable.list_alt_24px),
+    Journals("Journals", R.drawable.list_24px),
     Timeline("Timeline", R.drawable.event_note_24px),
 }
 

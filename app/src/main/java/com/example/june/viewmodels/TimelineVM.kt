@@ -8,6 +8,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import java.time.YearMonth
 import java.time.ZoneId
+import com.example.june.R
+
+enum class TimelineTab(val label: String, val iconRes: Int) {
+    Journals("Journals", R.drawable.list_alt_24px),
+    Media("Media", R.drawable.art_track_24px),
+    Map("Map", R.drawable.location_on_24px),
+    Music("Music", R.drawable.music_note_24px)
+}
 
 class TimelineVM(
     private val repo: JournalRepo
@@ -16,12 +24,16 @@ class TimelineVM(
     private val _currentMonth = MutableStateFlow(YearMonth.now())
     val currentMonth = _currentMonth.asStateFlow()
 
+    private val _selectedTab = MutableStateFlow(TimelineTab.Journals)
+    val selectedTab = _selectedTab.asStateFlow()
+
     val initialPage = Int.MAX_VALUE / 2
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val journalsInMonth: StateFlow<List<Journal>> = _currentMonth.flatMapLatest { month ->
         val start = month.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val end = month.atEndOfMonth().atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val end = month.atEndOfMonth().atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant()
+            .toEpochMilli()
         repo.getJournalsByDateRange(start, end)
     }.stateIn(
         scope = viewModelScope,
@@ -31,6 +43,10 @@ class TimelineVM(
 
     fun onMonthChange(newMonth: YearMonth) {
         _currentMonth.value = newMonth
+    }
+
+    fun onTabChange(tab: TimelineTab) {
+        _selectedTab.value = tab
     }
 
     fun getMonthForPage(page: Int): YearMonth {

@@ -32,7 +32,9 @@ fun HomeBottomBar(
     val scope = rememberCoroutineScope()
 
     Box(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding(),
         contentAlignment = Alignment.BottomCenter
     ) {
         Box(
@@ -49,41 +51,36 @@ fun HomeBottomBar(
                     )
                 )
         )
-
-        Box(
-            modifier = Modifier.padding(bottom = 32.dp)
-        ) {
-            HorizontalFloatingToolbar(
-                expanded = true,
-                floatingActionButton = {
-                    FloatingActionButton(
-                        onClick = onFabClick,
-                        shape = RoundedCornerShape(20.dp),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.add_2_24px),
-                            contentDescription = "New Journal"
-                        )
-                    }
-                },
-            ) {
-                HomeTab.entries.forEachIndexed { index, tab ->
-                    val isSelected = pagerState.currentPage == index
-
-                    ToolbarTab(
-                        selected = isSelected,
-                        enabled = tab.enabled,
-                        iconRes = tab.iconRes,
-                        label = tab.label,
-                        onClick = {
-                            if (tab.enabled) {
-                                scope.launch {
-                                    pagerState.animateScrollToPage(index)
-                                }
-                            }
-                        }
+        HorizontalFloatingToolbar(
+            expanded = true,
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = onFabClick,
+                    shape = RoundedCornerShape(20.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.add_2_24px),
+                        contentDescription = "New Journal"
                     )
                 }
+            },
+        ) {
+            HomeTab.entries.forEachIndexed { index, tab ->
+                val isSelected = pagerState.currentPage == index
+
+                ToolbarTab(
+                    selected = isSelected,
+                    enabled = tab.enabled,
+                    iconRes = tab.iconRes,
+                    label = tab.label,
+                    onClick = {
+                        if (tab.enabled) {
+                            scope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        }
+                    }
+                )
             }
         }
     }
