@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.june.R
 import com.example.june.core.presentation.screens.home.timeline.components.TimelineCalendarPage
 import com.example.june.core.presentation.screens.home.timeline.components.TimelineMonthStrip
 import com.example.june.core.presentation.screens.home.timeline.components.TimelineTabs
@@ -38,11 +37,6 @@ fun TimelinePage(
     val journalsInMonth by viewModel.journalsInMonth.collectAsStateWithLifecycle()
     val isCalendarExpanded by viewModel.isCalendarExpanded.collectAsStateWithLifecycle()
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
-
-    val sortedJournals = remember(journalsInMonth) {
-        journalsInMonth.sortedByDescending { it.dateTime }
-    }
-
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
     val density = LocalDensity.current
@@ -185,7 +179,7 @@ fun TimelinePage(
 
         TimelineTabs(
             selectedTab = selectedTab,
-            sortedJournals = sortedJournals,
+            journals = journalsInMonth,
             onTabSelected = { viewModel.onTabChange(it) },
             modifier = Modifier.weight(1f),
             bottomPadding = 80.dp

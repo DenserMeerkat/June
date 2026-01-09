@@ -300,16 +300,14 @@ fun JournalScreen() {
                     readOnly = !state.isEditMode,
                     enabled = state.isEditMode,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = if (state.isEditMode) {
-                        {
-                            Text(
-                                "Add title",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                        }
-                    } else null,
+                    placeholder = {
+                        Text(
+                            "Add title",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                    },
                     textStyle = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     ),

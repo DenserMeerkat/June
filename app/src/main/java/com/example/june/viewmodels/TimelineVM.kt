@@ -1,12 +1,20 @@
 package com.example.june.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import com.example.june.R
 import com.example.june.core.domain.JournalRepo
 import com.example.june.core.domain.data_classes.Journal
+import com.example.june.core.domain.data_classes.SongDetails
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import java.time.YearMonth
 import java.time.ZoneId
 
@@ -18,7 +26,8 @@ enum class TimelineTab(val label: String, val iconRes: Int) {
 }
 
 class TimelineVM(
-    private val repo: JournalRepo
+    private val repo: JournalRepo,
+    context: Context
 ) : ViewModel() {
 
     private val _currentMonth = MutableStateFlow(YearMonth.now())
@@ -44,6 +53,83 @@ class TimelineVM(
         initialValue = emptyList()
     )
 
+    private val _activeSong = MutableStateFlow<SongDetails?>(null)
+    val activeSong = _activeSong.asStateFlow()
+
+    private val _isPlaying = MutableStateFlow(false)
+    val isPlaying = _isPlaying.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
+    private val _sliderProgress = MutableStateFlow(0f)
+    val sliderProgress = _sliderProgress.asStateFlow()
+
+    private val exoPlayer: ExoPlayer by lazy {
+        ExoPlayer.Builder(context).build().apply {
+            addListener(object : Player.Listener {
+                override fun onIsPlayingChanged(playing: Boolean) {
+                    _isPlaying.value = playing
+                }
+
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    _isLoading.value = playbackState == Player.STATE_BUFFERING
+                    if (playbackState == Player.STATE_ENDED) {
+                        _isPlaying.value = false
+                        _sliderProgress.value = 0f
+                        seekTo(0)
+                        pause()
+                    }
+                }
+            })
+        }
+    }
+
+    init {
+        viewModelScope.launch {
+            while (isActive) {
+                if (_isPlaying.value) {
+                    val duration = exoPlayer.duration.coerceAtLeast(1)
+                    val position = exoPlayer.currentPosition
+                    _sliderProgress.value = position.toFloat() / duration.toFloat()
+                }
+                delay(100)
+            }
+        }
+    }
+
+    fun onSongSelected(song: SongDetails, autoPlay: Boolean = true) {
+        if (_activeSong.value?.previewUrl == song.previewUrl) {
+            togglePlayPause()
+        } else {
+            _activeSong.value = song
+            val url = song.previewUrl
+            if (url != null) {
+                exoPlayer.stop()
+                exoPlayer.clearMediaItems()
+                exoPlayer.setMediaItem(MediaItem.fromUri(url))
+                exoPlayer.prepare()
+                if (autoPlay) {
+                    exoPlayer.play()
+                }
+            }
+        }
+    }
+
+    fun togglePlayPause() {
+        if (exoPlayer.isPlaying) {
+            exoPlayer.pause()
+        } else {
+            if (exoPlayer.mediaItemCount > 0) exoPlayer.play()
+        }
+    }
+
+    fun pause() {
+        if (exoPlayer.isPlaying) {
+            exoPlayer.pause()
+        }
+    }
+
     fun onMonthChange(newMonth: YearMonth) {
         _currentMonth.value = newMonth
     }
@@ -65,5 +151,10 @@ class TimelineVM(
         val now = YearMonth.now()
         val diff = (month.year - now.year) * 12 + (month.monthValue - now.monthValue)
         return initialPage + diff
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        exoPlayer.release()
     }
 }

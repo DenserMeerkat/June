@@ -28,7 +28,7 @@ import com.example.june.viewmodels.TimelineTab
 @Composable
 fun TimelineTabs(
     selectedTab: TimelineTab,
-    sortedJournals: List<Journal>,
+    journals: List<Journal>,
     onTabSelected: (TimelineTab) -> Unit,
     modifier: Modifier = Modifier,
     bottomPadding: Dp = 0.dp
@@ -48,21 +48,24 @@ fun TimelineTabs(
             ) {
                 when (selectedTab) {
                     TimelineTab.Journals -> JournalListSection(
-                        journals = sortedJournals,
+                        journals = journals,
                         bottomPadding = bottomPadding
                     )
 
                     TimelineTab.Media -> MonthMediaGrid(
-                        journals = sortedJournals,
+                        journals = journals,
                         bottomPadding = bottomPadding
                     )
 
                     TimelineTab.Map -> TimelineMapTab(
-                        journals = sortedJournals,
+                        journals = journals,
                         bottomPadding = bottomPadding
                     )
 
-                    TimelineTab.Music -> MonthMusicList(journals = sortedJournals)
+                    TimelineTab.Music -> TimelineMusicTab(
+                        journals = journals,
+                        bottomPadding = bottomPadding
+                    )
                 }
             }
         }
