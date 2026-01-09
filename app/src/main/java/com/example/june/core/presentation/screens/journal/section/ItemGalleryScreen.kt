@@ -63,7 +63,8 @@ fun ItemGalleryScreen(
                     Route.JournalMediaDetail(
                         journalId = state.journalId ?: 0L,
                         initialIndex = state.images.reversed().indexOf(path)
-                    )
+                    ),
+                    isSingleTop = true,
                 )
             },
             frontMediaPath = state.images.lastOrNull(),

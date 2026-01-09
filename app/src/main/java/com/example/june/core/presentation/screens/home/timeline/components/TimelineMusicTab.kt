@@ -78,7 +78,7 @@ fun TimelineMusicTab(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
                     bottom = bottomPadding + 16.dp + 80.dp,
-                    top = 8.dp
+                    top = 16.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -239,7 +239,7 @@ fun MusicListTile(
             ) {
                 Text(
                     text = journal.dateTime.toDayOfMonth(),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -251,16 +251,7 @@ fun MusicListTile(
                     letterSpacing = 1.sp
                 )
             }
-
-            Box(
-                modifier = Modifier
-                    .width(1.dp)
-                    .height(40.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant)
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
+            Spacer(modifier = Modifier.width(4.dp))
             AsyncImage(
                 model = song.thumbnailUrl,
                 contentDescription = null,
@@ -270,9 +261,7 @@ fun MusicListTile(
                     .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             )
-
             Spacer(modifier = Modifier.width(12.dp))
-
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
