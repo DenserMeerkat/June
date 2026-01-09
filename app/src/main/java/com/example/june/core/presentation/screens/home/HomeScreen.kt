@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 enum class HomeTab(val label: String, val iconRes: Int, val enabled: Boolean = true) {
-    Journals("Journals", R.drawable.list_24px),
+    Journals("Journals", R.drawable.list_alt_24px),
     Timeline("Timeline", R.drawable.event_note_24px),
 }
 

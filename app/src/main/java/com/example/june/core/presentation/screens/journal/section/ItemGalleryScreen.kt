@@ -1,4 +1,4 @@
-package com.example.june.core.presentation.screens.journal.journalitem
+package com.example.june.core.presentation.screens.journal.section
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues

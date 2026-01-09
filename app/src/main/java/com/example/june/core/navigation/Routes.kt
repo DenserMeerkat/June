@@ -20,6 +20,12 @@ sealed interface Route {
     ) : Route
 
     @Serializable
+    data class MediaViewerRoute(
+        val mediaPaths: List<String>,
+        val initialIndex: Int
+    ) : Route
+
+    @Serializable
     data object Search : Route
 
     @Serializable

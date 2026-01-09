@@ -40,12 +40,13 @@ fun HomeBottomBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(160.dp)
+                .height(100.dp)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
                             Color.Transparent,
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
                             MaterialTheme.colorScheme.surface
                         )
                     )

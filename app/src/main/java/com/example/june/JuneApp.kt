@@ -20,10 +20,10 @@ import androidx.navigation.toRoute
 import com.example.june.core.navigation.AppNavigatorImpl
 import com.example.june.core.navigation.NavigationIntent
 import com.example.june.core.navigation.Route
+import com.example.june.core.presentation.components.JuneMediaLightbox
 import com.example.june.core.presentation.screens.home.HomeScreen
 import com.example.june.core.presentation.screens.journal.JournalScreen
-import com.example.june.core.presentation.screens.journal.journalitem.MediaDetailScreen
-import com.example.june.core.presentation.screens.journal.journalitem.ItemGalleryScreen
+import com.example.june.core.presentation.screens.journal.section.ItemGalleryScreen
 import com.example.june.core.presentation.screens.search.SearchScreen
 import com.example.june.core.presentation.screens.settings.SettingsScreen
 import com.example.june.core.presentation.screens.settings.section.AboutLibrariesScreen
@@ -105,16 +105,27 @@ fun JuneApp() {
                     ItemGalleryScreen(viewModel = viewModel)
                 }
 
+                composable<Route.MediaViewerRoute> { backStackEntry ->
+                    val args = backStackEntry.toRoute<Route.MediaViewerRoute>()
+                    JuneMediaLightbox(
+                        mediaPaths = args.mediaPaths,
+                        initialIndex = args.initialIndex,
+                    )
+                }
+
+
                 composable<Route.JournalMediaDetail> { backStackEntry ->
                     val args = backStackEntry.toRoute<Route.JournalMediaDetail>()
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry<Route.Journal>()
                     }
                     val viewModel: EditorVM = koinViewModel(viewModelStoreOwner = parentEntry)
+                    val state by viewModel.state.collectAsStateWithLifecycle()
+                    val editorImages = remember(state.images) { state.images.reversed() }
 
-                    MediaDetailScreen(
+                    JuneMediaLightbox(
+                        mediaPaths = editorImages,
                         initialIndex = args.initialIndex,
-                        viewModel = viewModel
                     )
                 }
 
