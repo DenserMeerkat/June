@@ -1,0 +1,23 @@
+package com.denser.june.core.domain
+
+import com.denser.june.core.domain.data_classes.Journal
+import kotlinx.coroutines.flow.Flow
+
+interface JournalRepo {
+    suspend fun insertJournal(journal: Journal): Long
+    fun getJournals(): Flow<List<Journal>>
+    suspend fun getAllJournals(): List<Journal>
+    suspend fun getJournalById(id: Long): Journal?
+    suspend fun searchJournals(query: String): Flow<List<Journal>>
+    suspend fun updateJournal(journal: Journal)
+    suspend fun deleteJournal(id: Long)
+    suspend fun deleteAllJournals()
+    fun getJournalsByDateRange(startDate: Long, endDate: Long): Flow<List<Journal>>
+    fun getFilteredJournals(
+        query: String = "",
+        isBookmarked: Boolean? = null,
+        isDraft: Boolean? = null,
+        hasLocation: Boolean? = null,
+        hasSong: Boolean? = null
+    ): Flow<List<Journal>>
+}

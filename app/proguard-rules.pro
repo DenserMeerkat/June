@@ -24,5 +24,5 @@
 -keepclassmembers class * {
     @kotlinx.serialization.SerialName <fields>;
 }
--keep class com.example.june.core.domain.backup.** { *; }
--keep class com.example.june.core.domain.data_classes.** { *; }
+-keep class com.denser.june.core.domain.backup.** { *; }
+-keep class com.denser.june.core.domain.data_classes.** { *; }

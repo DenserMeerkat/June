@@ -19,11 +19,11 @@ val appVersionCode = 1
 val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
 
 android {
-    namespace = "com.example.june"
+    namespace = "com.denser.june"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.june"
+        applicationId = "com.denser.june"
         minSdk = 28
         targetSdk = 36
         versionCode = appVersionCode
