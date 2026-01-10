@@ -1,5 +1,7 @@
 package com.denser.june.core.presentation.screens.journal.components
 
+import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,7 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,7 +37,8 @@ fun AddSongSheet(
     var songLink by remember { mutableStateOf("") }
 
     val scope = rememberCoroutineScope()
-    val clipboardManager = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
+    val context = LocalContext.current
 
     ModalBottomSheet(
         sheetState = sheetState,
@@ -52,11 +56,10 @@ fun AddSongSheet(
                 AddSongBottomBar(
                     onPaste = {
                         scope.launch {
-                            val text = clipboardManager.getText()?.text?.trim() ?: ""
-                            if (text.isNotBlank()) {
-                                songLink = text
-                                onFetchDetails(text)
-                            }
+                            val clipEntry = clipboard.getClipEntry()
+                            val text = clipEntry?.clipData?.getItemAt(0)?.text?.toString() ?: ""
+                            songLink = text
+                            onFetchDetails(text)
                         }
                     },
                     onDone = onDismiss

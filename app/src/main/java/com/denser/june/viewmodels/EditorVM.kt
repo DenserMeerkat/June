@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
+import android.util.Patterns
 
 class EditorVM(
     savedStateHandle: SavedStateHandle,
@@ -275,14 +276,24 @@ class EditorVM(
 
     fun fetchSongDetails(url: String) {
         viewModelScope.launch {
-            _state.update { it.copy(isFetchingSong = true) }
-            songRepo.fetchSongDetails(url).onSuccess { details ->
-                updateState { it.copy(songDetails = details, isFetchingSong = false) }
-            }.onFailure {error ->
-                _state.update { it.copy(isFetchingSong = false) }
-                val errorMessage = "Failed to fetch song details"
-                _uiEvent.send(errorMessage)
+            val trimmedUrl = url.trim()
+            if (trimmedUrl.isBlank()) {
+                _uiEvent.send("Link cannot be empty")
+                return@launch
             }
+            if (!Patterns.WEB_URL.matcher(trimmedUrl).matches()) {
+                _uiEvent.send("Invalid URL format")
+                return@launch
+            }
+            _state.update { it.copy(isFetchingSong = true) }
+            songRepo.fetchSongDetails(trimmedUrl)
+                .onSuccess { details ->
+                    updateState { it.copy(songDetails = details, isFetchingSong = false) }
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(isFetchingSong = false) }
+                    _uiEvent.send("Failed to fetch song details")
+                }
         }
     }
 }
