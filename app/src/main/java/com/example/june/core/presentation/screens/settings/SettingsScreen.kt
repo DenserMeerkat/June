@@ -9,19 +9,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.june.R
 import com.example.june.core.navigation.AppNavigator
-import com.example.june.core.navigation.Route
 import com.example.june.core.presentation.components.JuneAppBarType
 import com.example.june.core.presentation.components.JuneTopAppBar
+import com.example.june.core.presentation.screens.settings.section.AboutSection
 import org.koin.compose.koinInject
 
 import com.example.june.core.presentation.screens.settings.section.AppearanceSection
 import com.example.june.core.presentation.screens.settings.section.GeneralSection
-import com.example.june.core.presentation.screens.settings.section.SettingSection
-import com.example.june.core.presentation.screens.settings.section.SettingsItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,8 +47,7 @@ fun SettingsScreen(
                         Icon(
                             painter = painterResource(R.drawable.arrow_back_24px),
                             contentDescription = "Back",
-
-                            )
+                        )
                     }
                 }
             )
@@ -76,22 +72,7 @@ fun SettingsScreen(
                 )
             }
             item(key = "about_section") {
-                SettingSection(
-                    title = "About"
-                ) {
-                    SettingsItem(
-                        title = stringResource(R.string.about_libraries),
-                        subtitle = stringResource(R.string.about_libraries),
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(R.drawable.info_24px),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.secondary
-                            )
-                        },
-                        onClick = { navigator.navigateTo(Route.AboutLibraries) }
-                    )
-                }
+                AboutSection()
             }
             item {
                 Spacer(modifier = Modifier.height(32.dp))

@@ -55,7 +55,7 @@ android {
         create("beta") {
             resValue("string", "app_name", "$appName (Beta)")
             applicationIdSuffix = ".beta"
-            versionNameSuffix = "-beta01"
+            versionNameSuffix = "-beta"
             isMinifyEnabled = true
             isShrinkResources = true
             signingConfig = signingConfigs.getByName("debug")
