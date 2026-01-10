@@ -45,7 +45,7 @@ fun TimelineJournalTab(
                 TimelineJournalTile(
                     journal = journal,
                     onClick = {
-                        navigator.navigateTo(Route.Journal(journal.id))
+                        navigator.navigateTo(Route.Journal(journal.id), isSingleTop = true)
                     }
                 )
             }

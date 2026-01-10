@@ -95,6 +95,8 @@ fun JuneMediaLightbox(
                     .fillMaxWidth()
                     .background(Color.Black)
                     .statusBarsPadding()
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 4.dp)
                     .height(56.dp)
             ) {
                 Row(

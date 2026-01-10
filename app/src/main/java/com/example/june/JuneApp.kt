@@ -1,5 +1,6 @@
 package com.example.june
 
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -71,24 +72,23 @@ fun JuneApp() {
             NavHost(
                 navController = navController,
                 startDestination = Route.Home,
-                enterTransition = {
-                    slideInHorizontally(initialOffsetX = { it }) + fadeIn()
-                },
-                exitTransition = {
-                    slideOutHorizontally(targetOffsetX = { -it }) + fadeOut()
-                },
-                popEnterTransition = {
-                    slideInHorizontally(initialOffsetX = { -it }) + fadeIn()
-                },
-                popExitTransition = {
-                    slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
-                }
+                enterTransition = { slideInHorizontally(initialOffsetX = { it }) + fadeIn() },
+                exitTransition = { fadeOut(targetAlpha = 0.5f) },
+                popEnterTransition = { fadeIn() },
+                popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) + fadeOut() }
             ) {
                 composable<Route.Home> {
                     HomeScreen()
                 }
 
-                composable<Route.Search> {
+                composable<Route.Search>(
+                    enterTransition = {
+                        slideInHorizontally(initialOffsetX = { -it }) + fadeIn()
+                    },
+                    popExitTransition = {
+                        slideOutHorizontally(targetOffsetX = { -it }) + fadeOut()
+                    }
+                ) {
                     SearchScreen()
                 }
 
@@ -105,7 +105,10 @@ fun JuneApp() {
                     ItemGalleryScreen(viewModel = viewModel)
                 }
 
-                composable<Route.MediaViewerRoute> { backStackEntry ->
+                composable<Route.MediaViewerRoute>(
+                    enterTransition = { fadeIn(animationSpec = tween(300)) },
+                    popExitTransition = { fadeOut(animationSpec = tween(300)) }
+                ) { backStackEntry ->
                     val args = backStackEntry.toRoute<Route.MediaViewerRoute>()
                     JuneMediaLightbox(
                         mediaPaths = args.mediaPaths,
@@ -113,8 +116,10 @@ fun JuneApp() {
                     )
                 }
 
-
-                composable<Route.JournalMediaDetail> { backStackEntry ->
+                composable<Route.JournalMediaDetail>(
+                    enterTransition = { fadeIn(animationSpec = tween(300)) },
+                    popExitTransition = { fadeOut(animationSpec = tween(300)) }
+                ) { backStackEntry ->
                     val args = backStackEntry.toRoute<Route.JournalMediaDetail>()
                     val parentEntry = remember(backStackEntry) {
                         navController.getBackStackEntry<Route.Journal>()

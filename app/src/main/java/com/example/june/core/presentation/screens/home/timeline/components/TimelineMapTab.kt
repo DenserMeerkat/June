@@ -6,6 +6,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -132,54 +133,84 @@ fun TimelineMapTab(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 16.dp, end = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                SmallFloatingActionButton(
+                FilledIconButton(
                     onClick = { viewModel.setCalendarExpanded(isMapExpanded) },
-                    containerColor = if (isMapExpanded) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = if (isMapExpanded) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                    shape = RoundedCornerShape(16.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = if (isMapExpanded) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = if (isMapExpanded) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         painter = painterResource(
                             if (isMapExpanded) R.drawable.fullscreen_exit_24px else R.drawable.fullscreen_24px
                         ),
-                        contentDescription = if (isMapExpanded) "Collapse Map" else "Expand Map"
+                        contentDescription = if (isMapExpanded) "Collapse Map" else "Expand Map",
+                        modifier = Modifier.size(24.dp)
                     )
                 }
-                SmallFloatingActionButton(
+
+                FilledIconButton(
                     onClick = { isDarkMap = !isDarkMap },
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    shape = RoundedCornerShape(16.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         painter = painterResource(if (isDarkMap) R.drawable.light_mode_24px else R.drawable.dark_mode_24px),
-                        contentDescription = "Toggle Theme"
+                        contentDescription = "Toggle Theme",
+                        modifier = Modifier.size(20.dp)
                     )
                 }
-                Column {
-                    SmallFloatingActionButton(
+
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    FilledIconButton(
                         onClick = { zoomLevel = (zoomLevel + 1).coerceAtMost(21.0) },
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        shape = RoundedCornerShape(
+                            topStart = 16.dp, topEnd = 16.dp,
+                            bottomStart = 4.dp, bottomEnd = 4.dp
+                        ),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.add_24px),
-                            contentDescription = "Zoom In"
+                            contentDescription = "Zoom In",
+                            modifier = Modifier.size(24.dp)
                         )
                     }
-                    SmallFloatingActionButton(
+
+                    FilledIconButton(
                         onClick = { zoomLevel = (zoomLevel - 1).coerceAtLeast(3.0) },
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        shape = RoundedCornerShape(
+                            topStart = 4.dp, topEnd = 4.dp,
+                            bottomStart = 16.dp, bottomEnd = 16.dp
+                        ),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.remove_24px),
-                            contentDescription = "Zoom Out"
+                            contentDescription = "Zoom Out",
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
             }
+
             MapNavigationPill(
                 currentIndex = selectedIndex,
                 totalCount = validPoints.size,
