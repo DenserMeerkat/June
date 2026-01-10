@@ -5,6 +5,7 @@ import com.example.june.core.domain.data_classes.JournalLocation
 sealed interface JournalAction {
     data class ChangeTitle(val title: String) : JournalAction
     data class ChangeContent(val content: String) : JournalAction
+    data class ChangeEmoji(val emoji: String?) : JournalAction
     data class ChangeDateTime(val dateTime: Long) : JournalAction
 
     data class AddImage(val uri: String) : JournalAction

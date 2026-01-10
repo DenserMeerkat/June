@@ -34,6 +34,7 @@ gmsLocation = "21.3.0"
 coroutinesPlayServices = "1.7.3"
 biometric = "1.2.0-alpha05"
 core-splashscreen = "1.0.1"
+emojipicker = "1.6.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -87,6 +88,7 @@ gms-location = { module = "com.google.android.gms:play-services-location", versi
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "core-splashscreen" }
+androidx-emoji2-emojipicker = { group = "androidx.emoji2", name = "emoji2-emojipicker", version.ref = "emojipicker" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

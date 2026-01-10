@@ -108,7 +108,7 @@ fun MonthStripItem(
     val shape = if (isSelected) CircleShape else RoundedCornerShape(8.dp)
 
     val rotation by animateFloatAsState(
-        targetValue = if (isExpanded) 180f else 0f,
+        targetValue = if (isExpanded) -180f else 0f,
         label = "Chevron Rotation"
     )
 

@@ -7,6 +7,7 @@ data class JournalState(
     val journalId: Long? = null,
     val title: String = "",
     val content: String = "",
+    val emoji: String? = null,
     val images: List<String> = emptyList(),
     val location: JournalLocation? = null,
     val songDetails: SongDetails? = null,

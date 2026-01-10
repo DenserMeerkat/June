@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 
 class EditorVM(
     savedStateHandle: SavedStateHandle,
@@ -28,6 +30,9 @@ class EditorVM(
 
     private val _state = MutableStateFlow(JournalState())
     val state = _state.asStateFlow()
+
+    private val _uiEvent = Channel<String>()
+    val uiEvent = _uiEvent.receiveAsFlow()
 
     init {
         if (initialJournalId != null) {
@@ -54,6 +59,7 @@ class EditorVM(
             is JournalAction.ChangeTitle -> updateState { it.copy(title = action.title) }
             is JournalAction.ChangeContent -> updateState { it.copy(content = action.content) }
             is JournalAction.ChangeDateTime -> updateState { it.copy(dateTime = action.dateTime) }
+            is JournalAction.ChangeEmoji -> updateState { it.copy(emoji = action.emoji) }
 
             is JournalAction.AddImage -> updateState { it.copy(images = it.images + action.uri) }
             is JournalAction.AddImages -> {
@@ -101,6 +107,7 @@ class EditorVM(
 
         return original.title != currentState.title ||
                 original.content != currentState.content ||
+                original.emoji != currentState.emoji ||
                 original.images != currentState.images ||
                 original.location != currentState.location ||
                 original.dateTime != currentState.dateTime ||
@@ -154,6 +161,7 @@ class EditorVM(
                         journalId = journal.id,
                         title = journal.title,
                         content = journal.content,
+                        emoji = journal.emoji,
                         images = journal.images,
                         location = journal.location,
                         songDetails = journal.songDetails,
@@ -180,6 +188,7 @@ class EditorVM(
 
             if (currentState.title.isBlank() &&
                 currentState.content.isBlank() &&
+                currentState.emoji == null &&
                 currentState.images.isEmpty() &&
                 currentState.songDetails == null &&
                 currentState.location == null
@@ -192,6 +201,7 @@ class EditorVM(
                 id = existingJournal?.id ?: 0L,
                 title = currentState.title,
                 content = currentState.content,
+                emoji = currentState.emoji,
                 images = currentState.images,
                 location = currentState.location,
                 songDetails = currentState.songDetails,
@@ -225,6 +235,7 @@ class EditorVM(
                 id = existingJournal?.id ?: 0L,
                 title = currentState.title,
                 content = currentState.content,
+                emoji = currentState.emoji,
                 images = currentState.images,
                 location = currentState.location,
                 songDetails = currentState.songDetails,
@@ -267,9 +278,10 @@ class EditorVM(
             _state.update { it.copy(isFetchingSong = true) }
             songRepo.fetchSongDetails(url).onSuccess { details ->
                 updateState { it.copy(songDetails = details, isFetchingSong = false) }
-            }.onFailure {
+            }.onFailure {error ->
                 _state.update { it.copy(isFetchingSong = false) }
-                // TODO: Handle error
+                val errorMessage = "Failed to fetch song details"
+                _uiEvent.send(errorMessage)
             }
         }
     }

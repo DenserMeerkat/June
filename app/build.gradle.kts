@@ -10,9 +10,13 @@ plugins {
     alias(libs.plugins.aboutLibraries)
 }
 
+val versionMajor = 0
+val versionMinor = 1
+val versionPatch = 0
+
 val appName = "June"
 val appVersionCode = 1
-val appVersionName = "0.0.1"
+val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
 
 android {
     namespace = "com.example.june"
@@ -49,11 +53,12 @@ android {
         }
 
         create("beta") {
-            resValue("string", "app_name", "$appName Beta")
+            resValue("string", "app_name", "$appName (Beta)")
             applicationIdSuffix = ".beta"
-            versionNameSuffix = "-beta$appVersionName"
+            versionNameSuffix = "-beta01"
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -62,8 +67,8 @@ android {
 
         debug {
             applicationIdSuffix = ".debug"
-            resValue("string", "app_name", "$appName Debug")
-            versionNameSuffix = "-debug"
+            resValue("string", "app_name", "$appName (Debug)")
+            versionNameSuffix = "-dev"
         }
     }
 
@@ -137,6 +142,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.emoji2.emojipicker)
 
     implementation(libs.koin.core)
     implementation(libs.koin.compose)

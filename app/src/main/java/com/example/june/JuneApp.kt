@@ -1,6 +1,5 @@
 package com.example.june
 
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -106,8 +105,8 @@ fun JuneApp() {
                 }
 
                 composable<Route.MediaViewerRoute>(
-                    enterTransition = { fadeIn(animationSpec = tween(300)) },
-                    popExitTransition = { fadeOut(animationSpec = tween(300)) }
+                    enterTransition = { fadeIn() },
+                    popExitTransition = { fadeOut() }
                 ) { backStackEntry ->
                     val args = backStackEntry.toRoute<Route.MediaViewerRoute>()
                     JuneMediaLightbox(
@@ -117,8 +116,8 @@ fun JuneApp() {
                 }
 
                 composable<Route.JournalMediaDetail>(
-                    enterTransition = { fadeIn(animationSpec = tween(300)) },
-                    popExitTransition = { fadeOut(animationSpec = tween(300)) }
+                    enterTransition = { fadeIn() },
+                    popExitTransition = { fadeOut() }
                 ) { backStackEntry ->
                     val args = backStackEntry.toRoute<Route.JournalMediaDetail>()
                     val parentEntry = remember(backStackEntry) {

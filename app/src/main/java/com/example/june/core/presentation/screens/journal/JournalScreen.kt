@@ -1,6 +1,7 @@
 package com.example.june.core.presentation.screens.journal
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -22,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.june.R
 import com.example.june.core.domain.utils.FileUtils
@@ -32,6 +34,7 @@ import com.example.june.core.presentation.components.JuneTopAppBar
 import com.example.june.core.presentation.screens.journal.components.AddItemSheet
 import com.example.june.core.presentation.screens.journal.components.AddLocationDialog
 import com.example.june.core.presentation.screens.journal.components.AddSongSheet
+import com.example.june.core.presentation.screens.journal.components.JournalEmojiPickerDialog
 import com.example.june.core.presentation.screens.journal.components.JournalDatePickerDialog
 import com.example.june.core.presentation.screens.journal.components.JournalItemsPreview
 import com.example.june.core.presentation.screens.journal.components.MediaOperations
@@ -56,6 +59,7 @@ fun JournalScreen() {
     var showMenu by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showAddItemSheet by remember { mutableStateOf(false) }
+    var showEmojiPicker by remember { mutableStateOf(false) }
     var showCameraSelectionDialog by remember { mutableStateOf(false) }
     var showSongSheet by remember { mutableStateOf(false) }
     var showLocationDialog by remember { mutableStateOf(false) }
@@ -108,6 +112,12 @@ fun JournalScreen() {
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     BackHandler { onBack() }
 
     val mediaOperations = remember(state.isEditMode, state.images) {
@@ -152,11 +162,36 @@ fun JournalScreen() {
                             Icon(
                                 painter = painterResource(R.drawable.close_24px),
                                 contentDescription = "Close",
-
-                                )
+                            )
+                        }
+                        if (state.isEditMode || state.emoji != null) {
+                            FilledIconButton(
+                                onClick = {
+                                    if (state.isEditMode) {
+                                        showEmojiPicker = true
+                                    }
+                                },
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                        alpha = 0.75F
+                                    )
+                                ),
+                            ) {
+                                if (state.emoji != null) {
+                                    Text(
+                                        text = state.emoji!!,
+                                        fontSize = 22.sp
+                                    )
+                                } else {
+                                    Icon(
+                                        painter = painterResource(R.drawable.sentiment_very_satisfied_24px),
+                                        contentDescription = "Add Emoji"
+                                    )
+                                }
+                            }
                         }
                         if (state.isEditMode) {
-                            Spacer(modifier = Modifier.width(2.dp))
                             FilledIconButton(
                                 onClick = { showAddItemSheet = true },
                                 colors = IconButtonDefaults.filledIconButtonColors(
@@ -511,6 +546,17 @@ fun JournalScreen() {
                 showAddItemSheet = false
                 showLocationDialog = true
             }
+        )
+    }
+
+    if (showEmojiPicker) {
+        JournalEmojiPickerDialog(
+            initialEmoji = state.emoji,
+            onEmojiSelected = { emoji ->
+                viewModel.onAction(JournalAction.ChangeEmoji(emoji))
+                showEmojiPicker = false
+            },
+            onDismiss = { showEmojiPicker = false }
         )
     }
 }

@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.june.core.domain.data_classes.Journal
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -95,8 +96,10 @@ fun TimelineCalendarPage(
                 ) {
                     week.forEach { date ->
                         if (date != null) {
-                            val count = journalsByDate[date]?.size ?: 0
+                            val dayJournals = journalsByDate[date]
+                            val count = dayJournals?.size ?: 0
                             val hasSelf = count > 0
+                            val emoji = dayJournals?.firstNotNullOfOrNull { it.emoji }
 
                             val isSunday = date.dayOfWeek == DayOfWeek.SUNDAY
                             val connectLeft = hasSelf && !isSunday && hasEntry(date.minusDays(1))
@@ -118,6 +121,7 @@ fun TimelineCalendarPage(
                                 CalendarDayTile(
                                     date = date,
                                     entryCount = count,
+                                    emoji = emoji,
                                     shape = dynamicShape,
                                     onClick = { onDateSelected(date) }
                                 )
@@ -136,6 +140,7 @@ fun TimelineCalendarPage(
 fun CalendarDayTile(
     date: LocalDate,
     entryCount: Int,
+    emoji: String?,
     shape: androidx.compose.ui.graphics.Shape,
     onClick: () -> Unit
 ) {
@@ -162,11 +167,19 @@ fun CalendarDayTile(
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = date.dayOfMonth.toString(),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = if (hasJournals || isToday) FontWeight.Bold else FontWeight.Normal,
-            color = textColor
-        )
+        if (emoji != null) {
+            Text(
+                text = emoji,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center
+            )
+        } else {
+            Text(
+                text = date.dayOfMonth.toString(),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (hasJournals || isToday) FontWeight.Bold else FontWeight.Normal,
+                color = textColor
+            )
+        }
     }
 }
