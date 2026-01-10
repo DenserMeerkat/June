@@ -14,7 +14,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.june.core.domain.data_classes.Journal
-import com.example.june.core.presentation.screens.home.journals.components.JournalCard
 import com.example.june.viewmodels.TimelineTab
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -40,7 +39,7 @@ fun TimelineTabs(
                     .weight(1f)
             ) {
                 when (selectedTab) {
-                    TimelineTab.Journals -> JournalListSection(
+                    TimelineTab.Journals -> TimelineJournalTab(
                         journals = journals,
                         bottomPadding = bottomPadding
                     )
@@ -94,28 +93,6 @@ fun TimelineTabSelector(
                 },
                 unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }
-    }
-}
-
-@Composable
-fun JournalListSection(journals: List<Journal>, bottomPadding: Dp) {
-    if (journals.isEmpty()) {
-        EmptyStateMessage("No journals this month.")
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = bottomPadding + 16.dp, top = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(journals, key = { it.id }) { journal ->
-                JournalCard(
-                    journal = journal,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-            }
         }
     }
 }

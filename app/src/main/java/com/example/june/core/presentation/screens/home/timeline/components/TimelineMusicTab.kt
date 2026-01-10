@@ -216,7 +216,7 @@ fun MusicListTile(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 12.dp)
             .clip(RoundedCornerShape(16.dp))
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
@@ -251,7 +251,6 @@ fun MusicListTile(
                     letterSpacing = 1.sp
                 )
             }
-            Spacer(modifier = Modifier.width(4.dp))
             AsyncImage(
                 model = song.thumbnailUrl,
                 contentDescription = null,
