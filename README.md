@@ -10,6 +10,15 @@
 </p>
 
 <p align="center">
+    <a href="https://github.com/DenserMeerkat/June/releases/latest">
+        <img src="https://img.shields.io/github/v/release/DenserMeerkat/June?include_prereleases&logo=github&style=for-the-badge&label=Latest%20Release" alt="Latest Release">
+    </a>
+    <a href="https://github.com/DenserMeerkat/June/releases">
+        <img src="https://img.shields.io/github/downloads/DenserMeerkat/June/total?logo=github&style=for-the-badge" alt="Total Downloads">
+    </a>
+</p>
+
+<p align="center">
   <img src="assets/screenshots/home1.png" alt="Screenshot 1" width="200" style="border-radius:24px;"/>
   <img src="assets/screenshots/editor1.png" alt="Screenshot 2" width="200" style="border-radius:24px;"/>
   <img src="assets/screenshots/search2.png" alt="Screenshot 3" width="200" style="border-radius:24px;"/>
