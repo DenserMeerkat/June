@@ -1,5 +1,7 @@
 import com.mikepenz.aboutlibraries.plugin.DuplicateMode
 import com.mikepenz.aboutlibraries.plugin.DuplicateRule
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     alias(libs.plugins.android.application)
@@ -8,6 +10,12 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.aboutLibraries)
+}
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 val versionMajor = 0
@@ -35,6 +43,23 @@ android {
         }
     }
 
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.configureEach {
+            val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
+            output.outputFileName = "june-${variant.versionName}.apk"
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storePassword = keystoreProperties["storePassword"] as String?
+            storeFile = (keystoreProperties["storeFile"] as String?)?.let { file(it) }
+        }
+    }
+
     kotlin {
         compilerOptions {
             jvmToolchain(17)
@@ -43,6 +68,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             resValue("string", "app_name", appName)
             isMinifyEnabled = true
             isShrinkResources = true
@@ -53,12 +79,12 @@ android {
         }
 
         create("beta") {
+            signingConfig = signingConfigs.getByName("release")
             resValue("string", "app_name", "$appName (Beta)")
             applicationIdSuffix = ".beta"
             versionNameSuffix = "-beta"
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
