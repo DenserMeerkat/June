@@ -12,109 +12,121 @@ import com.denser.june.R
 @Composable
 fun provideTypography(
     scale: Float = 1f,
-    font: Int = R.font.poppins_regular
+    font: Int = R.font.poppins_regular,
 ): Typography {
-    val selectedFont = FontFamily(Font(font))
+
+    val displayFont = FontFamily(Font(font))
+    val bodyFont = FontFamily(Font(font))
 
     return Typography(
         displayLarge = TextStyle(
-            fontFamily = selectedFont,
-            fontWeight = FontWeight.Black,
+            fontFamily = displayFont,
+            fontWeight = FontWeight.Bold,
             fontSize = 57.sp * scale,
             lineHeight = 64.sp * scale,
-            letterSpacing = -(0.25).sp,
+            letterSpacing = (-0.25).sp,
         ),
         displayMedium = TextStyle(
-            fontFamily = selectedFont,
-            fontWeight = FontWeight.Black,
+            fontFamily = displayFont,
+            fontWeight = FontWeight.Bold,
             fontSize = 45.sp * scale,
-            lineHeight = 52.sp * scale
+            lineHeight = 52.sp * scale,
+            letterSpacing = 0.sp
         ),
         displaySmall = TextStyle(
-            fontFamily = selectedFont,
-            fontWeight = FontWeight.Black,
+            fontFamily = displayFont,
+            fontWeight = FontWeight.Bold,
             fontSize = 36.sp * scale,
-            lineHeight = 44.sp * scale
+            lineHeight = 44.sp * scale,
+            letterSpacing = 0.sp
         ),
+
         headlineLarge = TextStyle(
-            fontFamily = selectedFont,
+            fontFamily = displayFont,
             fontWeight = FontWeight.Bold,
             fontSize = 32.sp * scale,
-            lineHeight = 40.sp * scale
+            lineHeight = 40.sp * scale,
+            letterSpacing = 0.sp
         ),
         headlineMedium = TextStyle(
-            fontFamily = selectedFont,
+            fontFamily = displayFont,
             fontWeight = FontWeight.Bold,
             fontSize = 28.sp * scale,
-            lineHeight = 36.sp * scale
+            lineHeight = 36.sp * scale,
+            letterSpacing = 0.sp
         ),
         headlineSmall = TextStyle(
-            fontFamily = selectedFont,
+            fontFamily = displayFont,
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp * scale,
-            lineHeight = 32.sp * scale
+            lineHeight = 32.sp * scale,
+            letterSpacing = 0.sp
         ),
+
         titleLarge = TextStyle(
-            fontFamily = selectedFont,
-            fontWeight = FontWeight.Medium,
+            fontFamily = bodyFont,
+            fontWeight = FontWeight.SemiBold,
             fontSize = 22.sp * scale,
-            lineHeight = 28.sp * scale
+            lineHeight = 28.sp * scale,
+            letterSpacing = 0.sp
         ),
         titleMedium = TextStyle(
-            fontFamily = selectedFont,
-            fontWeight = FontWeight.Medium,
+            fontFamily = bodyFont,
+            fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp * scale,
             lineHeight = 24.sp * scale,
             letterSpacing = 0.15.sp
         ),
         titleSmall = TextStyle(
-            fontFamily = selectedFont,
+            fontFamily = bodyFont,
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp * scale,
             lineHeight = 20.sp * scale,
             letterSpacing = 0.1.sp
         ),
-        labelLarge = TextStyle(
-            fontFamily = selectedFont,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp * scale,
-            lineHeight = 16.sp * scale,
-            letterSpacing = 0.1.sp
-        ),
-        labelMedium = TextStyle(
-            fontFamily = selectedFont,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp * scale,
-            lineHeight = 14.sp * scale,
-            letterSpacing = 0.5.sp
-        ),
-        labelSmall = TextStyle(
-            fontFamily = selectedFont,
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp * scale,
-            lineHeight = 12.sp * scale,
-            letterSpacing = 0.5.sp
-        ),
+
         bodyLarge = TextStyle(
-            fontFamily = selectedFont,
+            fontFamily = bodyFont,
             fontWeight = FontWeight.Normal,
             fontSize = 16.sp * scale,
             lineHeight = 24.sp * scale,
             letterSpacing = 0.5.sp
         ),
         bodyMedium = TextStyle(
-            fontFamily = selectedFont,
+            fontFamily = bodyFont,
             fontWeight = FontWeight.Normal,
             fontSize = 14.sp * scale,
             lineHeight = 20.sp * scale,
             letterSpacing = 0.25.sp
         ),
         bodySmall = TextStyle(
-            fontFamily = selectedFont,
+            fontFamily = bodyFont,
             fontWeight = FontWeight.Normal,
             fontSize = 12.sp * scale,
             lineHeight = 16.sp * scale,
             letterSpacing = 0.4.sp
+        ),
+
+        labelLarge = TextStyle(
+            fontFamily = bodyFont,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp * scale,
+            lineHeight = 20.sp * scale,
+            letterSpacing = 0.1.sp
+        ),
+        labelMedium = TextStyle(
+            fontFamily = bodyFont,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.sp * scale,
+            lineHeight = 16.sp * scale,
+            letterSpacing = 0.5.sp
+        ),
+        labelSmall = TextStyle(
+            fontFamily = bodyFont,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 11.sp * scale,
+            lineHeight = 16.sp * scale,
+            letterSpacing = 0.5.sp
         )
     )
 }
