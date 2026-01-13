@@ -75,6 +75,9 @@ interface JournalDao {
     @Query("SELECT * FROM journals WHERE id = :id")
     suspend fun getJournalById(id: Long): JournalEntity?
 
+    @Query("SELECT * FROM journals ORDER BY dateTime DESC LIMIT 1")
+    suspend fun getLatestJournal(): JournalEntity?
+
     @Query("SELECT * FROM journals WHERE title LIKE '%' || :query || '%' ")
     fun searchJournal(query: String): Flow<List<JournalEntity>>
 

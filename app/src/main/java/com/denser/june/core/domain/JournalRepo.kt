@@ -8,6 +8,7 @@ interface JournalRepo {
     fun getJournals(): Flow<List<Journal>>
     suspend fun getAllJournals(): List<Journal>
     suspend fun getJournalById(id: Long): Journal?
+    suspend fun getLatestJournal(): Journal?
     suspend fun searchJournals(query: String): Flow<List<Journal>>
     suspend fun updateJournal(journal: Journal)
     suspend fun deleteJournal(id: Long)

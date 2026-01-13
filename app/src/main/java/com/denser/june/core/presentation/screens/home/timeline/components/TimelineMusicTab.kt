@@ -66,7 +66,11 @@ fun TimelineMusicTab(
     }
     LaunchedEffect(musicJournals) {
         if (activeSong == null && musicJournals.isNotEmpty()) {
-            viewModel.onSongSelected(musicJournals.first().songDetails!!, false)
+            viewModel.onSongSelected(
+                musicJournals.first().songDetails!!,
+                musicJournals.first().id,
+                false
+            )
             viewModel.pause()
         }
     }
@@ -89,7 +93,7 @@ fun TimelineMusicTab(
                         journal = journal,
                         song = song,
                         isActive = activeSong?.previewUrl == song.previewUrl,
-                        onClick = { viewModel.onSongSelected(song) }
+                        onClick = { viewModel.onSongSelected(song, journal.id) }
                     )
                 }
             }

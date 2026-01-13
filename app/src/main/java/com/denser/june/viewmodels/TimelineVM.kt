@@ -1,6 +1,7 @@
 package com.denser.june.viewmodels
 
 import android.content.Context
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -10,11 +11,14 @@ import com.denser.june.R
 import com.denser.june.core.domain.JournalRepo
 import com.denser.june.core.domain.data_classes.Journal
 import com.denser.june.core.domain.data_classes.SongDetails
+import com.denser.june.core.domain.utils.toYearMonth
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.YearMonth
 import java.time.ZoneId
 
@@ -27,10 +31,15 @@ enum class TimelineTab(val label: String, val iconRes: Int) {
 
 class TimelineVM(
     private val repo: JournalRepo,
-    context: Context
+    context: Context,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _currentMonth = MutableStateFlow(YearMonth.now())
+    private var playingJournalId: Long? = null
+    private val _currentMonth = MutableStateFlow(
+        savedStateHandle.get<String>("current_month")?.let { YearMonth.parse(it) }
+            ?: YearMonth.now()
+    )
     val currentMonth = _currentMonth.asStateFlow()
 
     private val _selectedTab = MutableStateFlow(TimelineTab.Journals)
@@ -86,6 +95,19 @@ class TimelineVM(
     }
 
     init {
+        if (!savedStateHandle.contains("current_month")) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val latestJournal = repo.getLatestJournal()
+                if (latestJournal != null) {
+                    val latestMonth = latestJournal.dateTime.toYearMonth()
+                    if (latestMonth != YearMonth.now()) {
+                        withContext(Dispatchers.Main) {
+                            onMonthChange(latestMonth)
+                        }
+                    }
+                }
+            }
+        }
         viewModelScope.launch {
             while (isActive) {
                 if (_isPlaying.value) {
@@ -96,9 +118,28 @@ class TimelineVM(
                 delay(100)
             }
         }
+        viewModelScope.launch {
+            journalsInMonth.collect {
+                val currentId = playingJournalId
+                if (_activeSong.value != null && currentId != null) {
+                    withContext(Dispatchers.IO) {
+                        val journal = repo.getJournalById(currentId)
+                        if (journal == null) {
+                            withContext(Dispatchers.Main) {
+                                _activeSong.value = null
+                                playingJournalId = null
+                                exoPlayer.stop()
+                                exoPlayer.clearMediaItems()
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    fun onSongSelected(song: SongDetails, autoPlay: Boolean = true) {
+    fun onSongSelected(song: SongDetails, journalId: Long, autoPlay: Boolean = true) {
+        playingJournalId = journalId
         if (_activeSong.value?.previewUrl == song.previewUrl) {
             togglePlayPause()
         } else {
@@ -132,6 +173,7 @@ class TimelineVM(
 
     fun onMonthChange(newMonth: YearMonth) {
         _currentMonth.value = newMonth
+        savedStateHandle["current_month"] = newMonth.toString()
     }
 
     fun onTabChange(tab: TimelineTab) {

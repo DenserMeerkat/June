@@ -37,6 +37,12 @@ class JournalRepository(
         }
     }
 
+    override suspend fun getLatestJournal(): Journal? {
+        return withContext(Dispatchers.IO) {
+            localDao.getLatestJournal()?.toJournal()
+        }
+    }
+
     override suspend fun searchJournals(query: String): Flow<List<Journal>> {
         return localDao.searchJournal(query).map { entities ->
             entities.map { it.toJournal() }

@@ -1,9 +1,19 @@
 package com.denser.june.core.domain.utils
 
+import java.time.YearMonth
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+
+fun Long.toYearMonth(): YearMonth {
+    val localDate = Instant.ofEpochMilli(this)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+    return YearMonth.from(localDate)
+}
 
 fun Long.toShortMonth(): String {
     val sdf = SimpleDateFormat("MMM", Locale.getDefault())
