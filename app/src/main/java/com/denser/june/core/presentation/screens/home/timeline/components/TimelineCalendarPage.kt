@@ -16,11 +16,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.denser.june.core.domain.data_classes.Journal
+import com.denser.june.core.domain.utils.getDaysInMonthGrid
+import com.denser.june.core.presentation.components.DaysOfWeekHeader
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.format.TextStyle
-import java.util.Locale
 
 @Composable
 fun TimelineCalendarPage(
@@ -29,19 +29,7 @@ fun TimelineCalendarPage(
     journals: List<Journal>,
     onDateSelected: (LocalDate) -> Unit
 ) {
-    val daysInMonth = remember(yearMonth) {
-        val firstDay = yearMonth.atDay(1)
-        val count = yearMonth.lengthOfMonth()
-        val startOffset = firstDay.dayOfWeek.value % 7
-        val list = mutableListOf<LocalDate?>()
-
-        repeat(startOffset) { list.add(null) }
-        for (i in 1..count) list.add(yearMonth.atDay(i))
-        while (list.size < 42) {
-            list.add(null)
-        }
-        list
-    }
+    val daysInMonth = remember(yearMonth) { yearMonth.getDaysInMonthGrid() }
     val weeks = remember(daysInMonth) { daysInMonth.chunked(7) }
 
     val journalsByDate = remember(journals) {
@@ -60,30 +48,10 @@ fun TimelineCalendarPage(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(bottom = 4.dp)
-        ) {
-            val days = listOf(
-                DayOfWeek.SUNDAY,
-                DayOfWeek.MONDAY,
-                DayOfWeek.TUESDAY,
-                DayOfWeek.WEDNESDAY,
-                DayOfWeek.THURSDAY,
-                DayOfWeek.FRIDAY,
-                DayOfWeek.SATURDAY
-            )
-            days.forEach { day ->
-                Text(
-                    text = day.getDisplayName(TextStyle.NARROW, Locale.getDefault()),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
+        DaysOfWeekHeader(
+            modifier = Modifier.padding(bottom = 4.dp),
+            textStyle = MaterialTheme.typography.labelSmall
+        )
 
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -94,7 +62,9 @@ fun TimelineCalendarPage(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    week.forEach { date ->
+                    for (i in 0 until 7) {
+                        val date = week.getOrNull(i)
+
                         if (date != null) {
                             val dayJournals = journalsByDate[date]
                             val count = dayJournals?.size ?: 0
