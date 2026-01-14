@@ -44,6 +44,9 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 import com.denser.june.R
+import com.denser.june.core.domain.utils.toFullTime
+import com.denser.june.core.domain.utils.toLocalTime
+import java.time.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -107,6 +110,14 @@ fun JournalScreen() {
 
     val formattedDate = remember(state.dateTime) {
         state.dateTime.toDateWithDay()
+    }
+    val formattedTime = remember(state.dateTime) {
+        val time = state.dateTime.toLocalTime()
+        if (time != LocalTime.MIDNIGHT) {
+            time.toFullTime()
+        } else {
+            null
+        }
     }
 
     val onBack = {
@@ -385,6 +396,27 @@ fun JournalScreen() {
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    if (formattedTime != null) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "•",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            painter = painterResource(R.drawable.schedule_24px),
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = formattedTime,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 TextField(

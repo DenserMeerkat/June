@@ -2,6 +2,7 @@ package com.denser.june.core.presentation.screens.journal
 
 import com.denser.june.core.domain.data_classes.JournalLocation
 import com.denser.june.core.domain.data_classes.SongDetails
+import com.denser.june.core.domain.utils.getTodayAtMidnight
 
 data class JournalState(
     val journalId: Long? = null,
@@ -13,7 +14,7 @@ data class JournalState(
     val songDetails: SongDetails? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long? = null,
-    val dateTime: Long = System.currentTimeMillis(),
+    val dateTime: Long = getTodayAtMidnight(),
     val isBookmarked: Boolean = false,
     val isArchived: Boolean = false,
     val isLoading: Boolean = false,
