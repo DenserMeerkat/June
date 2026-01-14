@@ -1,13 +1,9 @@
 package com.denser.june.core.presentation.screens.home.timeline.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -25,10 +21,10 @@ import androidx.compose.ui.unit.dp
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
-
 import com.denser.june.R
+import com.denser.june.core.presentation.components.InfiniteMonthStrip
+import com.denser.june.core.presentation.components.YearHeader
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TimelineMonthStrip(
     currentMonth: YearMonth,
@@ -37,54 +33,25 @@ fun TimelineMonthStrip(
     onToggleExpand: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val listState = rememberLazyListState()
-
-    val startYear = remember(currentMonth) { currentMonth.year - 5 }
-    val endYear = remember(currentMonth) { currentMonth.year + 5 }
-    val yearRange = remember(startYear, endYear) { startYear..endYear }
-
-    LaunchedEffect(currentMonth) {
-        val yearDiff = currentMonth.year - startYear
-        if (yearDiff >= 0) {
-            val index = (yearDiff * 13) + currentMonth.monthValue
-            listState.animateScrollToItem(index, scrollOffset = -150)
-        }
-    }
-
-    LazyRow(
-        state = listState,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        yearRange.forEach { year ->
-            stickyHeader(key = "Y-$year") {
-                YearStripItem(year = year.toString())
-            }
-
-            val months = (1..12).map { YearMonth.of(year, it) }
-            items(items = months, key = { it.toString() }) { ym ->
-                val isSelected = ym == currentMonth
-                val label = ym.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
-
-                MonthStripItem(
-                    label = label,
-                    isSelected = isSelected,
-                    isExpanded = isExpanded,
-                    onClick = {
-                        if (isSelected) {
-                            onToggleExpand()
-                        } else {
-                            onMonthSelect(ym)
-                        }
+    InfiniteMonthStrip(
+        currentMonth = currentMonth,
+        modifier = modifier.padding(vertical = 12.dp),
+        yearContent = { year -> YearHeader(year) },
+        monthContent = { ym, isSelected ->
+            MonthStripItem(
+                label = ym.month.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
+                isSelected = isSelected,
+                isExpanded = isSelected && isExpanded,
+                onClick = {
+                    if (isSelected) {
+                        onToggleExpand()
+                    } else {
+                        onMonthSelect(ym)
                     }
-                )
-            }
+                }
+            )
         }
-    }
+    )
 }
 
 @Composable
@@ -132,8 +99,7 @@ fun MonthStripItem(
         if (isSelected) {
             Spacer(Modifier.width(12.dp))
             VerticalDivider(
-                modifier = Modifier
-                    .height(20.dp),
+                modifier = Modifier.height(20.dp),
                 color = textColor.copy(alpha = 0.3f)
             )
             Spacer(Modifier.width(4.dp))
@@ -146,26 +112,5 @@ fun MonthStripItem(
                     .graphicsLayer { rotationZ = rotation }
             )
         }
-    }
-}
-
-@Composable
-fun YearStripItem(year: String) {
-    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val backgroundColor = MaterialTheme.colorScheme.surface
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .height(36.dp)
-            .background(backgroundColor)
-            .padding(horizontal = 12.dp)
-    ) {
-        Text(
-            text = year,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold,
-            color = textColor
-        )
     }
 }
