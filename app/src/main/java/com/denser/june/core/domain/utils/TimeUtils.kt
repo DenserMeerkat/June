@@ -4,9 +4,12 @@ import java.time.YearMonth
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
+import java.time.format.DateTimeFormatter
 
 fun Long.toYearMonth(): YearMonth {
     val localDate = Instant.ofEpochMilli(this)
@@ -30,18 +33,8 @@ fun Long.toDateWithDay(): String {
     return sdf.format(Date(this))
 }
 
-fun Long.toFullDateWithDay(): String {
-    val sdf = SimpleDateFormat("EEE, MMMM dd, yyyy", Locale.getDefault())
-    return sdf.format(Date(this))
-}
-
 fun Long.toFullDate(): String {
     val sdf = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
-    return sdf.format(Date(this))
-}
-
-fun Long.toFullDateTime(): String {
-    val sdf = SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault())
     return sdf.format(Date(this))
 }
 
@@ -61,14 +54,44 @@ fun Long.toHoursMinutesSeconds(): String {
 fun YearMonth.getDaysInMonthGrid(): List<LocalDate?> {
     val firstDay = this.atDay(1)
     val totalDays = this.lengthOfMonth()
-
     val startOffset = firstDay.dayOfWeek.value % 7
-
     val list = mutableListOf<LocalDate?>()
     repeat(startOffset) { list.add(null) }
     for (i in 1..totalDays) {
         list.add(this.atDay(i))
     }
-
     return list
 }
+
+fun Long.isMidnight(): Boolean {
+    return this.toLocalTime() == LocalTime.MIDNIGHT
+}
+
+fun Long.toLocalDate(): LocalDate =
+    Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
+
+fun Long.toLocalTime(): LocalTime =
+    Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalTime()
+
+fun LocalDate.toFullDate(): String =
+    this.format(DateTimeFormatter.ofPattern("MMMM dd, yyyy", Locale.getDefault()))
+
+fun LocalTime.toFullTime(): String =
+    this.format(DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
+
+fun combineDateAndTime(date: LocalDate, time: LocalTime?): Long {
+    val dateTime = if (time != null) {
+        LocalDateTime.of(date, time)
+    } else {
+        date.atStartOfDay()
+    }
+    return dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+}
+
+fun getTodayAtMidnight(): Long {
+    return LocalDate.now()
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli()
+}
+

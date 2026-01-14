@@ -1,6 +1,11 @@
 package com.denser.june.core.presentation.screens.journal.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -10,8 +15,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,22 +28,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.YearMonth
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
-import java.util.Locale
 import kotlinx.coroutines.launch
 import com.denser.june.R
 import com.denser.june.core.domain.utils.getDaysInMonthGrid
+import com.denser.june.core.domain.utils.toLocalDate
+import com.denser.june.core.domain.utils.toLocalTime
+import com.denser.june.core.domain.utils.combineDateAndTime
+import com.denser.june.core.domain.utils.toFullDate
+import com.denser.june.core.domain.utils.toFullTime
 import com.denser.june.core.presentation.components.DaysOfWeekHeader
 import com.denser.june.core.presentation.components.InfiniteMonthStrip
 import com.denser.june.core.presentation.components.YearHeader
+import java.time.format.TextStyle
+import java.util.Locale
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JournalDatePickerDialog(
     initialDateMillis: Long,
@@ -44,22 +54,23 @@ fun JournalDatePickerDialog(
     onDismiss: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    val initialDate = remember(initialDateMillis) {
-        Instant.ofEpochMilli(initialDateMillis).atZone(ZoneId.systemDefault()).toLocalDate()
-    }
+    val initialDate = remember(initialDateMillis) { initialDateMillis.toLocalDate() }
+    val initialTime = remember(initialDateMillis) { initialDateMillis.toLocalTime() }
     val anchorMonth = remember { YearMonth.from(initialDate) }
     var selectedDate by remember { mutableStateOf(initialDate) }
+    var includeTime by remember { mutableStateOf(initialTime != LocalTime.MIDNIGHT) }
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialTime.hour,
+        initialMinute = initialTime.minute
+    )
     val initialPageIndex = Int.MAX_VALUE / 2
     val pagerState = rememberPagerState(initialPage = initialPageIndex) { Int.MAX_VALUE }
-
     val currentMonth by remember {
         derivedStateOf {
             val monthsToAdd = pagerState.currentPage - initialPageIndex
             anchorMonth.plusMonths(monthsToAdd.toLong())
         }
     }
-    val headerFormatter =
-        remember { DateTimeFormatter.ofPattern("MMMM dd, yyyy", Locale.getDefault()) }
 
     Box(
         modifier = Modifier
@@ -70,7 +81,8 @@ fun JournalDatePickerDialog(
                 onClick = onDismiss
             )
             .statusBarsPadding()
-            .navigationBarsPadding(),
+            .navigationBarsPadding()
+            .imePadding(),
         contentAlignment = Alignment.TopCenter
     ) {
         Surface(
@@ -83,7 +95,11 @@ fun JournalDatePickerDialog(
                 .clickable(enabled = false) {}
                 .animateContentSize()
         ) {
-            Column(modifier = Modifier.padding(vertical = 16.dp)) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = 16.dp)
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -92,17 +108,15 @@ fun JournalDatePickerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = headerFormatter.format(selectedDate),
+                        text = selectedDate.toFullDate(),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-
                     Button(
                         onClick = {
                             val today = LocalDate.now()
                             selectedDate = today
-                            val monthsDiff =
-                                ChronoUnit.MONTHS.between(anchorMonth, YearMonth.from(today))
+                            val monthsDiff = ChronoUnit.MONTHS.between(anchorMonth, YearMonth.from(today))
                             scope.launch {
                                 pagerState.animateScrollToPage(initialPageIndex + monthsDiff.toInt())
                             }
@@ -120,10 +134,7 @@ fun JournalDatePickerDialog(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Today",
-                            style = MaterialTheme.typography.labelMedium
-                        )
+                        Text("Today", style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -163,25 +174,100 @@ fun JournalDatePickerDialog(
                         onDateClick = { selectedDate = it }
                     )
                 }
-                Spacer(modifier = Modifier.height(12.dp))
+                AnimatedVisibility(
+                    visible = includeTime,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    Column {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val selectedTime = remember(timePickerState.hour, timePickerState.minute) {
+                                LocalTime.of(timePickerState.hour, timePickerState.minute)
+                            }
+                            Text(
+                                text = selectedTime.toFullTime(),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Button(
+                                onClick = {
+                                    val now = LocalTime.now()
+                                    timePickerState.hour = now.hour
+                                    timePickerState.minute = now.minute
+                                },
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                                modifier = Modifier.height(32.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.schedule_24px),
+                                    contentDescription = "Jump to Now",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Now", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            TimeInput(state = timePickerState)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedButton(onClick = onDismiss) {
-                        Text("Cancel")
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    FilledTonalButton(
-                        onClick = {
-                            val millis = selectedDate.atStartOfDay(ZoneId.systemDefault())
-                                .toInstant().toEpochMilli()
-                            onDateSelected(millis)
+                    Switch(
+                        checked = includeTime,
+                        onCheckedChange = { includeTime = it },
+                        thumbContent = {
+                            Icon(
+                                painter = painterResource(R.drawable.schedule_24px),
+                                contentDescription = "Set time",
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
-                    ) {
-                        Text("OK")
+                    )
+                    Row {
+                        OutlinedButton(onClick = onDismiss) {
+                            Text("Cancel")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        FilledTonalButton(
+                            onClick = {
+                                val time = if (includeTime) {
+                                    LocalTime.of(timePickerState.hour, timePickerState.minute)
+                                } else null
+
+                                val millis = combineDateAndTime(selectedDate, time)
+                                onDateSelected(millis)
+                            }
+                        ) {
+                            Text("OK")
+                        }
                     }
                 }
             }
@@ -197,7 +283,6 @@ fun CalendarPage(
 ) {
     val daysInMonth = remember(yearMonth) { yearMonth.getDaysInMonthGrid() }
     val weeks = remember(daysInMonth) { daysInMonth.chunked(7) }
-
     val cellHeight = 36.dp
     val cellShape = RoundedCornerShape(16.dp)
 
@@ -298,9 +383,7 @@ fun DialogDateMonthStrip(
             } else {
                 MaterialTheme.colorScheme.onSurfaceVariant
             }
-
             val shape = if (isSelected) CircleShape else RoundedCornerShape(8.dp)
-
             Box(
                 modifier = Modifier
                     .height(36.dp)
