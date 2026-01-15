@@ -20,6 +20,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.emoji2.emojipicker.EmojiPickerView
+import com.denser.june.LocalAppTheme
+import com.denser.june.core.domain.enums.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +31,15 @@ fun JournalEmojiPickerDialog(
     onDismiss: () -> Unit
 ) {
     var currentSelection by remember(initialEmoji) { mutableStateOf(initialEmoji) }
-    val isDarkTheme = isSystemInDarkTheme()
+    val currentTheme = LocalAppTheme.current.appTheme
+    val systemDark = isSystemInDarkTheme()
+    val isDarkTheme = remember(currentTheme, systemDark) {
+        when (currentTheme) {
+            AppTheme.SYSTEM -> systemDark
+            AppTheme.DARK -> true
+            AppTheme.LIGHT -> false
+        }
+    }
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(

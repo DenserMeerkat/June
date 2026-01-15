@@ -2,11 +2,9 @@ package com.denser.june.core.presentation.screens.home.timeline.components
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,17 +19,25 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.denser.june.LocalAppTheme
+import com.denser.june.R
 import com.denser.june.core.domain.data_classes.Journal
-import com.denser.june.core.domain.utils.toFullDate
-import com.denser.june.core.presentation.utils.rememberManagedOsmMapView
+import com.denser.june.core.domain.enums.AppTheme
+import com.denser.june.core.presentation.components.MapControlColumn
+import com.denser.june.core.presentation.components.MapAttributions
+import com.denser.june.core.presentation.utils.MapTilerUtils
 import com.denser.june.viewmodels.TimelineVM
 import org.koin.compose.viewmodel.koinViewModel
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.TilesOverlay
-
-import com.denser.june.R
+import org.maplibre.android.MapLibre
+import org.maplibre.android.annotations.IconFactory
+import org.maplibre.android.annotations.MarkerOptions
+import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.MapView
 
 @Composable
 fun TimelineMapTab(
@@ -40,178 +46,143 @@ fun TimelineMapTab(
     viewModel: TimelineVM = koinViewModel()
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val isCalendarExpanded by viewModel.isCalendarExpanded.collectAsStateWithLifecycle()
     val isMapExpanded = !isCalendarExpanded
-
-    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
-    val secondaryColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f).toArgb()
+    remember { MapLibre.getInstance(context) }
 
     val validPoints = remember(journals) {
         journals.filter {
             it.location != null && it.location.latitude != 0.0 && it.location.longitude != 0.0
         }
     }
-
     var selectedIndex by remember { mutableIntStateOf(0) }
-    var zoomLevel by remember { mutableDoubleStateOf(18.0) }
-    var isDarkMap by remember { mutableStateOf(false) }
 
-    fun resizeDrawable(resId: Int, sizeDp: Int): Drawable? {
-        val drawable = context.getDrawable(resId) ?: return null
-        val sizePx = (sizeDp * context.resources.displayMetrics.density).toInt()
-        val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+    val currentTheme = LocalAppTheme.current.appTheme
+    val systemDark = isSystemInDarkTheme()
+    val initialMapTheme = remember(currentTheme, systemDark) {
+        when (currentTheme) {
+            AppTheme.SYSTEM -> systemDark
+            AppTheme.DARK -> true
+            AppTheme.LIGHT -> false
+        }
+    }
+    var isDarkMap by remember { mutableStateOf(initialMapTheme) }
+    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+
+    fun getMarkerIcon(resId: Int, color: Int): org.maplibre.android.annotations.Icon {
+        val drawable = context.getDrawable(resId)?.mutate()
+        drawable?.setTint(color)
+        val bitmap = Bitmap.createBitmap(
+            drawable!!.intrinsicWidth,
+            drawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+        )
         val canvas = Canvas(bitmap)
-        drawable.setBounds(0, 0, sizePx, sizePx)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
         drawable.draw(canvas)
-        return BitmapDrawable(context.resources, bitmap)
+        return IconFactory.getInstance(context).fromBitmap(bitmap)
     }
 
     if (validPoints.isEmpty()) {
         EmptyStateMessage("No locations added for this month.")
     } else {
-        val mapView = rememberManagedOsmMapView(
-            context = context,
-            debounceTime = 500L
-        )
-
+        val mapView = remember {
+            MapView(context).apply {
+                isClickable = true
+                isFocusable = true
+            }
+        }
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_RESUME -> mapView.onResume()
+                    Lifecycle.Event.ON_PAUSE -> mapView.onPause()
+                    Lifecycle.Event.ON_START -> mapView.onStart()
+                    Lifecycle.Event.ON_STOP -> mapView.onStop()
+                    Lifecycle.Event.ON_DESTROY -> mapView.onDestroy()
+                    else -> {}
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .clipToBounds()
         ) {
             AndroidView(
-                modifier = Modifier.fillMaxSize(),
                 factory = { mapView },
+                modifier = Modifier.fillMaxSize(),
                 update = { map ->
-                    if (isDarkMap) {
-                        map.overlayManager.tilesOverlay.setColorFilter(TilesOverlay.INVERT_COLORS)
-                    } else {
-                        map.overlayManager.tilesOverlay.setColorFilter(null)
-                    }
+                    val styleUrl =
+                        if (isDarkMap) MapTilerUtils.STYLE_DARK else MapTilerUtils.STYLE_LIGHT
+                    map.getMapAsync { mapboxMap ->
+                        mapboxMap.uiSettings.isAttributionEnabled = false
+                        mapboxMap.uiSettings.isLogoEnabled = false
+                        mapboxMap.uiSettings.isCompassEnabled = false
+                        mapboxMap.setStyle(styleUrl) { style ->
+                            mapboxMap.clear()
 
-                    map.overlays.clear()
-                    validPoints.forEachIndexed { index, journal ->
-                        val point =
-                            GeoPoint(journal.location!!.latitude, journal.location.longitude)
-                        val isSelected = index == selectedIndex
-
-                        val marker = Marker(map).apply {
-                            position = point
-                            title = journal.location.name ?: journal.location.address
-                            snippet = journal.dateTime.toFullDate()
-
-                            val size = if (isSelected) 40 else 36
-                            val resizedDrawable = resizeDrawable(R.drawable.location_on_24px_fill, size)?.mutate()
-
-                            resizedDrawable?.setTint(if (isSelected) primaryColor else secondaryColor)
-                            icon = resizedDrawable
-
-                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-
-                            setOnMarkerClickListener { m, _ ->
-                                selectedIndex = index
-                                m.showInfoWindow()
-                                true
+                            validPoints.forEachIndexed { index, journal ->
+                                val loc = journal.location!!
+                                val markerOptions = MarkerOptions()
+                                    .position(LatLng(loc.latitude, loc.longitude))
+                                    .title(loc.name ?: "Location")
+                                    .icon(
+                                        getMarkerIcon(
+                                            R.drawable.location_on_24px_fill,
+                                            primaryColor
+                                        )
+                                    )
+                                mapboxMap.addMarker(markerOptions)
                             }
                         }
-                        map.overlays.add(marker)
-                    }
-                    map.invalidate()
-
-                    if (validPoints.isNotEmpty()) {
-                        val targetJournal = validPoints[selectedIndex]
-                        val targetPoint = GeoPoint(
-                            targetJournal.location!!.latitude,
-                            targetJournal.location.longitude
-                        )
-                        map.controller.setZoom(zoomLevel)
-                        map.controller.animateTo(targetPoint)
                     }
                 }
             )
-
-            Column(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 16.dp, end = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                FilledIconButton(
-                    onClick = { viewModel.setCalendarExpanded(isMapExpanded) },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = if (isMapExpanded) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
-                        contentColor = if (isMapExpanded) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(
-                            if (isMapExpanded) R.drawable.fullscreen_exit_24px else R.drawable.fullscreen_24px
-                        ),
-                        contentDescription = if (isMapExpanded) "Collapse Map" else "Expand Map",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                FilledIconButton(
-                    onClick = { isDarkMap = !isDarkMap },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(if (isDarkMap) R.drawable.light_mode_24px else R.drawable.dark_mode_24px),
-                        contentDescription = "Toggle Theme",
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    FilledIconButton(
-                        onClick = { zoomLevel = (zoomLevel + 1).coerceAtMost(21.0) },
-                        shape = RoundedCornerShape(
-                            topStart = 16.dp, topEnd = 16.dp,
-                            bottomStart = 4.dp, bottomEnd = 4.dp
-                        ),
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.add_24px),
-                            contentDescription = "Zoom In",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    FilledIconButton(
-                        onClick = { zoomLevel = (zoomLevel - 1).coerceAtLeast(3.0) },
-                        shape = RoundedCornerShape(
-                            topStart = 4.dp, topEnd = 4.dp,
-                            bottomStart = 16.dp, bottomEnd = 16.dp
-                        ),
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.remove_24px),
-                            contentDescription = "Zoom Out",
-                            modifier = Modifier.size(24.dp)
+            LaunchedEffect(selectedIndex) {
+                if (validPoints.isNotEmpty()) {
+                    val target = validPoints[selectedIndex].location!!
+                    mapView.getMapAsync { map ->
+                        map.animateCamera(
+                            org.maplibre.android.camera.CameraUpdateFactory.newCameraPosition(
+                                CameraPosition.Builder()
+                                    .target(LatLng(target.latitude, target.longitude))
+                                    .zoom(16.0)
+                                    .build()
+                            ),
+                            800
                         )
                     }
                 }
             }
-
+            MapControlColumn(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 12.dp, end = 16.dp),
+                isDarkMode = isDarkMap,
+                onToggleDarkMode = { isDarkMap = !isDarkMap },
+                isMapExpanded = isMapExpanded,
+                onToggleFullscreen = { viewModel.setCalendarExpanded(isMapExpanded) },
+                isFetchingLocation = false,
+                onZoomIn = {
+                    mapView.getMapAsync { it.animateCamera(org.maplibre.android.camera.CameraUpdateFactory.zoomIn()) }
+                },
+                onZoomOut = {
+                    mapView.getMapAsync { it.animateCamera(org.maplibre.android.camera.CameraUpdateFactory.zoomOut()) }
+                }
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 16.dp, top = 12.dp)
+            ) {
+                MapAttributions(isDarkMode = isDarkMap)
+            }
             MapNavigationPill(
                 currentIndex = selectedIndex,
                 totalCount = validPoints.size,
@@ -238,7 +209,8 @@ fun MapNavigationPill(
     Surface(
         modifier = modifier
             .height(56.dp)
-            .width(300.dp),
+            .widthIn(max = 320.dp)
+            .fillMaxWidth(),
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         tonalElevation = 6.dp,
@@ -247,7 +219,7 @@ fun MapNavigationPill(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.padding(horizontal = 4.dp)
+            modifier = Modifier.padding(horizontal = 8.dp)
         ) {
             IconButton(
                 onClick = onPrevious,
@@ -261,7 +233,6 @@ fun MapNavigationPill(
                     )
                 )
             }
-
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -284,7 +255,6 @@ fun MapNavigationPill(
                     textAlign = TextAlign.Center
                 )
             }
-
             IconButton(
                 onClick = onNext,
                 enabled = currentIndex < totalCount - 1

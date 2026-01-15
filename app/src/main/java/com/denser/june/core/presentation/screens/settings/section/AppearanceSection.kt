@@ -20,7 +20,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.denser.june.LocalAppTheme
 import com.denser.june.R
+import com.denser.june.core.domain.enums.AppTheme
 import com.denser.june.core.presentation.screens.settings.SettingsAction
 import com.denser.june.core.presentation.screens.settings.SettingsState
 import com.denser.june.core.presentation.screens.settings.components.ColorPickerSheet
@@ -37,6 +39,15 @@ fun AppearanceSection(
     var showColorPickerSheet by remember { mutableStateOf(false) }
     var showThemePickerDialog by remember { mutableStateOf(false) }
     var showFontPickerDialog by remember { mutableStateOf(false) }
+    val currentTheme = LocalAppTheme.current.appTheme
+    val systemDark = isSystemInDarkTheme()
+    val isDarkMode = remember(currentTheme, systemDark) {
+        when (currentTheme) {
+            AppTheme.SYSTEM -> systemDark
+            AppTheme.DARK -> true
+            AppTheme.LIGHT -> false
+        }
+    }
     SettingSection(
         title = "Appearance"
     ) {
@@ -170,7 +181,7 @@ fun AppearanceSection(
         PaletteSelectionSettingsItem(
             state = state,
             onAction = onAction,
-            isDarkTheme = isSystemInDarkTheme()
+            isDarkTheme = isDarkMode
         )
     }
 
