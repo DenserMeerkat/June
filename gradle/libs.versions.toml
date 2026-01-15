@@ -35,6 +35,7 @@ coroutinesPlayServices = "1.7.3"
 biometric = "1.2.0-alpha05"
 core-splashscreen = "1.0.1"
 emojipicker = "1.6.0"
+mapLibrecompose = "0.12.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -89,6 +90,7 @@ kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-cor
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "core-splashscreen" }
 androidx-emoji2-emojipicker = { group = "androidx.emoji2", name = "emoji2-emojipicker", version.ref = "emojipicker" }
+maplibre-compose = { module = "org.maplibre.compose:maplibre-compose", version.ref = "mapLibrecompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

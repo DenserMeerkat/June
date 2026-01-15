@@ -5,6 +5,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -12,25 +13,27 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import com.denser.june.core.domain.data_classes.JournalLocation
-import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-
 import com.denser.june.R
+import com.denser.june.core.domain.data_classes.JournalLocation
+import com.denser.june.core.presentation.components.MapLocationPin
+import com.denser.june.core.presentation.components.MapTilerAttribution
+import com.denser.june.core.presentation.utils.MapTilerUtils
+import org.maplibre.android.MapLibre
+import org.maplibre.compose.camera.CameraPosition
+import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.map.GestureOptions
+import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.map.MaplibreMap
+import org.maplibre.compose.map.OrnamentOptions
+import org.maplibre.compose.style.BaseStyle
+import org.maplibre.spatialk.geojson.Position
 
 @Composable
 fun JournalMapItem(
@@ -43,40 +46,19 @@ fun JournalMapItem(
     var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
     val interactionSource = remember { MutableInteractionSource() }
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
 
-    LaunchedEffect(Unit) {
-        Configuration.getInstance().userAgentValue = context.packageName
-    }
+    remember { MapLibre.getInstance(context) }
 
-    val mapView = remember {
-        MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
-            setMultiTouchControls(false)
-            isClickable = false
-            isFocusable = false
-            isFocusableInTouchMode = false
-            setOnTouchListener { _, _ -> false }
-        }
-    }
+    val cameraState = rememberCameraState(
+        firstPosition = CameraPosition(
+            target = Position(location.longitude, location.latitude),
+            zoom = 15.0
+        )
+    )
 
-    LaunchedEffect(Unit) {
-        mapView.setUseDataConnection(true)
-    }
-
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> mapView.onResume()
-                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
-                else -> {}
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            mapView.onDetach()
-        }
+    val isDarkMode = isSystemInDarkTheme()
+    val mapStyle = remember(isDarkMode) {
+        if (isDarkMode) MapTilerUtils.STYLE_DARK else MapTilerUtils.STYLE_LIGHT
     }
 
     Surface(
@@ -87,20 +69,61 @@ fun JournalMapItem(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            AndroidView(
-                factory = { mapView },
+            MaplibreMap(
                 modifier = Modifier.fillMaxSize(),
-                update = { map ->
-                    map.post {
-                        map.controller.apply {
-                            setZoom(17.5)
-                            setCenter(GeoPoint(location.latitude, location.longitude))
-                        }
-                        map.invalidate()
-                    }
-                }
+                baseStyle = BaseStyle.Uri(mapStyle),
+                cameraState = cameraState,
+                options = MapOptions(
+                    gestureOptions = GestureOptions(
+                        isTiltEnabled = false,
+                        isZoomEnabled = false,
+                        isRotateEnabled = false,
+                        isScrollEnabled = false,
+                    ),
+                    ornamentOptions = OrnamentOptions(
+                        isLogoEnabled = false,
+                        isAttributionEnabled = false,
+                        isCompassEnabled = false,
+                        isScaleBarEnabled = false
+                    )
+                )
             )
-
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 12.dp, bottom = 12.dp)
+            ) {
+                MapTilerAttribution(isDarkMode = isDarkMode)
+            }
+            Surface(
+                onClick = onMapClick,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 16.dp, top = 8.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f),
+                tonalElevation = 2.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.location_on_24px),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = location.name ?: "Pinned Location",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -124,54 +147,8 @@ fun JournalMapItem(
                         )
                     }
             )
-
-            Icon(
-                painter = painterResource(R.drawable.location_on_24px_fill),
-                contentDescription = null,
-                tint = Color.Black.copy(alpha = 0.25f),
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(40.dp)
-                    .offset(y = (-16).dp)
-            )
-            Icon(
-                painter = painterResource(R.drawable.location_on_24px_fill),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(40.dp)
-                    .offset(y = (-20).dp)
-            )
-
-            Surface(
-                onClick = onMapClick,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.9f),
-                tonalElevation = 2.dp
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.location_on_24px),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = location.name ?: "Pinned Location",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+            Box(modifier = Modifier.align(Alignment.Center)) {
+                MapLocationPin()
             }
             if (isEditMode && showMenu) {
                 Box(
