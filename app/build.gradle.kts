@@ -17,6 +17,11 @@ val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
 
 val versionMajor = 0
 val versionMinor = 1
@@ -41,6 +46,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        val mapTilerKey = localProperties.getProperty("MAPTILER_API_KEY") ?: ""
+        buildConfigField("String", "MAPTILER_API_KEY", "\"$mapTilerKey\"")
+        manifestPlaceholders["MAPTILER_API_KEY"] = mapTilerKey
     }
 
     applicationVariants.all {
@@ -105,6 +113,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
@@ -169,6 +178,7 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.emoji2.emojipicker)
+    implementation(libs.maplibre.compose)
 
     implementation(libs.koin.core)
     implementation(libs.koin.compose)
