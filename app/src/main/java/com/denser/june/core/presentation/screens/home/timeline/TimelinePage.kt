@@ -23,11 +23,13 @@ import com.denser.june.core.presentation.screens.home.timeline.components.Timeli
 import com.denser.june.core.presentation.screens.home.timeline.components.TimelineTabs
 import com.denser.june.viewmodels.TimelineVM
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.WeekFields
 import java.util.Locale
+import kotlin.math.abs
 
 @Composable
 fun TimelinePage(
@@ -119,10 +121,14 @@ fun TimelinePage(
 
     var isProgrammaticScroll by remember { mutableStateOf(false) }
 
-    LaunchedEffect(pagerState.currentPage) {
-        if (!isProgrammaticScroll) {
-            val newMonth = viewModel.getMonthForPage(pagerState.currentPage)
-            if (newMonth != currentMonth) viewModel.onMonthChange(newMonth)
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collectLatest { page ->
+            if (!isProgrammaticScroll) {
+                val newMonth = viewModel.getMonthForPage(page)
+                if (newMonth != currentMonth) {
+                    viewModel.onMonthChange(newMonth)
+                }
+            }
         }
     }
 
@@ -130,8 +136,11 @@ fun TimelinePage(
         val targetPage = viewModel.getPageForMonth(currentMonth)
         if (targetPage != pagerState.currentPage) {
             isProgrammaticScroll = true
-            pagerState.animateScrollToPage(targetPage)
-            isProgrammaticScroll = false
+            try {
+                pagerState.animateScrollToPage(targetPage)
+            } finally {
+                isProgrammaticScroll = false
+            }
         }
     }
 
@@ -165,7 +174,7 @@ fun TimelinePage(
                 verticalAlignment = Alignment.Top
             ) { page ->
                 val monthForPage = viewModel.getMonthForPage(page)
-                if (monthForPage == currentMonth || kotlin.math.abs(pagerState.currentPage - page) <= 1) {
+                if (abs(pagerState.currentPage - page) <= 1) {
                     val pageJournals = if (monthForPage == currentMonth) journalsInMonth else emptyList()
                     TimelineCalendarPage(
                         yearMonth = monthForPage,
