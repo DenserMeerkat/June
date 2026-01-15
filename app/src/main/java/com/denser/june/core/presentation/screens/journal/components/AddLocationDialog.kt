@@ -29,11 +29,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import com.denser.june.LocalAppTheme
 import com.denser.june.R
 import com.denser.june.core.domain.data_classes.JournalLocation
+import com.denser.june.core.domain.enums.AppTheme
 import com.denser.june.core.presentation.components.MapControlColumn
 import com.denser.june.core.presentation.components.MapLocationPin
-import com.denser.june.core.presentation.components.MapTilerAttribution
+import com.denser.june.core.presentation.components.MapAttributions
 import com.denser.june.core.presentation.utils.MapTilerUtils
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationRequest
@@ -105,7 +107,15 @@ fun AddLocationDialog(
         }
     }
 
-    val initialMapTheme = isSystemInDarkTheme()
+    val currentTheme = LocalAppTheme.current.appTheme
+    val systemDark = isSystemInDarkTheme()
+    val initialMapTheme = remember(currentTheme, systemDark) {
+        when (currentTheme) {
+            AppTheme.SYSTEM -> systemDark
+            AppTheme.DARK -> true
+            AppTheme.LIGHT -> false
+        }
+    }
     var isMapDarkMode by remember { mutableStateOf(initialMapTheme) }
     val mapStyleUrl = remember(isMapDarkMode) {
         if (isMapDarkMode) MapTilerUtils.STYLE_DARK else MapTilerUtils.STYLE_LIGHT
@@ -288,8 +298,6 @@ fun AddLocationDialog(
                     onToggleDarkMode = { isMapDarkMode = !isMapDarkMode },
                     isFetchingLocation = isFetchingLocation,
                     onMyLocationClick = if (isEditMode) onMyLocationClick else null,
-                    isTerrainMode = false,
-                    onToggleTerrain = {},
                     onZoomIn = {
                         scope.launch {
                             val currentPos = cameraState.position
@@ -309,7 +317,7 @@ fun AddLocationDialog(
                         }
                     }
                 )
-                MapTilerAttribution(
+                MapAttributions(
                     modifier = Modifier.padding(start = 8.dp),
                     isDarkMode = isMapDarkMode
                 )

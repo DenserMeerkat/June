@@ -20,10 +20,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.denser.june.LocalAppTheme
 import com.denser.june.R
 import com.denser.june.core.domain.data_classes.JournalLocation
+import com.denser.june.core.domain.enums.AppTheme
 import com.denser.june.core.presentation.components.MapLocationPin
-import com.denser.june.core.presentation.components.MapTilerAttribution
+import com.denser.june.core.presentation.components.MapAttributions
 import com.denser.june.core.presentation.utils.MapTilerUtils
 import org.maplibre.android.MapLibre
 import org.maplibre.compose.camera.CameraPosition
@@ -56,9 +58,18 @@ fun JournalMapItem(
         )
     )
 
-    val isDarkMode = isSystemInDarkTheme()
-    val mapStyle = remember(isDarkMode) {
-        if (isDarkMode) MapTilerUtils.STYLE_DARK else MapTilerUtils.STYLE_LIGHT
+    val currentTheme = LocalAppTheme.current.appTheme
+    val systemDark = isSystemInDarkTheme()
+    val initialMapTheme = remember(currentTheme, systemDark) {
+        when (currentTheme) {
+            AppTheme.SYSTEM -> systemDark
+            AppTheme.DARK -> true
+            AppTheme.LIGHT -> false
+        }
+    }
+    var isMapDarkMode by remember { mutableStateOf(initialMapTheme) }
+    val mapStyleUrl = remember(isMapDarkMode) {
+        if (isMapDarkMode) MapTilerUtils.STYLE_DARK else MapTilerUtils.STYLE_LIGHT
     }
 
     Surface(
@@ -71,7 +82,7 @@ fun JournalMapItem(
         Box(modifier = Modifier.fillMaxSize()) {
             MaplibreMap(
                 modifier = Modifier.fillMaxSize(),
-                baseStyle = BaseStyle.Uri(mapStyle),
+                baseStyle = BaseStyle.Uri(mapStyleUrl),
                 cameraState = cameraState,
                 options = MapOptions(
                     gestureOptions = GestureOptions(
@@ -93,7 +104,7 @@ fun JournalMapItem(
                     .align(Alignment.BottomStart)
                     .padding(start = 12.dp, bottom = 12.dp)
             ) {
-                MapTilerAttribution(isDarkMode = isDarkMode)
+                MapAttributions(isDarkMode = isMapDarkMode)
             }
             Surface(
                 onClick = onMapClick,

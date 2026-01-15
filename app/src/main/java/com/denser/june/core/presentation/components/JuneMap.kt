@@ -24,10 +24,12 @@ import com.denser.june.R
 fun MapControlColumn(
     isDarkMode: Boolean,
     onToggleDarkMode: () -> Unit,
-    isFetchingLocation: Boolean,
-    onMyLocationClick: (() -> Unit)?,
-    isTerrainMode: Boolean,
-    onToggleTerrain: () -> Unit,
+    isFetchingLocation: Boolean = false,
+    onMyLocationClick: (() -> Unit)? = null,
+    isTerrainMode: Boolean = false,
+    onToggleTerrain: (() -> Unit)? = null,
+    isMapExpanded: Boolean = false,
+    onToggleFullscreen: (() -> Unit)? = null,
     onZoomIn: () -> Unit,
     onZoomOut: () -> Unit,
     modifier: Modifier = Modifier
@@ -37,6 +39,23 @@ fun MapControlColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (onToggleFullscreen != null) {
+            FilledIconButton(
+                onClick = onToggleFullscreen,
+                shape = RoundedCornerShape(16.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    painter = painterResource(if (isMapExpanded) R.drawable.fullscreen_exit_24px else R.drawable.fullscreen_24px),
+                    contentDescription = if (isMapExpanded) "Collapse Map" else "Expand Map",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
         FilledIconButton(
             onClick = onToggleDarkMode,
             shape = RoundedCornerShape(16.dp),
@@ -56,26 +75,44 @@ fun MapControlColumn(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             FilledIconButton(
                 onClick = onZoomIn,
-                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
+                shape = RoundedCornerShape(
+                    topStart = 16.dp,
+                    topEnd = 16.dp,
+                    bottomStart = 4.dp,
+                    bottomEnd = 4.dp
+                ),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 modifier = Modifier.size(48.dp)
             ) {
-                Icon(painter = painterResource(R.drawable.add_24px), contentDescription = "Zoom In", modifier = Modifier.size(24.dp))
+                Icon(
+                    painter = painterResource(R.drawable.add_24px),
+                    contentDescription = "Zoom In",
+                    modifier = Modifier.size(24.dp)
+                )
             }
 
             FilledIconButton(
                 onClick = onZoomOut,
-                shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
+                shape = RoundedCornerShape(
+                    topStart = 4.dp,
+                    topEnd = 4.dp,
+                    bottomStart = 16.dp,
+                    bottomEnd = 16.dp
+                ),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 modifier = Modifier.size(48.dp)
             ) {
-                Icon(painter = painterResource(R.drawable.remove_24px), contentDescription = "Zoom Out", modifier = Modifier.size(24.dp))
+                Icon(
+                    painter = painterResource(R.drawable.remove_24px),
+                    contentDescription = "Zoom Out",
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
 
@@ -92,9 +129,16 @@ fun MapControlColumn(
                 modifier = Modifier.size(56.dp)
             ) {
                 if (isFetchingLocation) {
-                    CircularWavyProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.primary)
+                    CircularWavyProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 } else {
-                    Icon(painter = painterResource(R.drawable.my_location_24px_fill), contentDescription = "Current Location", modifier = Modifier.size(24.dp))
+                    Icon(
+                        painter = painterResource(R.drawable.my_location_24px_fill),
+                        contentDescription = "Current Location",
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
         }
@@ -134,7 +178,6 @@ fun MapLocationPin(
         ) {
             drawOval(color = Color.Black.copy(alpha = shadowAlpha))
         }
-
         Icon(
             painter = painterResource(R.drawable.location_on_24px_fill),
             contentDescription = null,
@@ -149,7 +192,7 @@ fun MapLocationPin(
 
 
 @Composable
-fun MapTilerAttribution(isDarkMode: Boolean, modifier: Modifier = Modifier) {
+fun MapAttributions(isDarkMode: Boolean, modifier: Modifier = Modifier) {
     val contentColor = if (isDarkMode)
         Color.White.copy(alpha = 0.7f)
     else
