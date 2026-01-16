@@ -3,6 +3,7 @@ package com.denser.june.core.data.database
 import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.denser.june.BuildConfig
 import com.denser.june.core.data.database.journal.JournalDatabase
 
 class DatabaseFactory(
@@ -12,10 +13,14 @@ class DatabaseFactory(
         val appContext = context.applicationContext
         val dbFile = appContext.getDatabasePath(JournalDatabase.DB_NAME)
 
-        return Room.databaseBuilder(
+        val builder = Room.databaseBuilder(
             appContext,
-            JournalDatabase::class.java, 
+            JournalDatabase::class.java,
             dbFile.absolutePath
-        ).fallbackToDestructiveMigration(dropAllTables = true)
+        )
+        if (BuildConfig.DEBUG) {
+            builder.fallbackToDestructiveMigration(dropAllTables = true)
+        }
+        return builder
     }
 }
