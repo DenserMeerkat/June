@@ -55,7 +55,12 @@ android {
         val variant = this
         variant.outputs.configureEach {
             val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
-            output.outputFileName = "june-${variant.versionName}.apk"
+            val abi = output.getFilter(com.android.build.OutputFile.ABI)
+            if (abi != null) {
+                output.outputFileName = "june-${variant.versionName}-${abi}.apk"
+            } else {
+                output.outputFileName = "june-${variant.versionName}-universal.apk"
+            }
         }
     }
 
@@ -65,6 +70,15 @@ android {
             keyPassword = keystoreProperties["keyPassword"] as String?
             storePassword = keystoreProperties["storePassword"] as String?
             storeFile = (keystoreProperties["storeFile"] as String?)?.let { file(it) }
+        }
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true
         }
     }
 
