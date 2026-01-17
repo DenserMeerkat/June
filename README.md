@@ -22,14 +22,14 @@
 </p>
 
 <p align="center">
-  <img src="assets/screenshots/home1.png" alt="Screenshot 1" width="196" style="border-radius:24px;"/>
-  <img src="assets/screenshots/editor1.png" alt="Screenshot 2" width="196" style="border-radius:24px;"/>
-  <img src="assets/screenshots/editor3.png" alt="Screenshot 3" width="196" style="border-radius:24px;"/>
-  <img src="assets/screenshots/editor4.png" alt="Screenshot 4" width="196" style="border-radius:24px;"/>
-  <img src="assets/screenshots/timeline1.png" alt="Screenshot 5" width="196" style="border-radius:24px;"/>
-  <img src="assets/screenshots/timeline4.png" alt="Screenshot 6" width="196" style="border-radius:24px;"/>
-  <img src="assets/screenshots/search1.png" alt="Screenshot 7" width="196" style="border-radius:24px;"/>
-  <img src="assets/screenshots/settings1.png" alt="Screenshot 8" width="196" style="border-radius:24px;"/>
+  <img src="assets/screenshots/home1.png" width="23%" style="border-radius:12px; margin: 1px;">
+  <img src="assets/screenshots/editor1.png" width="23%" style="border-radius:12px; margin: 1px;">
+  <img src="assets/screenshots/editor3.png" width="23%" style="border-radius:12px; margin: 1px;">
+  <img src="assets/screenshots/editor4.png" width="23%" style="border-radius:12px; margin: 1px;">
+  <img src="assets/screenshots/timeline1.png" width="23%" style="border-radius:12px; margin: 1px;">
+  <img src="assets/screenshots/timeline4.png" width="23%" style="border-radius:12px; margin: 1px;">
+  <img src="assets/screenshots/search1.png" width="23%" style="border-radius:12px; margin: 1px;">
+  <img src="assets/screenshots/settings1.png" width="23%" style="border-radius:12px; margin: 1px;">
 </p>
 
 ## Core Features
