@@ -1,6 +1,5 @@
 package com.denser.june.core.presentation.screens.home.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -14,7 +13,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -38,21 +36,6 @@ fun HomeBottomBar(
             .navigationBarsPadding(),
         contentAlignment = Alignment.BottomCenter
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.Transparent,
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
-                            MaterialTheme.colorScheme.surface
-                        )
-                    )
-                )
-        )
         HorizontalFloatingToolbar(
             expanded = true,
             floatingActionButton = {
