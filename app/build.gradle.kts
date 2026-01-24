@@ -24,11 +24,11 @@ if (localPropertiesFile.exists()) {
 }
 
 val versionMajor = 0
-val versionMinor = 2
+val versionMinor = 3
 val versionPatch = 0
 
 val appName = "June"
-val appVersionCode = 2
+val appVersionCode = 3
 val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
 
 android {

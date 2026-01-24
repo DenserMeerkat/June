@@ -44,13 +44,13 @@ June is designed to be more than just text—it's a multimedia capsule of your l
 
 ### Relive Your History
 
-- **Unified Timeline:** Navigate your past via a smooth month-strip. See your **media, songs, and locations** all in one place within a seamless flow.
+- **Unified Timeline:** Navigate your past through a Month View calendar. See your **media, songs, and locations** all in one place within a seamless flow.
 - **Visual Habits:** Keep your momentum going with calendar **streaks** and writing indicators that visualize your consistency.
 - **Smart Search:** Instantly locate memories by searching through content, dates, tags, or attached media.
 
 ### Secure & Styled
 
-- **Biometric Vault:** Protect your private thoughts with Fingerprint or Face Unlock.
+- **Privacy Vault:** Keep your thoughts for your eyes only with multiple locking options. Choose between fast Biometric Unlock (Fingerprint/Face) or a dedicated Custom PIN that exists independently of your phone's system lock.
 - **Expressive Theming:** Enjoy a personalized look with **Dynamic Wallpaper Colors (Material You)** or curated custom themes.
 - **Total Ownership:** 100% offline architecture with full Backup & Restore capabilities—your data never leaves your device.
 
