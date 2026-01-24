@@ -28,71 +28,126 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.denser.june.core.domain.AppPreferences
+import com.denser.june.core.domain.enums.LockType
+import com.denser.june.core.presentation.components.PinLockScreen
+import com.denser.june.core.utils.SecurityUtils
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
+enum class LockState {
+    LOADING,
+    LOCKED_BIOMETRIC,
+    LOCKED_PIN,
+    UNLOCKED
+}
+
 class MainActivity : FragmentActivity() {
 
     private val appPreferences: AppPreferences by inject()
-    private var isUnlocked by mutableStateOf(false)
+    private var lockState by mutableStateOf(LockState.LOADING)
+
+    private var isPinError by mutableStateOf(false)
+    private var storedPinHash: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        var keepSplash = true
-        splashScreen.setKeepOnScreenCondition { keepSplash }
+        splashScreen.setKeepOnScreenCondition { lockState == LockState.LOADING }
 
         lifecycleScope.launch {
             val isLockEnabled = appPreferences.getAppLockFlow().first()
+            val lockType = appPreferences.getLockTypeFlow().first()
+            storedPinHash = appPreferences.getPinHashFlow().first()
 
-            val biometricManager = BiometricManager.from(this@MainActivity)
-            val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                    BiometricManager.Authenticators.DEVICE_CREDENTIAL
-
-            val canAuthenticate = biometricManager.canAuthenticate(authenticators)
-
-            if (isLockEnabled && canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS) {
-                keepSplash = false
-                authenticateUser()
+            if (!isLockEnabled) {
+                lockState = LockState.UNLOCKED
             } else {
-                isUnlocked = true
-                keepSplash = false
+                when (lockType) {
+                    LockType.BIOMETRIC -> {
+                        lockState = LockState.LOCKED_BIOMETRIC
+                        checkBiometricAndAuthenticate()
+                    }
+
+                    LockType.PIN -> {
+                        if (storedPinHash != null) {
+                            lockState = LockState.LOCKED_PIN
+                        } else {
+                            lockState = LockState.UNLOCKED
+                        }
+                    }
+                }
             }
         }
 
         setContent {
             val systemDark = isSystemInDarkTheme()
-            val colorScheme = if (systemDark) darkColorScheme() else lightColorScheme()
+            val systemColorScheme = if (systemDark) darkColorScheme() else lightColorScheme()
 
-            MaterialTheme(colorScheme = colorScheme) {
-                if (isUnlocked) {
-                    JuneApp()
-                } else {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        Box(
+            MaterialTheme(colorScheme = systemColorScheme) {
+                when (lockState) {
+                    LockState.UNLOCKED -> {
+                        JuneApp()
+                    }
+
+                    LockState.LOCKED_PIN -> {
+                        PinLockScreen(
+                            title = "Enter PIN",
+                            isError = isPinError,
+                            onPinSubmitted = { inputPin ->
+                                val inputHash = SecurityUtils.hashPin(inputPin)
+                                if (inputHash == storedPinHash) {
+                                    lockState = LockState.UNLOCKED
+                                    isPinError = false
+                                } else {
+                                    isPinError = true
+                                }
+                            }
+                        )
+                    }
+
+                    else -> {
+                        Surface(
                             modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            color = MaterialTheme.colorScheme.background
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_launcher_background),
-                                contentDescription = null,
-                                modifier = Modifier.size(180.dp).clip(CircleShape)
-                            )
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                                contentDescription = "June Logo",
-                                modifier = Modifier.size(240.dp)
-                            )
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_launcher_background),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(180.dp)
+                                        .clip(CircleShape)
+                                )
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                                    contentDescription = "June Logo",
+                                    modifier = Modifier.size(240.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+
+    private fun checkBiometricAndAuthenticate() {
+        val biometricManager = BiometricManager.from(this)
+        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+
+        val canAuthenticate = biometricManager.canAuthenticate(authenticators)
+
+        if (canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS) {
+            authenticateUser()
+        } else {
+            lockState = LockState.UNLOCKED
         }
     }
 
@@ -103,7 +158,7 @@ class MainActivity : FragmentActivity() {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    isUnlocked = true
+                    lockState = LockState.UNLOCKED
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {

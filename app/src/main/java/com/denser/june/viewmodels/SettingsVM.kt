@@ -11,6 +11,7 @@ import com.denser.june.core.domain.backup.RestoreResult
 import com.denser.june.core.domain.backup.RestoreState
 import com.denser.june.core.domain.enums.AppTheme
 import com.denser.june.core.domain.enums.Fonts
+import com.denser.june.core.domain.enums.LockType
 import com.denser.june.core.domain.utils.FileUtils
 import com.denser.june.core.presentation.screens.settings.SettingsAction
 import com.denser.june.core.presentation.screens.settings.SettingsState
@@ -42,30 +43,41 @@ class SettingsVM(
         ColorPrefs(seed, appTheme, amoled, style)
     }
 
-    private val miscPrefsFlow = combine(
+    private val uiPrefsFlow = combine(
         prefs.getMaterialYouFlow(),
         prefs.getFontFlow(),
-        prefs.getOnboardingDoneFlow(),
-        prefs.getAppLockFlow() 
-    ) { matYou, font, onboarding, appLock ->
-        MiscPrefs(matYou, font, onboarding, appLock)
+        prefs.getOnboardingDoneFlow()
+    ) { matYou, font, onboarding ->
+        UiPrefs(matYou, font, onboarding)
+    }
+
+    private val securityPrefsFlow = combine(
+        prefs.getAppLockFlow(),
+        prefs.getLockTypeFlow(),
+        prefs.getPinHashFlow()
+    ) { appLock, lockType, pinHash ->
+        SecurityPrefs(appLock, lockType, pinHash)
     }
 
     val state = combine(
         _localState,
         colorPrefsFlow,
-        miscPrefsFlow
-    ) { local, colors, misc ->
+        uiPrefsFlow,
+        securityPrefsFlow
+    ) { local, colors, ui, security ->
         local.copy(
-            onBoardingDone = misc.onboardingDone,
-            isAppLockEnabled = misc.appLock, 
+            onBoardingDone = ui.onboardingDone,
+            isAppLockEnabled = security.appLock,
+            lockType = security.lockType,
+            pinHash = security.pinHash,
+
             theme = local.theme.copy(
                 seedColor = colors.seed,
                 appTheme = colors.appTheme,
                 withAmoled = colors.amoled,
                 style = colors.style,
-                materialTheme = misc.matYou,
-                font = misc.font,
+                materialTheme = ui.matYou,
+                font = ui.font,
             )
         )
     }.stateIn(
@@ -80,9 +92,7 @@ class SettingsVM(
                 SettingsAction.OnDeleteJournals -> {
                     withContext(Dispatchers.IO) {
                         val allJournals = repo.getAllJournals()
-                        allJournals.flatMap { it.images }.forEach { path ->
-                            FileUtils.deleteMedia(path)
-                        }
+                        allJournals.flatMap { it.images }.forEach { FileUtils.deleteMedia(it) }
                         repo.deleteAllJournals()
                     }
                 }
@@ -91,37 +101,30 @@ class SettingsVM(
                     _localState.update { it.copy(exportState = ExportState.Exporting) }
                     val result = exportRepo.exportData(includeMedia = action.includeMedia)
                     _localState.update {
-                        it.copy(
-                            exportState = if (result != null)
-                                ExportState.ExportReady(result)
-                            else ExportState.Error
-                        )
+                        it.copy(exportState = if (result != null) ExportState.ExportReady(result) else ExportState.Error)
                     }
                 }
 
                 is SettingsAction.OnRestoreJournals -> {
                     _localState.update { it.copy(restoreState = RestoreState.Restoring) }
                     when (val res = restoreRepo.restoreData(action.path)) {
-                        is RestoreResult.Failure -> {
-                            _localState.update {
-                                it.copy(restoreState = RestoreState.Failure(res.exceptionType))
-                            }
+                        is RestoreResult.Failure -> _localState.update {
+                            it.copy(
+                                restoreState = RestoreState.Failure(
+                                    res.exceptionType
+                                )
+                            )
                         }
 
-                        RestoreResult.Success -> {
-                            _localState.update {
-                                it.copy(restoreState = RestoreState.Restored)
-                            }
-                        }
+                        RestoreResult.Success -> _localState.update { it.copy(restoreState = RestoreState.Restored) }
                     }
                 }
-
-                SettingsAction.ResetBackup -> {
-                    _localState.update {
-                        it.copy(restoreState = RestoreState.Idle, exportState = ExportState.Idle)
-                    }
+                SettingsAction.ResetBackup -> _localState.update {
+                    it.copy(
+                        restoreState = RestoreState.Idle,
+                        exportState = ExportState.Idle
+                    )
                 }
-
                 is SettingsAction.OnUpdateOnboardingDone -> prefs.updateOnboardingDone(action.done)
                 is SettingsAction.OnSeedColorChange -> prefs.updateSeedColor(action.color)
                 is SettingsAction.OnAmoledSwitch -> prefs.updateAmoledPref(action.amoled)
@@ -130,6 +133,8 @@ class SettingsVM(
                 is SettingsAction.OnFontChange -> prefs.updateFont(action.fonts)
                 is SettingsAction.OnMaterialThemeToggle -> prefs.updateMaterialTheme(action.pref)
                 is SettingsAction.OnAppLockToggle -> prefs.updateAppLock(action.enabled)
+                is SettingsAction.UpdateLockType -> prefs.updateLockType(action.type)
+                is SettingsAction.UpdatePinHash -> prefs.updatePinHash(action.hash)
             }
         }
     }
@@ -141,10 +146,15 @@ class SettingsVM(
         val style: PaletteStyle
     )
 
-    private data class MiscPrefs(
+    private data class UiPrefs(
         val matYou: Boolean,
         val font: Fonts,
-        val onboardingDone: Boolean,
-        val appLock: Boolean
+        val onboardingDone: Boolean
+    )
+
+    private data class SecurityPrefs(
+        val appLock: Boolean,
+        val lockType: LockType,
+        val pinHash: String?
     )
 }

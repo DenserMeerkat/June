@@ -36,4 +36,13 @@ sealed interface Route {
 
     @Serializable
     data object Backup : Route
+
+    @Serializable
+    data object Permissions : Route
+
+    @Serializable
+    data object LockMethod : Route
+
+    @Serializable
+    data object PinSetup : Route
 }

@@ -29,8 +29,11 @@ import com.denser.june.core.presentation.screens.journal.JournalScreen
 import com.denser.june.core.presentation.screens.journal.section.ItemGalleryScreen
 import com.denser.june.core.presentation.screens.search.SearchScreen
 import com.denser.june.core.presentation.screens.settings.SettingsScreen
-import com.denser.june.core.presentation.screens.settings.section.AboutLibrariesScreen
-import com.denser.june.core.presentation.screens.settings.section.BackupScreen
+import com.denser.june.core.presentation.screens.settings.screens.AboutLibrariesScreen
+import com.denser.june.core.presentation.screens.settings.screens.BackupScreen
+import com.denser.june.core.presentation.screens.settings.screens.LockMethodScreen
+import com.denser.june.core.presentation.screens.settings.screens.PermissionsScreen
+import com.denser.june.core.presentation.screens.settings.screens.PinSetupScreen
 import com.denser.june.core.presentation.theme.JuneTheme
 import com.denser.june.viewmodels.EditorVM
 import com.denser.june.viewmodels.SettingsVM
@@ -155,8 +158,25 @@ fun JuneApp() {
                         )
                     }
 
+                    composable<Route.Permissions> {
+                        PermissionsScreen()
+                    }
+
                     composable<Route.AboutLibraries> {
                         AboutLibrariesScreen()
+                    }
+
+                    composable<Route.LockMethod> {
+                        LockMethodScreen(
+                            state = settingsState,
+                            onAction = settingsVM::onAction
+                        )
+                    }
+
+                    composable<Route.PinSetup> {
+                        PinSetupScreen(
+                            onAction = settingsVM::onAction
+                        )
                     }
                 }
             }

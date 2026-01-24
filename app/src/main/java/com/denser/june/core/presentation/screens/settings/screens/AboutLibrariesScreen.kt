@@ -1,4 +1,4 @@
-package com.denser.june.core.presentation.screens.settings.section
+package com.denser.june.core.presentation.screens.settings.screens
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding

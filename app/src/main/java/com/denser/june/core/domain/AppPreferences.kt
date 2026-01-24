@@ -2,6 +2,7 @@ package com.denser.june.core.domain
 
 import com.denser.june.core.domain.enums.AppTheme
 import com.denser.june.core.domain.enums.Fonts
+import com.denser.june.core.domain.enums.LockType
 import com.materialkolor.PaletteStyle
 import kotlinx.coroutines.flow.Flow
 
@@ -31,4 +32,10 @@ interface AppPreferences {
 
     fun getAppLockFlow(): Flow<Boolean>
     suspend fun updateAppLock(enabled: Boolean)
+
+    fun getLockTypeFlow(): Flow<LockType>
+    suspend fun updateLockType(type: LockType)
+
+    fun getPinHashFlow(): Flow<String?>
+    suspend fun updatePinHash(hash: String?)
 }
