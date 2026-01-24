@@ -1,17 +1,19 @@
-package com.denser.june.core.presentation.screens.settings.section
+package com.denser.june.core.presentation.screens.settings.screens
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -26,6 +28,9 @@ import com.denser.june.core.presentation.screens.settings.SettingsState
 import org.koin.compose.koinInject
 
 import com.denser.june.R
+import com.denser.june.core.domain.backup.RestoreFailedException
+import com.denser.june.core.presentation.screens.settings.section.SettingSection
+import com.denser.june.core.presentation.screens.settings.section.SettingsItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,8 +91,8 @@ fun BackupScreen(
 
             is RestoreState.Failure -> {
                 val errorMsg = when (state.restoreState.exception) {
-                    com.denser.june.core.domain.backup.RestoreFailedException.InvalidFile -> "Invalid or Corrupted Backup File"
-                    com.denser.june.core.domain.backup.RestoreFailedException.OldSchema -> "Backup format is too old"
+                    RestoreFailedException.InvalidFile -> "Invalid or Corrupted Backup File"
+                    RestoreFailedException.OldSchema -> "Backup format is too old"
                 }
                 Toast.makeText(context, "Restore Failed: $errorMsg", Toast.LENGTH_LONG).show()
                 onAction(SettingsAction.ResetBackup)
@@ -100,6 +105,7 @@ fun BackupScreen(
     BackHandler { navigator.navigateBack() }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
@@ -119,13 +125,26 @@ fun BackupScreen(
             )
         }
     ) { innerPadding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(innerPadding)
-                .clip(RoundedCornerShape(24.dp))
+                .verticalScroll(rememberScrollState())
         ) {
-            item(key = "export_import") {
+            Box(
+                modifier = Modifier.padding(horizontal = 24.dp)
+            ) {
+                Text(
+                    text = "Securely export your data or restore from a previous backup",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+            ) {
                 SettingSection {
                     SettingsItem(
                         title = "Export Data",
@@ -133,8 +152,7 @@ fun BackupScreen(
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.upload_24px),
-                                null,
-                                tint = MaterialTheme.colorScheme.primary
+                                null
                             )
                         }
                     ) {
@@ -174,8 +192,7 @@ fun BackupScreen(
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.download_24px),
-                                null,
-                                tint = MaterialTheme.colorScheme.primary
+                                null
                             )
                         }
                     ) {

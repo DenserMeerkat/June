@@ -2,6 +2,7 @@ package com.denser.june.core.presentation.screens.settings
 
 import com.denser.june.core.domain.enums.AppTheme
 import com.denser.june.core.domain.enums.Fonts
+import com.denser.june.core.domain.enums.LockType
 import com.materialkolor.PaletteStyle
 
 sealed interface SettingsAction {
@@ -17,4 +18,6 @@ sealed interface SettingsAction {
     data class OnRestoreJournals(val path: String): SettingsAction
     data class OnExportJournals(val includeMedia: Boolean = true) : SettingsAction
     data class OnAppLockToggle(val enabled: Boolean) : SettingsAction
+    data class UpdateLockType(val type: LockType) : SettingsAction
+    data class UpdatePinHash(val hash: String?) : SettingsAction
 }
