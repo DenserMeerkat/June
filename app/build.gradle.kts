@@ -145,68 +145,67 @@ ksp {
 }
 
 dependencies {
+    // Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-
     implementation(libs.androidx.material3.window.size)
-    implementation(libs.androidx.material.icons.extended)
-
+    implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.material3.adaptive)
     implementation(libs.androidx.material3.adaptive.layout)
     implementation(libs.androidx.material3.adaptive.navigation)
     implementation(libs.androidx.material3.adaptive.navigation.suite)
-
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
 
-    implementation(libs.androidx.navigation.compose)
+
+    // Essential
+    implementation(libs.koin.core)
+    implementation(libs.koin.compose)
+    implementation(libs.koin.compose.viewmodel)
+    implementation(libs.koin.compose.viewmodel.navigation)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
-
-    implementation(libs.materialKolor)
-    implementation(libs.colorpicker.compose)
-    implementation(libs.datetime)
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.kotlin.serialization)
+    implementation(libs.okhttp.core)
+    implementation(libs.okhttp.logging)
+    implementation(libs.materialKolor)           
+    implementation(libs.colorpicker.compose)     
+    implementation(libs.wavy.slider)             
     implementation(libs.composeIcons.fontAwesome)
-    implementation(libs.aboutLibraries)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.datetime)                
+    implementation(libs.androidx.core.splashscreen) 
+    implementation(libs.aboutLibraries)          
     implementation(libs.aboutLibraries.compose.m3)
-    implementation(libs.kotlinx.serialization.json)
+
+
+    // June
+    implementation(libs.maplibre.compose)        
+    implementation(libs.osmdroid)                
+    implementation(libs.gms.location)            
+    implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.coil.compose)
     implementation(libs.coil.video)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.media3.common)
-    implementation(libs.retrofit.core)
-    implementation(libs.retrofit.kotlin.serialization)
-    implementation(libs.okhttp.core)
-    implementation(libs.okhttp.logging)
-    implementation(libs.jsoup)
-    implementation(libs.json.path)
-    implementation(libs.wavy.slider)
     implementation(libs.androidx.palette)
-    implementation(libs.osmdroid)
-    implementation(libs.gms.location)
-    implementation(libs.kotlinx.coroutines.play.services)
-    implementation(libs.androidx.biometric)
-    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.jsoup)                   
+    implementation(libs.json.path)               
     implementation(libs.androidx.emoji2.emojipicker)
-    implementation(libs.maplibre.compose)
-
-    implementation(libs.koin.core)
-    implementation(libs.koin.compose)
-    implementation(libs.koin.compose.viewmodel)
-    implementation(libs.koin.compose.viewmodel.navigation)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
+    implementation(libs.androidx.biometric)      
 }
-
 aboutLibraries {
     export.excludeFields.add("generated")
     library {
