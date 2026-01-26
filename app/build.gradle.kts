@@ -12,31 +12,35 @@ plugins {
     alias(libs.plugins.aboutLibraries)
 }
 
+val appName = "June"
+val appId = "com.denser.june"
+val appNamespace = "com.denser.june"
+val apkNamePrefix = "june"
+
+val versionMajor = 0
+val versionMinor = 3
+val versionPatch = 0
+val appVersionCode = 3
+val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
+
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
+
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
 
-val versionMajor = 0
-val versionMinor = 3
-val versionPatch = 0
-
-val appName = "June"
-val appVersionCode = 3
-val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
-
 android {
-    namespace = "com.denser.june"
+    namespace = appNamespace
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.denser.june"
+        applicationId = appId
         minSdk = 28
         targetSdk = 36
         versionCode = appVersionCode
@@ -46,6 +50,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
         val mapTilerKey = localProperties.getProperty("MAPTILER_API_KEY") ?: ""
         buildConfigField("String", "MAPTILER_API_KEY", "\"$mapTilerKey\"")
         manifestPlaceholders["MAPTILER_API_KEY"] = mapTilerKey
@@ -57,9 +62,9 @@ android {
             val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
             val abi = output.getFilter(com.android.build.OutputFile.ABI)
             if (abi != null) {
-                output.outputFileName = "june-${variant.versionName}-${abi}.apk"
+                output.outputFileName = "$apkNamePrefix-${variant.versionName}-${abi}.apk"
             } else {
-                output.outputFileName = "june-${variant.versionName}-universal.apk"
+                output.outputFileName = "$apkNamePrefix-${variant.versionName}-universal.apk"
             }
         }
     }
@@ -136,6 +141,7 @@ android {
         }
     }
 }
+
 configurations.all {
     exclude(group = "org.jetbrains", module = "annotations-java5")
 }
