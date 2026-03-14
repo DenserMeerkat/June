@@ -144,6 +144,7 @@ android {
 
 configurations.all {
     exclude(group = "org.jetbrains", module = "annotations-java5")
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
 }
 
 ksp {
@@ -211,6 +212,7 @@ dependencies {
     implementation(libs.json.path)
     implementation(libs.androidx.emoji2.emojipicker)
     implementation(libs.androidx.biometric)
+    implementation(libs.hyphen)
 }
 aboutLibraries {
     export.excludeFields.add("generated")

@@ -280,7 +280,6 @@ class EditorVM(
             }
 
             _state.update { it.copy(isDirty = false, isDraft = false) }
-            navigator.navigateBack()
         }
     }
 

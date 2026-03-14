@@ -1,54 +1,53 @@
 package com.denser.june.presentation.screens.editor
 
-import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.denser.june.core.utils.FileUtils
 import com.denser.june.core.utils.toDateWithDay
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.components.JuneTopAppBar
-import com.denser.june.presentation.screens.editor.components.AddItemSheet
-import com.denser.june.presentation.screens.editor.components.AddLocationDialog
-import com.denser.june.presentation.screens.editor.components.AddSongSheet
-import com.denser.june.presentation.screens.editor.components.JournalEmojiPickerDialog
-import com.denser.june.presentation.screens.editor.components.JournalDatePickerDialog
 import com.denser.june.presentation.screens.editor.components.JournalItemsPreview
 import com.denser.june.presentation.screens.editor.components.MediaOperations
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import com.denser.hyphen.state.rememberHyphenTextState
+import com.denser.hyphen.ui.HyphenStyleConfig
+import com.denser.hyphen.ui.material3.HyphenTextEditor
 
 import com.denser.june.R
 import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
-import com.denser.june.presentation.screens.editor.components.JournalTagsDialog
+import com.denser.june.presentation.screens.editor.components.EditorToolbar
 import com.denser.june.presentation.utils.TagUtils
 import com.denser.june.presentation.utils.UiUtils
 import java.time.LocalTime
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,79 +58,34 @@ fun JournalScreen() {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
+    val dialogState = rememberEditorDialogState()
+    var showMenu by remember { mutableStateOf(false) }
+    val isEditorReady = !state.isLoading
+    val hyphenState = rememberHyphenTextState()
+
+    LaunchedEffect(isEditorReady) {
+        if (isEditorReady && state.content.isNotEmpty()) {
+            hyphenState.setMarkdown(state.content)
+        }
+    }
+
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val contentFocusRequester = remember { FocusRequester() }
     val interactionSource = remember { MutableInteractionSource() }
 
-    val showSaveButton = if (state.isDraft) {
-        state.hasContent
-    } else {
-        state.isDirty
-    }
+    var isEditorFocused by remember { mutableStateOf(false) }
+    val showSaveButton = if (state.isDraft) state.hasContent else state.isDirty
 
-    var showExitDialog by remember { mutableStateOf(false) }
-    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
-    var showMenu by remember { mutableStateOf(false) }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showAddItemSheet by remember { mutableStateOf(false) }
-    var showEmojiPicker by remember { mutableStateOf(false) }
-    var showCameraSelectionDialog by remember { mutableStateOf(false) }
-    var showSongSheet by remember { mutableStateOf(false) }
-    var showLocationDialog by remember { mutableStateOf(false) }
-    var showTagsDialog by remember { mutableStateOf(false) }
-
-    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
-    var tempVideoUri by remember { mutableStateOf<Uri?>(null) }
-
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia()
-    ) { uris ->
-        val newPaths = uris.mapNotNull { uri ->
-            FileUtils.persistMedia(context, uri)
-        }
-        if (newPaths.isNotEmpty()) {
-            viewModel.onAction(EditorAction.AddImages(newPaths))
-        }
-    }
-
-    val photoLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success && tempCameraUri != null) {
-            val internalPath = FileUtils.persistMedia(context, tempCameraUri!!)
-            if (internalPath != null) {
-                viewModel.onAction(EditorAction.AddImage(internalPath))
-            }
-        }
-    }
-
-    val videoLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CaptureVideo()
-    ) { success ->
-        if (success && tempVideoUri != null) {
-            val internalPath = FileUtils.persistMedia(context, tempVideoUri!!)
-            if (internalPath != null) {
-                viewModel.onAction(EditorAction.AddImage(internalPath))
-            }
-        }
-    }
-
-    val formattedDate = remember(state.dateTime) {
-        state.dateTime.toDateWithDay()
-    }
+    val formattedDate = remember(state.dateTime) { state.dateTime.toDateWithDay() }
     val formattedTime = remember(state.dateTime) {
         val time = state.dateTime.toLocalTime()
-        if (time != LocalTime.MIDNIGHT) {
-            time.toFullTime()
-        } else {
-            null
-        }
+        if (time != LocalTime.MIDNIGHT) time.toFullTime() else null
     }
 
     val onBack = {
         if (!state.isDraft && state.isDirty) {
-            showExitDialog = true
+            dialogState.showExitDialog = true
         } else {
             viewModel.onAction(EditorAction.NavigateBack)
         }
@@ -147,7 +101,7 @@ fun JournalScreen() {
 
     val mediaOperations = remember(state.images) {
         MediaOperations(
-            onItemSheetToggle = { showAddItemSheet = it },
+            onItemSheetToggle = { dialogState.showAddItemSheet = it },
             onRemoveMedia = { viewModel.onAction(EditorAction.RemoveImage(it)) },
             onMoveToFront = { viewModel.onAction(EditorAction.MoveImageToFront(it)) },
             onMediaClick = { path ->
@@ -161,9 +115,9 @@ fun JournalScreen() {
             },
             frontMediaPath = state.images.lastOrNull(),
             onRemoveSong = { viewModel.onAction(EditorAction.RemoveSong) },
-            onSongSheetToggle = { showSongSheet = true },
+            onSongSheetToggle = { dialogState.showSongSheet = true },
             onRemoveLocation = { viewModel.onAction(EditorAction.RemoveLocation) },
-            onLocationDialogToggle = { showLocationDialog = true },
+            onLocationDialogToggle = { dialogState.showLocationDialog = true },
         )
     }
 
@@ -180,87 +134,99 @@ fun JournalScreen() {
                             onClick = { onBack() },
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                            ),
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                    alpha = 0.75f
+                                )
+                            )
+                        ) { Icon(painterResource(R.drawable.close_24px), "Close") }
+
+                        FilledIconButton(
+                            onClick = { dialogState.showEmojiPicker = true },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                    alpha = 0.75F
+                                )
+                            )
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.close_24px),
-                                contentDescription = "Close",
+                            if (state.emoji != null) Text(state.emoji!!, fontSize = 22.sp)
+                            else Icon(
+                                painterResource(if (dialogState.showEmojiPicker) R.drawable.sentiment_very_satisfied_24px_fill else R.drawable.sentiment_very_satisfied_24px),
+                                "Add Emoji"
                             )
                         }
+
                         FilledIconButton(
-                            onClick = { showEmojiPicker = true },
+                            onClick = { dialogState.showAddItemSheet = true },
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                                     alpha = 0.75F
                                 )
-                            ),
-                        ) {
-                            if (state.emoji != null) {
-                                Text(
-                                    text = state.emoji!!,
-                                    fontSize = 22.sp
-                                )
-                            } else {
-                                Icon(
-                                    painter = painterResource(if (showEmojiPicker) R.drawable.sentiment_very_satisfied_24px_fill else R.drawable.sentiment_very_satisfied_24px),
-                                    contentDescription = "Add Emoji"
-                                )
-                            }
-                        }
-                        FilledIconButton(
-                            onClick = { showAddItemSheet = true },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.75F
-                                )
-                            ),
+                            )
                         ) {
                             Icon(
-                                painter = painterResource(if (showAddItemSheet) R.drawable.add_circle_24px_fill else R.drawable.add_circle_24px),
-                                contentDescription = "Add Attachment"
+                                painterResource(if (dialogState.showAddItemSheet) R.drawable.add_circle_24px_fill else R.drawable.add_circle_24px),
+                                "Add Attachment"
                             )
                         }
+
                         FilledIconButton(
-                            onClick = { showTagsDialog = true },
+                            onClick = { dialogState.showTagsDialog = true },
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                                     alpha = 0.75F
                                 )
-                            ),
+                            )
                         ) {
                             Icon(
-                                painter = painterResource(if (showTagsDialog) R.drawable.sell_24px_fill else R.drawable.sell_24px),
-                                contentDescription = "Add Tags"
+                                painterResource(if (dialogState.showTagsDialog) R.drawable.sell_24px_fill else R.drawable.sell_24px),
+                                "Add Tags"
                             )
                         }
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = { viewModel.onAction(EditorAction.ToggleBookmark) },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(if (state.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px),
-                            contentDescription = "Toggle Bookmark"
-                        )
+                    if (showSaveButton) {
+                        Button(
+                            enabled = !state.isLoading,
+                            onClick = {
+                                keyboardController?.hide()
+                                focusManager.clearFocus(force = true)
+                                if (!state.isLoading) viewModel.onAction(EditorAction.SaveJournal)
+                            },
+                        ) {
+                            Text("Save")
+                        }
+                    } else {
+                        IconButton(
+                            onClick = { viewModel.onAction(EditorAction.ToggleBookmark) },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                    alpha = 0.75f
+                                )
+                            ),
+                        ) {
+                            Icon(
+                                painterResource(if (state.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px),
+                                "Toggle Bookmark"
+                            )
+                        }
                     }
+
                     Box {
                         IconButton(
                             onClick = { showMenu = true },
                             colors = IconButtonDefaults.iconButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                    alpha = 0.75f
+                                )
                             ),
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.more_vert_24px),
-                                contentDescription = "Options"
+                                painterResource(R.drawable.more_vert_24px),
+                                "Options"
                             )
                         }
                         DropdownMenu(
@@ -277,7 +243,7 @@ fun JournalScreen() {
                                 text = { Text("Delete") },
                                 onClick = {
                                     showMenu = false
-                                    showDeleteConfirmDialog = true
+                                    dialogState.showDeleteConfirmDialog = true
                                 },
                                 leadingIcon = {
                                     Icon(
@@ -291,23 +257,13 @@ fun JournalScreen() {
                 }
             )
         },
-        floatingActionButton = {
-            if (showSaveButton) {
-                ExtendedFloatingActionButton(
-                    text = { Text("Save") },
-                    icon = {
-                        Icon(
-                            painter = painterResource(R.drawable.save_24px),
-                            contentDescription = "Save"
-                        )
-                    },
-                    onClick = {
-                        if (!state.isLoading) {
-                            viewModel.onAction(EditorAction.SaveJournal)
-                        }
-                    },
-                    containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    contentColor = MaterialTheme.colorScheme.primaryContainer
+        bottomBar = {
+            if (isEditorFocused) {
+                EditorToolbar(
+                    state = hyphenState,
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .imePadding()
                 )
             }
         },
@@ -325,9 +281,7 @@ fun JournalScreen() {
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .imePadding()
             ) {
                 if (state.images.isNotEmpty() || state.songDetails != null || state.location != null) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -369,40 +323,40 @@ fun JournalScreen() {
                         .clickable {
                             keyboardController?.hide()
                             focusManager.clearFocus()
-                            showDatePicker = true
+                            dialogState.showDatePicker = true
                         }
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.today_24px),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
+                        painterResource(R.drawable.today_24px),
+                        null,
+                        Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = formattedDate,
+                        formattedDate,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (formattedTime != null) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "•",
+                            "•",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
-                            painter = painterResource(R.drawable.schedule_24px),
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
+                            painterResource(R.drawable.schedule_24px),
+                            null,
+                            Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = formattedTime,
+                            formattedTime,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -413,13 +367,13 @@ fun JournalScreen() {
                     LazyRow(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { showTagsDialog = true },
+                            .clickable { dialogState.showTagsDialog = true },
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(state.tags) { tag ->
                             SuggestionChip(
-                                onClick = { showTagsDialog = true },
+                                onClick = { dialogState.showTagsDialog = true },
                                 label = { Text(tag, fontSize = 12.sp) },
                                 shape = RoundedCornerShape(8.dp),
                                 border = null,
@@ -429,192 +383,46 @@ fun JournalScreen() {
                     }
                 }
 
-                TextField(
-                    value = state.content,
-                    onValueChange = { viewModel.onAction(EditorAction.ChangeContent(it)) },
+                HyphenTextEditor(
+                    state = hyphenState,
+                    onMarkdownChange = {
+                        viewModel.onAction(EditorAction.ChangeContent(it))
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .focusRequester(contentFocusRequester),
+                        .defaultMinSize(minHeight = 84.dp)
+                        .focusRequester(contentFocusRequester)
+                        .onFocusChanged { focusState ->
+                            isEditorFocused = focusState.isFocused
+                        },
                     placeholder = {
                         Text(
                             "What's on your mind?",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
                     },
-                    colors = UiUtils.getTransparentTextFieldColors()
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                    ),
+                    colors = UiUtils.getTransparentTextFieldColors().copy(
+                        unfocusedPlaceholderColor =  MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        focusedPlaceholderColor =  MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    ),
+                    styleConfig = HyphenStyleConfig(
+                        boldStyle = SpanStyle(
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
                 )
+                Spacer(Modifier.height(24.dp))
             }
         }
     }
-
-    if (showCameraSelectionDialog) {
-        AlertDialog(
-            onDismissRequest = { showCameraSelectionDialog = false },
-            icon = {
-                Icon(
-                    painterResource(R.drawable.add_a_photo_24px),
-                    null
-                )
-            },
-            title = { Text("Capture Media") },
-            text = { Text("Would you like to take a photo or record a video?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showCameraSelectionDialog = false
-                    val uri = FileUtils.createTempVideoUri(context)
-                    tempVideoUri = uri
-                    videoLauncher.launch(uri)
-                }) { Text("Record Video") }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showCameraSelectionDialog = false
-                    val uri = FileUtils.createTempPictureUri(context)
-                    tempCameraUri = uri
-                    photoLauncher.launch(uri)
-                }) { Text("Take Photo") }
-            }
-        )
-    }
-
-    if (showExitDialog) {
-        AlertDialog(
-            onDismissRequest = { showExitDialog = false },
-            icon = {
-                Icon(
-                    painterResource(R.drawable.file_save_24px),
-                    null
-                )
-            },
-            title = { Text("Save Entry?") },
-            text = { Text("Would you like to save your progress before leaving?") },
-            confirmButton = {
-                Button(onClick = {
-                    showExitDialog = false
-                    viewModel.onAction(EditorAction.SaveJournal)
-                }) { Text("Save") }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = {
-                    showExitDialog = false
-                    viewModel.onAction(EditorAction.NavigateBack)
-                }) { Text("Discard") }
-            }
-        )
-    }
-
-    if (showDeleteConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirmDialog = false },
-            icon = {
-                Icon(
-                    painterResource(R.drawable.delete_24px),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error
-                )
-            },
-            title = { Text("Delete Journal?") },
-            text = { Text("This action cannot be undone. Are you sure you want to delete this entry?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDeleteConfirmDialog = false
-                        viewModel.onAction(EditorAction.DeleteJournal)
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    )
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showDeleteConfirmDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (showDatePicker) {
-        JournalDatePickerDialog(
-            initialDateMillis = state.dateTime,
-            onDateSelected = { millis ->
-                viewModel.onAction(EditorAction.ChangeDateTime(millis))
-                showDatePicker = false
-            },
-            onDismiss = { showDatePicker = false }
-        )
-    }
-
-    if (showSongSheet) {
-        AddSongSheet(
-            songDetails = state.songDetails,
-            isFetching = state.isFetchingSong,
-            onFetchDetails = { link ->
-                viewModel.onAction(EditorAction.FetchSong(link))
-            },
-            onRemoveSong = {
-                viewModel.onAction(EditorAction.RemoveSong)
-            },
-            onDismiss = { showSongSheet = false }
-        )
-    }
-
-    if (showLocationDialog) {
-        AddLocationDialog(
-            existingLocation = state.location,
-            onLocationSelected = { loc ->
-                viewModel.onAction(EditorAction.SetLocation(loc))
-            },
-            onDismiss = { showLocationDialog = false }
-        )
-    }
-
-    if (showAddItemSheet) {
-        AddItemSheet(
-            onDismiss = { showAddItemSheet = false },
-            onTakePhotoClick = {
-                showCameraSelectionDialog = true
-            },
-            onAddPhotoClick = {
-                galleryLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                )
-            },
-            onAddSongClick = {
-                showAddItemSheet = false
-                showSongSheet = true
-            },
-            onAddLocationClick = {
-                showAddItemSheet = false
-                showLocationDialog = true
-            }
-        )
-    }
-
-    if (showEmojiPicker) {
-        JournalEmojiPickerDialog(
-            initialEmoji = state.emoji,
-            onEmojiSelected = { emoji ->
-                viewModel.onAction(EditorAction.ChangeEmoji(emoji))
-                showEmojiPicker = false
-            },
-            onDismiss = { showEmojiPicker = false }
-        )
-    }
-
-    if (showTagsDialog) {
-        JournalTagsDialog(
-            tags = state.tags,
-            suggestions = state.tagSuggestions,
-            onSaveTags = { newTags ->
-                viewModel.onAction(EditorAction.UpdateTags(newTags))
-            },
-            onSearchTags = { viewModel.onAction(EditorAction.SearchTags(it)) },
-            onDismiss = { showTagsDialog = false }
-        )
-    }
+    EditorModals(
+        dialogState = dialogState,
+        editorState = state,
+        onAction = viewModel::onAction
+    )
 }

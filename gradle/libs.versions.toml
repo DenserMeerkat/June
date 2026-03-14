@@ -43,6 +43,7 @@ jsoup = "1.18.1"
 jsonPath = "2.9.0"
 emojipicker = "1.6.0"
 biometric = "1.2.0-alpha05"
+hyphen = "0.2.0-alpha01"
 
 [libraries]
 # Core
@@ -105,6 +106,7 @@ jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
 json-path = { group = "com.jayway.jsonpath", name = "json-path", version.ref = "jsonPath" }
 androidx-emoji2-emojipicker = { group = "androidx.emoji2", name = "emoji2-emojipicker", version.ref = "emojipicker" }
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
+hyphen = { module = "io.github.densermeerkat:hyphen", version.ref = "hyphen" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
