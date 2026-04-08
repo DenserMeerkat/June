@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -24,6 +25,8 @@ import org.koin.compose.koinInject
 
 import com.denser.june.core.R
 import com.denser.june.presentation.screens.home.tags.TagsVM
+import com.denser.june.presentation.components.SyncIndicator
+import com.denser.june.MainVM
 import org.koin.compose.viewmodel.koinViewModel
 
 enum class HomeTab(val label: String, val iconRes: Int, val filledIconRes: Int) {
@@ -36,6 +39,9 @@ enum class HomeTab(val label: String, val iconRes: Int, val filledIconRes: Int) 
 @Composable
 fun HomeScreen() {
     val navigator = koinInject<AppNavigator>()
+    val mainVM: MainVM = koinViewModel()
+    val appState by mainVM.state.collectAsStateWithLifecycle()
+    
     val pagerState = rememberPagerState(pageCount = { HomeTab.entries.size })
     val scope = rememberCoroutineScope()
 
@@ -76,6 +82,13 @@ fun HomeScreen() {
                         }
                     },
                     actions = {
+                        if (appState.isSyncEnabled) {
+                            SyncIndicator(
+                                status = appState.syncStatus,
+                                onClick = { navigator.navigateTo(Route.SyncSettings) }
+                            )
+                        }
+                        Spacer(Modifier.width(4.dp))
                         FilledIconButton(
                             onClick = { navigator.navigateTo(Route.Settings) },
                             colors = IconButtonDefaults.filledIconButtonColors(

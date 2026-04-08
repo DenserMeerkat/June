@@ -37,7 +37,7 @@ class TimelineVM(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private var playingJournalId: Long? = null
+    private var playingJournalId: String? = null
     private val _currentMonth = MutableStateFlow(
         savedStateHandle.get<String>("current_month")?.let { YearMonth.parse(it) }
             ?: YearMonth.now()
@@ -139,7 +139,7 @@ class TimelineVM(
         }
     }
 
-    fun onSongSelected(song: SongDetails, journalId: Long, autoPlay: Boolean = true) {
+    fun onSongSelected(song: SongDetails, journalId: String, autoPlay: Boolean = true) {
         playingJournalId = journalId
         if (_activeSong.value?.previewUrl == song.previewUrl) {
             togglePlayPause()

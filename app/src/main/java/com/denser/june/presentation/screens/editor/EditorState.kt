@@ -5,7 +5,7 @@ import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.utils.getTodayAtMidnight
 
 data class EditorState(
-    val journalId: Long? = null,
+    val journalId: String? = null,
     val title: String = "",
     val content: String = "",
     val emoji: String? = null,

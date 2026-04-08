@@ -111,7 +111,7 @@ fun JournalScreen() {
             onMediaClick = { path ->
                 navigator.navigateTo(
                     Route.JournalMediaDetail(
-                        journalId = state.journalId ?: 0L,
+                        journalId = state.journalId ?: "",
                         initialIndex = state.images.reversed().indexOf(path)
                     ),
                     isSingleTop = true
@@ -296,7 +296,7 @@ fun JournalScreen() {
                         location = state.location,
                         onShowAllClick = {
                             navigator.navigateTo(
-                                Route.JournalMedia(journalId = state.journalId ?: 0L),
+                                Route.JournalMedia(journalId = state.journalId ?: ""),
                                 isSingleTop = true
                             )
                         }

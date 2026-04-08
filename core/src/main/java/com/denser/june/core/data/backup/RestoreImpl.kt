@@ -75,13 +75,13 @@ class RestoreImpl(
                 }
                 RestoreResult.Success
             } catch (e: IllegalArgumentException) {
-                Log.e(TAG, "Invalid URI", e)
+                Log.e(TAG, "Restore failed: Invalid URI", e)
                 RestoreResult.Failure(RestoreFailedException.InvalidFile)
             } catch (e: SerializationException) {
-                Log.e(TAG, "Schema Mismatch", e)
+                Log.e(TAG, "Restore failed: Schema Mismatch or Malformed JSON. This might be an old backup format that needs migration logic.", e)
                 RestoreResult.Failure(RestoreFailedException.OldSchema)
             } catch (e: Exception) {
-                Log.e("RestoreDebug", "Restore failed exception", e)
+                Log.e(TAG, "Restore failed: Unexpected error during ZIP extraction or DB insertion", e)
                 RestoreResult.Failure(RestoreFailedException.InvalidFile)
             }
         }

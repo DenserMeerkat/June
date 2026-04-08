@@ -32,7 +32,9 @@ import com.denser.june.core.R
 @Composable
 fun JournalCard(
     journal: Journal,
-    modifier: Modifier
+    modifier: Modifier,
+    actionIcon: Int? = null,
+    onActionClick: (() -> Unit)? = null
 ) {
     val viewModel: JournalsVM = koinViewModel()
     val navigator = koinInject<AppNavigator>()
@@ -105,7 +107,7 @@ fun JournalCard(
                 )
             }
             FilledIconButton(
-                onClick = { viewModel.toggleBookmark(journal.id) },
+                onClick = { onActionClick?.invoke() ?: viewModel.toggleBookmark(journal.id) },
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -113,8 +115,11 @@ fun JournalCard(
                 shape = IconButtonDefaults.smallRoundShape
             ) {
                 Icon(
-                    painter = painterResource(if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px),
-                    contentDescription = "Toggle Bookmark",
+                    painter = painterResource(
+                        actionIcon ?: if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill 
+                        else R.drawable.bookmark_24px
+                    ),
+                    contentDescription = if (actionIcon != null) "Action" else "Toggle Bookmark",
                 )
             }
             Spacer(modifier = Modifier.width(4.dp))
@@ -126,12 +131,16 @@ fun JournalCard(
 @Composable
 fun RecentJournalCard(
     journal: Journal,
-    modifier: Modifier
+    modifier: Modifier,
+    actionIcon: Int? = null,
+    onActionClick: (() -> Unit)? = null
 ) {
     if (journal.images.isEmpty()) {
         JournalCard(
             journal = journal,
-            modifier = modifier
+            modifier = modifier,
+            actionIcon = actionIcon,
+            onActionClick = onActionClick
         )
     } else {
         val viewModel: JournalsVM = koinViewModel()
@@ -197,7 +206,7 @@ fun RecentJournalCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     FilledIconButton(
-                        onClick = { viewModel.toggleBookmark(journal.id) },
+                        onClick = { onActionClick?.invoke() ?: viewModel.toggleBookmark(journal.id) },
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -205,8 +214,11 @@ fun RecentJournalCard(
                         shape = IconButtonDefaults.smallRoundShape
                     ) {
                         Icon(
-                            painter = painterResource(if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px),
-                            contentDescription = "Toggle Bookmark",
+                            painter = painterResource(
+                                actionIcon ?: if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill 
+                                else R.drawable.bookmark_24px
+                            ),
+                            contentDescription = if (actionIcon != null) "Action" else "Toggle Bookmark",
                         )
                     }
                     Spacer(modifier = Modifier.width(4.dp))

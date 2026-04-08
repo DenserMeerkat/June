@@ -18,11 +18,11 @@ class DatabaseFactory(
             JournalDatabase::class.java,
             dbFile.absolutePath
         ).apply {
-            addMigrations(DatabaseMigrations.MIGRATION_1_2)
+            addMigrations(
+                DatabaseMigrations.MIGRATION_1_2,
+                DatabaseMigrations.MIGRATION_2_3
+            )
 
-            if (BuildConfig.DEBUG) {
-                fallbackToDestructiveMigration(dropAllTables = false)
-            }
         }
     }
 }

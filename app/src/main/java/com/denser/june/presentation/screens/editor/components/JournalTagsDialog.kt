@@ -136,10 +136,7 @@ fun JournalTagsDialog(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
+                    }
                 )
             },
             floatingActionButtonPosition = FabPosition.Center,

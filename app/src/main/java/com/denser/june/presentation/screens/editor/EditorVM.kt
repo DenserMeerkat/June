@@ -11,20 +11,20 @@ import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.FileUtils
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+@OptIn(FlowPreview::class)
 class EditorVM(
     savedStateHandle: SavedStateHandle,
     private val journalRepo: JournalRepository,
     private val songRepo: SongRepository,
     private val navigator: AppNavigator
 ) : ViewModel() {
-    private val initialJournalId: Long? = savedStateHandle.getJournalIdFromRoutes()
+    private val initialJournalId: String? = savedStateHandle.getJournalIdFromRoutes()
     private var existingJournal: Journal? = null
 
     private val _state = MutableStateFlow(EditorState())
@@ -33,7 +33,21 @@ class EditorVM(
     private val _uiEvent = Channel<String>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
+    private val _saveTrigger = MutableSharedFlow<EditorState>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
     init {
+        viewModelScope.launch {
+            _saveTrigger
+                .debounce(5000L)
+                .collect { stateToSave ->
+                    saveDraft(stateToSave)
+                }
+        }
+
         if (initialJournalId != null) {
             loadJournal(initialJournalId)
         } else {
@@ -51,7 +65,7 @@ class EditorVM(
         }
     }
 
-    private fun SavedStateHandle.getJournalIdFromRoutes(): Long? {
+    private fun SavedStateHandle.getJournalIdFromRoutes(): String? {
         return tryRoute<Route.Editor>()?.journalId
             ?: tryRoute<Route.JournalMedia>()?.journalId
             ?: tryRoute<Route.JournalMediaDetail>()?.journalId
@@ -104,7 +118,12 @@ class EditorVM(
             is EditorAction.ToggleBookmark -> toggleBookmark()
             is EditorAction.ToggleArchive -> toggleArchive()
             is EditorAction.SaveJournal -> saveJournal()
-            is EditorAction.NavigateBack -> navigator.navigateBack()
+            is EditorAction.NavigateBack -> {
+                if (_state.value.isDirty) {
+                    saveDraft(_state.value)
+                }
+                navigator.navigateBack()
+            }
             is EditorAction.DeleteJournal -> deleteJournal()
         }
     }
@@ -113,7 +132,7 @@ class EditorVM(
         _state.update { currentState ->
             val newState = update(currentState)
             if (isDirtyCheck(newState)) {
-                saveDraft(newState)
+                _saveTrigger.tryEmit(newState)
             }
             newState.copy(isDirty = isDirtyCheck(newState))
         }
@@ -167,7 +186,7 @@ class EditorVM(
         }
     }
 
-    private fun loadJournal(id: Long) {
+    private fun loadJournal(id: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             val journal = journalRepo.getJournalById(id)
@@ -217,7 +236,7 @@ class EditorVM(
             val isNewEntry = existingJournal == null
 
             val journalToSave = Journal(
-                id = existingJournal?.id ?: 0L,
+                id = existingJournal?.id ?: "",
                 title = currentState.title,
                 content = currentState.content,
                 emoji = currentState.emoji,
@@ -254,7 +273,7 @@ class EditorVM(
             val currentTime = System.currentTimeMillis()
 
             val journalToSave = Journal(
-                id = existingJournal?.id ?: 0L,
+                id = existingJournal?.id ?: "",
                 title = currentState.title,
                 content = currentState.content,
                 emoji = currentState.emoji,
@@ -286,10 +305,7 @@ class EditorVM(
     private fun deleteJournal() {
         viewModelScope.launch {
             existingJournal?.let { journal ->
-                journal.images.forEach { path ->
-                    FileUtils.deleteMedia(path)
-                }
-                journalRepo.deleteJournal(journal.id)
+                journalRepo.softDeleteJournal(journal.id)
             }
             navigator.navigateBack()
         }

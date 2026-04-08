@@ -10,8 +10,8 @@ import com.denser.june.core.domain.model.SongDetails
 @Entity(tableName = "journals")
 @TypeConverters(JournalTypeConverters::class)
 data class JournalEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long,
+    @PrimaryKey
+    val id: String,
     val title: String,
     val content: String,
     val emoji: String? = null,
@@ -25,4 +25,7 @@ data class JournalEntity(
     val isBookmarked: Boolean = false,
     val isArchived: Boolean = false,
     val isDraft: Boolean = true,
+    val isDeleted: Boolean = false,
+    val syncedAt: Long? = null,
+    val cloudId: String? = null,
 )

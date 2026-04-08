@@ -61,7 +61,7 @@ fun ItemGalleryScreen(
             onMediaClick = { path ->
                 navigator.navigateTo(
                     Route.JournalMediaDetail(
-                        journalId = state.journalId ?: 0L,
+                        journalId = state.journalId ?: "",
                         initialIndex = state.images.reversed().indexOf(path)
                     ),
                     isSingleTop = true,

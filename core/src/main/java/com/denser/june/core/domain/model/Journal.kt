@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("Journal")
 data class Journal(
-    val id: Long,
+    @Serializable(with = StringIdSerializer::class)
+    val id: String,
     val title: String,
     val content: String,
     val emoji: String? = null,
@@ -20,6 +21,9 @@ data class Journal(
     val isBookmarked: Boolean = false,
     val isArchived: Boolean = false,
     val isDraft: Boolean = true,
+    val isDeleted: Boolean = false,
+    val syncedAt: Long? = null,
+    val cloudId: String? = null,
 )
 
 @Serializable

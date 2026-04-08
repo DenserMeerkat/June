@@ -37,11 +37,11 @@ class JournalsVM(
         _selectedTab.value = tab
     }
 
-    fun deleteJournal(id: Long) {
-        viewModelScope.launch { journalRepo.deleteJournal(id) }
+    fun deleteJournal(id: String) {
+        viewModelScope.launch { journalRepo.softDeleteJournal(id) }
     }
 
-    fun toggleBookmark(id: Long) {
+    fun toggleBookmark(id: String) {
         viewModelScope.launch {
             val journal = journalRepo.getJournalById(id)
             journal?.let {

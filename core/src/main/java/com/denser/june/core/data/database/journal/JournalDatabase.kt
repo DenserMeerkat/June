@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase
         TagEntity::class,
         JournalTagCrossRef::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class JournalDatabase : RoomDatabase() {

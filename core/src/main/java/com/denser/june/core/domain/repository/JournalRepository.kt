@@ -14,15 +14,22 @@ interface JournalRepository {
     ): Flow<List<Journal>>
 
     suspend fun getAllJournals(): List<Journal>
-    suspend fun getJournalById(id: Long): Journal?
+    suspend fun getJournalById(id: String): Journal?
     suspend fun getLatestJournal(): Journal?
     fun getJournalsByDateRange(startDate: Long, endDate: Long): Flow<List<Journal>>
     fun getJournalsByMultipleTags(tags: List<String>): Flow<List<Journal>>
     
-    suspend fun insertJournal(journal: Journal): Long
-    suspend fun deleteJournal(id: Long)
+    suspend fun insertJournal(journal: Journal): String
+    suspend fun softDeleteJournal(id: String)
+    suspend fun restoreJournal(id: String)
+    suspend fun hardDeleteJournal(id: String)
     suspend fun deleteAllJournals()
+    suspend fun emptyTrash()
     suspend fun updateJournal(journal: Journal)
+
+    fun getDeletedJournals(): Flow<List<Journal>>
+    suspend fun getJournalsToSync(lastSyncTime: Long): List<Journal>
+    suspend fun updateSyncStatus(id: String, cloudId: String, syncedAt: Long)
 
     fun getTagSuggestions(query: String): Flow<List<String>>
     fun getUniqueTags(): Flow<List<String>>

@@ -9,6 +9,6 @@ import androidx.room.Index
     indices = [Index("tagId")]
 )
 data class JournalTagCrossRef(
-    val id: Long,
+    val id: String,
     val tagId: Long
 )

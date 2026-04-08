@@ -57,8 +57,21 @@ fun GeneralSection(
         )
 
         SettingsItem(
+            title = "Sync & Backup",
+            subtitle = "Sync across devices via Cloud",
+            leadingContent = {
+                Icon(
+                    painter = painterResource(R.drawable.cloud_sync_24px),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+            },
+            onClick = { navigator.navigateTo(Route.SyncSettings) }
+        )
+
+        SettingsItem(
             title = "Backup & Restore",
-            subtitle = "Export or import your data",
+            subtitle = "Local export or import",
             leadingContent = {
                 Icon(
                     painter = painterResource(R.drawable.backup_24px),
@@ -70,8 +83,21 @@ fun GeneralSection(
         )
 
         SettingsItem(
+            title = "Trash",
+            subtitle = "View and restore deleted journals",
+            leadingContent = {
+                Icon(
+                    painter = painterResource(R.drawable.delete_24px),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+            },
+            onClick = { navigator.navigateTo(Route.Trash) }
+        )
+
+        SettingsItem(
             title = "Delete all journals",
-            subtitle = "Permanently remove all entries",
+            subtitle = "Move all entries to Trash",
             leadingContent = {
                 Icon(
                     painter = painterResource(R.drawable.warning_24px),

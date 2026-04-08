@@ -39,6 +39,11 @@ fun Long.toFullDate(): String {
     return sdf.format(Date(this))
 }
 
+fun Long.toFullDateTime(): String {
+    val sdf = SimpleDateFormat("MMMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
+    return sdf.format(Date(this))
+}
+
 fun Long.toHoursMinutesSeconds(): String {
     val totalSeconds = this / 1000
     val hours = totalSeconds / 3600

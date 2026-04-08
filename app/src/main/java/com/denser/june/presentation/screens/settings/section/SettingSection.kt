@@ -58,7 +58,7 @@ fun SettingsItem(
     leadingContent: @Composable () -> Unit,
     trailingContent: @Composable () -> Unit = {},
     onClick: () -> Unit = {},
-    content: @Composable ColumnScope.() -> Unit = {} 
+    content: @Composable ColumnScope.() -> Unit = {}
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,

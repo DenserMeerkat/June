@@ -9,17 +9,17 @@ sealed interface Route {
 
     @Serializable
     data class Editor(
-        val journalId: Long? = null,
+        val journalId: String? = null,
         val initialDate: Long? = null,
         val initialTags: List<String>? = null
     ) : Route
 
     @Serializable
-    data class JournalMedia(val journalId: Long) : Route
+    data class JournalMedia(val journalId: String) : Route
 
     @Serializable
     data class JournalMediaDetail(
-        val journalId: Long,
+        val journalId: String,
         val initialIndex: Int
     ) : Route
 
@@ -31,6 +31,12 @@ sealed interface Route {
 
     @Serializable
     data object Search : Route
+
+    @Serializable
+    data object Trash : Route
+
+    @Serializable
+    data object SyncSettings : Route
 
     @Serializable
     data object Settings : Route

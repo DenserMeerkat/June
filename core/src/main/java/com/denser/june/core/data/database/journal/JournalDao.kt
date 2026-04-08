@@ -11,33 +11,33 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface JournalDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertJournal(journal: JournalEntity): Long
+    suspend fun insertJournal(journal: JournalEntity)
 
     @Update
     suspend fun updateJournal(journal: JournalEntity)
 
     @Query("DELETE FROM journals WHERE id = :id")
-    suspend fun deleteJournal(id: Long)
+    suspend fun deleteJournal(id: String)
 
     @Query("DELETE FROM journals")
     suspend fun deleteAllJournals()
 
-    @Query("SELECT * FROM journals ORDER BY dateTime DESC")
+    @Query("SELECT * FROM journals WHERE isDeleted = 0 ORDER BY dateTime DESC")
     fun getAllJournals(): Flow<List<JournalEntity>>
 
-    @Query("SELECT * FROM journals ORDER BY dateTime DESC")
+    @Query("SELECT * FROM journals WHERE isDeleted = 0 ORDER BY dateTime DESC")
     suspend fun getAllJournalsSync(): List<JournalEntity>
 
     @Query("SELECT * FROM journals WHERE id = :id")
-    suspend fun getJournalById(id: Long): JournalEntity?
+    suspend fun getJournalById(id: String): JournalEntity?
 
-    @Query("SELECT * FROM journals ORDER BY dateTime DESC LIMIT 1")
+    @Query("SELECT * FROM journals WHERE isDeleted = 0 ORDER BY dateTime DESC LIMIT 1")
     suspend fun getLatestJournal(): JournalEntity?
 
-    @Query("SELECT * FROM journals WHERE title LIKE '%' || :query || '%' ")
+    @Query("SELECT * FROM journals WHERE isDeleted = 0 AND title LIKE '%' || :query || '%' ")
     fun searchJournal(query: String): Flow<List<JournalEntity>>
 
-    @Query(""" SELECT * FROM journals WHERE dateTime >= :startDate AND dateTime <= :endDate ORDER BY dateTime DESC """)
+    @Query(""" SELECT * FROM journals WHERE isDeleted = 0 AND dateTime >= :startDate AND dateTime <= :endDate ORDER BY dateTime DESC """)
     fun getJournalsByDateRange(startDate: Long, endDate: Long): Flow<List<JournalEntity>>
 
     @Query("""
@@ -79,7 +79,7 @@ interface JournalDao {
         AND (:hasLocation IS NULL OR (:hasLocation = 1 AND location IS NOT NULL) OR (:hasLocation = 0 AND location IS NULL))
         
         AND (:hasSong IS NULL OR (:hasSong = 1 AND songDetails IS NOT NULL) OR (:hasSong = 0 AND songDetails IS NULL))
-        
+        AND isDeleted = 0
         ORDER BY dateTime DESC
     """)
     fun getJournals(
@@ -96,7 +96,7 @@ interface JournalDao {
         SELECT j.* FROM journals j
         INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
         INNER JOIN tags t ON ref.tagId = t.tagId
-        WHERE t.name = :tagName
+        WHERE t.name = :tagName AND j.isDeleted = 0
         ORDER BY j.dateTime DESC
     """)
     fun getJournalsByTagName(tagName: String): Flow<List<JournalEntity>>
@@ -106,7 +106,7 @@ interface JournalDao {
         SELECT j.* FROM journals j
         INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
         INNER JOIN tags t ON ref.tagId = t.tagId
-        WHERE t.name = :tagName
+        WHERE t.name = :tagName AND j.isDeleted = 0
     """)
     suspend fun getJournalsByTagNameSync(tagName: String): List<JournalEntity>
 
@@ -120,7 +120,7 @@ interface JournalDao {
     suspend fun insertJournalTagCrossRef(crossRef: JournalTagCrossRef)
 
     @Query("DELETE FROM journal_tag_cross_ref WHERE id = :journalId")
-    suspend fun deleteTagsForJournal(journalId: Long)
+    suspend fun deleteTagsForJournal(journalId: String)
 
     @Query("DELETE FROM journal_tag_cross_ref")
     suspend fun deleteAllCrossRefs()
@@ -164,7 +164,7 @@ interface JournalDao {
         SELECT j.* FROM journals j
         INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
         INNER JOIN tags t ON ref.tagId = t.tagId
-        WHERE t.name IN (:tags)
+        WHERE t.name IN (:tags) AND j.isDeleted = 0
         GROUP BY j.id
         HAVING COUNT(DISTINCT t.name) = :tagCount
         ORDER BY j.dateTime DESC
@@ -176,6 +176,27 @@ interface JournalDao {
 
     @Query("DELETE FROM tags WHERE name = :tagName")
     suspend fun deleteTag(tagName: String)
+
+    @Query("SELECT * FROM journals WHERE isDeleted = 1 ORDER BY updatedAt DESC")
+    fun getDeletedJournals(): Flow<List<JournalEntity>>
+
+    @Query("UPDATE journals SET isDeleted = 1, updatedAt = :timestamp WHERE id = :id")
+    suspend fun softDeleteJournal(id: String, timestamp: Long)
+
+    @Query("DELETE FROM journals WHERE id = :id")
+    suspend fun hardDeleteJournal(id: String)
+
+    @Query("UPDATE journals SET isDeleted = 1, updatedAt = :timestamp WHERE isDeleted = 0")
+    suspend fun softDeleteAllJournals(timestamp: Long)
+
+    @Query("DELETE FROM journals WHERE isDeleted = 1")
+    suspend fun emptyTrash()
+
+    @Query("SELECT * FROM journals WHERE updatedAt > :lastSyncTime")
+    suspend fun getJournalsToSync(lastSyncTime: Long): List<JournalEntity>
+
+    @Query("UPDATE journals SET cloudId = :cloudId, syncedAt = :syncedAt WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, cloudId: String, syncedAt: Long)
 }
 
 data class TagCount(

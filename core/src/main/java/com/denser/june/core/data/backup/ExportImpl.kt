@@ -29,7 +29,7 @@ class ExportImpl(
 
             val jsonString = Json.Default.encodeToString(
                 ExportSchema(
-                    schemaVersion = 1,
+                    schemaVersion = 3,
                     journals = journals
                 )
             )
