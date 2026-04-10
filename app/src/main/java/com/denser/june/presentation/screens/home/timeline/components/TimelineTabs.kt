@@ -37,7 +37,7 @@ fun TimelineTabs(
             ) {
                 TimelineTab.entries.forEach { tab ->
                     Tab(
-                        modifier = modifier.clip(RoundedCornerShape(16.dp)),
+                        modifier = Modifier.clip(RoundedCornerShape(16.dp)),
                         selected = selectedTab == tab,
                         onClick = { onTabSelected(tab) },
                         text = {

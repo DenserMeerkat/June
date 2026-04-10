@@ -22,8 +22,10 @@ data class EditorState(
     val isLoading: Boolean = false,
     val isDirty: Boolean = false,
     val isDraft: Boolean = true,
-    val isFetchingSong: Boolean = false
+    val isFetchingSong: Boolean = false,
+    val deletedAt: Long? = null
 ) {
+    val isDeleted: Boolean get() = deletedAt != null
     val hasContent: Boolean
         get() = title.isNotBlank() ||
                 content.isNotBlank() ||

@@ -25,7 +25,7 @@ import com.denser.june.presentation.screens.settings.screens.LockMethodScreen
 import com.denser.june.presentation.screens.settings.screens.PermissionsScreen
 import com.denser.june.presentation.screens.settings.screens.PinSetupScreen
 import com.denser.june.presentation.screens.settings.screens.sync.SyncScreen
-import com.denser.june.presentation.screens.trash.TrashScreen
+import com.denser.june.presentation.screens.settings.screens.bin.BinScreen
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -124,8 +124,8 @@ fun JuneNavHost(
             PinSetupScreen()
         }
 
-        composable<Route.Trash> {
-            TrashScreen()
+        composable<Route.Bin> {
+            BinScreen()
         }
 
         composable<Route.SyncSettings> {

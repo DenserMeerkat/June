@@ -11,7 +11,7 @@ import com.denser.june.presentation.screens.search.SearchVM
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.screens.home.timeline.TimelineVM
 import com.denser.june.presentation.screens.settings.screens.sync.SyncVM
-import com.denser.june.presentation.screens.trash.TrashVM
+import com.denser.june.presentation.screens.settings.screens.bin.BinVM
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -27,7 +27,7 @@ val juneModules = module {
     viewModelOf(::TagsVM)
     viewModelOf(::TimelineVM)
     viewModelOf(::SearchVM)
-    viewModelOf(::TrashVM)
+    viewModelOf(::BinVM)
     viewModelOf(::SyncVM)
 
     singleOf(::JuneNavigator)

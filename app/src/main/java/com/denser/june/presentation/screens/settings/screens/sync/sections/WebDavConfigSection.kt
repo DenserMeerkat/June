@@ -19,6 +19,7 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.sync.SyncStatus
 import com.denser.june.presentation.screens.settings.screens.sync.components.SyncTextField
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun WebDavConfigSection(
     isVisible: Boolean,
@@ -145,11 +146,12 @@ fun WebDavConfigSection(
                     contentPadding = PaddingValues(vertical = 12.dp)
                 ) {
                     if (isTestingConnection) {
-                        CircularProgressIndicator(
+                        CircularWavyProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
                             color = MaterialTheme.colorScheme.primary
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Testing Connection...")
                     } else {
                         Icon(
                             painterResource(if (status is SyncStatus.Error) R.drawable.sync_problem_24px else R.drawable.backup_24px),
@@ -170,11 +172,12 @@ fun WebDavConfigSection(
                 contentPadding = PaddingValues(vertical = 14.dp)
             ) {
                 if (isSyncing) {
-                    CircularProgressIndicator(
+                    CircularWavyProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Syncing...")
                 } else {
                     Icon(
                         painterResource(R.drawable.sync_24px),

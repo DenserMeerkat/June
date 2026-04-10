@@ -4,10 +4,14 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.utils.FileUtils
 import com.denser.june.presentation.screens.editor.components.AddItemSheet
@@ -19,7 +23,7 @@ import com.denser.june.presentation.screens.editor.components.JournalTagsDialog
 
 class EditorDialogState {
     var showExitDialog by mutableStateOf(false)
-    var showDeleteConfirmDialog by mutableStateOf(false)
+    var showDeleteConfirmation by mutableStateOf(false)
     var showDatePicker by mutableStateOf(false)
     var showAddItemSheet by mutableStateOf(false)
     var showEmojiPicker by mutableStateOf(false)
@@ -32,6 +36,7 @@ class EditorDialogState {
 @Composable
 fun rememberEditorDialogState() = remember { EditorDialogState() }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorModals(
     dialogState: EditorDialogState,
@@ -54,7 +59,8 @@ fun EditorModals(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && tempCameraUri != null) {
-            FileUtils.persistMedia(context, tempCameraUri!!)?.let { onAction(EditorAction.AddImage(it)) }
+            FileUtils.persistMedia(context, tempCameraUri!!)
+                ?.let { onAction(EditorAction.AddImage(it)) }
         }
     }
 
@@ -62,7 +68,8 @@ fun EditorModals(
         contract = ActivityResultContracts.CaptureVideo()
     ) { success ->
         if (success && tempVideoUri != null) {
-            FileUtils.persistMedia(context, tempVideoUri!!)?.let { onAction(EditorAction.AddImage(it)) }
+            FileUtils.persistMedia(context, tempVideoUri!!)
+                ?.let { onAction(EditorAction.AddImage(it)) }
         }
     }
 
@@ -113,25 +120,54 @@ fun EditorModals(
         )
     }
 
-    if (dialogState.showDeleteConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { dialogState.showDeleteConfirmDialog = false },
-            icon = { Icon(painterResource(R.drawable.delete_24px), null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Delete Journal?") },
-            text = { Text("This action cannot be undone. Are you sure you want to delete this entry?") },
-            confirmButton = {
-                Button(
+    if (dialogState.showDeleteConfirmation) {
+        ModalBottomSheet(
+            onDismissRequest = { dialogState.showDeleteConfirmation = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    text = "Move to bin? It will be permanently deleted after 30 days.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Surface(
                     onClick = {
-                        dialogState.showDeleteConfirmDialog = false
+                        dialogState.showDeleteConfirmation = false
                         onAction(EditorAction.DeleteJournal)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError)
-                ) { Text("Delete") }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { dialogState.showDeleteConfirmDialog = false }) { Text("Cancel") }
+                    color = androidx.compose.ui.graphics.Color.Transparent
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp, 20.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.delete_24px),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = "Move to bin",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
             }
-        )
+        }
     }
 
     if (dialogState.showDatePicker) {

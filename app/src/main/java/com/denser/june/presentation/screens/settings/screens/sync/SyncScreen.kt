@@ -1,8 +1,8 @@
 package com.denser.june.presentation.screens.settings.screens.sync
 
 import android.widget.Toast
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -12,6 +12,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.presentation.components.JuneAppBarType
@@ -23,6 +26,7 @@ import com.denser.june.presentation.screens.settings.screens.sync.sections.SyncA
 import com.denser.june.presentation.screens.settings.screens.sync.sections.SyncGeneralSettings
 import com.denser.june.presentation.screens.settings.screens.sync.sections.SyncStatusCard
 import com.denser.june.presentation.screens.settings.screens.sync.sections.WebDavConfigSection
+import com.denser.june.presentation.screens.settings.screens.sync.components.SyncDetailsDialog
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -44,22 +48,6 @@ fun SyncScreen() {
         label = "Caret Rotation"
     )
 
-    val isStuck by remember {
-        derivedStateOf { 
-            lazyListState.firstVisibleItemIndex > 1 || 
-            (lazyListState.firstVisibleItemIndex == 1 && lazyListState.firstVisibleItemScrollOffset > 0)
-        }
-    }
-
-    val hPadding by animateDpAsState(
-        targetValue = if (isStuck) 0.dp else 16.dp,
-        label = "Sticky Padding"
-    )
-    val cornerRadius by animateDpAsState(
-        targetValue = if (isStuck) 0.dp else 24.dp,
-        label = "Sticky Corners"
-    )
-
     LaunchedEffect(Unit) {
         syncVM.effect.collect { effect ->
             when (effect) {
@@ -76,7 +64,7 @@ fun SyncScreen() {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text("Sync & Backup") },
+                title = { Text("Cloud Sync") },
                 navigationIcon = {
                     FilledIconButton(
                         onClick = { navigator.navigateBack() },
@@ -88,6 +76,28 @@ fun SyncScreen() {
                         Icon(
                             painterResource(R.drawable.arrow_back_24px),
                             contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    AnimatedVisibility(
+                        visible = state.isEnabled,
+                        enter = fadeIn() + scaleIn(initialScale = 0.8f, animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy)),
+                        exit = fadeOut() + scaleOut(targetScale = 0.8f)
+                    ) {
+                        Switch(
+                            checked = state.isEnabled,
+                            onCheckedChange = { syncVM.toggleSync(it) },
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .scale(0.85f),
+                            thumbContent = {
+                                Icon(
+                                    painterResource(if (state.isEnabled) R.drawable.cloud_24px else R.drawable.cloud_off_24px),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
                         )
                     }
                 }
@@ -113,24 +123,30 @@ fun SyncScreen() {
             }
 
             item {
-                SettingSection {
-                    SettingsItem(
-                        title = "Cloud Sync",
-                        subtitle = (if (state.isEnabled) "Enabled" else "Disabled"),
-                        leadingContent = {
-                            Icon(
-                                painterResource(if (state.isEnabled) R.drawable.cloud_24px else R.drawable.cloud_off_24px),
-                                null,
-                                tint = if (state.isEnabled) MaterialTheme.colorScheme.primary else LocalContentColor.current
-                            )
-                        },
-                        trailingContent = {
-                            Switch(
-                                checked = state.isEnabled,
-                                onCheckedChange = { syncVM.toggleSync(it) }
-                            )
-                        }
-                    )
+                AnimatedVisibility(
+                    visible = !state.isEnabled,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    SettingSection {
+                        SettingsItem(
+                            title = "Enable Cloud Sync",
+                            leadingContent = {
+                                Icon(
+                                    painterResource(R.drawable.cloud_off_24px),
+                                    null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+                            },
+                            trailingContent = {
+                                Switch(
+                                    checked = state.isEnabled,
+                                    onCheckedChange = { syncVM.toggleSync(it) }
+                                )
+                            },
+                            onClick = { syncVM.toggleSync(true) }
+                        )
+                    }
                 }
             }
 
@@ -139,9 +155,18 @@ fun SyncScreen() {
                     status = state.status,
                     lastSyncTime = state.lastSyncTime,
                     isVisible = state.isEnabled,
-                    horizontalPadding = hPadding,
-                    cornerRadius = cornerRadius,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                    horizontalPadding = 16.dp,
+                    cornerRadius = 24.dp,
+                    modifier = Modifier
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.surface,
+                                    MaterialTheme.colorScheme.surface,
+                                    Color.Transparent
+                                )
+                            )
+                        )
                 )
             }
 
@@ -186,9 +211,17 @@ fun SyncScreen() {
                     rotationAngle = rotationAngle,
                     onToggleAdvanced = { syncVM.toggleAdvancedOptions() },
                     onAnalyze = { syncVM.analyzeSync() },
-                    onRepair = { syncVM.revalidate() }
+                    onRepair = { syncVM.revalidate() },
+                    onViewDetails = { syncVM.setShowAnalysisDetails(true) }
                 )
             }
+        }
+
+        if (state.showAnalysisDetails && state.analysis != null) {
+            SyncDetailsDialog(
+                analysis = state.analysis!!,
+                onDismiss = { syncVM.setShowAnalysisDetails(false) }
+            )
         }
     }
 }

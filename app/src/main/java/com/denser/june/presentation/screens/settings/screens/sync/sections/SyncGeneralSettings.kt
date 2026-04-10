@@ -34,7 +34,8 @@ fun SyncGeneralSettings(
                         checked = isAutoSyncOn,
                         onCheckedChange = onToggleAutoSync
                     )
-                }
+                },
+                onClick = { onToggleAutoSync(!isAutoSyncOn) }
             )
 
             SettingsItem(
@@ -48,7 +49,8 @@ fun SyncGeneralSettings(
                         checked = syncOnlyOnWifi,
                         onCheckedChange = onToggleWifiOnly
                     )
-                }
+                },
+                onClick = { onToggleWifiOnly(!syncOnlyOnWifi) }
             )
         }
     }

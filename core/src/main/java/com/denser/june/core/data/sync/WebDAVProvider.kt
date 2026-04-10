@@ -428,4 +428,29 @@ class WebDAVProvider(
             Result.failure(e)
         }
     }
+
+    override suspend fun deleteJournal(cloudId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        val baseUrl = syncPrefs.getWebDavUrl().first() ?: ""
+        val user = syncPrefs.getWebDavUsername().first() ?: ""
+        val pass = syncPrefs.getWebDavPassword().first() ?: ""
+        val auth = createAuthHeader(user, pass)
+
+        val journalUrl = "${baseUrl.trimEnd('/')}/June/journals/$cloudId"
+        val request = Request.Builder()
+            .url(journalUrl)
+            .delete()
+            .addHeader("Authorization", auth)
+            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
+            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .build()
+
+        try {
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful || response.code == 404) Result.success(Unit)
+                else Result.failure(Exception("Delete journal failed: ${response.code}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

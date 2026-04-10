@@ -125,6 +125,7 @@ class EditorVM(
                 navigator.navigateBack()
             }
             is EditorAction.DeleteJournal -> deleteJournal()
+            is EditorAction.RestoreJournal -> restoreJournal()
         }
     }
 
@@ -209,6 +210,7 @@ class EditorVM(
                         isBookmarked = journal.isBookmarked,
                         isArchived = journal.isArchived,
                         isDraft = journal.isDraft,
+                        deletedAt = journal.deletedAt,
                         isLoading = false,
                         isDirty = false
                     )
@@ -306,6 +308,15 @@ class EditorVM(
         viewModelScope.launch {
             existingJournal?.let { journal ->
                 journalRepo.softDeleteJournal(journal.id)
+            }
+            navigator.navigateBack()
+        }
+    }
+
+    private fun restoreJournal() {
+        viewModelScope.launch {
+            existingJournal?.let { journal ->
+                journalRepo.restoreJournal(journal.id)
             }
             navigator.navigateBack()
         }

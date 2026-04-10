@@ -42,11 +42,6 @@ class JournalsVM(
     }
 
     fun toggleBookmark(id: String) {
-        viewModelScope.launch {
-            val journal = journalRepo.getJournalById(id)
-            journal?.let {
-                journalRepo.updateJournal(it.copy(isBookmarked = !it.isBookmarked))
-            }
-        }
+        viewModelScope.launch { journalRepo.toggleBookmark(id) }
     }
 }

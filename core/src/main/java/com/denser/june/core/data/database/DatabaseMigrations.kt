@@ -44,7 +44,7 @@ object DatabaseMigrations {
                     `isBookmarked` INTEGER NOT NULL, 
                     `isArchived` INTEGER NOT NULL, 
                     `isDraft` INTEGER NOT NULL, 
-                    `isDeleted` INTEGER NOT NULL DEFAULT 0, 
+                    `deletedAt` INTEGER, 
                     `syncedAt` INTEGER DEFAULT NULL, 
                     `cloudId` TEXT DEFAULT NULL, 
                     PRIMARY KEY(`id`)
@@ -75,6 +75,14 @@ object DatabaseMigrations {
             db.execSQL("DROP TABLE journal_tag_cross_ref")
             db.execSQL("ALTER TABLE journal_tag_cross_ref_new RENAME TO journal_tag_cross_ref")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_journal_tag_cross_ref_tagId` ON `journal_tag_cross_ref` (`tagId`)")
+
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `deleted_journal_tombstones` (
+                    `id` TEXT NOT NULL, 
+                    `deletedAt` INTEGER NOT NULL, 
+                    PRIMARY KEY(`id`)
+                )
+            """.trimIndent())
         }
     }
 }

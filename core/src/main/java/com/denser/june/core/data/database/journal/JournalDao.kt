@@ -22,22 +22,25 @@ interface JournalDao {
     @Query("DELETE FROM journals")
     suspend fun deleteAllJournals()
 
-    @Query("SELECT * FROM journals WHERE isDeleted = 0 ORDER BY dateTime DESC")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC")
     fun getAllJournals(): Flow<List<JournalEntity>>
 
-    @Query("SELECT * FROM journals WHERE isDeleted = 0 ORDER BY dateTime DESC")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC")
     suspend fun getAllJournalsSync(): List<JournalEntity>
+
+    @Query("SELECT * FROM journals ORDER BY dateTime DESC")
+    suspend fun getAllJournalsIncludeDeletedSync(): List<JournalEntity>
 
     @Query("SELECT * FROM journals WHERE id = :id")
     suspend fun getJournalById(id: String): JournalEntity?
 
-    @Query("SELECT * FROM journals WHERE isDeleted = 0 ORDER BY dateTime DESC LIMIT 1")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC LIMIT 1")
     suspend fun getLatestJournal(): JournalEntity?
 
-    @Query("SELECT * FROM journals WHERE isDeleted = 0 AND title LIKE '%' || :query || '%' ")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NULL AND title LIKE '%' || :query || '%' ")
     fun searchJournal(query: String): Flow<List<JournalEntity>>
 
-    @Query(""" SELECT * FROM journals WHERE isDeleted = 0 AND dateTime >= :startDate AND dateTime <= :endDate ORDER BY dateTime DESC """)
+    @Query(""" SELECT * FROM journals WHERE deletedAt IS NULL AND dateTime >= :startDate AND dateTime <= :endDate ORDER BY dateTime DESC """)
     fun getJournalsByDateRange(startDate: Long, endDate: Long): Flow<List<JournalEntity>>
 
     @Query("""
@@ -79,7 +82,7 @@ interface JournalDao {
         AND (:hasLocation IS NULL OR (:hasLocation = 1 AND location IS NOT NULL) OR (:hasLocation = 0 AND location IS NULL))
         
         AND (:hasSong IS NULL OR (:hasSong = 1 AND songDetails IS NOT NULL) OR (:hasSong = 0 AND songDetails IS NULL))
-        AND isDeleted = 0
+        AND deletedAt IS NULL
         ORDER BY dateTime DESC
     """)
     fun getJournals(
@@ -96,7 +99,7 @@ interface JournalDao {
         SELECT j.* FROM journals j
         INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
         INNER JOIN tags t ON ref.tagId = t.tagId
-        WHERE t.name = :tagName AND j.isDeleted = 0
+        WHERE t.name = :tagName AND j.deletedAt IS NULL
         ORDER BY j.dateTime DESC
     """)
     fun getJournalsByTagName(tagName: String): Flow<List<JournalEntity>>
@@ -106,7 +109,7 @@ interface JournalDao {
         SELECT j.* FROM journals j
         INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
         INNER JOIN tags t ON ref.tagId = t.tagId
-        WHERE t.name = :tagName AND j.isDeleted = 0
+        WHERE t.name = :tagName AND j.deletedAt IS NULL
     """)
     suspend fun getJournalsByTagNameSync(tagName: String): List<JournalEntity>
 
@@ -134,9 +137,9 @@ interface JournalDao {
     @Query("""
         SELECT t.name 
         FROM tags t
-        LEFT JOIN journal_tag_cross_ref ref ON t.tagId = ref.tagId
-        LEFT JOIN journals j ON ref.id = j.id
-        WHERE t.name LIKE :query || '%'
+        INNER JOIN journal_tag_cross_ref ref ON t.tagId = ref.tagId
+        INNER JOIN journals j ON ref.id = j.id
+        WHERE t.name LIKE :query || '%' AND j.deletedAt IS NULL
         GROUP BY t.tagId
         ORDER BY MAX(j.dateTime) DESC, t.name ASC
     """)
@@ -145,8 +148,9 @@ interface JournalDao {
     @Query("""
         SELECT t.name 
         FROM tags t
-        LEFT JOIN journal_tag_cross_ref ref ON t.tagId = ref.tagId
-        LEFT JOIN journals j ON ref.id = j.id
+        INNER JOIN journal_tag_cross_ref ref ON t.tagId = ref.tagId
+        INNER JOIN journals j ON ref.id = j.id
+        WHERE j.deletedAt IS NULL
         GROUP BY t.tagId
         ORDER BY MAX(j.dateTime) DESC, t.name ASC
     """)
@@ -156,6 +160,8 @@ interface JournalDao {
         SELECT t.name, COUNT(ref.id) as count
         FROM tags t
         INNER JOIN journal_tag_cross_ref ref ON t.tagId = ref.tagId
+        INNER JOIN journals j ON ref.id = j.id
+        WHERE j.deletedAt IS NULL
         GROUP BY t.name
     """)
     fun getAllTagCounts(): Flow<List<TagCount>>
@@ -164,7 +170,7 @@ interface JournalDao {
         SELECT j.* FROM journals j
         INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
         INNER JOIN tags t ON ref.tagId = t.tagId
-        WHERE t.name IN (:tags) AND j.isDeleted = 0
+        WHERE t.name IN (:tags) AND j.deletedAt IS NULL
         GROUP BY j.id
         HAVING COUNT(DISTINCT t.name) = :tagCount
         ORDER BY j.dateTime DESC
@@ -177,26 +183,70 @@ interface JournalDao {
     @Query("DELETE FROM tags WHERE name = :tagName")
     suspend fun deleteTag(tagName: String)
 
-    @Query("SELECT * FROM journals WHERE isDeleted = 1 ORDER BY updatedAt DESC")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NOT NULL ORDER BY updatedAt DESC")
     fun getDeletedJournals(): Flow<List<JournalEntity>>
 
-    @Query("UPDATE journals SET isDeleted = 1, updatedAt = :timestamp WHERE id = :id")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NOT NULL ORDER BY updatedAt DESC")
+    suspend fun getDeletedJournalsSync(): List<JournalEntity>
+
+    @Query("UPDATE journals SET deletedAt = :timestamp, updatedAt = :timestamp WHERE id = :id")
     suspend fun softDeleteJournal(id: String, timestamp: Long)
 
     @Query("DELETE FROM journals WHERE id = :id")
     suspend fun hardDeleteJournal(id: String)
 
-    @Query("UPDATE journals SET isDeleted = 1, updatedAt = :timestamp WHERE isDeleted = 0")
+    @Query("UPDATE journals SET deletedAt = :timestamp, updatedAt = :timestamp WHERE deletedAt IS NULL")
     suspend fun softDeleteAllJournals(timestamp: Long)
 
-    @Query("DELETE FROM journals WHERE isDeleted = 1")
-    suspend fun emptyTrash()
+    @Query("UPDATE journals SET deletedAt = NULL, updatedAt = :timestamp WHERE deletedAt IS NOT NULL")
+    suspend fun restoreAllJournals(timestamp: Long)
 
-    @Query("SELECT * FROM journals WHERE updatedAt > :lastSyncTime")
+    @Query("DELETE FROM journals WHERE deletedAt IS NOT NULL")
+    suspend fun emptyBin()
+
+    @Query("SELECT * FROM journals WHERE updatedAt > :lastSyncTime OR syncedAt IS NULL")
     suspend fun getJournalsToSync(lastSyncTime: Long): List<JournalEntity>
 
     @Query("UPDATE journals SET cloudId = :cloudId, syncedAt = :syncedAt WHERE id = :id")
     suspend fun updateSyncStatus(id: String, cloudId: String, syncedAt: Long)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTombstone(tombstone: DeletedJournalTombstone)
+
+    @Query("SELECT * FROM deleted_journal_tombstones")
+    suspend fun getAllTombstones(): List<DeletedJournalTombstone>
+
+    @Query("DELETE FROM deleted_journal_tombstones WHERE id = :id")
+    suspend fun deleteTombstone(id: String)
+
+    @Query("SELECT * FROM journals WHERE deletedAt IS NOT NULL AND deletedAt < :threshold")
+    suspend fun getOldDeletedJournals(threshold: Long): List<JournalEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTombstones(tombstones: List<DeletedJournalTombstone>)
+
+    @Query("""
+        UPDATE journals 
+        SET updatedAt = :timestamp 
+        WHERE id IN (
+            SELECT ref.id FROM journal_tag_cross_ref ref
+            INNER JOIN tags t ON ref.tagId = t.tagId
+            WHERE t.name = :tagName
+        )
+    """)
+    suspend fun bumpJournalTimestampsByTag(tagName: String, timestamp: Long)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE updatedAt > :lastSyncTime OR syncedAt IS NULL)")
+    suspend fun hasUnsyncedJournals(lastSyncTime: Long): Boolean
+
+    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE updatedAt > :lastSyncTime OR syncedAt IS NULL)")
+    fun observeHasUnsyncedJournals(lastSyncTime: Long): Flow<Boolean>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM deleted_journal_tombstones)")
+    suspend fun hasTombstones(): Boolean
+
+    @Query("SELECT EXISTS(SELECT 1 FROM deleted_journal_tombstones)")
+    fun observeHasTombstones(): Flow<Boolean>
 }
 
 data class TagCount(

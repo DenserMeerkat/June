@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.sync.SyncStatus
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SyncIndicator(
     modifier: Modifier = Modifier,
@@ -46,26 +47,23 @@ fun SyncIndicator(
     ) {
         when (status) {
             is SyncStatus.Preparing -> {
-                 CircularProgressIndicator(
+                 CircularWavyProgressIndicator(
                     modifier = Modifier.fillMaxSize(),
-                    strokeWidth = 3.dp,
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                 )
             }
             is SyncStatus.Syncing -> {
                 if (status.progress > 0) {
-                    CircularProgressIndicator(
+                    CircularWavyProgressIndicator(
                         progress = { status.progress },
                         modifier = Modifier.fillMaxSize(),
-                        strokeWidth = 3.dp,
                         color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
                 } else {
-                    CircularProgressIndicator(
+                    CircularWavyProgressIndicator(
                         modifier = Modifier.fillMaxSize(),
-                        strokeWidth = 3.dp,
                         color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
@@ -77,12 +75,14 @@ fun SyncIndicator(
         val iconRes = when (status) {
             is SyncStatus.Error -> R.drawable.sync_problem_24px
             is SyncStatus.Success -> R.drawable.cloud_done_24px
+            is SyncStatus.Dirty -> R.drawable.cloud_upload_24px
             else -> R.drawable.cloud_sync_24px
         }
         
         val iconTint = when (status) {
             is SyncStatus.Error -> MaterialTheme.colorScheme.error
             is SyncStatus.Success -> MaterialTheme.colorScheme.primary
+            is SyncStatus.Dirty -> MaterialTheme.colorScheme.secondary
             else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         }
 

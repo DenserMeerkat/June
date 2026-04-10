@@ -3,6 +3,9 @@ package com.denser.june.core.data.repository
 import android.content.Context
 import com.denser.june.core.data.database.journal.JournalDao
 import com.denser.june.core.data.database.journal.TagCount
+import com.denser.june.core.data.database.journal.TagEntity
+import com.denser.june.core.data.database.journal.JournalTagCrossRef
+import com.denser.june.core.data.database.journal.DeletedJournalTombstone
 import com.denser.june.core.data.mappers.asDomain
 import com.denser.june.core.data.mappers.asEntity
 import com.denser.june.core.data.sync.SyncWorker
@@ -64,6 +67,7 @@ class JournalRepositoryImpl(
         } else journal
         
         journalDao.insertJournal(journalToInsert.asEntity())
+        updateJournalTags(journalToInsert)
         triggerSync()
         return journalToInsert.id
     }
@@ -75,12 +79,14 @@ class JournalRepositoryImpl(
 
     override suspend fun restoreJournal(id: String) {
         val journal = journalDao.getJournalById(id) ?: return
-        journalDao.updateJournal(journal.copy(isDeleted = false, updatedAt = System.currentTimeMillis()))
+        journalDao.updateJournal(journal.copy(deletedAt = null, updatedAt = System.currentTimeMillis()))
         triggerSync()
     }
 
     override suspend fun hardDeleteJournal(id: String) {
+        journalDao.insertTombstone(DeletedJournalTombstone(id))
         journalDao.hardDeleteJournal(id)
+        triggerSync()
     }
 
     override suspend fun deleteAllJournals() {
@@ -88,13 +94,44 @@ class JournalRepositoryImpl(
         triggerSync()
     }
 
-    override suspend fun emptyTrash() {
-        journalDao.emptyTrash()
+    override suspend fun emptyBin() {
+        val deletedIds = journalDao.getDeletedJournalsSync().map { it.id }
+        if (deletedIds.isNotEmpty()) {
+            journalDao.insertTombstones(deletedIds.map { DeletedJournalTombstone(it) })
+            journalDao.emptyBin()
+            triggerSync()
+        }
+    }
+
+    override suspend fun restoreAllJournals() {
+        journalDao.restoreAllJournals(System.currentTimeMillis())
+        triggerSync()
     }
 
     override suspend fun updateJournal(journal: Journal) {
         journalDao.updateJournal(journal.asEntity())
+        updateJournalTags(journal)
         triggerSync()
+    }
+
+    private suspend fun updateJournalTags(journal: Journal) {
+        journalDao.deleteTagsForJournal(journal.id)
+        journal.tags.forEach { tagName ->
+            val trimmedName = tagName.trim()
+            if (trimmedName.isNotBlank()) {
+                var tagId = journalDao.getTagIdByName(trimmedName)
+                if (tagId == null) {
+                    tagId = journalDao.insertTag(TagEntity(name = trimmedName))
+                }
+                if (tagId == -1L) {
+                    tagId = journalDao.getTagIdByName(trimmedName)
+                }
+                if (tagId != null && tagId != -1L) {
+                    journalDao.insertJournalTagCrossRef(JournalTagCrossRef(id = journal.id, tagId = tagId))
+                }
+            }
+        }
+        journalDao.deleteOrphanedTags()
     }
 
     private suspend fun triggerSync() {
@@ -119,10 +156,23 @@ class JournalRepositoryImpl(
 
     override suspend fun renameTag(oldName: String, newName: String) {
         journalDao.updateTagName(oldName, newName)
+        journalDao.bumpJournalTimestampsByTag(newName, System.currentTimeMillis())
+        triggerSync()
     }
 
     override suspend fun deleteTag(tagName: String) {
+        journalDao.bumpJournalTimestampsByTag(tagName, System.currentTimeMillis())
         journalDao.deleteTag(tagName)
+        triggerSync()
+    }
+
+    override suspend fun toggleBookmark(id: String) {
+        val journal = journalDao.getJournalById(id) ?: return
+        journalDao.updateJournal(journal.copy(
+            isBookmarked = !journal.isBookmarked,
+            updatedAt = System.currentTimeMillis()
+        ))
+        triggerSync()
     }
 
     override fun getDeletedJournals(): Flow<List<Journal>> {
@@ -135,5 +185,37 @@ class JournalRepositoryImpl(
 
     override suspend fun updateSyncStatus(id: String, cloudId: String, syncedAt: Long) {
         journalDao.updateSyncStatus(id, cloudId, syncedAt)
+    }
+
+    override suspend fun getAllJournalsIncludeDeletedSync(): List<Journal> {
+        return journalDao.getAllJournalsIncludeDeletedSync().asDomain()
+    }
+
+    override suspend fun getOldDeletedJournals(threshold: Long): List<Journal> {
+        return journalDao.getOldDeletedJournals(threshold).asDomain()
+    }
+
+    override suspend fun getAllTombstones(): List<String> {
+        return journalDao.getAllTombstones().map { it.id }
+    }
+
+    override suspend fun deleteTombstone(id: String) {
+        journalDao.deleteTombstone(id)
+    }
+
+    override fun observeHasUnsyncedJournals(lastSyncTime: Long): Flow<Boolean> {
+        return journalDao.observeHasUnsyncedJournals(lastSyncTime)
+    }
+
+    override suspend fun hasUnsyncedJournals(lastSyncTime: Long): Boolean {
+        return journalDao.hasUnsyncedJournals(lastSyncTime)
+    }
+
+    override fun observeHasTombstones(): Flow<Boolean> {
+        return journalDao.observeHasTombstones()
+    }
+
+    override suspend fun hasTombstones(): Boolean {
+        return journalDao.hasTombstones()
     }
 }

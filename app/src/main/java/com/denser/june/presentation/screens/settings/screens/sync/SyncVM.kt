@@ -15,7 +15,7 @@ sealed class SyncEffect {
 
 data class SyncSettingsState(
     val isEnabled: Boolean = false,
-    val isAutoSyncOn: Boolean = true,
+    val isAutoSyncOn: Boolean = false,
     val syncOnlyOnWifi: Boolean = true,
     val webDavUrl: String = "",
     val webDavUser: String = "",
@@ -29,7 +29,8 @@ data class SyncSettingsState(
     val webDavPassError: String? = null,
     val analysis: SyncAnalysis? = null,
     val isAnalyzing: Boolean = false,
-    val showAdvancedOptions: Boolean = false
+    val showAdvancedOptions: Boolean = false,
+    val showAnalysisDetails: Boolean = false
 )
 
 class SyncVM(
@@ -39,53 +40,66 @@ class SyncVM(
 
     private val _state = MutableStateFlow(SyncSettingsState())
     
+    val state = _state.asStateFlow()
+
     private val _effect = MutableSharedFlow<SyncEffect>()
     val effect = _effect.asSharedFlow()
 
     init {
         viewModelScope.launch {
-            val enabled = syncPrefs.getSyncEnabled().first()
-            val auto = syncPrefs.isAutomaticSyncEnabled().first()
-            val onlyWifi = syncPrefs.getSyncOnlyOnWifi().first()
-            val url = syncPrefs.getWebDavUrl().first() ?: ""
-            val user = syncPrefs.getWebDavUsername().first() ?: ""
-            val pass = syncPrefs.getWebDavPassword().first() ?: ""
-            val last = syncPrefs.getLastSyncTime().first()
+            var isInitialLoad = true
+            combine(
+                syncPrefs.getSyncEnabled(),
+                syncPrefs.isAutomaticSyncEnabled(),
+                syncPrefs.getSyncOnlyOnWifi(),
+                syncPrefs.getLastSyncTime(),
+                syncPrefs.getWebDavUrl(),
+                syncPrefs.getWebDavUsername(),
+                syncPrefs.getWebDavPassword()
+            ) { args: Array<Any?> -> args }
+                .collect { args ->
+                    val url = args[4] as String? ?: ""
+                    val user = args[5] as String? ?: ""
+                    val pass = args[6] as String? ?: ""
+                    
+                    _state.update {
+                        it.copy(
+                            isEnabled = args[0] as Boolean,
+                            isAutoSyncOn = args[1] as Boolean,
+                            syncOnlyOnWifi = args[2] as Boolean,
+                            lastSyncTime = args[3] as Long,
+                            webDavUrl = url,
+                            webDavUser = user,
+                            webDavPass = pass,
+                            webDavUrlError = null,
+                            webDavUserError = null,
+                            webDavPassError = null,
+                            isConfigLocked = if (isInitialLoad) {
+                                url.isNotBlank() && user.isNotBlank() && pass.isNotBlank()
+                            } else {
+                                it.isConfigLocked
+                            }
+                        )
+                    }
+                    isInitialLoad = false
+                }
+        }
 
-            _state.update {
-                it.copy(
-                    isEnabled = enabled,
-                    isAutoSyncOn = auto,
-                    syncOnlyOnWifi = onlyWifi,
-                    webDavUrl = url,
-                    webDavUser = user,
-                    webDavPass = pass,
-                    lastSyncTime = last,
-                    isConfigLocked = url.isNotBlank() && user.isNotBlank() && pass.isNotBlank()
-                )
+        viewModelScope.launch {
+            syncManager.status.collect { status ->
+                _state.update { it.copy(status = status) }
+                when (status) {
+                    is SyncStatus.Success -> {
+                        analyzeSync()
+                    }
+                    is SyncStatus.Preparing, is SyncStatus.Syncing -> {
+                        _state.update { it.copy(analysis = null) }
+                    }
+                    else -> {}
+                }
             }
         }
     }
-
-    val state: StateFlow<SyncSettingsState> = combine(
-        combine(
-            syncPrefs.getSyncEnabled(),
-            syncPrefs.isAutomaticSyncEnabled(),
-            syncPrefs.getSyncOnlyOnWifi(),
-            syncPrefs.getLastSyncTime()
-        ) { enabled, auto, onlyWifi, last -> listOf(enabled, auto, onlyWifi, last) },
-        combine(syncManager.status, _state) { syncStatus, internalState -> Pair(syncStatus, internalState) }
-    ) { prefs, statusAndState ->
-        val (syncStatus, internalState) = statusAndState
-        @Suppress("UNCHECKED_CAST")
-        internalState.copy(
-            isEnabled = prefs[0] as Boolean,
-            isAutoSyncOn = prefs[1] as Boolean,
-            syncOnlyOnWifi = prefs[2] as Boolean,
-            lastSyncTime = prefs[3] as Long,
-            status = syncStatus
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SyncSettingsState())
 
     fun toggleSync(enabled: Boolean) {
         viewModelScope.launch { syncPrefs.setSyncEnabled(enabled) }
@@ -191,7 +205,6 @@ class SyncVM(
 
     fun toggleConfigLock() {
         val currentState = _state.value
-        // Only validate when trying to LOCK (going from unlocked to locked)
         if (!currentState.isConfigLocked) {
             if (!validateInputs()) {
                 viewModelScope.launch {
@@ -205,5 +218,9 @@ class SyncVM(
 
     fun toggleAdvancedOptions() {
         _state.update { it.copy(showAdvancedOptions = !it.showAdvancedOptions) }
+    }
+
+    fun setShowAnalysisDetails(show: Boolean) {
+        _state.update { it.copy(showAnalysisDetails = show) }
     }
 }

@@ -14,7 +14,7 @@ import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.SettingsState
-import com.denser.june.presentation.screens.settings.components.DeleteConfirmationDialog
+import com.denser.june.presentation.components.JuneConfirmationDialog
 import org.koin.compose.koinInject
 
 @Composable
@@ -57,7 +57,7 @@ fun GeneralSection(
         )
 
         SettingsItem(
-            title = "Sync & Backup",
+            title = "Cloud Sync",
             subtitle = "Sync across devices via Cloud",
             leadingContent = {
                 Icon(
@@ -68,10 +68,10 @@ fun GeneralSection(
             },
             onClick = { navigator.navigateTo(Route.SyncSettings) }
         )
-
+ 
         SettingsItem(
-            title = "Backup & Restore",
-            subtitle = "Local export or import",
+            title = "Local Backup",
+            subtitle = "Restore or export data locally",
             leadingContent = {
                 Icon(
                     painter = painterResource(R.drawable.backup_24px),
@@ -83,7 +83,7 @@ fun GeneralSection(
         )
 
         SettingsItem(
-            title = "Trash",
+            title = "Bin",
             subtitle = "View and restore deleted journals",
             leadingContent = {
                 Icon(
@@ -92,12 +92,12 @@ fun GeneralSection(
                     tint = MaterialTheme.colorScheme.secondary
                 )
             },
-            onClick = { navigator.navigateTo(Route.Trash) }
+            onClick = { navigator.navigateTo(Route.Bin) }
         )
 
         SettingsItem(
             title = "Delete all journals",
-            subtitle = "Move all entries to Trash",
+            subtitle = "Move all entries to Bin",
             leadingContent = {
                 Icon(
                     painter = painterResource(R.drawable.warning_24px),
@@ -110,7 +110,11 @@ fun GeneralSection(
     }
 
     if (showDeleteDialog) {
-        DeleteConfirmationDialog(
+        JuneConfirmationDialog(
+            title = "Move all to Bin?",
+            description = "This will move all your journal entries to the Bin. You can restore them within 30 days.",
+            confirmText = "Delete",
+            confirmButtonText = "Move All to Bin",
             onDismiss = { showDeleteDialog = false },
             onConfirm = { onAction(SettingsAction.OnDeleteJournals) }
         )

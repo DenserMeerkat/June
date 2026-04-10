@@ -69,6 +69,11 @@ interface CloudProvider {
      * Delete a media file from the cloud.
      */
     suspend fun deleteMedia(filename: String): Result<Unit>
+
+    /**
+     * Delete a journal file from the cloud.
+     */
+    suspend fun deleteJournal(cloudId: String): Result<Unit>
 }
 
 @Serializable
@@ -78,5 +83,6 @@ data class SyncManifest(
     val databaseVersion: Int,
     val schemaVersion: Int,
     val totalJournals: Int,
-    val totalMedia: Int = 0
+    val totalMedia: Int = 0,
+    val deletedIds: List<String> = emptyList()
 )

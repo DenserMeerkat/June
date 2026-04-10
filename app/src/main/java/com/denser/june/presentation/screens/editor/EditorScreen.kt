@@ -242,20 +242,37 @@ fun JournalScreen() {
                             modifier = Modifier.padding(horizontal = 8.dp),
                             offset = androidx.compose.ui.unit.DpOffset(x = 0.dp, y = 4.dp)
                         ) {
-                            DropdownMenuItem(
-                                modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                text = { Text("Delete") },
-                                onClick = {
-                                    showMenu = false
-                                    dialogState.showDeleteConfirmDialog = true
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        painterResource(R.drawable.delete_24px),
-                                        null
-                                    )
-                                }
-                            )
+                            if (state.isDeleted) {
+                                DropdownMenuItem(
+                                    modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                                    text = { Text("Restore") },
+                                    onClick = {
+                                        showMenu = false
+                                        viewModel.onAction(EditorAction.RestoreJournal)
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            painterResource(R.drawable.restore_from_trash_24px),
+                                            null
+                                        )
+                                    }
+                                )
+                            } else {
+                                DropdownMenuItem(
+                                    modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                                    text = { Text("Delete") },
+                                    onClick = {
+                                        showMenu = false
+                                        dialogState.showDeleteConfirmation = true
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            painterResource(R.drawable.delete_24px),
+                                            null
+                                        )
+                                    }
+                                )
+                            }
                         }
                     }
                 }

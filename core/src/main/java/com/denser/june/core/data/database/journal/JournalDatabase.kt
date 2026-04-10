@@ -7,7 +7,8 @@ import androidx.room.RoomDatabase
     entities = [
         JournalEntity::class,
         TagEntity::class,
-        JournalTagCrossRef::class
+        JournalTagCrossRef::class,
+        DeletedJournalTombstone::class
     ],
     version = 3,
     exportSchema = true

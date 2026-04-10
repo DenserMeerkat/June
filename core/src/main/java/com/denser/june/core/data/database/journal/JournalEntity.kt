@@ -25,7 +25,7 @@ data class JournalEntity(
     val isBookmarked: Boolean = false,
     val isArchived: Boolean = false,
     val isDraft: Boolean = true,
-    val isDeleted: Boolean = false,
+    val deletedAt: Long? = null,
     val syncedAt: Long? = null,
     val cloudId: String? = null,
 )

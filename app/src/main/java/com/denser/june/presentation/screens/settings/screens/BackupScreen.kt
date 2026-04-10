@@ -113,7 +113,7 @@ fun BackupScreen() {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text("Backup & Restore") },
+                title = { Text("Local Backup") },
                 navigationIcon = {
                     FilledIconButton(
                         onClick = { navigator.navigateBack() },

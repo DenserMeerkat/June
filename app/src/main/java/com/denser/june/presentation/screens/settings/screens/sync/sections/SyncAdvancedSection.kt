@@ -15,6 +15,7 @@ import com.denser.june.core.domain.sync.SyncStatus
 import com.denser.june.presentation.screens.settings.screens.sync.components.SyncAnalysisSection
 import com.denser.june.presentation.screens.settings.section.SettingsItem
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SyncAdvancedSection(
     isVisible: Boolean,
@@ -25,7 +26,8 @@ fun SyncAdvancedSection(
     rotationAngle: Float,
     onToggleAdvanced: () -> Unit,
     onAnalyze: () -> Unit,
-    onRepair: () -> Unit
+    onRepair: () -> Unit,
+    onViewDetails: () -> Unit
 ) {
     AnimatedVisibility(
         visible = isVisible,
@@ -62,26 +64,33 @@ fun SyncAdvancedSection(
                         exit = fadeOut() + shrinkVertically()
                     ) {
                         Column(
-                            modifier = Modifier.padding(top = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            modifier = Modifier
+                                .padding(top = 16.dp)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Column(
+                            if (analysis != null || isAnalyzing) {
+                                SyncAnalysisSection(
+                                    analysis = analysis,
+                                    isAnalyzing = isAnalyzing,
+                                    onViewDetails = onViewDetails
+                                )
+                            }
+
+                            Button(
+                                onClick = onAnalyze,
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                                enabled = !isAnalyzing && status !is SyncStatus.Syncing && status !is SyncStatus.Preparing,
+                                shape = RoundedCornerShape(14.dp)
                             ) {
-                                if (analysis != null || isAnalyzing) {
-                                    SyncAnalysisSection(
-                                        analysis = analysis,
-                                        isAnalyzing = isAnalyzing
+                                if (isAnalyzing) {
+                                    CircularWavyProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary
                                     )
-                                }
-                                
-                                Button(
-                                    onClick = onAnalyze,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    enabled = !isAnalyzing && status !is SyncStatus.Syncing && status !is SyncStatus.Preparing,
-                                    shape = RoundedCornerShape(14.dp)
-                                ) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Analyzing...")
+                                } else {
                                     Icon(
                                         painterResource(R.drawable.track_changes_24px),
                                         null,
@@ -90,13 +99,22 @@ fun SyncAdvancedSection(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("Analyze Sync")
                                 }
-                                
-                                OutlinedButton(
-                                    onClick = onRepair,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    enabled = !isAnalyzing && status !is SyncStatus.Syncing && status !is SyncStatus.Preparing,
-                                    shape = RoundedCornerShape(14.dp)
-                                ) {
+                            }
+
+                            OutlinedButton(
+                                onClick = onRepair,
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !isAnalyzing && status !is SyncStatus.Syncing && status !is SyncStatus.Preparing,
+                                shape = RoundedCornerShape(14.dp)
+                            ) {
+                                if (status is SyncStatus.Preparing || (status is SyncStatus.Syncing && status.currentOperation == "Preparing...")) {
+                                    CircularWavyProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Revalidating...")
+                                } else {
                                     Icon(
                                         painterResource(R.drawable.reset_wrench_24px),
                                         null,

@@ -27,7 +27,7 @@ class JuneApplication : Application() {
     private fun cleanupStorage() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val allJournals = journalRepo.getAllJournals()
+                val allJournals = journalRepo.getAllJournalsIncludeDeletedSync()
                 val activePaths = allJournals.flatMap { it.images }
                 FileUtils.cleanOrphanedFiles(applicationContext, activePaths)
             } catch (e: Exception) {

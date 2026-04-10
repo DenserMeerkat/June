@@ -75,8 +75,6 @@ class SettingsVM(
             when (action) {
                 SettingsAction.OnDeleteJournals -> {
                     withContext(Dispatchers.IO) {
-                        val allJournals = repo.getAllJournals()
-                        allJournals.flatMap { it.images }.forEach { FileUtils.deleteMedia(it) }
                         repo.deleteAllJournals()
                     }
                 }

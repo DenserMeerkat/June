@@ -80,7 +80,7 @@ class SyncPreferencesImpl(
         dataStore.edit { it.updateOrRemove(webDavPassword, password) }
     }
 
-    override fun isAutomaticSyncEnabled(): Flow<Boolean> = dataStore.data.map { it[automaticSyncEnabled] ?: true }
+    override fun isAutomaticSyncEnabled(): Flow<Boolean> = dataStore.data.map { it[automaticSyncEnabled] ?: false }
     override suspend fun setAutomaticSyncEnabled(enabled: Boolean) {
         dataStore.edit { it[automaticSyncEnabled] = enabled }
     }

@@ -33,7 +33,7 @@ sealed interface Route {
     data object Search : Route
 
     @Serializable
-    data object Trash : Route
+    data object Bin : Route
 
     @Serializable
     data object SyncSettings : Route
