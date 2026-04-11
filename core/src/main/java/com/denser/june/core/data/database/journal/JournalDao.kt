@@ -204,8 +204,8 @@ interface JournalDao {
     @Query("DELETE FROM journals WHERE deletedAt IS NOT NULL")
     suspend fun emptyBin()
 
-    @Query("SELECT * FROM journals WHERE updatedAt > :lastSyncTime OR syncedAt IS NULL")
-    suspend fun getJournalsToSync(lastSyncTime: Long): List<JournalEntity>
+    @Query("SELECT * FROM journals WHERE (updatedAt > syncedAt OR syncedAt IS NULL)")
+    suspend fun getJournalsToSync(): List<JournalEntity>
 
     @Query("UPDATE journals SET cloudId = :cloudId, syncedAt = :syncedAt WHERE id = :id")
     suspend fun updateSyncStatus(id: String, cloudId: String, syncedAt: Long)
@@ -236,11 +236,11 @@ interface JournalDao {
     """)
     suspend fun bumpJournalTimestampsByTag(tagName: String, timestamp: Long)
 
-    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE updatedAt > :lastSyncTime OR syncedAt IS NULL)")
-    suspend fun hasUnsyncedJournals(lastSyncTime: Long): Boolean
+    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE (updatedAt > syncedAt OR syncedAt IS NULL))")
+    suspend fun hasUnsyncedJournals(): Boolean
 
-    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE updatedAt > :lastSyncTime OR syncedAt IS NULL)")
-    fun observeHasUnsyncedJournals(lastSyncTime: Long): Flow<Boolean>
+    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE (updatedAt > syncedAt OR syncedAt IS NULL))")
+    fun observeHasUnsyncedJournals(): Flow<Boolean>
 
     @Query("SELECT EXISTS(SELECT 1 FROM deleted_journal_tombstones)")
     suspend fun hasTombstones(): Boolean

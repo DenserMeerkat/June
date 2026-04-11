@@ -179,8 +179,8 @@ class JournalRepositoryImpl(
         return journalDao.getDeletedJournals().map { it.asDomain() }
     }
 
-    override suspend fun getJournalsToSync(lastSyncTime: Long): List<Journal> {
-        return journalDao.getJournalsToSync(lastSyncTime).asDomain()
+    override suspend fun getJournalsToSync(): List<Journal> {
+        return journalDao.getJournalsToSync().asDomain()
     }
 
     override suspend fun updateSyncStatus(id: String, cloudId: String, syncedAt: Long) {
@@ -203,12 +203,12 @@ class JournalRepositoryImpl(
         journalDao.deleteTombstone(id)
     }
 
-    override fun observeHasUnsyncedJournals(lastSyncTime: Long): Flow<Boolean> {
-        return journalDao.observeHasUnsyncedJournals(lastSyncTime)
+    override fun observeHasUnsyncedJournals(): Flow<Boolean> {
+        return journalDao.observeHasUnsyncedJournals()
     }
 
-    override suspend fun hasUnsyncedJournals(lastSyncTime: Long): Boolean {
-        return journalDao.hasUnsyncedJournals(lastSyncTime)
+    override suspend fun hasUnsyncedJournals(): Boolean {
+        return journalDao.hasUnsyncedJournals()
     }
 
     override fun observeHasTombstones(): Flow<Boolean> {

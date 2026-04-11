@@ -64,9 +64,9 @@ class SyncManager(
 
     init {
         applicationScope.launch {
-            syncPrefs.getLastSyncTime().flatMapLatest { lastSync: Long ->
+            syncPrefs.getSyncEnabled().flatMapLatest { _ ->
                 combine(
-                    journalRepo.observeHasUnsyncedJournals(lastSync),
+                    journalRepo.observeHasUnsyncedJournals(),
                     journalRepo.observeHasTombstones()
                 ) { hasUnsynced: Boolean, hasTombstones: Boolean ->
                     hasUnsynced || hasTombstones
@@ -84,8 +84,7 @@ class SyncManager(
 
     fun resetStatus() {
         applicationScope.launch {
-            val lastSync = syncPrefs.getLastSyncTime().first()
-            val hasUnsynced = journalRepo.hasUnsyncedJournals(lastSync)
+            val hasUnsynced = journalRepo.hasUnsyncedJournals()
             val hasTombstones = journalRepo.hasTombstones()
             
             _status.value = if (hasUnsynced || hasTombstones) SyncStatus.Dirty else SyncStatus.Idle
@@ -218,13 +217,11 @@ class SyncManager(
             provider.connect().getOrThrow()
 
             val remoteMetaList = provider.listJournals().getOrNull() ?: emptyList<RemoteFileMeta>()
-            val lastSyncTime = if (isFullRevalidation) 0L else syncPrefs.getLastSyncTime().first()
-            
-            val hasUnsynced = journalRepo.hasUnsyncedJournals(lastSyncTime)
+            val hasUnsynced = journalRepo.hasUnsyncedJournals()
             val hasTombstones = journalRepo.hasTombstones()
             
             val localsToSync = if (hasUnsynced || hasTombstones || isFullRevalidation) {
-                journalRepo.getJournalsToSync(lastSyncTime)
+                journalRepo.getJournalsToSync()
             } else {
                 emptyList()
             }
@@ -252,12 +249,14 @@ class SyncManager(
                     toDownload.add(id to remoteTime)
                 } else {
                     val localTime = local.updatedAt ?: 0L
-                    val syncTime = local.syncedAt ?: 0L
-                    val lastKnownLocalTime = maxOf(localTime, syncTime)
+                    val syncAtTime = local.syncedAt ?: 0L
+                    
+                    val hasRemoteChange = remoteTime > (syncAtTime + 2000)
+                    val hasLocalChange = localTime > (syncAtTime + 2000)
 
-                    if (remoteTime > lastSyncTime + 2000 && localTime > lastSyncTime + 2000) {
+                    if (hasRemoteChange && hasLocalChange) {
                         toDownload.add(id to remoteTime)
-                    } else if (remoteTime > lastKnownLocalTime + 2000) {
+                    } else if (hasRemoteChange) {
                         toDownload.add(id to remoteTime)
                     }
                 }
@@ -357,7 +356,7 @@ class SyncManager(
         
         return provider.downloadJournal(filename).onSuccess { journal ->
             val local = journalRepo.getJournalById(id)
-            val finalJournal = if (local != null && (local.updatedAt ?: 0L) > lastSyncTime + 2000) {
+            val finalJournal = if (local != null && (local.updatedAt ?: 0L) > (local.syncedAt ?: 0L)) {
                 journal.copy(
                     id = java.util.UUID.randomUUID().toString(),
                     title = "Conflict: ${journal.title.ifBlank { "Untitled" }}",

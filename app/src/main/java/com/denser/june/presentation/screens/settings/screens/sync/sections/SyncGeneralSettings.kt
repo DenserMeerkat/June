@@ -25,7 +25,7 @@ fun SyncGeneralSettings(
         SettingSection(title = "General Settings") {
             SettingsItem(
                 title = "Automatic Sync",
-                subtitle = "Sync in the background automatically",
+                subtitle = "Sync changes as they happen",
                 leadingContent = {
                     Icon(painterResource(R.drawable.cloud_sync_24px), null)
                 },
