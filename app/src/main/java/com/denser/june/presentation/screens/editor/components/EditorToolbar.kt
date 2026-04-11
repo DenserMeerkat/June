@@ -84,6 +84,12 @@ fun EditorToolbar(
                         isActive = state.hasStyle(MarkupStyle.Highlight),
                         onClick = { state.toggleStyle(MarkupStyle.Highlight) }
                     )
+                    FormatToggleButton(
+                        icon = R.drawable.link_24px,
+                        contentDescription = "Link",
+                        isActive = state.hasStyle(MarkupStyle.Link("")),
+                        onClick = { state.toggleLink() }
+                    )
 
                     VerticalDivider(modifier = Modifier.height(16.dp).padding(horizontal = 2.dp), color = MaterialTheme.colorScheme.outlineVariant)
 

@@ -17,7 +17,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.sync.SyncStatus
-import com.denser.june.presentation.screens.settings.screens.sync.components.SyncTextField
+import com.denser.june.presentation.components.JuneTextField
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -92,7 +92,7 @@ fun WebDavConfigSection(
                     )
                 }
 
-                SyncTextField(
+                JuneTextField(
                     value = webDavUrl,
                     onValueChange = onUrlChange,
                     label = "Server URL",
@@ -102,7 +102,7 @@ fun WebDavConfigSection(
                     enabled = !isAnyBusy && !isConfigLocked,
                     errorText = urlError
                 )
-                SyncTextField(
+                JuneTextField(
                     value = webDavUser,
                     onValueChange = onUserChange,
                     label = "Username",
@@ -111,7 +111,7 @@ fun WebDavConfigSection(
                     enabled = !isAnyBusy && !isConfigLocked,
                     errorText = userError
                 )
-                SyncTextField(
+                JuneTextField(
                     value = webDavPass,
                     onValueChange = onPassChange,
                     label = "Password / App Token",

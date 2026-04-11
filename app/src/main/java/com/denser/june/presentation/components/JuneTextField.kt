@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.settings.screens.sync.components
+package com.denser.june.presentation.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -29,7 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SyncTextField(
+fun JuneTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,

@@ -43,6 +43,9 @@ import com.denser.hyphen.state.rememberHyphenTextState
 import com.denser.hyphen.ui.style.HyphenStyleConfig
 import com.denser.hyphen.ui.style.ListItemStyle
 import com.denser.hyphen.ui.material3.HyphenTextField
+import com.denser.hyphen.ui.link.HyphenLinkConfig
+import com.denser.june.presentation.screens.editor.components.JuneLinkSheet
+import com.denser.june.presentation.screens.editor.components.JuneLinkMenu
 
 import com.denser.june.core.R
 import com.denser.june.core.utils.toFullTime
@@ -122,6 +125,27 @@ fun JournalScreen() {
             onSongSheetToggle = { dialogState.showSongSheet = true },
             onRemoveLocation = { viewModel.onAction(EditorAction.RemoveLocation) },
             onLocationDialogToggle = { dialogState.showLocationDialog = true },
+        )
+    }
+
+    val linkConfig = remember {
+        HyphenLinkConfig(
+            dropdownContent = { span, menuOffset, onDismiss, onEditRequest ->
+                JuneLinkMenu(
+                    span = span,
+                    menuOffset = menuOffset,
+                    onDismiss = onDismiss,
+                    onEditRequest = onEditRequest
+                )
+            },
+            dialogContent = { span, onDismiss, onConfirm ->
+                JuneLinkSheet(
+                    span = span,
+                    initialText = hyphenState.text.substring(span.start, span.end),
+                    onDismiss = onDismiss,
+                    onConfirm = onConfirm
+                )
+            }
         )
     }
 
@@ -406,6 +430,7 @@ fun JournalScreen() {
 
                 HyphenTextField(
                     state = hyphenState,
+                    linkConfig = linkConfig,
                     onMarkdownChange = {
                         viewModel.onAction(EditorAction.ChangeContent(it))
                     },
@@ -477,6 +502,10 @@ fun JournalScreen() {
                             prefixStyle = SpanStyle(
                                 color = MaterialTheme.colorScheme.tertiary
                             )
+                        ),
+                        linkStyle = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            textDecoration = TextDecoration.Underline,
                         )
                     )
                 )
