@@ -22,25 +22,25 @@ interface JournalDao {
     @Query("DELETE FROM journals")
     suspend fun deleteAllJournals()
 
-    @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC, createdAt DESC")
     fun getAllJournals(): Flow<List<JournalEntity>>
 
-    @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC, createdAt DESC")
     suspend fun getAllJournalsSync(): List<JournalEntity>
 
-    @Query("SELECT * FROM journals ORDER BY dateTime DESC")
+    @Query("SELECT * FROM journals ORDER BY dateTime DESC, createdAt DESC")
     suspend fun getAllJournalsIncludeDeletedSync(): List<JournalEntity>
 
     @Query("SELECT * FROM journals WHERE id = :id")
     suspend fun getJournalById(id: String): JournalEntity?
 
-    @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC LIMIT 1")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC, createdAt DESC LIMIT 1")
     suspend fun getLatestJournal(): JournalEntity?
 
     @Query("SELECT * FROM journals WHERE deletedAt IS NULL AND title LIKE '%' || :query || '%' ")
     fun searchJournal(query: String): Flow<List<JournalEntity>>
 
-    @Query(""" SELECT * FROM journals WHERE deletedAt IS NULL AND dateTime >= :startDate AND dateTime <= :endDate ORDER BY dateTime DESC """)
+    @Query(""" SELECT * FROM journals WHERE deletedAt IS NULL AND dateTime >= :startDate AND dateTime <= :endDate ORDER BY dateTime DESC, createdAt DESC """)
     fun getJournalsByDateRange(startDate: Long, endDate: Long): Flow<List<JournalEntity>>
 
     @Query("""
@@ -83,7 +83,7 @@ interface JournalDao {
         
         AND (:hasSong IS NULL OR (:hasSong = 1 AND songDetails IS NOT NULL) OR (:hasSong = 0 AND songDetails IS NULL))
         AND deletedAt IS NULL
-        ORDER BY dateTime DESC
+        ORDER BY dateTime DESC, createdAt DESC
     """)
     fun getJournals(
         query: String? = null,
@@ -100,7 +100,7 @@ interface JournalDao {
         INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
         INNER JOIN tags t ON ref.tagId = t.tagId
         WHERE t.name = :tagName AND j.deletedAt IS NULL
-        ORDER BY j.dateTime DESC
+        ORDER BY j.dateTime DESC, j.createdAt DESC
     """)
     fun getJournalsByTagName(tagName: String): Flow<List<JournalEntity>>
 
@@ -141,7 +141,7 @@ interface JournalDao {
         INNER JOIN journals j ON ref.id = j.id
         WHERE t.name LIKE :query || '%' AND j.deletedAt IS NULL
         GROUP BY t.tagId
-        ORDER BY MAX(j.dateTime) DESC, t.name ASC
+        ORDER BY MAX(j.dateTime) DESC, MAX(j.createdAt) DESC, t.name ASC
     """)
     fun getTagSuggestions(query: String): Flow<List<String>>
 
@@ -152,7 +152,7 @@ interface JournalDao {
         INNER JOIN journals j ON ref.id = j.id
         WHERE j.deletedAt IS NULL
         GROUP BY t.tagId
-        ORDER BY MAX(j.dateTime) DESC, t.name ASC
+        ORDER BY MAX(j.dateTime) DESC, MAX(j.createdAt) DESC, t.name ASC
     """)
     fun getAllUniqueTags(): Flow<List<String>>
 
@@ -173,7 +173,7 @@ interface JournalDao {
         WHERE t.name IN (:tags) AND j.deletedAt IS NULL
         GROUP BY j.id
         HAVING COUNT(DISTINCT t.name) = :tagCount
-        ORDER BY j.dateTime DESC
+        ORDER BY j.dateTime DESC, j.createdAt DESC
     """)
     fun getJournalsWithAllTags(tags: List<String>, tagCount: Int): Flow<List<JournalEntity>>
 

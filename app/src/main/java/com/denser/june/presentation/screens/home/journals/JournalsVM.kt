@@ -22,15 +22,15 @@ class JournalsVM(
         )
 
     val nonDraftJournals = journals.map { list ->
-        list?.filter { !it.isDraft }?.sortedByDescending { it.dateTime }
+        list?.filter { !it.isDraft }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val bookmarkedJournals = journals.map { list ->
-        list?.filter { it.isBookmarked }?.sortedByDescending { it.dateTime }
+        list?.filter { it.isBookmarked }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val draftJournals = journals.map { list ->
-        list?.filter { it.isDraft }?.sortedByDescending { it.dateTime }
+        list?.filter { it.isDraft }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun onTabSelected(tab: JournalListTab) {
