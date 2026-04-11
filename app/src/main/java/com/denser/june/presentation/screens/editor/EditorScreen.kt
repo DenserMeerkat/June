@@ -40,9 +40,9 @@ import com.denser.june.presentation.screens.editor.components.MediaOperations
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import com.denser.hyphen.state.rememberHyphenTextState
-import com.denser.hyphen.ui.HyphenStyleConfig
-import com.denser.hyphen.ui.ListItemStyle
-import com.denser.hyphen.ui.material3.HyphenTextEditor
+import com.denser.hyphen.ui.style.HyphenStyleConfig
+import com.denser.hyphen.ui.style.ListItemStyle
+import com.denser.hyphen.ui.material3.HyphenTextField
 
 import com.denser.june.core.R
 import com.denser.june.core.utils.toFullTime
@@ -404,7 +404,7 @@ fun JournalScreen() {
                     }
                 }
 
-                HyphenTextEditor(
+                HyphenTextField(
                     state = hyphenState,
                     onMarkdownChange = {
                         viewModel.onAction(EditorAction.ChangeContent(it))
@@ -476,16 +476,6 @@ fun JournalScreen() {
                         orderedListStyle = ListItemStyle(
                             prefixStyle = SpanStyle(
                                 color = MaterialTheme.colorScheme.tertiary
-                            )
-                        ),
-                        checkboxUncheckedStyle = ListItemStyle(
-                            prefixStyle = SpanStyle(
-                                color = MaterialTheme.colorScheme.outline,
-                            )
-                        ),
-                        checkboxCheckedStyle = ListItemStyle(
-                            prefixStyle = SpanStyle(
-                                color = MaterialTheme.colorScheme.tertiary,
                             )
                         )
                     )
