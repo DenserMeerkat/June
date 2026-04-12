@@ -30,39 +30,53 @@ class WebDAVProvider(
 
     override val name: String = "WebDAV"
     private val _isConnected = MutableStateFlow(false)
-
     private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
 
-    override suspend fun connect(): Result<Unit> = withContext(Dispatchers.IO) {
-        val url = syncPrefs.getWebDavUrl().first() ?: return@withContext Result.failure(Exception("URL not set"))
-        val user = syncPrefs.getWebDavUsername().first() ?: return@withContext Result.failure(Exception("User not set"))
-        val pass = syncPrefs.getWebDavPassword().first() ?: return@withContext Result.failure(Exception("Password not set"))
-
-        val auth = createAuthHeader(user, pass)
-
-        val propfindBody = """
+    private companion object {
+        const val USER_AGENT = "June/0.6.0 (Android)"
+        const val XML_PROPFIND_BODY = """
             <?xml version="1.0" encoding="utf-8" ?>
             <d:propfind xmlns:d="DAV:">
                 <d:prop>
                     <d:resourcetype/>
+                    <d:displayname/>
+                    <d:getlastmodified/>
                 </d:prop>
             </d:propfind>
-        """.trimIndent()
+        """
+    }
+
+    private data class WebDavAuth(val baseUrl: String, val auth: String)
+
+    private suspend fun getAuth(): WebDavAuth? {
+        val url = syncPrefs.getWebDavUrl().first() ?: return null
+        val user = syncPrefs.getWebDavUsername().first() ?: ""
+        val pass = syncPrefs.getWebDavPassword().first() ?: ""
+        val auth = createAuthHeader(user, pass)
+        return WebDavAuth(url, auth)
+    }
+
+    private fun Request.Builder.webDavHeaders(auth: String, depth: String? = "0") = apply {
+        header("Authorization", auth)
+        header("User-Agent", USER_AGENT)
+        header("X-Requested-With", "XMLHttpRequest")
+        depth?.let { header("Depth", it) }
+    }
+
+    override suspend fun connect(): Result<Unit> = withContext(Dispatchers.IO) {
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
         val request = Request.Builder()
-            .url(url)
-            .method("PROPFIND", propfindBody.toRequestBody("application/xml; charset=utf-8".toMediaType()))
-            .addHeader("Authorization", auth)
-            .addHeader("Depth", "0")
-            .addHeader("Accept", "application/xml")
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .url(authInfo.baseUrl)
+            .method("PROPFIND", XML_PROPFIND_BODY.trimIndent().toRequestBody("application/xml; charset=utf-8".toMediaType()))
+            .webDavHeaders(authInfo.auth, depth = "0")
+            .header("Accept", "application/xml")
             .build()
 
         try {
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    ensureJuneFoldersExist(url, auth)
+                    ensureJuneFoldersExist(authInfo)
                     _isConnected.value = true
                     Result.success(Unit)
                 } else {
@@ -74,41 +88,29 @@ class WebDAVProvider(
         }
     }
 
-    private suspend fun ensureJuneFoldersExist(baseUrl: String, auth: String) {
-        val juneFolder = baseUrl.trimEnd('/') + "/June/"
-        if (!checkRemoteResourceExists(juneFolder, auth)) {
-            createRemoteFolder(juneFolder, auth)
+    private fun ensureJuneFoldersExist(authInfo: WebDavAuth) {
+        val juneFolder = authInfo.baseUrl.trimEnd('/') + "/June/"
+        if (!checkRemoteResourceExists(juneFolder, authInfo.auth)) {
+            createRemoteFolder(juneFolder, authInfo.auth)
         }
 
         val mediaFolder = juneFolder + "media/"
-        if (!checkRemoteResourceExists(mediaFolder, auth)) {
-            createRemoteFolder(mediaFolder, auth)
+        if (!checkRemoteResourceExists(mediaFolder, authInfo.auth)) {
+            createRemoteFolder(mediaFolder, authInfo.auth)
         }
 
         val journalsFolder = juneFolder + "journals/"
-        if (!checkRemoteResourceExists(journalsFolder, auth)) {
-            createRemoteFolder(journalsFolder, auth)
+        if (!checkRemoteResourceExists(journalsFolder, authInfo.auth)) {
+            createRemoteFolder(journalsFolder, authInfo.auth)
         }
     }
 
     private fun checkRemoteResourceExists(path: String, auth: String): Boolean {
-        val propfindBody = """
-            <?xml version="1.0" encoding="utf-8" ?>
-            <d:propfind xmlns:d="DAV:">
-                <d:prop>
-                    <d:resourcetype/>
-                </d:prop>
-            </d:propfind>
-        """.trimIndent()
-
         val request = Request.Builder()
             .url(path)
-            .method("PROPFIND", propfindBody.toRequestBody("application/xml; charset=utf-8".toMediaType()))
-            .addHeader("Authorization", auth)
-            .addHeader("Depth", "0")
-            .addHeader("Accept", "application/xml")
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .method("PROPFIND", XML_PROPFIND_BODY.trimIndent().toRequestBody("application/xml; charset=utf-8".toMediaType()))
+            .webDavHeaders(auth, depth = "0")
+            .header("Accept", "application/xml")
             .build()
         return client.newCall(request).execute().use { it.isSuccessful }
     }
@@ -117,10 +119,8 @@ class WebDAVProvider(
         val request = Request.Builder()
             .url(path)
             .method("MKCOL", null)
-            .addHeader("Authorization", auth)
-            .addHeader("Content-Type", "application/xml; charset=utf-8")
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .header("Content-Type", "application/xml; charset=utf-8")
+            .webDavHeaders(auth, depth = null)
             .build()
         client.newCall(request).execute().use { }
     }
@@ -138,21 +138,16 @@ class WebDAVProvider(
     }
 
     override suspend fun uploadJournal(journal: Journal): Result<String> = withContext(Dispatchers.IO) {
-        val baseUrl = syncPrefs.getWebDavUrl().first() ?: return@withContext Result.failure(Exception("URL not set"))
-        val user = syncPrefs.getWebDavUsername().first() ?: ""
-        val pass = syncPrefs.getWebDavPassword().first() ?: ""
-        val auth = createAuthHeader(user, pass)
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
         val journalFileName = "${journal.id}.json"
-        val journalUrl = "${baseUrl.trimEnd('/')}/June/journals/$journalFileName"
+        val journalUrl = "${authInfo.baseUrl.trimEnd('/')}/June/journals/$journalFileName"
         val content = json.encodeToString(Journal.serializer(), journal)
 
         val request = Request.Builder()
             .url(journalUrl)
             .put(content.toRequestBody("application/json".toMediaType()))
-            .addHeader("Authorization", auth)
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .webDavHeaders(authInfo.auth, depth = null)
             .build()
 
         try {
@@ -165,18 +160,12 @@ class WebDAVProvider(
         }
     }
 
-
     override suspend fun downloadJournal(cloudId: String): Result<Journal> = withContext(Dispatchers.IO) {
-        val baseUrl = syncPrefs.getWebDavUrl().first() ?: ""
-        val user = syncPrefs.getWebDavUsername().first() ?: ""
-        val pass = syncPrefs.getWebDavPassword().first() ?: ""
-        val auth = createAuthHeader(user, pass)
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
         val request = Request.Builder()
-            .url("${baseUrl.trimEnd('/')}/June/journals/$cloudId")
-            .addHeader("Authorization", auth)
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .url("${authInfo.baseUrl.trimEnd('/')}/June/journals/$cloudId")
+            .webDavHeaders(authInfo.auth, depth = null)
             .get()
             .build()
 
@@ -195,18 +184,13 @@ class WebDAVProvider(
     }
 
     override suspend fun uploadMedia(file: File): Result<String> = withContext(Dispatchers.IO) {
-        val baseUrl = syncPrefs.getWebDavUrl().first() ?: ""
-        val user = syncPrefs.getWebDavUsername().first() ?: ""
-        val pass = syncPrefs.getWebDavPassword().first() ?: ""
-        val auth = createAuthHeader(user, pass)
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
         
-        val mediaUrl = "${baseUrl.trimEnd('/')}/June/media/${file.name}"
+        val mediaUrl = "${authInfo.baseUrl.trimEnd('/')}/June/media/${file.name}"
         val request = Request.Builder()
             .url(mediaUrl)
             .put(file.asRequestBody("application/octet-stream".toMediaType()))
-            .addHeader("Authorization", auth)
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .webDavHeaders(authInfo.auth, depth = null)
             .build()
             
         try {
@@ -220,17 +204,12 @@ class WebDAVProvider(
     }
 
     override suspend fun downloadMedia(cloudId: String, targetFile: File): Result<File> = withContext(Dispatchers.IO) {
-        val baseUrl = syncPrefs.getWebDavUrl().first() ?: ""
-        val user = syncPrefs.getWebDavUsername().first() ?: ""
-        val pass = syncPrefs.getWebDavPassword().first() ?: ""
-        val auth = createAuthHeader(user, pass)
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
-        val mediaUrl = "${baseUrl.trimEnd('/')}/June/media/$cloudId"
+        val mediaUrl = "${authInfo.baseUrl.trimEnd('/')}/June/media/$cloudId"
         val request = Request.Builder()
             .url(mediaUrl)
-            .addHeader("Authorization", auth)
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .webDavHeaders(authInfo.auth, depth = null)
             .get()
             .build()
 
@@ -251,20 +230,14 @@ class WebDAVProvider(
         }
     }
 
-
     override suspend fun updateManifest(manifest: SyncManifest): Result<Unit> = withContext(Dispatchers.IO) {
-        val baseUrl = syncPrefs.getWebDavUrl().first() ?: ""
-        val user = syncPrefs.getWebDavUsername().first() ?: ""
-        val pass = syncPrefs.getWebDavPassword().first() ?: ""
-        val auth = createAuthHeader(user, pass)
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
         val content = json.encodeToString(SyncManifest.serializer(), manifest)
         val request = Request.Builder()
-            .url("${baseUrl.trimEnd('/')}/June/manifest.json")
+            .url("${authInfo.baseUrl.trimEnd('/')}/June/manifest.json")
             .put(content.toRequestBody("application/json".toMediaType()))
-            .addHeader("Authorization", auth)
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .webDavHeaders(authInfo.auth, depth = null)
             .build()
 
         try {
@@ -278,31 +251,14 @@ class WebDAVProvider(
     }
 
     override suspend fun listJournals(): Result<List<RemoteFileMeta>> = withContext(Dispatchers.IO) {
-        val baseUrl = syncPrefs.getWebDavUrl().first() ?: ""
-        val user = syncPrefs.getWebDavUsername().first() ?: ""
-        val pass = syncPrefs.getWebDavPassword().first() ?: ""
-        val auth = createAuthHeader(user, pass)
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
-        val propfindBody = """
-            <?xml version="1.0" encoding="utf-8" ?>
-            <d:propfind xmlns:d="DAV:">
-                <d:prop>
-                    <d:displayname/>
-                    <d:getlastmodified/>
-                    <d:resourcetype/>
-                </d:prop>
-            </d:propfind>
-        """.trimIndent()
-
-        val journalsFolder = baseUrl.trimEnd('/') + "/June/journals/"
+        val journalsFolder = authInfo.baseUrl.trimEnd('/') + "/June/journals/"
         val request = Request.Builder()
             .url(journalsFolder)
-            .method("PROPFIND", propfindBody.toRequestBody("application/xml; charset=utf-8".toMediaType()))
-            .addHeader("Authorization", auth)
-            .addHeader("Depth", "1")
-            .addHeader("Accept", "application/xml")
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .method("PROPFIND", XML_PROPFIND_BODY.trimIndent().toRequestBody("application/xml; charset=utf-8".toMediaType()))
+            .webDavHeaders(authInfo.auth, depth = "1")
+            .header("Accept", "application/xml")
             .build()
 
         try {
@@ -357,31 +313,14 @@ class WebDAVProvider(
         }
     }
     override suspend fun listMedia(): Result<List<String>> = withContext(Dispatchers.IO) {
-        val baseUrl = syncPrefs.getWebDavUrl().first() ?: ""
-        val user = syncPrefs.getWebDavUsername().first() ?: ""
-        val pass = syncPrefs.getWebDavPassword().first() ?: ""
-        val auth = createAuthHeader(user, pass)
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
-        val propfindBody = """
-            <?xml version="1.0" encoding="utf-8" ?>
-            <d:propfind xmlns:d="DAV:">
-                <d:prop>
-                    <d:displayname/>
-                    <d:getlastmodified/>
-                    <d:resourcetype/>
-                </d:prop>
-            </d:propfind>
-        """.trimIndent()
-
-        val mediaFolder = baseUrl.trimEnd('/') + "/June/media/"
+        val mediaFolder = authInfo.baseUrl.trimEnd('/') + "/June/media/"
         val request = Request.Builder()
             .url(mediaFolder)
-            .method("PROPFIND", propfindBody.toRequestBody("application/xml; charset=utf-8".toMediaType()))
-            .addHeader("Authorization", auth)
-            .addHeader("Depth", "1")
-            .addHeader("Accept", "application/xml")
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .method("PROPFIND", XML_PROPFIND_BODY.trimIndent().toRequestBody("application/xml; charset=utf-8".toMediaType()))
+            .webDavHeaders(authInfo.auth, depth = "1")
+            .header("Accept", "application/xml")
             .build()
 
         try {
@@ -405,18 +344,13 @@ class WebDAVProvider(
     }
 
     override suspend fun deleteMedia(filename: String): Result<Unit> = withContext(Dispatchers.IO) {
-        val baseUrl = syncPrefs.getWebDavUrl().first() ?: ""
-        val user = syncPrefs.getWebDavUsername().first() ?: ""
-        val pass = syncPrefs.getWebDavPassword().first() ?: ""
-        val auth = createAuthHeader(user, pass)
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
-        val mediaUrl = "${baseUrl.trimEnd('/')}/June/media/$filename"
+        val mediaUrl = "${authInfo.baseUrl.trimEnd('/')}/June/media/$filename"
         val request = Request.Builder()
             .url(mediaUrl)
             .delete()
-            .addHeader("Authorization", auth)
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .webDavHeaders(authInfo.auth, depth = null)
             .build()
 
         try {
@@ -430,18 +364,13 @@ class WebDAVProvider(
     }
 
     override suspend fun deleteJournal(cloudId: String): Result<Unit> = withContext(Dispatchers.IO) {
-        val baseUrl = syncPrefs.getWebDavUrl().first() ?: ""
-        val user = syncPrefs.getWebDavUsername().first() ?: ""
-        val pass = syncPrefs.getWebDavPassword().first() ?: ""
-        val auth = createAuthHeader(user, pass)
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
-        val journalUrl = "${baseUrl.trimEnd('/')}/June/journals/$cloudId"
+        val journalUrl = "${authInfo.baseUrl.trimEnd('/')}/June/journals/$cloudId"
         val request = Request.Builder()
             .url(journalUrl)
             .delete()
-            .addHeader("Authorization", auth)
-            .addHeader("User-Agent", "JuneApp/1.0 (Android)")
-            .addHeader("X-Requested-With", "XMLHttpRequest")
+            .webDavHeaders(authInfo.auth, depth = null)
             .build()
 
         try {

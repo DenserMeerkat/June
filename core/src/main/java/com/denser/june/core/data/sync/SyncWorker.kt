@@ -2,10 +2,7 @@ package com.denser.june.core.data.sync
 
 import android.content.Context
 import androidx.work.*
-import com.denser.june.core.domain.preferences.SyncPreferences
 import com.denser.june.core.domain.sync.SyncManager
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
@@ -32,14 +29,9 @@ class SyncWorker(
 
     companion object {
         private const val WORK_NAME = "com.denser.june.sync_worker"
+        private const val COALESCING_DELAY_SECONDS = 3L
 
-        /**
-         * Enqueue a one-time sync work.
-         * Respects the [SyncPreferences.getSyncOnlyOnWifi] preference so that the work
-         * only runs on an unmetered (Wi-Fi) network when the user has that option enabled.
-         */
-        fun enqueue(context: Context, syncPrefs: SyncPreferences) {
-            val onlyWifi = runBlocking { syncPrefs.getSyncOnlyOnWifi().first() }
+        fun enqueue(context: Context, onlyWifi: Boolean) {
             val networkType = if (onlyWifi) NetworkType.UNMETERED else NetworkType.CONNECTED
 
             val constraints = Constraints.Builder()
@@ -48,6 +40,7 @@ class SyncWorker(
 
             val request = OneTimeWorkRequestBuilder<SyncWorker>()
                 .setConstraints(constraints)
+                .setInitialDelay(COALESCING_DELAY_SECONDS, TimeUnit.SECONDS)
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
                 .build()
 

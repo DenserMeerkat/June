@@ -29,7 +29,7 @@ interface JournalRepository {
     suspend fun updateJournal(journal: Journal)
 
     fun getDeletedJournals(): Flow<List<Journal>>
-    suspend fun getJournalsToSync(): List<Journal>
+    suspend fun getJournalsToSync(threshold: Long): List<Journal>
     suspend fun getAllJournalsIncludeDeletedSync(): List<Journal>
     suspend fun getOldDeletedJournals(threshold: Long): List<Journal>
     
@@ -45,8 +45,8 @@ interface JournalRepository {
     suspend fun renameTag(oldName: String, newName: String)
     suspend fun deleteTag(tagName: String)
 
-    fun observeHasUnsyncedJournals(): Flow<Boolean>
-    suspend fun hasUnsyncedJournals(): Boolean
+    fun observeHasUnsyncedJournals(threshold: Long): Flow<Boolean>
+    suspend fun hasUnsyncedJournals(threshold: Long): Boolean
     fun observeHasTombstones(): Flow<Boolean>
     suspend fun hasTombstones(): Boolean
 }

@@ -136,7 +136,8 @@ class JournalRepositoryImpl(
 
     private suspend fun triggerSync() {
         if (syncPrefs.getSyncEnabled().first() && syncPrefs.isAutomaticSyncEnabled().first()) {
-            SyncWorker.enqueue(context, syncPrefs)
+            val onlyWifi = syncPrefs.getSyncOnlyOnWifi().first()
+            SyncWorker.enqueue(context, onlyWifi)
         }
     }
 
@@ -179,8 +180,8 @@ class JournalRepositoryImpl(
         return journalDao.getDeletedJournals().map { it.asDomain() }
     }
 
-    override suspend fun getJournalsToSync(): List<Journal> {
-        return journalDao.getJournalsToSync().asDomain()
+    override suspend fun getJournalsToSync(threshold: Long): List<Journal> {
+        return journalDao.getJournalsToSync(threshold).asDomain()
     }
 
     override suspend fun updateSyncStatus(id: String, cloudId: String, syncedAt: Long) {
@@ -203,12 +204,12 @@ class JournalRepositoryImpl(
         journalDao.deleteTombstone(id)
     }
 
-    override fun observeHasUnsyncedJournals(): Flow<Boolean> {
-        return journalDao.observeHasUnsyncedJournals()
+    override fun observeHasUnsyncedJournals(threshold: Long): Flow<Boolean> {
+        return journalDao.observeHasUnsyncedJournals(threshold)
     }
 
-    override suspend fun hasUnsyncedJournals(): Boolean {
-        return journalDao.hasUnsyncedJournals()
+    override suspend fun hasUnsyncedJournals(threshold: Long): Boolean {
+        return journalDao.hasUnsyncedJournals(threshold)
     }
 
     override fun observeHasTombstones(): Flow<Boolean> {

@@ -39,7 +39,7 @@ fun SyncGeneralSettings(
             )
 
             SettingsItem(
-                title = "Sync on Wi-Fi only",
+                title = "Auto-sync on Wi-Fi only",
                 subtitle = "Avoid syncing over mobile data",
                 leadingContent = {
                     Icon(painterResource(R.drawable.wifi_24px), null)

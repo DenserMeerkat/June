@@ -57,7 +57,7 @@ fun SyncAnalysisSection(
                         Modifier.weight(1f)
                     )
                     VerticalDivider(
-                        modifier = Modifier.height(52.dp),
+                        modifier = Modifier.height(56.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
                     AnalysisStatColumn(
