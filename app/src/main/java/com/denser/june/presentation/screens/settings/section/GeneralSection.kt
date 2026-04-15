@@ -27,8 +27,21 @@ fun GeneralSection(
 
     SettingSection(title = "General") {
         SettingsItem(
-            title = "Automatic time",
-            subtitle = "Always capture current time when creating journals",
+            title = "Start of the week",
+            subtitle = state.startOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault()),
+            leadingContent = {
+                Icon(
+                    painter = painterResource(R.drawable.event_note_24px),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+            },
+            onClick = { showDayPicker = true }
+        )
+
+        SettingsItem(
+            title = "Include time",
+            subtitle = "Always enable time when creating journals",
             leadingContent = {
                 Icon(
                     painter = painterResource(R.drawable.schedule_24px),
@@ -45,18 +58,6 @@ fun GeneralSection(
             onClick = { onAction(SettingsAction.OnAutoTimeToggle(!state.isAutoTimeEnabled)) }
         )
 
-        SettingsItem(
-            title = "Start of the week",
-            subtitle = state.startOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault()),
-            leadingContent = {
-                Icon(
-                    painter = painterResource(R.drawable.event_note_24px),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-            },
-            onClick = { showDayPicker = true }
-        )
         SettingsItem(
             title = "Bin",
             subtitle = "Restore deleted journals",

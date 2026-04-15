@@ -186,16 +186,16 @@ fun RecentJournalCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = journal.dateTime.toShortMonth(),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
                             text = journal.dateTime.toDayOfMonth(),
-                            style = MaterialTheme.typography.headlineMedium,
+                            style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = journal.dateTime.toShortMonth(),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
                     Spacer(modifier = Modifier.width(20.dp))

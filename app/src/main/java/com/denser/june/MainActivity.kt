@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import android.graphics.Color as AndroidColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import com.denser.june.core.R
+import androidx.core.graphics.drawable.toDrawable
 
 enum class LockState {
     LOADING,
@@ -101,6 +103,8 @@ class MainActivity : FragmentActivity() {
         setContent {
             val systemDark = isSystemInDarkTheme()
             val systemColorScheme = if (systemDark) darkColorScheme() else lightColorScheme()
+            val colorBackground = if (systemDark) AndroidColor.BLACK else AndroidColor.WHITE
+            window.setBackgroundDrawable(colorBackground.toDrawable())
 
             MaterialTheme(colorScheme = systemColorScheme) {
                 when (lockState) {

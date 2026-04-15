@@ -5,7 +5,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -13,7 +12,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -26,6 +24,8 @@ import com.denser.june.presentation.components.JuneBadge
 import org.koin.compose.koinInject
 
 import com.denser.june.core.R
+import com.denser.june.core.utils.toDayOfMonth
+import com.denser.june.core.utils.toShortMonth
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -56,6 +56,7 @@ fun TimelineJournalTab(
         }
     }
 }
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TimelineJournalTile(
@@ -68,7 +69,6 @@ fun TimelineJournalTile(
         if (trimmed.isEmpty()) 0
         else trimmed.split("\\s+".toRegex()).size
     }
-    val wordText = if (wordCount == 1) "word" else "words"
     val mediaCount = remember(journal.images) { journal.images.size }
     val hasMusic = remember(journal.songDetails) { journal.songDetails != null }
     val hasLocation = remember(journal.location) { journal.location != null }
@@ -94,118 +94,68 @@ fun TimelineJournalTile(
             verticalAlignment = Alignment.CenterVertically
         ) {
             TimelineDateColumn(dateTime = journal.dateTime)
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(2.dp))
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center
+                modifier = Modifier.weight(1f)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        val titleText = journal.title.ifBlank { "Untitled Entry" }
-                        val contentText = journal.content.ifBlank { "No content" }
+                val titleText = journal.title.ifBlank { "Untitled" }
 
-                        Text(
-                            text = titleText,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = contentText,
-                            style = MaterialTheme.typography.bodySmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    val emoji = journal.emoji
-                    if (emoji != null) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = emoji,
-                            fontSize = 20.sp
-                        )
-                    }
-                }
+                Text(
+                    text = titleText,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "$wordCount $wordText",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        fontSize = 11.sp
+                    JuneBadge(
+                        show = true,
+                        icon = if (journal.cloudId != null) R.drawable.cloud_24px else R.drawable.devices_24px,
+                        label = if (journal.cloudId != null) "Cloud" else "Local"
                     )
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        JuneBadge(
-                            show = mediaCount > 0,
-                            icon = R.drawable.photo_24px,
-                            label = if (mediaCount > 1) "$mediaCount" else null
-                        )
-                        JuneBadge(
-                            show = hasMusic,
-                            icon = R.drawable.music_note_24px
-                        )
-                        JuneBadge(
-                            show = hasLocation,
-                            icon = R.drawable.location_on_24px
-                        )
-                        JuneBadge(
-                            show = tagCount > 0,
-                            icon = R.drawable.sell_24px,
-                            label = "$tagCount"
-                        )
-                    }
+                    JuneBadge(
+                        show = wordCount > 0,
+                        icon = R.drawable.article_24px,
+                        label = "$wordCount ${if (wordCount == 1) "word" else "words"}"
+                    )
+                    JuneBadge(
+                        show = mediaCount > 0,
+                        icon = R.drawable.photo_24px,
+                        label = if (mediaCount > 1) "$mediaCount" else null
+                    )
+                    JuneBadge(
+                        show = hasMusic,
+                        icon = R.drawable.music_note_24px
+                    )
+                    JuneBadge(
+                        show = hasLocation,
+                        icon = R.drawable.location_on_24px
+                    )
+                    JuneBadge(
+                        show = tagCount > 0,
+                        icon = R.drawable.sell_24px,
+                        label = "$tagCount"
+                    )
                 }
             }
-        }
-    }
-}
 
-@Composable
-private fun MetadataBadge(
-    show: Boolean,
-    icon: Int,
-    label: String? = null
-) {
-    if (!show) return
-
-    Surface(
-        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        shape = CircleShape
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                modifier = Modifier.size(12.dp)
-            )
-            if (label != null) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold
-                )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                val emoji = journal.emoji
+                if (emoji != null) {
+                    Text(
+                        text = emoji,
+                        fontSize = 24.sp
+                    )
+                }
             }
         }
     }

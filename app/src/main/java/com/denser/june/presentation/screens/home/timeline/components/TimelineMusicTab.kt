@@ -285,8 +285,6 @@ fun MusicListTile(
     }
 }
 
-
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SmallPlayPauseButton(

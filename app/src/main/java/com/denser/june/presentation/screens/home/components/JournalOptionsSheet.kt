@@ -72,16 +72,15 @@ fun JournalOptionsSheet(
                 ) {
                     Text(
                         text = journal.dateTime.toDayOfMonth(),
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = journal.dateTime.toShortMonth().uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
+                        text = journal.dateTime.toShortMonth(),
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        letterSpacing = 1.5.sp
                     )
                     Text(
                         text = year,
@@ -109,7 +108,7 @@ fun JournalOptionsSheet(
                             modifier = Modifier.weight(1f, fill = false)
                         )
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -132,8 +131,6 @@ fun JournalOptionsSheet(
                             contentDescription = if (journal.isBookmarked) "Remove Bookmark" else "Bookmark",
                             onClick = onToggleBookmark,
                             isActive = journal.isBookmarked,
-                            activeColor = MaterialTheme.colorScheme.primaryContainer,
-                            activeContentColor = MaterialTheme.colorScheme.primary
                         )
                     }
                     ActionSquircle(
@@ -239,14 +236,13 @@ private fun ActionSquircle(
     onClick: () -> Unit,
     tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     isActive: Boolean = false,
-    activeColor: Color = MaterialTheme.colorScheme.primaryContainer,
     activeContentColor: Color = MaterialTheme.colorScheme.primary
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier.size(40.dp),
         shape = IconButtonDefaults.smallRoundShape,
-        color = if (isActive) activeColor else MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = if (isActive) activeContentColor else tint
     ) {
         Box(contentAlignment = Alignment.Center) {

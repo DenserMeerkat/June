@@ -24,7 +24,7 @@ fun SyncBackupSection(
             subtitle = "Sync across devices via Cloud",
             leadingContent = {
                 Icon(
-                    painter = painterResource(R.drawable.cloud_sync_24px),
+                    painter = painterResource(R.drawable.cloud_24px),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.secondary
                 )
@@ -37,7 +37,7 @@ fun SyncBackupSection(
             subtitle = "Restore or export data locally",
             leadingContent = {
                 Icon(
-                    painter = painterResource(R.drawable.backup_24px),
+                    painter = painterResource(R.drawable.drive_folder_upload_24px),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.secondary
                 )

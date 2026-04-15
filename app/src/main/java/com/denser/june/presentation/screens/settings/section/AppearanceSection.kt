@@ -61,16 +61,6 @@ fun AppearanceSection(
                     tint = MaterialTheme.colorScheme.secondary
                 )
             },
-            trailingContent = {
-                FilledTonalIconButton(
-                    onClick = { showThemePickerDialog = true }
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.edit_24px),
-                        contentDescription = "Pick Theme"
-                    )
-                }
-            },
             onClick = { showThemePickerDialog = true }
         )
         SettingsItem(
@@ -82,16 +72,6 @@ fun AppearanceSection(
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.secondary
                 )
-            },
-            trailingContent = {
-                FilledTonalIconButton(
-                    onClick = { showFontPickerDialog = true },
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.edit_24px),
-                        contentDescription = "Pick Font",
-                    )
-                }
             },
             onClick = { showFontPickerDialog = true }
         )
@@ -164,16 +144,6 @@ fun AppearanceSection(
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.secondary
                     )
-                },
-                trailingContent = {
-                    FilledTonalIconButton(
-                        onClick = { showColorPickerSheet = true }
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.edit_24px),
-                            contentDescription = "Pick Color",
-                        )
-                    }
                 },
                 onClick = { showColorPickerSheet = true }
             )
