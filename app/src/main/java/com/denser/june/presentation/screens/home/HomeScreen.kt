@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
+import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.screens.home.components.HomeBottomBar
@@ -41,6 +42,8 @@ fun HomeScreen() {
     val navigator = koinInject<AppNavigator>()
     val mainVM: MainVM = koinViewModel()
     val appState by mainVM.state.collectAsStateWithLifecycle()
+    val journalPrefs = koinInject<JournalPreferences>()
+    val isAutoTimeEnabled by journalPrefs.isAutoTimeEnabled().collectAsStateWithLifecycle(initialValue = false)
     
     val pagerState = rememberPagerState(pageCount = { HomeTab.entries.size })
     val scope = rememberCoroutineScope()
@@ -126,6 +129,7 @@ fun HomeScreen() {
                 handleFabClick(
                     currentTab = currentTab,
                     activeTag = activeTag,
+                    isAutoTimeEnabled = isAutoTimeEnabled,
                     navigator = navigator
                 )
             }
@@ -136,12 +140,14 @@ fun HomeScreen() {
 private fun handleFabClick(
     currentTab: HomeTab,
     activeTag: String?,
+    isAutoTimeEnabled: Boolean,
     navigator: AppNavigator
 ) {
+    val initialDate = if (isAutoTimeEnabled) System.currentTimeMillis() else null
     val route = if (currentTab == HomeTab.Tags && activeTag != null) {
-        Route.Editor(initialTags = listOf(activeTag))
+        Route.Editor(initialDate = initialDate, initialTags = listOf(activeTag))
     } else {
-        Route.Editor()
+        Route.Editor(initialDate = initialDate)
     }
-    navigator.navigateTo(route, isSingleTop = true)
+    navigator.navigateTo(route)
 }

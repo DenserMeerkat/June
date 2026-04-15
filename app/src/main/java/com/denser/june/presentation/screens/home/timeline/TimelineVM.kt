@@ -9,8 +9,10 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.denser.june.core.R
 import com.denser.june.core.domain.repository.JournalRepository
+import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.SongDetails
+import java.time.DayOfWeek
 import com.denser.june.core.utils.combineDateAndTime
 import com.denser.june.core.utils.toYearMonth
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,7 +24,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import java.time.YearMonth
-import java.time.ZoneId
 
 enum class TimelineTab(val label: String, val iconRes: Int) {
     Journals("Journals", R.drawable.list_alt_24px),
@@ -33,6 +34,7 @@ enum class TimelineTab(val label: String, val iconRes: Int) {
 
 class TimelineVM(
     private val repo: JournalRepository,
+    private val journalPrefs: JournalPreferences,
     context: Context,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -49,6 +51,12 @@ class TimelineVM(
 
     private val _isCalendarExpanded = MutableStateFlow(true)
     val isCalendarExpanded = _isCalendarExpanded.asStateFlow()
+
+    val startOfWeek = journalPrefs.startOfWeek().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = DayOfWeek.SUNDAY
+    )
 
     val initialPage = Int.MAX_VALUE / 2
 

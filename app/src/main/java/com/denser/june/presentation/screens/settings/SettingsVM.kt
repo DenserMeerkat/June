@@ -3,6 +3,7 @@ package com.denser.june.presentation.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.denser.june.core.domain.repository.JournalRepository
+import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.preferences.ThemePreferences
 import com.denser.june.core.domain.backup.ExportRepo
@@ -13,7 +14,7 @@ import com.denser.june.core.domain.backup.RestoreState
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.domain.model.enums.Fonts
 import com.denser.june.core.domain.model.enums.LockType
-import com.denser.june.core.utils.FileUtils
+import java.time.DayOfWeek
 import com.materialkolor.PaletteStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +29,7 @@ class SettingsVM(
     private val repo: JournalRepository,
     private val themePrefs: ThemePreferences,
     private val privacyPrefs: PrivacyPreferences,
+    private val journalPrefs: JournalPreferences,
     private val exportRepo: ExportRepo,
     private val restoreRepo: RestoreRepo
 ) : ViewModel() {
@@ -46,7 +48,9 @@ class SettingsVM(
             privacyPrefs.getAppLockFlow(),
             privacyPrefs.getLockTypeFlow(),
             privacyPrefs.getPinHashFlow(),
-            privacyPrefs.getScreenPrivacyFlow()
+            privacyPrefs.getScreenPrivacyFlow(),
+            journalPrefs.isAutoTimeEnabled(),
+            journalPrefs.startOfWeek()
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -56,6 +60,8 @@ class SettingsVM(
             lockType = array[8] as LockType,
             pinHash = array[9] as String?,
             isScreenPrivacyEnabled = array[10] as Boolean,
+            isAutoTimeEnabled = array[11] as Boolean,
+            startOfWeek = array[12] as DayOfWeek,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -119,6 +125,8 @@ class SettingsVM(
                 is SettingsAction.UpdateLockType -> privacyPrefs.updateLockType(action.type)
                 is SettingsAction.UpdatePinHash -> privacyPrefs.updatePinHash(action.hash)
                 is SettingsAction.OnScreenPrivacyToggle -> privacyPrefs.updateScreenPrivacy(action.enabled)
+                is SettingsAction.OnAutoTimeToggle -> journalPrefs.setAutoTimeEnabled(action.enabled)
+                is SettingsAction.OnStartOfWeekChange -> journalPrefs.setStartOfWeek(action.startOfWeek)
             }
         }
     }

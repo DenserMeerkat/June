@@ -2,11 +2,9 @@ package com.denser.june.presentation.screens.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -16,7 +14,7 @@ import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.screens.settings.section.PrivacySecuritySection
 import com.denser.june.presentation.screens.settings.section.SyncBackupSection
-import com.denser.june.presentation.screens.settings.section.JournalSection
+import com.denser.june.presentation.screens.settings.section.GeneralSection
 import com.denser.june.presentation.screens.settings.section.AboutSection
 import com.denser.june.presentation.screens.settings.section.AppearanceSection
 import org.koin.compose.koinInject
@@ -62,6 +60,12 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            item(key = "general_section") {
+                GeneralSection(
+                    state = state,
+                    onAction = onAction
+                )
+            }
             item(key = "privacy_security_section") {
                 PrivacySecuritySection(
                     state = state,
@@ -70,12 +74,6 @@ fun SettingsScreen(
             }
             item(key = "sync_backup_section") {
                 SyncBackupSection(
-                    state = state,
-                    onAction = onAction
-                )
-            }
-            item(key = "journal_section") {
-                JournalSection(
                     state = state,
                     onAction = onAction
                 )

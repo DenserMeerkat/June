@@ -27,9 +27,10 @@ fun TimelineCalendarPage(
     yearMonth: YearMonth,
     selectedDate: LocalDate,
     journals: List<Journal>,
+    startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
     onDateSelected: (LocalDate) -> Unit
 ) {
-    val daysInMonth = remember(yearMonth) { yearMonth.getDaysInMonthGrid() }
+    val daysInMonth = remember(yearMonth, startOfWeek) { yearMonth.getDaysInMonthGrid(startOfWeek) }
     val weeks = remember(daysInMonth) { daysInMonth.chunked(7) }
 
     val journalsByDate = remember(journals) {
@@ -50,6 +51,7 @@ fun TimelineCalendarPage(
     ) {
         DaysOfWeekHeader(
             modifier = Modifier.padding(bottom = 4.dp),
+            startOfWeek = startOfWeek,
             textStyle = MaterialTheme.typography.labelSmall
         )
 

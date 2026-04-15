@@ -45,6 +45,7 @@ fun TimelinePage(
     val currentMonth by viewModel.currentMonth.collectAsStateWithLifecycle()
     val journalsInMonth by viewModel.journalsInMonth.collectAsStateWithLifecycle()
     val isCalendarExpanded by viewModel.isCalendarExpanded.collectAsStateWithLifecycle()
+    val startOfWeek by viewModel.startOfWeek.collectAsStateWithLifecycle()
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
@@ -247,6 +248,7 @@ fun TimelinePage(
                         yearMonth = monthForPage,
                         selectedDate = selectedDate,
                         journals = pageJournals,
+                        startOfWeek = startOfWeek,
                         onDateSelected = { clickedDate ->
                             selectedDate = clickedDate
                             val dateMillis = combineDateAndTime(clickedDate, null)

@@ -135,6 +135,7 @@ fun EditorModals(
     if (dialogState.showDatePicker) {
         JournalDatePickerDialog(
             initialDateMillis = editorState.dateTime,
+            startOfWeek = editorState.startOfWeek,
             onDateSelected = { millis ->
                 onAction(EditorAction.ChangeDateTime(millis))
                 dialogState.showDatePicker = false

@@ -3,6 +3,7 @@ package com.denser.june.presentation.screens.editor
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.utils.getTodayAtMidnight
+import java.time.DayOfWeek
 
 data class EditorState(
     val journalId: String? = null,
@@ -25,7 +26,8 @@ data class EditorState(
     val isFetchingSong: Boolean = false,
     val deletedAt: Long? = null,
     val syncedAt: Long? = null,
-    val cloudId: String? = null
+    val cloudId: String? = null,
+    val startOfWeek: DayOfWeek = DayOfWeek.SUNDAY
 ) {
     val isDeleted: Boolean get() = deletedAt != null
     val hasContent: Boolean

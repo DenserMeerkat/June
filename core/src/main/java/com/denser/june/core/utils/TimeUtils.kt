@@ -1,6 +1,7 @@
 package com.denser.june.core.utils
 
 import java.time.YearMonth
+import java.time.DayOfWeek
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -57,10 +58,13 @@ fun Long.toHoursMinutesSeconds(): String {
     }
 }
 
-fun YearMonth.getDaysInMonthGrid(): List<LocalDate?> {
+fun YearMonth.getDaysInMonthGrid(startOfWeek: DayOfWeek = DayOfWeek.SUNDAY): List<LocalDate?> {
     val firstDay = this.atDay(1)
     val totalDays = this.lengthOfMonth()
-    val startOffset = firstDay.dayOfWeek.value % 7
+    val firstDayOfWeek = firstDay.dayOfWeek.value
+    val startDayValue = startOfWeek.value
+
+    val startOffset = (firstDayOfWeek - startDayValue + 7) % 7
     val list = mutableListOf<LocalDate?>()
     repeat(startOffset) { list.add(null) }
     for (i in 1..totalDays) {

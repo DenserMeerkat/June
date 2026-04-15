@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -78,15 +77,16 @@ fun InfiniteMonthStrip(
 @Composable
 fun DaysOfWeekHeader(
     modifier: Modifier = Modifier,
+    startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
     textStyle: TextStyle = MaterialTheme.typography.bodyMedium,
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
 ) {
+    val days = remember(startOfWeek) {
+        (0..6).map { offset ->
+            startOfWeek.plus(offset.toLong())
+        }
+    }
     Row(modifier = modifier.fillMaxWidth()) {
-        val days = listOf(
-            DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
-            DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY,
-            DayOfWeek.SATURDAY
-        )
         days.forEach { day ->
             Text(
                 text = day.getDisplayName(java.time.format.TextStyle.NARROW, Locale.getDefault()),

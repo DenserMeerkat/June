@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.DayOfWeek
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.launch
@@ -50,6 +51,7 @@ import java.util.Locale
 @Composable
 fun JournalDatePickerDialog(
     initialDateMillis: Long,
+    startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
     onDateSelected: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -171,6 +173,7 @@ fun JournalDatePickerDialog(
                     CalendarPage(
                         yearMonth = monthForPage,
                         selectedDate = selectedDate,
+                        startOfWeek = startOfWeek,
                         onDateClick = { selectedDate = it }
                     )
                 }
@@ -279,9 +282,10 @@ fun JournalDatePickerDialog(
 fun CalendarPage(
     yearMonth: YearMonth,
     selectedDate: LocalDate,
+    startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
     onDateClick: (LocalDate) -> Unit
 ) {
-    val daysInMonth = remember(yearMonth) { yearMonth.getDaysInMonthGrid() }
+    val daysInMonth = remember(yearMonth, startOfWeek) { yearMonth.getDaysInMonthGrid(startOfWeek) }
     val weeks = remember(daysInMonth) { daysInMonth.chunked(7) }
     val cellHeight = 36.dp
     val cellShape = RoundedCornerShape(16.dp)
@@ -290,7 +294,8 @@ fun CalendarPage(
         modifier = Modifier.fillMaxWidth()
     ) {
         DaysOfWeekHeader(
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 8.dp),
+            startOfWeek = startOfWeek
         )
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp)

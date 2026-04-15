@@ -6,6 +6,7 @@ import com.denser.june.core.domain.backup.ExportState
 import com.denser.june.core.domain.backup.RestoreState
 import com.denser.june.core.domain.model.AppTheme
 import com.denser.june.core.domain.model.enums.LockType
+import java.time.DayOfWeek
 
 @Stable
 @Immutable
@@ -17,5 +18,7 @@ data class SettingsState(
     val isAppLockEnabled: Boolean = false,
     val lockType: LockType = LockType.BIOMETRIC,
     val pinHash: String? = null,
-    val isScreenPrivacyEnabled: Boolean = false
+    val isScreenPrivacyEnabled: Boolean = false,
+    val isAutoTimeEnabled: Boolean = false,
+    val startOfWeek: DayOfWeek = DayOfWeek.SUNDAY
 )

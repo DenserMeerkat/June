@@ -7,8 +7,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.repository.SongRepository
+import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.utils.getTodayAtMidnight
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import kotlinx.coroutines.FlowPreview
@@ -21,13 +23,28 @@ import kotlinx.coroutines.launch
 class EditorVM(
     savedStateHandle: SavedStateHandle,
     private val journalRepo: JournalRepository,
+    private val journalPrefs: JournalPreferences,
     private val songRepo: SongRepository,
     private val navigator: AppNavigator
 ) : ViewModel() {
-    private val initialJournalId: String? = savedStateHandle.getJournalIdFromRoutes()
+    private val editorRoute = savedStateHandle.tryRoute<Route.Editor>()
+    private val journalId = editorRoute?.journalId
+        ?: savedStateHandle.tryRoute<Route.JournalMedia>()?.journalId
+        ?: savedStateHandle.tryRoute<Route.JournalMediaDetail>()?.journalId
+
     private var existingJournal: Journal? = null
 
-    private val _state = MutableStateFlow(EditorState())
+    private val _state = MutableStateFlow(
+        run {
+            val routeDate = editorRoute?.initialDate
+            EditorState(
+                dateTime = routeDate ?: getTodayAtMidnight(),
+                tags = editorRoute?.initialTags ?: emptyList(),
+                isDraft = true,
+                isDirty = true
+            )
+        }
+    )
     val state = _state.asStateFlow()
 
     private val _uiEvent = Channel<String>()
@@ -41,6 +58,12 @@ class EditorVM(
 
     init {
         viewModelScope.launch {
+            journalPrefs.startOfWeek().collect { startDay ->
+                updateState { it.copy(startOfWeek = startDay) }
+            }
+        }
+
+        viewModelScope.launch {
             _saveTrigger
                 .debounce(5000L)
                 .collect { stateToSave ->
@@ -48,28 +71,11 @@ class EditorVM(
                 }
         }
 
-        if (initialJournalId != null) {
-            loadJournal(initialJournalId)
-        } else {
-            val editorRoute = savedStateHandle.tryRoute<Route.Editor>()
-            if (editorRoute?.initialDate != null || editorRoute?.initialTags != null) {
-                _state.update { currentState ->
-                    currentState.copy(
-                        dateTime = editorRoute.initialDate ?: currentState.dateTime,
-                        tags = editorRoute.initialTags ?: currentState.tags,
-                        isDraft = true,
-                        isDirty = true
-                    )
-                }
-            }
+        if (journalId != null) {
+            loadJournal(journalId)
         }
     }
 
-    private fun SavedStateHandle.getJournalIdFromRoutes(): String? {
-        return tryRoute<Route.Editor>()?.journalId
-            ?: tryRoute<Route.JournalMedia>()?.journalId
-            ?: tryRoute<Route.JournalMediaDetail>()?.journalId
-    }
 
     private inline fun <reified T : Any> SavedStateHandle.tryRoute(): T? {
         return try {
