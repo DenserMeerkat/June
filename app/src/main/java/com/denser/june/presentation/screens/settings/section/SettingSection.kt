@@ -103,6 +103,7 @@ fun SettingsItem(
                         )
                     }
                 }
+                Spacer(modifier = Modifier.width(4.dp))
                 Box(
                     modifier = Modifier.size(40.dp),
                     contentAlignment = Alignment.Center

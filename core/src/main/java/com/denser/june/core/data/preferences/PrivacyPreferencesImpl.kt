@@ -18,6 +18,7 @@ class PrivacyPreferencesImpl(
         private val appLock = booleanPreferencesKey("app_lock")
         private val lockType = stringPreferencesKey("lock_type")
         private val pinHash = stringPreferencesKey("pin_hash")
+        private val screenPrivacy = booleanPreferencesKey("screen_privacy")
     }
 
     override fun getAppLockFlow(): Flow<Boolean> = dataStore.data
@@ -46,5 +47,12 @@ class PrivacyPreferencesImpl(
         dataStore.edit {
             if (hash == null) it.remove(pinHash) else it[pinHash] = hash
         }
+    }
+
+    override fun getScreenPrivacyFlow(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[screenPrivacy] == true }
+
+    override suspend fun updateScreenPrivacy(enabled: Boolean) {
+        dataStore.edit { it[screenPrivacy] = enabled }
     }
 }

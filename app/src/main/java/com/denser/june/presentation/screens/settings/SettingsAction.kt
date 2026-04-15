@@ -19,4 +19,5 @@ sealed interface SettingsAction {
     data class OnAppLockToggle(val enabled: Boolean) : SettingsAction
     data class UpdateLockType(val type: LockType) : SettingsAction
     data class UpdatePinHash(val hash: String?) : SettingsAction
+    data class OnScreenPrivacyToggle(val enabled: Boolean) : SettingsAction
 }

@@ -45,7 +45,8 @@ class SettingsVM(
             themePrefs.getFontFlow(),
             privacyPrefs.getAppLockFlow(),
             privacyPrefs.getLockTypeFlow(),
-            privacyPrefs.getPinHashFlow()
+            privacyPrefs.getPinHashFlow(),
+            privacyPrefs.getScreenPrivacyFlow()
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -54,6 +55,7 @@ class SettingsVM(
             isAppLockEnabled = array[7] as Boolean,
             lockType = array[8] as LockType,
             pinHash = array[9] as String?,
+            isScreenPrivacyEnabled = array[10] as Boolean,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -116,6 +118,7 @@ class SettingsVM(
                 is SettingsAction.OnAppLockToggle -> privacyPrefs.updateAppLock(action.enabled)
                 is SettingsAction.UpdateLockType -> privacyPrefs.updateLockType(action.type)
                 is SettingsAction.UpdatePinHash -> privacyPrefs.updatePinHash(action.hash)
+                is SettingsAction.OnScreenPrivacyToggle -> privacyPrefs.updateScreenPrivacy(action.enabled)
             }
         }
     }

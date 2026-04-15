@@ -14,12 +14,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.screens.settings.section.PrivacySecuritySection
+import com.denser.june.presentation.screens.settings.section.SyncBackupSection
+import com.denser.june.presentation.screens.settings.section.JournalSection
 import com.denser.june.presentation.screens.settings.section.AboutSection
 import com.denser.june.presentation.screens.settings.section.AppearanceSection
-import com.denser.june.presentation.screens.settings.section.GeneralSection
 import org.koin.compose.koinInject
-
-
 import com.denser.june.core.R
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -62,8 +62,20 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            item(key = "general_section") {
-                GeneralSection(
+            item(key = "privacy_security_section") {
+                PrivacySecuritySection(
+                    state = state,
+                    onAction = onAction
+                )
+            }
+            item(key = "sync_backup_section") {
+                SyncBackupSection(
+                    state = state,
+                    onAction = onAction
+                )
+            }
+            item(key = "journal_section") {
+                JournalSection(
                     state = state,
                     onAction = onAction
                 )

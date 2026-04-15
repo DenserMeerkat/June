@@ -1,6 +1,7 @@
 package com.denser.june
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.biometric.BiometricManager
@@ -80,6 +81,19 @@ class MainActivity : FragmentActivity() {
                             lockState = LockState.UNLOCKED
                         }
                     }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            privacyPreferences.getScreenPrivacyFlow().collect { enabled ->
+                if (enabled) {
+                    window.setFlags(
+                        WindowManager.LayoutParams.FLAG_SECURE,
+                        WindowManager.LayoutParams.FLAG_SECURE
+                    )
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
                 }
             }
         }

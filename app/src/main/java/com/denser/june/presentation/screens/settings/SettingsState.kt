@@ -16,5 +16,6 @@ data class SettingsState(
     val restoreState: RestoreState = RestoreState.Idle,
     val isAppLockEnabled: Boolean = false,
     val lockType: LockType = LockType.BIOMETRIC,
-    val pinHash: String? = null
+    val pinHash: String? = null,
+    val isScreenPrivacyEnabled: Boolean = false
 )

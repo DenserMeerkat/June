@@ -9,7 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
 import com.denser.june.core.R
-import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.settings.SettingsAction
@@ -18,73 +17,17 @@ import com.denser.june.presentation.components.JuneConfirmationDialog
 import org.koin.compose.koinInject
 
 @Composable
-fun GeneralSection(
+fun JournalSection(
     state: SettingsState,
     onAction: (SettingsAction) -> Unit
 ) {
     val navigator = koinInject<AppNavigator>()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    SettingSection(title = "General") {
-        SettingsItem(
-            title = "App Lock",
-            subtitle = if (state.isAppLockEnabled) {
-                if (state.lockType == LockType.PIN) "Custom PIN" else "Same as screen lock"
-            } else {
-                "No lock"
-            },
-            leadingContent = {
-                Icon(
-                    painter = painterResource(R.drawable.lock_24px),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-            },
-            onClick = { navigator.navigateTo(Route.LockMethod) }
-        )
-
-        SettingsItem(
-            title = "Permissions",
-            subtitle = "Manage app permissions",
-            leadingContent = {
-                Icon(
-                    painter = painterResource(R.drawable.security_24px),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-            },
-            onClick = { navigator.navigateTo(Route.Permissions) }
-        )
-
-        SettingsItem(
-            title = "Cloud Sync",
-            subtitle = "Sync across devices via Cloud",
-            leadingContent = {
-                Icon(
-                    painter = painterResource(R.drawable.cloud_sync_24px),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-            },
-            onClick = { navigator.navigateTo(Route.SyncSettings) }
-        )
- 
-        SettingsItem(
-            title = "Local Backup",
-            subtitle = "Restore or export data locally",
-            leadingContent = {
-                Icon(
-                    painter = painterResource(R.drawable.backup_24px),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-            },
-            onClick = { navigator.navigateTo(Route.Backup) }
-        )
-
+    SettingSection(title = "Journals") {
         SettingsItem(
             title = "Bin",
-            subtitle = "View and restore deleted journals",
+            subtitle = "Restore deleted journals",
             leadingContent = {
                 Icon(
                     painter = painterResource(R.drawable.delete_24px),
