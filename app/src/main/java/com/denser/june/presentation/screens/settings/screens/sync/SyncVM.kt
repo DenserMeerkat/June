@@ -3,6 +3,7 @@ package com.denser.june.presentation.screens.settings.screens.sync
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.denser.june.core.domain.preferences.SyncPreferences
+import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.sync.SyncManager
 import com.denser.june.core.domain.sync.SyncStatus
 import com.denser.june.core.domain.sync.SyncAnalysis
@@ -30,11 +31,13 @@ data class SyncSettingsState(
     val analysis: SyncAnalysis? = null,
     val isAnalyzing: Boolean = false,
     val showAdvancedOptions: Boolean = false,
-    val showAnalysisDetails: Boolean = false
+    val showAnalysisDetails: Boolean = false,
+    val isInternetAllowed: Boolean = true
 )
 
 class SyncVM(
     private val syncPrefs: SyncPreferences,
+    private val privacyPreferences: PrivacyPreferences,
     private val syncManager: SyncManager
 ) : ViewModel() {
 
@@ -46,6 +49,15 @@ class SyncVM(
     val effect = _effect.asSharedFlow()
 
     init {
+        viewModelScope.launch {
+            privacyPreferences.getIsInternetAllowedFlow().collect { allowed ->
+                _state.update { it.copy(isInternetAllowed = allowed) }
+                if (!allowed && _state.value.isEnabled) {
+                    toggleSync(false)
+                }
+            }
+        }
+
         viewModelScope.launch {
             var isInitialLoad = true
             combine(

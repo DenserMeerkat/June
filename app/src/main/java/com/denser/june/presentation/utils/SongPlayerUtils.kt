@@ -22,8 +22,11 @@ data class SongPlayerState(
 @Composable
 fun rememberSongPlayerState(
     previewUrl: String?,
+    isInternetAllowed: Boolean = true
 ): SongPlayerState {
-    val uri = remember(previewUrl) { previewUrl?.toUri() }
+    val uri = remember(previewUrl, isInternetAllowed) {
+        if (isInternetAllowed) previewUrl?.toUri() else null
+    }
     val exoPlayer = uri?.let {
         rememberManagedExoPlayer(uri = it, repeatMode = Player.REPEAT_MODE_OFF)
     }

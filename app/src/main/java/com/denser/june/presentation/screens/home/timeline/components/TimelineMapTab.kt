@@ -28,9 +28,12 @@ import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.presentation.components.MapControlColumn
 import com.denser.june.presentation.components.MapAttributions
+import com.denser.june.presentation.components.InternetRestrictedIndicator
+import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.presentation.utils.MapTilerUtils
 import com.denser.june.presentation.screens.home.timeline.TimelineVM
 import com.denser.june.presentation.theme.LocalAppTheme
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.maplibre.android.MapLibre
 import org.maplibre.android.annotations.IconFactory
@@ -45,11 +48,17 @@ fun TimelineMapTab(
     bottomPadding: Dp,
     viewModel: TimelineVM = koinViewModel()
 ) {
+    val privacyPreferences = koinInject<PrivacyPreferences>()
+    val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
+        .collectAsStateWithLifecycle(initialValue = false)
+
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val isCalendarExpanded by viewModel.isCalendarExpanded.collectAsStateWithLifecycle()
     val isMapExpanded = !isCalendarExpanded
-    remember { MapLibre.getInstance(context) }
+    remember(isInternetAllowed) {
+        if (isInternetAllowed) MapLibre.getInstance(context) else null
+    }
 
     val validPoints = remember(journals) {
         journals.filter { journal ->
@@ -88,116 +97,130 @@ fun TimelineMapTab(
     if (validPoints.isEmpty()) {
         EmptyStateMessage("No locations added for this month.")
     } else {
-        val mapView = remember {
-            MapView(context).apply {
-                isClickable = true
-                isFocusable = true
-            }
-        }
-        DisposableEffect(lifecycleOwner) {
-            val observer = LifecycleEventObserver { _, event ->
-                when (event) {
-                    Lifecycle.Event.ON_RESUME -> mapView.onResume()
-                    Lifecycle.Event.ON_PAUSE -> mapView.onPause()
-                    Lifecycle.Event.ON_START -> mapView.onStart()
-                    Lifecycle.Event.ON_STOP -> mapView.onStop()
-                    Lifecycle.Event.ON_DESTROY -> mapView.onDestroy()
-                    else -> {}
-                }
-            }
-            lifecycleOwner.lifecycle.addObserver(observer)
-            onDispose {
-                lifecycleOwner.lifecycle.removeObserver(observer)
-            }
-        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .clipToBounds()
         ) {
-            AndroidView(
-                factory = { mapView },
-                modifier = Modifier.fillMaxSize(),
-                update = { map ->
-                    val styleUrl =
-                        if (isDarkMap) MapTilerUtils.STYLE_DARK else MapTilerUtils.STYLE_LIGHT
-                    map.getMapAsync { mapboxMap ->
-                        mapboxMap.uiSettings.isAttributionEnabled = false
-                        mapboxMap.uiSettings.isLogoEnabled = false
-                        mapboxMap.uiSettings.isCompassEnabled = false
-                        mapboxMap.setStyle(styleUrl) { style ->
-                            mapboxMap.clear()
+            if (isInternetAllowed) {
+                val mapView = remember {
+                    MapView(context).apply {
+                        isClickable = true
+                        isFocusable = true
+                    }
+                }
 
-                            validPoints.forEachIndexed { index, journal ->
-                                val loc = journal.location
-                                if (loc != null) {
-                                    val markerOptions = MarkerOptions()
-                                        .position(LatLng(loc.latitude, loc.longitude))
-                                        .title(loc.name ?: "Location")
-                                        .icon(
-                                            getMarkerIcon(
-                                                R.drawable.location_on_24px_fill,
-                                                primaryColor
+                DisposableEffect(lifecycleOwner) {
+                    val observer = LifecycleEventObserver { _, event ->
+                        when (event) {
+                            Lifecycle.Event.ON_RESUME -> mapView.onResume()
+                            Lifecycle.Event.ON_PAUSE -> mapView.onPause()
+                            Lifecycle.Event.ON_START -> mapView.onStart()
+                            Lifecycle.Event.ON_STOP -> mapView.onStop()
+                            Lifecycle.Event.ON_DESTROY -> mapView.onDestroy()
+                            else -> {}
+                        }
+                    }
+                    lifecycleOwner.lifecycle.addObserver(observer)
+                    onDispose {
+                        lifecycleOwner.lifecycle.removeObserver(observer)
+                    }
+                }
+
+                AndroidView(
+                    factory = { mapView },
+                    modifier = Modifier.fillMaxSize(),
+                    update = { map ->
+                        val styleUrl =
+                            if (isDarkMap) MapTilerUtils.STYLE_DARK else MapTilerUtils.STYLE_LIGHT
+                        map.getMapAsync { mapboxMap ->
+                            mapboxMap.uiSettings.isAttributionEnabled = false
+                            mapboxMap.uiSettings.isLogoEnabled = false
+                            mapboxMap.uiSettings.isCompassEnabled = false
+                            mapboxMap.setStyle(styleUrl) { style ->
+                                mapboxMap.clear()
+
+                                validPoints.forEachIndexed { index, journal ->
+                                    val loc = journal.location
+                                    if (loc != null) {
+                                        val markerOptions = MarkerOptions()
+                                            .position(LatLng(loc.latitude, loc.longitude))
+                                            .title(loc.name ?: "Location")
+                                            .icon(
+                                                getMarkerIcon(
+                                                    R.drawable.location_on_24px_fill,
+                                                    primaryColor
+                                                )
                                             )
-                                        )
-                                    mapboxMap.addMarker(markerOptions)
+                                        mapboxMap.addMarker(markerOptions)
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            )
-            LaunchedEffect(selectedIndex) {
-                if (validPoints.isNotEmpty()) {
-                    val target = validPoints[selectedIndex].location
-                    if (target != null) {
-                        mapView.getMapAsync { map ->
-                            map.animateCamera(
-                                org.maplibre.android.camera.CameraUpdateFactory.newCameraPosition(
-                                    CameraPosition.Builder()
-                                        .target(LatLng(target.latitude, target.longitude))
-                                        .zoom(16.0)
-                                        .build()
-                                ),
-                                800
-                            )
+                )
+                LaunchedEffect(selectedIndex) {
+                    if (validPoints.isNotEmpty()) {
+                        val target = validPoints[selectedIndex].location
+                        if (target != null) {
+                            mapView.getMapAsync { map ->
+                                map.animateCamera(
+                                    org.maplibre.android.camera.CameraUpdateFactory.newCameraPosition(
+                                        CameraPosition.Builder()
+                                            .target(LatLng(target.latitude, target.longitude))
+                                            .zoom(16.0)
+                                            .build()
+                                    ),
+                                    800
+                                )
+                            }
                         }
                     }
                 }
-            }
-            MapControlColumn(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 12.dp, end = 16.dp),
-                isDarkMode = isDarkMap,
-                onToggleDarkMode = { isDarkMap = !isDarkMap },
-                isMapExpanded = isMapExpanded,
-                onToggleFullscreen = { viewModel.setCalendarExpanded(isMapExpanded) },
-                isFetchingLocation = false,
-                onZoomIn = {
-                    mapView.getMapAsync { it.animateCamera(org.maplibre.android.camera.CameraUpdateFactory.zoomIn()) }
-                },
-                onZoomOut = {
-                    mapView.getMapAsync { it.animateCamera(org.maplibre.android.camera.CameraUpdateFactory.zoomOut()) }
+                MapControlColumn(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 12.dp, end = 16.dp),
+                    isDarkMode = isDarkMap,
+                    onToggleDarkMode = { isDarkMap = !isDarkMap },
+                    isMapExpanded = isMapExpanded,
+                    onToggleFullscreen = { viewModel.setCalendarExpanded(isMapExpanded) },
+                    isFetchingLocation = false,
+                    onZoomIn = {
+                        mapView.getMapAsync { it.animateCamera(org.maplibre.android.camera.CameraUpdateFactory.zoomIn()) }
+                    },
+                    onZoomOut = {
+                        mapView.getMapAsync { it.animateCamera(org.maplibre.android.camera.CameraUpdateFactory.zoomOut()) }
+                    }
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = 16.dp, top = 12.dp)
+                ) {
+                    MapAttributions(isDarkMode = isDarkMap)
                 }
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = 16.dp, top = 12.dp)
-            ) {
-                MapAttributions(isDarkMode = isDarkMap)
+                MapNavigationPill(
+                    currentIndex = selectedIndex,
+                    totalCount = validPoints.size,
+                    currentLocationName = validPoints[selectedIndex].location?.name ?: "Unknown",
+                    onPrevious = { if (selectedIndex > 0) selectedIndex-- },
+                    onNext = { if (selectedIndex < validPoints.size - 1) selectedIndex++ },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = bottomPadding + 12.dp, start = 16.dp, end = 16.dp)
+                )
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    InternetRestrictedIndicator(
+                        modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = bottomPadding),
+                        description = "Maps require internet access to load tiles and display locations."
+                    )
+                }
             }
-            MapNavigationPill(
-                currentIndex = selectedIndex,
-                totalCount = validPoints.size,
-                currentLocationName = validPoints[selectedIndex].location?.name ?: "Unknown",
-                onPrevious = { if (selectedIndex > 0) selectedIndex-- },
-                onNext = { if (selectedIndex < validPoints.size - 1) selectedIndex++ },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = bottomPadding + 12.dp, start = 16.dp, end = 16.dp)
-            )
         }
     }
 }

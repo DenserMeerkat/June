@@ -20,6 +20,9 @@ import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.presentation.components.JuneSongPlayerCard
 import com.denser.june.presentation.utils.rememberSongPlayerState
 
+import com.denser.june.core.domain.preferences.PrivacyPreferences
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.koinInject
 import com.denser.june.core.R
 
 @Composable
@@ -29,7 +32,14 @@ fun JournalSongItem(
     onRemove: () -> Unit,
     onEdit: () -> Unit,
 ) {
-    val playerState = rememberSongPlayerState(previewUrl = details?.previewUrl)
+    val privacyPreferences = koinInject<PrivacyPreferences>()
+    val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
+        .collectAsStateWithLifecycle(initialValue = false)
+
+    val playerState = rememberSongPlayerState(
+        previewUrl = details?.previewUrl,
+        isInternetAllowed = isInternetAllowed
+    )
 
     var showMenu by remember { mutableStateOf(false) }
     var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
@@ -74,7 +84,8 @@ fun JournalSongItem(
                         onPlayPause = playerState.onPlayPause,
                         onSeek = playerState.onSeek,
                         onSeekFinished = playerState.onSeekFinished,
-                        onToggleRepeat = playerState.onToggleRepeat
+                        onToggleRepeat = playerState.onToggleRepeat,
+                        isInternetAllowed = isInternetAllowed
                     )
 
                     if (showMenu) {

@@ -10,6 +10,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.denser.june.core.R
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.preferences.JournalPreferences
+import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.SongDetails
 import java.time.DayOfWeek
@@ -35,6 +36,7 @@ enum class TimelineTab(val label: String, val iconRes: Int) {
 class TimelineVM(
     private val repo: JournalRepository,
     private val journalPrefs: JournalPreferences,
+    private val privacyPreferences: PrivacyPreferences,
     context: Context,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -59,6 +61,11 @@ class TimelineVM(
     )
 
     val initialPage = Int.MAX_VALUE / 2
+    private val isInternetAllowed = privacyPreferences.getIsInternetAllowedFlow().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = false
+    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val journalsInMonth: StateFlow<List<Journal>> = _currentMonth.flatMapLatest { month ->
@@ -148,6 +155,7 @@ class TimelineVM(
     }
 
     fun onSongSelected(song: SongDetails, journalId: String, autoPlay: Boolean = true) {
+        if (!isInternetAllowed.value) return
         playingJournalId = journalId
         if (_activeSong.value?.previewUrl == song.previewUrl) {
             togglePlayPause()

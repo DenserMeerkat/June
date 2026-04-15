@@ -25,6 +25,7 @@ class EditorVM(
     private val journalRepo: JournalRepository,
     private val journalPrefs: JournalPreferences,
     private val songRepo: SongRepository,
+    private val privacyPreferences: com.denser.june.core.domain.preferences.PrivacyPreferences,
     private val navigator: AppNavigator
 ) : ViewModel() {
     private val editorRoute = savedStateHandle.tryRoute<Route.Editor>()
@@ -332,6 +333,10 @@ class EditorVM(
 
     fun fetchSongDetails(url: String) {
         viewModelScope.launch {
+            if (!privacyPreferences.getIsInternetAllowedFlow().first()) {
+                _uiEvent.send("Internet access is restricted in settings")
+                return@launch
+            }
             val trimmedUrl = url.trim()
             if (trimmedUrl.isBlank()) {
                 _uiEvent.send("Link cannot be empty")

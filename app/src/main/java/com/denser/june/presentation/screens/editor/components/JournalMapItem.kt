@@ -18,6 +18,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import com.denser.june.core.domain.preferences.PrivacyPreferences
+import com.denser.june.presentation.components.InternetRestrictedIndicator
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.koinInject
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
@@ -43,12 +47,18 @@ fun JournalMapItem(
     onMapClick: () -> Unit,
     onRemove: () -> Unit
 ) {
+    val privacyPreferences = koinInject<PrivacyPreferences>()
+    val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
+        .collectAsStateWithLifecycle(initialValue = false)
+
     var showMenu by remember { mutableStateOf(false) }
     var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
     val interactionSource = remember { MutableInteractionSource() }
     val context = LocalContext.current
 
-    remember { MapLibre.getInstance(context) }
+    remember(isInternetAllowed) {
+        if (isInternetAllowed) MapLibre.getInstance(context) else null
+    }
 
     val cameraState = rememberCameraState(
         firstPosition = CameraPosition(
@@ -79,31 +89,40 @@ fun JournalMapItem(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            MaplibreMap(
-                modifier = Modifier.fillMaxSize(),
-                baseStyle = BaseStyle.Uri(mapStyleUrl),
-                cameraState = cameraState,
-                options = MapOptions(
-                    gestureOptions = GestureOptions(
-                        isTiltEnabled = false,
-                        isZoomEnabled = false,
-                        isRotateEnabled = false,
-                        isScrollEnabled = false,
-                    ),
-                    ornamentOptions = OrnamentOptions(
-                        isLogoEnabled = false,
-                        isAttributionEnabled = false,
-                        isCompassEnabled = false,
-                        isScaleBarEnabled = false
+            if (isInternetAllowed) {
+                MaplibreMap(
+                    modifier = Modifier.fillMaxSize(),
+                    baseStyle = BaseStyle.Uri(mapStyleUrl),
+                    cameraState = cameraState,
+                    options = MapOptions(
+                        gestureOptions = GestureOptions(
+                            isTiltEnabled = false,
+                            isZoomEnabled = false,
+                            isRotateEnabled = false,
+                            isScrollEnabled = false,
+                        ),
+                        ornamentOptions = OrnamentOptions(
+                            isLogoEnabled = false,
+                            isAttributionEnabled = false,
+                            isCompassEnabled = false,
+                            isScaleBarEnabled = false
+                        )
                     )
                 )
-            )
+            } else {
+                InternetRestrictedIndicator(
+                    modifier = Modifier.fillMaxSize().padding(top = 32.dp),
+                    description = "Maps require internet access to load tiles."
+                )
+            }
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(start = 12.dp, bottom = 12.dp)
             ) {
-                MapAttributions(isDarkMode = isMapDarkMode)
+                if (isInternetAllowed) {
+                    MapAttributions(isDarkMode = isMapDarkMode)
+                }
             }
             Surface(
                 onClick = onMapClick,
@@ -155,8 +174,10 @@ fun JournalMapItem(
                         )
                     }
             )
-            Box(modifier = Modifier.align(Alignment.Center)) {
-                MapLocationPin()
+            if (isInternetAllowed) {
+                Box(modifier = Modifier.align(Alignment.Center)) {
+                    MapLocationPin()
+                }
             }
             if (showMenu) {
                 Box(

@@ -15,6 +15,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.model.SongDetails
+import com.denser.june.core.domain.preferences.PrivacyPreferences
+import com.denser.june.presentation.components.InternetRestrictedBanner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
 
 import com.denser.june.core.R
@@ -31,6 +35,9 @@ fun AddSongSheet(
     onRemoveSong: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val privacyPreferences = koinInject<PrivacyPreferences>()
+    val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
+        .collectAsStateWithLifecycle(initialValue = true)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var songLink by remember { mutableStateOf("") }
 
@@ -46,7 +53,7 @@ fun AddSongSheet(
         Scaffold(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 600.dp),
+                .heightIn(max = if(isInternetAllowed) 600.dp else 660.dp),
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             topBar = { AddSongSheetHeader() },
             floatingActionButton = {
@@ -73,11 +80,13 @@ fun AddSongSheet(
                     }
                     JuneFloatingAction(
                         onClick = {
-                            scope.launch {
-                                val clipEntry = clipboard.getClipEntry()
-                                val text = clipEntry?.clipData?.getItemAt(0)?.text?.toString() ?: ""
-                                songLink = text
-                                onFetchDetails(text)
+                            if (isInternetAllowed) {
+                                scope.launch {
+                                    val clipEntry = clipboard.getClipEntry()
+                                    val text = clipEntry?.clipData?.getItemAt(0)?.text?.toString() ?: ""
+                                    songLink = text
+                                    onFetchDetails(text)
+                                }
                             }
                         },
                         label = "Paste",
@@ -87,8 +96,9 @@ fun AddSongSheet(
                                 contentDescription = null
                             )
                         },
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        containerColor = if (isInternetAllowed) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (isInternetAllowed) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                        enabled = isInternetAllowed
                     )
                     JuneFloatingAction(
                         onClick = onDismiss,
@@ -112,12 +122,19 @@ fun AddSongSheet(
                     .padding(horizontal = 22.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
+                if (!isInternetAllowed) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    InternetRestrictedBanner(
+                        description = "Enable internet access to fetch song details."
+                    )
+                }
+                Spacer(modifier = Modifier.height(20.dp))
                 SongInputCard(
                     songLink = songLink,
                     onLinkChange = { songLink = it },
                     isFetching = isFetching,
-                    onFetchClick = { onFetchDetails(songLink) }
+                    onFetchClick = { onFetchDetails(songLink) },
+                    enabled = isInternetAllowed
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 SongPreviewCard(
@@ -137,7 +154,8 @@ fun SongInputCard(
     songLink: String,
     onLinkChange: (String) -> Unit,
     isFetching: Boolean,
-    onFetchClick: () -> Unit
+    onFetchClick: () -> Unit,
+    enabled: Boolean = true
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -177,14 +195,14 @@ fun SongInputCard(
                 onValueChange = onLinkChange,
                 placeholder = { Text("Paste link here...") },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isFetching,
+                enabled = !isFetching && enabled,
                 trailingIcon = {
                     if (isFetching) {
                         CircularWavyProgressIndicator(
                             modifier = Modifier.size(24.dp),
                             color = MaterialTheme.colorScheme.primary
                         )
-                    } else if (songLink.isNotBlank()) {
+                    } else if (songLink.isNotBlank() && enabled) {
                         FilledTonalIconButton(
                             onClick = onFetchClick,
                             shape = IconButtonDefaults.extraSmallRoundShape,

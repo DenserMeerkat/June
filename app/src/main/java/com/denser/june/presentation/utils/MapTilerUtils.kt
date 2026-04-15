@@ -24,10 +24,13 @@ object MapTilerUtils {
     const val STYLE_LIGHT = "https://api.maptiler.com/maps/streets-v2/style.json?key=$API_KEY"
     const val STYLE_DARK = "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=$API_KEY"
 
+    var isInternetAllowed = true
+
     private val client = OkHttpClient()
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     suspend fun fetchCurrentLocation(context: Context): JournalLocation? {
+        if (!isInternetAllowed) return null
         return try {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             val cancellationTokenSource = CancellationTokenSource()
@@ -46,20 +49,23 @@ object MapTilerUtils {
         }
     }
 
-    private suspend fun performGetRequest(context: Context, url: String): String? = withContext(Dispatchers.IO) {
-        try {
-            val request = Request.Builder()
-                .url(url)
-                .header("User-Agent", context.packageName)
-                .build()
+    private suspend fun performGetRequest(context: Context, url: String): String? {
+        if (!isInternetAllowed) return null
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = Request.Builder()
+                    .url(url)
+                    .header("User-Agent", context.packageName)
+                    .build()
 
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return@withContext null
-                return@withContext response.body?.string()
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) return@withContext null
+                    return@withContext response.body?.string()
+                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+                null
             }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            null
         }
     }
 

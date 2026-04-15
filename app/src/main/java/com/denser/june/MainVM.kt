@@ -17,7 +17,8 @@ data class AppState(
     val isAppLockEnabled: Boolean = false,
     val isLoading: Boolean = true,
     val syncStatus: SyncStatus = SyncStatus.Idle,
-    val isSyncEnabled: Boolean = false
+    val isSyncEnabled: Boolean = false,
+    val isInternetAllowed: Boolean = true
 )
 
 class MainVM(
@@ -48,14 +49,23 @@ class MainVM(
         themePrefs.getFontFlow(),
         privacyPrefs.getAppLockFlow(),
         syncManager.status,
-        syncPrefs.getSyncEnabled()
-    ) { baseTheme, font, appLock, syncStatus, syncEnabled ->
+        syncPrefs.getSyncEnabled(),
+        privacyPrefs.getIsInternetAllowedFlow()
+    ) { args: Array<Any?> ->
+        val baseTheme = args[0] as AppTheme
+        val font = args[1] as com.denser.june.core.domain.model.enums.Fonts
+        val appLock = args[2] as Boolean
+        val syncStatus = args[3] as SyncStatus
+        val syncEnabled = args[4] as Boolean
+        val internetAllowed = args[5] as Boolean
+
         AppState(
             appTheme = baseTheme.copy(font = font),
             isAppLockEnabled = appLock,
             isLoading = false,
             syncStatus = syncStatus,
-            isSyncEnabled = syncEnabled
+            isSyncEnabled = syncEnabled,
+            isInternetAllowed = internetAllowed
         )
     }.stateIn(
         scope = viewModelScope,

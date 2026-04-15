@@ -29,11 +29,14 @@ import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.utils.toDayOfMonth
 import com.denser.june.core.utils.toShortMonth
 import com.denser.june.presentation.components.ListenDropdownMenu
+import com.denser.june.presentation.components.RestrictedAsyncImage
 import com.denser.june.presentation.utils.rememberDynamicThemeColors
 import com.denser.june.presentation.screens.home.timeline.TimelineVM
 import org.koin.compose.viewmodel.koinViewModel
 
 import com.denser.june.core.R
+import com.denser.june.core.domain.preferences.PrivacyPreferences
+import org.koin.compose.koinInject
 
 @Composable
 fun TimelineMusicTab(
@@ -41,6 +44,9 @@ fun TimelineMusicTab(
     bottomPadding: Dp,
     viewModel: TimelineVM = koinViewModel()
 ) {
+    val privacyPreferences = koinInject<PrivacyPreferences>()
+    val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
+        .collectAsStateWithLifecycle(initialValue = false)
     val musicJournals = remember(journals) {
         journals.filter { it.songDetails != null }
     }
@@ -93,13 +99,14 @@ fun TimelineMusicTab(
                         journal = journal,
                         song = song,
                         isActive = activeSong?.previewUrl == song.previewUrl,
+                        isInternetAllowed = isInternetAllowed,
                         onClick = { viewModel.onSongSelected(song, journal.id) }
                     )
                 }
             }
         }
 
-        if (activeSong != null) {
+        if (activeSong != null && isInternetAllowed) {
             DockedMiniPlayer(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -108,6 +115,7 @@ fun TimelineMusicTab(
                 isPlaying = isPlaying,
                 isLoading = isLoading,
                 progress = progress,
+                isInternetAllowed = isInternetAllowed,
                 onPlayPause = { viewModel.togglePlayPause() }
             )
         }
@@ -120,10 +128,11 @@ fun DockedMiniPlayer(
     isPlaying: Boolean,
     isLoading: Boolean,
     progress: Float,
+    isInternetAllowed: Boolean,
     onPlayPause: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val themeColors = rememberDynamicThemeColors(song.thumbnailUrl)
+    val themeColors = rememberDynamicThemeColors(if (isInternetAllowed) song.thumbnailUrl else null)
 
     Surface(
         modifier = modifier
@@ -142,15 +151,21 @@ fun DockedMiniPlayer(
                     .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AsyncImage(
-                    model = song.thumbnailUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                Box(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
-                )
+                        .background(MaterialTheme.colorScheme.surfaceContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    RestrictedAsyncImage(
+                        imageUrl = song.thumbnailUrl,
+                        isInternetAllowed = isInternetAllowed,
+                        iconSize = 20.dp,
+                        iconTint = themeColors.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(
                     modifier = Modifier.weight(1f),
@@ -201,6 +216,7 @@ fun MusicListTile(
     journal: Journal,
     song: SongDetails,
     isActive: Boolean = false,
+    isInternetAllowed: Boolean = true,
     onClick: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -223,7 +239,7 @@ fun MusicListTile(
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
             .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() },
+            .clickable(enabled = isInternetAllowed) { onClick() },
         shape = RoundedCornerShape(16.dp),
         color = if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         else MaterialTheme.colorScheme.surfaceContainerLow,
@@ -236,15 +252,21 @@ fun MusicListTile(
             verticalAlignment = Alignment.CenterVertically
         ) {
             TimelineDateColumn(dateTime = journal.dateTime)
-            AsyncImage(
-                model = song.thumbnailUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            Box(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            )
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                contentAlignment = Alignment.Center
+            ) {
+                RestrictedAsyncImage(
+                    imageUrl = song.thumbnailUrl,
+                    isInternetAllowed = isInternetAllowed,
+                    iconSize = 20.dp,
+                    iconTint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
             Spacer(modifier = Modifier.width(12.dp))
             Column(
                 modifier = Modifier.weight(1f),

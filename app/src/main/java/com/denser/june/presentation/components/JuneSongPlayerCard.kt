@@ -42,6 +42,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -75,10 +76,11 @@ fun JuneSongPlayerCard(
     onPlayPause: () -> Unit,
     onSeek: (Float) -> Unit,
     onSeekFinished: () -> Unit,
-    onToggleRepeat: () -> Unit
+    onToggleRepeat: () -> Unit,
+    isInternetAllowed: Boolean = true
 ) {
     val context = LocalContext.current
-    val themeColors = rememberDynamicThemeColors(details.thumbnailUrl)
+    val themeColors = rememberDynamicThemeColors(if (isInternetAllowed) details.thumbnailUrl else null)
 
     var rippleTrigger by remember { mutableIntStateOf(0) }
     val rippleScale = remember { Animatable(1f) }
@@ -126,10 +128,10 @@ fun JuneSongPlayerCard(
                 .height(240.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
-                AsyncImage(
-                    model = details.thumbnailUrl,
+                RestrictedAsyncImage(
+                    imageUrl = details.thumbnailUrl,
+                    isInternetAllowed = isInternetAllowed,
                     contentDescription = null,
-                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
                         .alpha(0.25f)
@@ -156,15 +158,22 @@ fun JuneSongPlayerCard(
                     Row(
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        AsyncImage(
-                            model = details.thumbnailUrl,
-                            contentDescription = "Album Art",
-                            contentScale = ContentScale.Crop,
+                        Box(
                             modifier = Modifier
                                 .size(108.dp)
                                 .clip(RoundedCornerShape(16.dp))
                                 .shadow(8.dp, RoundedCornerShape(16.dp))
-                        )
+                                .background(themeColors.secondaryContainer)
+                        ) {
+                            RestrictedAsyncImage(
+                                imageUrl = details.thumbnailUrl,
+                                isInternetAllowed = isInternetAllowed,
+                                contentDescription = "Album Art",
+                                iconSize = 32.dp,
+                                iconTint = themeColors.onSurfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                         Spacer(Modifier.weight(1f))
                         Box(
                             modifier = Modifier.offset(y = (-12).dp),
@@ -460,5 +469,38 @@ fun getPlatformIcon(platform: String): Int {
         "Tidal" -> R.drawable.tidal
         "Amazon Music" -> R.drawable.amazonmusic
         else -> R.drawable.music_note_24px
+    }
+}
+
+@Composable
+fun RestrictedAsyncImage(
+    imageUrl: String?,
+    isInternetAllowed: Boolean,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+    contentScale: ContentScale = ContentScale.Crop,
+    iconResource: Int = R.drawable.music_note_24px,
+    iconSize: Dp = 24.dp,
+    iconTint: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        AsyncImage(
+            model = if (isInternetAllowed) imageUrl else null,
+            contentDescription = contentDescription,
+            contentScale = contentScale,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        if (!isInternetAllowed) {
+            Icon(
+                painter = painterResource(iconResource),
+                contentDescription = null,
+                modifier = Modifier.size(iconSize),
+                tint = iconTint
+            )
+        }
     }
 }

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.debounce
 import com.denser.june.core.data.sync.SyncWorker
+import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.data.database.journal.JournalDatabase
 import kotlinx.coroutines.FlowPreview
 import java.io.File
@@ -63,7 +64,8 @@ class SyncManager(
     private val providers: Map<String, CloudProvider>,
     private val mediaDir: File,
     private val context: android.content.Context,
-    private val applicationScope: CoroutineScope
+    private val applicationScope: CoroutineScope,
+    private val privacyPreferences: PrivacyPreferences
 ) {
     companion object {
         const val SYNC_THRESHOLD_MS = 2000L
@@ -126,6 +128,9 @@ class SyncManager(
     }
 
     suspend fun performAnalysis(): Result<SyncAnalysis> = syncMutex.withLock {
+        if (!privacyPreferences.getIsInternetAllowedFlow().first()) {
+            return@withLock Result.failure(Exception("Internet access restricted in settings"))
+        }
         val isSyncEnabled = syncPrefs.getSyncEnabled().first()
         if (!isSyncEnabled) return@withLock Result.failure(Exception("Sync is disabled"))
 
@@ -241,6 +246,9 @@ class SyncManager(
     }
 
     suspend fun sync(isFullRevalidation: Boolean = false): Result<Unit> = syncMutex.withLock {
+        if (!privacyPreferences.getIsInternetAllowedFlow().first()) {
+            return@withLock Result.failure(Exception("Internet access restricted in settings"))
+        }
         val isSyncEnabled = syncPrefs.getSyncEnabled().first()
         if (!isSyncEnabled) return@withLock Result.failure(Exception("Sync is disabled"))
 

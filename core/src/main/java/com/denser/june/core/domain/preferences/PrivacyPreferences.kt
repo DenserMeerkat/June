@@ -15,4 +15,7 @@ interface PrivacyPreferences {
 
     fun getScreenPrivacyFlow(): Flow<Boolean>
     suspend fun updateScreenPrivacy(enabled: Boolean)
+
+    fun getIsInternetAllowedFlow(): Flow<Boolean>
+    suspend fun updateIsInternetAllowed(allowed: Boolean)
 }

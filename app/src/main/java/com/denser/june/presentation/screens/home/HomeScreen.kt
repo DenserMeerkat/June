@@ -85,7 +85,7 @@ fun HomeScreen() {
                         }
                     },
                     actions = {
-                        if (appState.isSyncEnabled) {
+                        if (appState.isSyncEnabled && appState.isInternetAllowed) {
                             SyncIndicator(
                                 status = appState.syncStatus,
                                 onClick = { navigator.navigateTo(Route.SyncSettings) }

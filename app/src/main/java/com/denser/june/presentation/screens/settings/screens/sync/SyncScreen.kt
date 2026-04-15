@@ -26,6 +26,7 @@ import com.denser.june.presentation.screens.settings.screens.sync.sections.SyncA
 import com.denser.june.presentation.screens.settings.screens.sync.sections.SyncGeneralSettings
 import com.denser.june.presentation.screens.settings.screens.sync.sections.SyncStatusCard
 import com.denser.june.presentation.screens.settings.screens.sync.sections.WebDavConfigSection
+import com.denser.june.presentation.components.InternetRestrictedBanner
 import com.denser.june.presentation.screens.settings.screens.sync.components.SyncDetailsDialog
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -88,6 +89,7 @@ fun SyncScreen() {
                         Switch(
                             checked = state.isEnabled,
                             onCheckedChange = { syncVM.toggleSync(it) },
+                            enabled = state.isInternetAllowed,
                             modifier = Modifier
                                 .padding(end = 8.dp)
                                 .scale(0.85f),
@@ -113,6 +115,14 @@ fun SyncScreen() {
             verticalArrangement = Arrangement.spacedBy(4.dp),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
+            if (!state.isInternetAllowed) {
+                item {
+                    InternetRestrictedBanner(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        description = "Enable internet access to use cloud sync."
+                    )
+                }
+            }
             item {
                 Text(
                     text = "Keep your journals in sync across all your devices using a cloud storage provider.",
@@ -141,10 +151,11 @@ fun SyncScreen() {
                             trailingContent = {
                                 Switch(
                                     checked = state.isEnabled,
-                                    onCheckedChange = { syncVM.toggleSync(it) }
+                                    onCheckedChange = { syncVM.toggleSync(it) },
+                                    enabled = state.isInternetAllowed
                                 )
                             },
-                            onClick = { syncVM.toggleSync(true) }
+                            onClick = { if (state.isInternetAllowed) syncVM.toggleSync(true) }
                         )
                     }
                 }
@@ -154,7 +165,7 @@ fun SyncScreen() {
                 SyncStatusCard(
                     status = state.status,
                     lastSyncTime = state.lastSyncTime,
-                    isVisible = state.isEnabled,
+                    isVisible = state.isEnabled && state.isInternetAllowed,
                     horizontalPadding = 16.dp,
                     cornerRadius = 24.dp,
                     modifier = Modifier
@@ -172,7 +183,7 @@ fun SyncScreen() {
 
             item {
                 SyncGeneralSettings(
-                    isVisible = state.isEnabled,
+                    isVisible = state.isEnabled && state.isInternetAllowed,
                     isAutoSyncOn = state.isAutoSyncOn,
                     syncOnlyOnWifi = state.syncOnlyOnWifi,
                     onToggleAutoSync = { syncVM.toggleAutoSync(it) },
@@ -182,7 +193,7 @@ fun SyncScreen() {
 
             item {
                 WebDavConfigSection(
-                    isVisible = state.isEnabled,
+                    isVisible = state.isEnabled && state.isInternetAllowed,
                     webDavUrl = state.webDavUrl,
                     webDavUser = state.webDavUser,
                     webDavPass = state.webDavPass,
@@ -197,13 +208,13 @@ fun SyncScreen() {
                     onPassChange = { syncVM.updatePass(it) },
                     onToggleLock = { syncVM.toggleConfigLock() },
                     onTestConnection = { syncVM.testConnection() },
-                    onManualSync = { syncVM.manualSync() }
+                    onManualSync = { if (state.isInternetAllowed) syncVM.manualSync() }
                 )
             }
 
             item {
                 SyncAdvancedSection(
-                    isVisible = state.isEnabled,
+                    isVisible = state.isEnabled && state.isInternetAllowed,
                     showAdvancedOptions = state.showAdvancedOptions,
                     isAnalyzing = state.isAnalyzing,
                     status = state.status,

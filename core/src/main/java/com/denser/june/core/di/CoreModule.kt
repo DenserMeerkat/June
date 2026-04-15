@@ -89,7 +89,8 @@ val coreModule = module {
             mapOf("WebDAV" to get<CloudProvider>(named("WebDAV"))),
             File(context.filesDir, "journal_media"),
             context,
-            get(named("ApplicationScope"))
+            get(named("ApplicationScope")),
+            get()
         )
     }
 }

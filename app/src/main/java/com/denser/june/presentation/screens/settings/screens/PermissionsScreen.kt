@@ -40,8 +40,13 @@ import com.denser.june.core.R
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.presentation.screens.settings.section.SettingSection
 import com.denser.june.presentation.screens.settings.section.SettingsItem
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,6 +55,11 @@ fun PermissionsScreen() {
     val navigator = koinInject<AppNavigator>()
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    val privacyPreferences = koinInject<PrivacyPreferences>()
+    val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
+        .collectAsStateWithLifecycle(initialValue = true)
+    val scope = rememberCoroutineScope()
 
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -116,7 +126,7 @@ fun PermissionsScreen() {
             SettingSection {
                 SettingsItem(
                     title = "Internet Access",
-                    subtitle = "Used to fetch song metadata and load map data.",
+                    subtitle = "Used to fetch song metadata, load map data and perform cloud sync.",
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.wifi_24px),
@@ -124,7 +134,17 @@ fun PermissionsScreen() {
                             tint = MaterialTheme.colorScheme.secondary
                         )
                     },
-                    onClick = {}
+                    trailingContent = {
+                        Switch(
+                            checked = isInternetAllowed,
+                            onCheckedChange = { allowed ->
+                                scope.launch { privacyPreferences.updateIsInternetAllowed(allowed) }
+                            }
+                        )
+                    },
+                    onClick = {
+                        scope.launch { privacyPreferences.updateIsInternetAllowed(!isInternetAllowed) }
+                    }
                 )
                 SettingsItem(
                     title = "Location",

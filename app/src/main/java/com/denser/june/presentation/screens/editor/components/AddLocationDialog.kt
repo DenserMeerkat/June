@@ -34,7 +34,11 @@ import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.presentation.components.MapControlColumn
 import com.denser.june.presentation.components.MapLocationPin
 import com.denser.june.presentation.components.MapAttributions
+import com.denser.june.presentation.components.InternetRestrictedBanner
+import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.presentation.theme.LocalAppTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.koinInject
 import com.denser.june.presentation.utils.MapTilerUtils
 import com.denser.june.presentation.utils.UiUtils
 import com.google.android.gms.common.api.ResolvableApiException
@@ -65,11 +69,17 @@ fun AddLocationDialog(
     onLocationSelected: (JournalLocation) -> Unit = {},
     onDismiss: () -> Unit
 ) {
+    val privacyPreferences = koinInject<PrivacyPreferences>()
+    val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
+        .collectAsStateWithLifecycle(initialValue = false)
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
-    remember { MapLibre.getInstance(context) }
+    remember(isInternetAllowed) {
+        if (isInternetAllowed) MapLibre.getInstance(context) else null
+    }
 
     var searchQuery by remember { mutableStateOf("") }
     var isSearching by remember { mutableStateOf(false) }
@@ -120,7 +130,7 @@ fun AddLocationDialog(
         if (isMapDarkMode) MapTilerUtils.STYLE_DARK else MapTilerUtils.STYLE_LIGHT
     }
 
-    LaunchedEffect(cameraState.position.target) {
+    LaunchedEffect(cameraState.position.target, isInternetAllowed) {
         isAddressLoading = true
         delay(800)
         val target = cameraState.position.target
@@ -202,7 +212,7 @@ fun AddLocationDialog(
     }
 
     LaunchedEffect(Unit) {
-        if (existingLocation == null) {
+        if (existingLocation == null && isInternetAllowed) {
             onMyLocationClick()
         }
     }
@@ -219,30 +229,33 @@ fun AddLocationDialog(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            MaplibreMap(
-                modifier = Modifier.fillMaxSize(),
-                baseStyle = BaseStyle.Uri(mapStyleUrl),
-                cameraState = cameraState,
-                options = MapOptions(
-                    ornamentOptions = OrnamentOptions(
-                        isLogoEnabled = false,
-                        isAttributionEnabled = false,
-                        isCompassEnabled = false,
-                        isScaleBarEnabled = false
-                    ),
-                    gestureOptions = GestureOptions(
-                        isTiltEnabled = true,
-                        isZoomEnabled = true,
-                        isRotateEnabled = true,
-                        isScrollEnabled = true
+            if (isInternetAllowed) {
+                MaplibreMap(
+                    modifier = Modifier.fillMaxSize(),
+                    baseStyle = BaseStyle.Uri(mapStyleUrl),
+                    cameraState = cameraState,
+                    options = MapOptions(
+                        ornamentOptions = OrnamentOptions(
+                            isLogoEnabled = false,
+                            isAttributionEnabled = false,
+                            isCompassEnabled = false,
+                            isScaleBarEnabled = false
+                        ),
+                        gestureOptions = GestureOptions(
+                            isTiltEnabled = true,
+                            isZoomEnabled = true,
+                            isRotateEnabled = true,
+                            isScrollEnabled = true
+                        )
                     )
                 )
-            )
+            }
 
-            Box(
+            Column(
                 modifier = Modifier
                     .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 MapSearchBar(
                     query = searchQuery,
@@ -258,13 +271,22 @@ fun AddLocationDialog(
                         }
                     },
                     isSearching = isSearching,
-                    onBack = onDismiss
+                    onBack = onDismiss,
+                    enabled = isInternetAllowed
                 )
+
+                if (!isInternetAllowed) {
+                    InternetRestrictedBanner(
+                        description = "Maps and search require internet access."
+                    )
+                }
             }
-            Box(modifier = Modifier.align(Alignment.Center)) {
-                MapLocationPin(
-                    isMoving = isAddressLoading
-                )
+            if (isInternetAllowed) {
+                Box(modifier = Modifier.align(Alignment.Center)) {
+                    MapLocationPin(
+                        isMoving = isAddressLoading
+                    )
+                }
             }
             Column(
                 modifier = Modifier
@@ -272,50 +294,58 @@ fun AddLocationDialog(
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                MapControlColumn(
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(end = 16.dp),
-                    isDarkMode = isMapDarkMode,
-                    onToggleDarkMode = { isMapDarkMode = !isMapDarkMode },
-                    isFetchingLocation = isFetchingLocation,
-                    onMyLocationClick = onMyLocationClick,
-                    onZoomIn = {
-                        scope.launch {
-                            val currentPos = cameraState.position
-                            cameraState.animateTo(
-                                currentPos.copy(zoom = currentPos.zoom + 1),
-                                300.milliseconds
-                            )
+                if (isInternetAllowed) {
+                    MapControlColumn(
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .padding(end = 16.dp),
+                        isDarkMode = isMapDarkMode,
+                        onToggleDarkMode = { isMapDarkMode = !isMapDarkMode },
+                        isFetchingLocation = isFetchingLocation,
+                        onMyLocationClick = onMyLocationClick,
+                        onZoomIn = {
+                            scope.launch {
+                                val currentPos = cameraState.position
+                                cameraState.animateTo(
+                                    currentPos.copy(zoom = currentPos.zoom + 1),
+                                    300.milliseconds
+                                )
+                            }
+                        },
+                        onZoomOut = {
+                            scope.launch {
+                                val currentPos = cameraState.position
+                                cameraState.animateTo(
+                                    currentPos.copy(zoom = currentPos.zoom - 1),
+                                    300.milliseconds
+                                )
+                            }
                         }
-                    },
-                    onZoomOut = {
-                        scope.launch {
-                            val currentPos = cameraState.position
-                            cameraState.animateTo(
-                                currentPos.copy(zoom = currentPos.zoom - 1),
-                                300.milliseconds
-                            )
-                        }
-                    }
-                )
-                MapAttributions(
-                    modifier = Modifier.padding(start = 8.dp),
-                    isDarkMode = isMapDarkMode
-                )
+                    )
+                    MapAttributions(
+                        modifier = Modifier.padding(start = 8.dp),
+                        isDarkMode = isMapDarkMode
+                    )
+                }
+
                 MapBottomBar(
-                    location = currentLocation,
+                    location = if (!isInternetAllowed && currentLocation.name == "Move map to select") {
+                        currentLocation.copy(name = "Network restricted")
+                    } else currentLocation,
                     isLoading = isAddressLoading,
                     isAtTarget = isAtSelectedLocation,
-                    onLocationIconClick = {
-                        existingLocation?.let {
-                            animateToLocation(LatLng(it.latitude, it.longitude))
+                    onLocationIconClick = if (isInternetAllowed) {
+                        {
+                            existingLocation?.let {
+                                animateToLocation(LatLng(it.latitude, it.longitude))
+                            }
                         }
-                    },
+                    } else null,
                     onConfirm = {
                         onLocationSelected(currentLocation)
                         onDismiss()
-                    }
+                    },
+                    enabled = isInternetAllowed
                 )
             }
         }
@@ -329,7 +359,8 @@ fun MapBottomBar(
     isLoading: Boolean,
     isAtTarget: Boolean,
     onLocationIconClick: (() -> Unit)? = null,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
+    enabled: Boolean = true
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -449,7 +480,7 @@ fun MapBottomBar(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(20.dp),
-                enabled = !isLoading
+                enabled = !isLoading && enabled
             ) {
                 Text(
                     "Confirm Location",
@@ -469,7 +500,8 @@ fun MapSearchBar(
     onSearch: () -> Unit,
     isSearching: Boolean,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -504,12 +536,13 @@ fun MapSearchBar(
                 },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
+                enabled = enabled,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { onSearch() }),
                 colors = UiUtils.getTransparentTextFieldColors(),
                 textStyle = MaterialTheme.typography.bodyLarge
             )
-            IconButton(onClick = onSearch, enabled = !isSearching) {
+            IconButton(onClick = onSearch, enabled = !isSearching && enabled) {
                 if (isSearching) {
                     CircularWavyProgressIndicator(
                         modifier = Modifier.size(24.dp),
@@ -519,7 +552,7 @@ fun MapSearchBar(
                     Icon(
                         painterResource(R.drawable.search_24px),
                         contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
