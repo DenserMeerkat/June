@@ -102,7 +102,9 @@ class SyncVM(
                 _state.update { it.copy(status = status) }
                 when (status) {
                     is SyncStatus.Success -> {
-                        analyzeSync()
+                        if (_state.value.isEnabled) {
+                            analyzeSync()
+                        }
                     }
                     is SyncStatus.Preparing, is SyncStatus.Syncing -> {
                         _state.update { it.copy(analysis = null) }

@@ -78,7 +78,7 @@ class SyncManager(
     init {
         applicationScope.launch {
             syncPrefs.getSyncEnabled().flatMapLatest { isSyncEnabled ->
-                if (!isSyncEnabled) kotlinx.coroutines.flow.flowOf(false)
+                if (!isSyncEnabled) kotlinx.coroutines.flow.flowOf(null)
                 else {
                     combine(
                         journalRepo.observeHasUnsyncedJournals(SYNC_THRESHOLD_MS),
@@ -87,10 +87,16 @@ class SyncManager(
                 }
             }.collect { isDirty ->
                 val current = _status.value
-                if (isDirty && (current is SyncStatus.Idle || current is SyncStatus.Success)) {
-                    _status.value = SyncStatus.Dirty
-                } else if (!isDirty && current is SyncStatus.Dirty) {
-                    _status.value = SyncStatus.Success
+                when {
+                    isDirty == true && (current is SyncStatus.Idle || current is SyncStatus.Success) -> {
+                        _status.value = SyncStatus.Dirty
+                    }
+                    isDirty == false && current is SyncStatus.Dirty -> {
+                        _status.value = SyncStatus.Success
+                    }
+                    isDirty == null -> {
+                        _status.value = SyncStatus.Idle
+                    }
                 }
             }
         }
@@ -276,7 +282,7 @@ class SyncManager(
             val allLocalJournals = journalRepo.getAllJournalsIncludeDeletedSync()
             val localJournalsMap = allLocalJournals.associateBy { it.id }
             val remoteMedia = if (isFullRevalidation) provider.listMedia().getOrThrow().toSet()
-                else emptySet<String>()
+            else emptySet<String>()
 
             val tombstones = journalRepo.getAllTombstones()
             val toDownload = mutableListOf<Pair<String, Long>>()
@@ -399,7 +405,6 @@ class SyncManager(
     }
 
     private suspend fun downloadJournal(id: String, remoteTime: Long): Result<Unit> {
-        val lastSyncTime = syncPrefs.getLastSyncTime().first()
         val provider = getActiveProvider()
         val filename = "$id.json"
 

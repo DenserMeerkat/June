@@ -5,27 +5,27 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.SettingsState
 import com.denser.june.presentation.screens.settings.components.ColorPickerSheet
-import com.denser.june.presentation.screens.settings.components.ThemePickerDialog
+import com.denser.june.presentation.screens.settings.components.ColorPickerSheet
 import com.denser.june.presentation.screens.settings.components.FontPickerDialog
 import com.denser.june.presentation.screens.settings.components.PaletteSelectionSettingsItem
 import com.denser.june.presentation.theme.LocalAppTheme
@@ -37,7 +37,6 @@ fun AppearanceSection(
     onAction: (SettingsAction) -> Unit
 ) {
     var showColorPickerSheet by remember { mutableStateOf(false) }
-    var showThemePickerDialog by remember { mutableStateOf(false) }
     var showFontPickerDialog by remember { mutableStateOf(false) }
     val currentTheme = LocalAppTheme.current.themeMode
     val systemDark = isSystemInDarkTheme()
@@ -60,9 +59,44 @@ fun AppearanceSection(
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.secondary
                 )
-            },
-            onClick = { showThemePickerDialog = true }
-        )
+            }
+        ) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween, Alignment.End)
+            ) {
+                Spacer(Modifier.width(32.dp))
+                ThemeMode.entries.forEachIndexed { index, appTheme ->
+                    val isSelected = state.appTheme.themeMode == appTheme
+                    val shape = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        ThemeMode.entries.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    }
+
+                    ToggleButton(
+                        checked = isSelected,
+                        onCheckedChange = { onAction(SettingsAction.OnThemeSwitch(appTheme)) },
+                        shapes = shape,
+                        modifier = Modifier.weight(1f),
+                        colors = ToggleButtonDefaults.toggleButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(appTheme.stringRes),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+        }
         SettingsItem(
             title = stringResource(R.string.font),
             subtitle = state.appTheme.font.fullName,
@@ -160,13 +194,6 @@ fun AppearanceSection(
             initialColor = Color(state.appTheme.seedColor),
             onSelect = { onAction(SettingsAction.OnSeedColorChange(it.toArgb())) },
             onDismiss = { showColorPickerSheet = false }
-        )
-    }
-    if (showThemePickerDialog) {
-        ThemePickerDialog(
-            state = state,
-            onAction = onAction,
-            onDismiss = { showThemePickerDialog = false }
         )
     }
     if (showFontPickerDialog) {

@@ -10,6 +10,7 @@ import com.denser.june.core.domain.repository.JournalRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.denser.june.notification.NotificationsHelper
 import org.koin.android.ext.android.inject
 
 class JuneApplication : Application() {
@@ -22,6 +23,8 @@ class JuneApplication : Application() {
             androidContext(this@JuneApplication)
             modules(juneModules)
         }
+        
+        NotificationsHelper(this).createNotificationChannel()
         cleanupStorage()
     }
     private fun cleanupStorage() {

@@ -55,17 +55,18 @@ fun SettingSection(
 fun SettingsItem(
     title: String,
     subtitle: String? = null,
-    leadingContent: @Composable () -> Unit,
+    leadingContent: (@Composable () -> Unit)? = null,
     trailingContent: @Composable () -> Unit = {},
+    enabled: Boolean = true,
     onClick: () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit = {}
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = if (enabled) 1f else 0.5f),
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
     ) {
         Column(
             modifier = Modifier
@@ -76,13 +77,15 @@ fun SettingsItem(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Box(
-                    modifier = Modifier
-                        .padding(end = 16.dp)
-                        .size(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    leadingContent()
+                if (leadingContent != null) {
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 16.dp)
+                            .size(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        leadingContent()
+                    }
                 }
                 Column(
                     modifier = Modifier

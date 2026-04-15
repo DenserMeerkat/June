@@ -74,6 +74,19 @@ fun PermissionsScreen() {
         )
     }
 
+    var hasNotificationPermission by remember {
+        mutableStateOf(
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            } else {
+                true
+            }
+        )
+    }
+
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -81,6 +94,15 @@ fun PermissionsScreen() {
         hasLocationPermission = isGranted
         if (isGranted) {
             Toast.makeText(context, "Location permission granted", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasNotificationPermission = isGranted
+        if (isGranted) {
+            Toast.makeText(context, "Notification permission granted", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -174,6 +196,31 @@ fun PermissionsScreen() {
                                 Toast.LENGTH_SHORT
                             )
                                 .show()
+                        }
+                    }
+                )
+                SettingsItem(
+                    title = "Reminders",
+                    subtitle = if (hasNotificationPermission)
+                        "Permission granted. Used to show journaling reminders."
+                    else
+                        "Tap to enable. Used to show journaling reminders.",
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(R.drawable.notifications_24px),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                    },
+                    onClick = {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                            if (!hasNotificationPermission) {
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT).show()
                         }
                     }
                 )

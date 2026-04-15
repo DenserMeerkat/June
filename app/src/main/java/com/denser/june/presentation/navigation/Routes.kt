@@ -39,6 +39,9 @@ sealed interface Route {
     data object SyncSettings : Route
 
     @Serializable
+    data object ReminderSettings : Route
+
+    @Serializable
     data object Settings : Route
 
     @Serializable

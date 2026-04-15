@@ -14,6 +14,8 @@ import com.denser.june.core.data.remote.SpotifyScraper
 import com.denser.june.core.data.repository.JournalRepositoryImpl
 import com.denser.june.core.data.repository.SongRepositoryImpl
 import com.denser.june.core.data.sync.WebDAVProvider
+import com.denser.june.core.domain.reminder.ReminderScheduler
+import com.denser.june.core.data.reminder.ReminderSchedulerImpl
 import com.denser.june.core.domain.backup.ExportRepo
 import com.denser.june.core.domain.backup.RestoreRepo
 import com.denser.june.core.domain.preferences.JournalPreferences
@@ -50,6 +52,7 @@ val coreModule = module {
     singleOf(::RestoreImpl).bind<RestoreRepo>()
 
     singleOf(::JournalRepositoryImpl).bind<JournalRepository>()
+    singleOf(::ReminderSchedulerImpl).bind<ReminderScheduler>()
 
     single(named("PreferencesDataStore")) { get<DatastoreFactory>().getPreferencesDataStore() }
     single { ThemePreferencesImpl(get(named("PreferencesDataStore"))) }.bind<ThemePreferences>()
