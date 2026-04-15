@@ -52,6 +52,7 @@ import java.util.Locale
 fun JournalDatePickerDialog(
     initialDateMillis: Long,
     startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
+    is24Hour: Boolean = false,
     onDateSelected: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -63,7 +64,8 @@ fun JournalDatePickerDialog(
     var includeTime by remember { mutableStateOf(initialTime != LocalTime.MIDNIGHT) }
     val timePickerState = rememberTimePickerState(
         initialHour = initialTime.hour,
-        initialMinute = initialTime.minute
+        initialMinute = initialTime.minute,
+        is24Hour = is24Hour
     )
     val initialPageIndex = Int.MAX_VALUE / 2
     val pagerState = rememberPagerState(initialPage = initialPageIndex) { Int.MAX_VALUE }
@@ -200,7 +202,7 @@ fun JournalDatePickerDialog(
                                 LocalTime.of(timePickerState.hour, timePickerState.minute)
                             }
                             Text(
-                                text = selectedTime.toFullTime(),
+                                text = selectedTime.toFullTime(is24Hour),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

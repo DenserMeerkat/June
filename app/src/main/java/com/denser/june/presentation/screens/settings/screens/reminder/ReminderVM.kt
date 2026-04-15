@@ -11,10 +11,13 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalTime
 
+import com.denser.june.core.domain.model.enums.TimeFormat
+
 data class ReminderSettingsState(
     val isEnabled: Boolean = false,
     val time: String = "20:00",
-    val days: Set<DayOfWeek> = DayOfWeek.values().toSet()
+    val days: Set<DayOfWeek> = DayOfWeek.values().toSet(),
+    val timeFormat: TimeFormat = TimeFormat.TWELVE_HOUR
 )
 
 class ReminderVM(
@@ -25,9 +28,10 @@ class ReminderVM(
     val state = combine(
         journalPreferences.isReminderEnabled(),
         journalPreferences.reminderTime(),
-        journalPreferences.reminderDays()
-    ) { enabled, time, days ->
-        ReminderSettingsState(enabled, time, days)
+        journalPreferences.reminderDays(),
+        journalPreferences.timeFormat()
+    ) { enabled, time, days, timeFormat ->
+        ReminderSettingsState(enabled, time, days, timeFormat)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

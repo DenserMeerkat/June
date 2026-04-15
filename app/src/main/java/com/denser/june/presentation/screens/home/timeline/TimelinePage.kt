@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.*
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -42,6 +43,8 @@ fun TimelinePage(
     viewModel: TimelineVM = koinViewModel()
 ) {
     val navigator = koinInject<AppNavigator>()
+    val timeFormat by viewModel.timeFormat.collectAsStateWithLifecycle()
+    val is24Hour = timeFormat == TimeFormat.TWENTY_FOUR_HOUR
     val currentMonth by viewModel.currentMonth.collectAsStateWithLifecycle()
     val journalsInMonth by viewModel.journalsInMonth.collectAsStateWithLifecycle()
     val isCalendarExpanded by viewModel.isCalendarExpanded.collectAsStateWithLifecycle()
@@ -77,6 +80,7 @@ fun TimelinePage(
         ) {
             JournalOptionsSheet(
                 journal = currentJournalForOptions,
+                is24Hour = is24Hour,
                 onToggleBookmark = {
                     viewModel.toggleBookmark(currentJournalForOptions.id)
                 },

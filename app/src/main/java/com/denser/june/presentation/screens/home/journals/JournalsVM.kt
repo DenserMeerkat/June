@@ -4,15 +4,25 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.preferences.JournalPreferences
+import com.denser.june.core.domain.model.enums.TimeFormat
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class JournalsVM(
-    private val journalRepo: JournalRepository
+    private val journalRepo: JournalRepository,
+    private val journalPrefs: JournalPreferences
 ) : ViewModel() {
 
     private val _selectedTab = MutableStateFlow(JournalListTab.Journals)
     val selectedTab = _selectedTab.asStateFlow()
+
+    val timeFormat: StateFlow<TimeFormat> = journalPrefs.timeFormat()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = TimeFormat.TWELVE_HOUR
+        )
 
     val journals: StateFlow<List<Journal>?> = journalRepo.getJournals()
         .stateIn(

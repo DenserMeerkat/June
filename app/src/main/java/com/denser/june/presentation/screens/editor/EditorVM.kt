@@ -65,6 +65,12 @@ class EditorVM(
         }
 
         viewModelScope.launch {
+            journalPrefs.timeFormat().collect { format ->
+                updateState { it.copy(timeFormat = format) }
+            }
+        }
+
+        viewModelScope.launch {
             _saveTrigger
                 .debounce(5000L)
                 .collect { stateToSave ->

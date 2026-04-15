@@ -4,7 +4,6 @@ import android.icu.text.SimpleDateFormat
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -17,7 +16,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.toDayOfMonth
@@ -34,6 +32,7 @@ import com.denser.june.core.domain.model.enums.TagCategory
 @Composable
 fun JournalOptionsSheet(
     journal: Journal,
+    is24Hour: Boolean = false,
     onToggleBookmark: () -> Unit,
     onDeleteOrRestore: () -> Unit,
     onPermanentDelete: (() -> Unit)? = null
@@ -210,17 +209,17 @@ fun JournalOptionsSheet(
                 JuneMetadataRow(
                     iconRes = R.drawable.cloud_sync_24px,
                     label = "Synced",
-                    value = journal.syncedAt?.toFullDateTime() ?: "Not synced"
+                    value = journal.syncedAt?.toFullDateTime(is24Hour) ?: "Not synced"
                 )
                 JuneMetadataRow(
                     iconRes = R.drawable.today_24px,
                     label = "Created",
-                    value = journal.createdAt.toFullDateTime()
+                    value = journal.createdAt.toFullDateTime(is24Hour)
                 )
                 JuneMetadataRow(
                     iconRes = R.drawable.history_24px,
                     label = "Updated",
-                    value = journal.updatedAt?.toFullDateTime() ?: "—"
+                    value = journal.updatedAt?.toFullDateTime(is24Hour) ?: "—"
                 )
             }
         }

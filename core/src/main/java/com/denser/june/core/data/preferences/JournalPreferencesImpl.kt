@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.preferences.JournalPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -20,6 +21,7 @@ class JournalPreferencesImpl(
         val REMINDER_ENABLED = booleanPreferencesKey("reminder_enabled")
         val REMINDER_TIME = stringPreferencesKey("reminder_time")
         val REMINDER_DAYS = stringPreferencesKey("reminder_days")
+        val TIME_FORMAT = stringPreferencesKey("time_format")
         const val DEFAULT_REMINDER_TIME = "21:14"
     }
 
@@ -73,5 +75,21 @@ class JournalPreferencesImpl(
 
     override suspend fun setReminderDays(days: Set<DayOfWeek>) {
         dataStore.edit { it[REMINDER_DAYS] = days.joinToString(",") { it.name } }
+    }
+
+    override fun timeFormat(): Flow<TimeFormat> = dataStore.data
+        .map { preferences ->
+            val value = preferences[TIME_FORMAT] ?: TimeFormat.TWELVE_HOUR.name
+            try {
+                TimeFormat.valueOf(value)
+            } catch (e: Exception) {
+                TimeFormat.TWELVE_HOUR
+            }
+        }
+
+    override suspend fun setTimeFormat(format: TimeFormat) {
+        dataStore.edit { preferences ->
+            preferences[TIME_FORMAT] = format.name
+        }
     }
 }

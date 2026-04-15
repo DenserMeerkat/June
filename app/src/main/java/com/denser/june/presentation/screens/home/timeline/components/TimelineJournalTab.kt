@@ -24,8 +24,6 @@ import com.denser.june.presentation.components.JuneBadge
 import org.koin.compose.koinInject
 
 import com.denser.june.core.R
-import com.denser.june.core.utils.toDayOfMonth
-import com.denser.june.core.utils.toShortMonth
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

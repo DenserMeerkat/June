@@ -2,6 +2,7 @@ package com.denser.june.presentation.screens.settings
 
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.domain.model.enums.Fonts
+import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.enums.LockType
 import java.time.DayOfWeek
 import com.materialkolor.PaletteStyle
@@ -23,4 +24,5 @@ sealed interface SettingsAction {
     data class OnScreenPrivacyToggle(val enabled: Boolean) : SettingsAction
     data class OnAutoTimeToggle(val enabled: Boolean) : SettingsAction
     data class OnStartOfWeekChange(val startOfWeek: DayOfWeek) : SettingsAction
+    data class OnTimeFormatChange(val timeFormat: TimeFormat) : SettingsAction
 }

@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
+import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
@@ -45,6 +46,8 @@ fun JournalsPage(
     isSelected: Boolean = true
 ) {
     val viewModel: JournalsVM = koinViewModel()
+    val timeFormat by viewModel.timeFormat.collectAsStateWithLifecycle()
+    val is24Hour = timeFormat == TimeFormat.TWENTY_FOUR_HOUR
     val nonDrafts by viewModel.nonDraftJournals.collectAsStateWithLifecycle()
     val bookmarkedJournals by viewModel.bookmarkedJournals.collectAsStateWithLifecycle()
     val draftJournals by viewModel.draftJournals.collectAsStateWithLifecycle()
@@ -85,6 +88,7 @@ fun JournalsPage(
         ) {
             JournalOptionsSheet(
                 journal = currentJournalForOptions,
+                is24Hour = is24Hour,
                 onToggleBookmark = {
                     if (selectedTab == JournalListTab.Bookmarks) {
                         dismissSheet { viewModel.toggleBookmark(currentJournalForOptions.id) }

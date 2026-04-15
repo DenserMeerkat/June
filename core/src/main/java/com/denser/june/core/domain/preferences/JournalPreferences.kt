@@ -1,5 +1,6 @@
 package com.denser.june.core.domain.preferences
 
+import com.denser.june.core.domain.model.enums.TimeFormat
 import java.time.DayOfWeek
 import kotlinx.coroutines.flow.Flow
 
@@ -18,4 +19,6 @@ interface JournalPreferences {
 
     fun reminderDays(): Flow<Set<DayOfWeek>>
     suspend fun setReminderDays(days: Set<DayOfWeek>)
+    fun timeFormat(): Flow<TimeFormat>
+    suspend fun setTimeFormat(format: TimeFormat)
 }

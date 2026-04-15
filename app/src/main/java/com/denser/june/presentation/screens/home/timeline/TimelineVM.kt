@@ -16,6 +16,7 @@ import com.denser.june.core.domain.model.SongDetails
 import java.time.DayOfWeek
 import com.denser.june.core.utils.combineDateAndTime
 import com.denser.june.core.utils.toYearMonth
+import com.denser.june.core.domain.model.enums.TimeFormat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -58,6 +59,12 @@ class TimelineVM(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = DayOfWeek.SUNDAY
+    )
+
+    val timeFormat = journalPrefs.timeFormat().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = TimeFormat.TWELVE_HOUR
     )
 
     val initialPage = Int.MAX_VALUE / 2

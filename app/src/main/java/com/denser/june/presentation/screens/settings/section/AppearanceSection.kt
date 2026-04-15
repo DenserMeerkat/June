@@ -59,44 +59,48 @@ fun AppearanceSection(
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.secondary
                 )
-            }
-        ) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween, Alignment.End)
-            ) {
-                Spacer(Modifier.width(32.dp))
-                ThemeMode.entries.forEachIndexed { index, appTheme ->
-                    val isSelected = state.appTheme.themeMode == appTheme
-                    val shape = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        ThemeMode.entries.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    }
+            },
+            trailingContent = {
+                val themeModes = ThemeMode.entries
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween, Alignment.End)
+                ) {
+                    themeModes.forEachIndexed { index, mode ->
+                        val isSelected = state.appTheme.themeMode == mode
+                        val shape = when (index) {
+                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                            themeModes.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                        }
 
-                    ToggleButton(
-                        checked = isSelected,
-                        onCheckedChange = { onAction(SettingsAction.OnThemeSwitch(appTheme)) },
-                        shapes = shape,
-                        modifier = Modifier.weight(1f),
-                        colors = ToggleButtonDefaults.toggleButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        )
-                    ) {
-                        Text(
-                            text = stringResource(appTheme.stringRes),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                        )
+                        val iconRes = when (mode) {
+                            ThemeMode.SYSTEM -> R.drawable.devices_24px
+                            ThemeMode.LIGHT -> R.drawable.light_mode_24px
+                            ThemeMode.DARK -> R.drawable.dark_mode_24px
+                        }
+
+                        ToggleButton(
+                            checked = isSelected,
+                            onCheckedChange = { onAction(SettingsAction.OnThemeSwitch(mode)) },
+                            shapes = shape,
+                            colors = ToggleButtonDefaults.toggleButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(iconRes),
+                                contentDescription = stringResource(mode.stringRes),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }
-        }
+        )
         SettingsItem(
             title = stringResource(R.string.font),
             subtitle = state.appTheme.font.fullName,

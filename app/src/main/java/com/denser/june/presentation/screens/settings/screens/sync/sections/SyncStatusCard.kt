@@ -23,6 +23,7 @@ fun SyncStatusCard(
     status: SyncStatus,
     lastSyncTime: Long,
     isVisible: Boolean,
+    is24Hour: Boolean = false,
     modifier: Modifier = Modifier,
     horizontalPadding: Dp = 16.dp,
     cornerRadius: Dp = 16.dp
@@ -59,7 +60,7 @@ fun SyncStatusCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = lastSyncTime.toFullDateTime(),
+                            text = lastSyncTime.toFullDateTime(is24Hour = is24Hour),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface

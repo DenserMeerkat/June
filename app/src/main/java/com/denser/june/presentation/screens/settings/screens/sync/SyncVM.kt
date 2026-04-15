@@ -7,6 +7,8 @@ import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.sync.SyncManager
 import com.denser.june.core.domain.sync.SyncStatus
 import com.denser.june.core.domain.sync.SyncAnalysis
+import com.denser.june.core.domain.preferences.JournalPreferences
+import com.denser.june.core.domain.model.enums.TimeFormat
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -32,13 +34,15 @@ data class SyncSettingsState(
     val isAnalyzing: Boolean = false,
     val showAdvancedOptions: Boolean = false,
     val showAnalysisDetails: Boolean = false,
-    val isInternetAllowed: Boolean = true
+    val isInternetAllowed: Boolean = true,
+    val timeFormat: TimeFormat = TimeFormat.TWELVE_HOUR
 )
 
 class SyncVM(
     private val syncPrefs: SyncPreferences,
     private val privacyPreferences: PrivacyPreferences,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val journalPrefs: JournalPreferences
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SyncSettingsState())
@@ -111,6 +115,12 @@ class SyncVM(
                     }
                     else -> {}
                 }
+            }
+        }
+
+        viewModelScope.launch {
+            journalPrefs.timeFormat().collect { format ->
+                _state.update { it.copy(timeFormat = format) }
             }
         }
     }

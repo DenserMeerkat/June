@@ -16,7 +16,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.denser.june.core.R
+import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
@@ -30,6 +30,7 @@ import com.denser.june.presentation.components.InternetRestrictedBanner
 import com.denser.june.presentation.screens.settings.screens.sync.components.SyncDetailsDialog
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import com.denser.june.core.R
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -166,6 +167,7 @@ fun SyncScreen() {
                     status = state.status,
                     lastSyncTime = state.lastSyncTime,
                     isVisible = state.isEnabled && state.isInternetAllowed,
+                    is24Hour = state.timeFormat == TimeFormat.TWENTY_FOUR_HOUR,
                     horizontalPadding = 16.dp,
                     cornerRadius = 24.dp,
                     modifier = Modifier

@@ -40,8 +40,9 @@ fun Long.toFullDate(): String {
     return sdf.format(Date(this))
 }
 
-fun Long.toFullDateTime(): String {
-    val sdf = SimpleDateFormat("MMMM dd, yyyy 'at' hh:mm a", Locale.getDefault())
+fun Long.toFullDateTime(is24Hour: Boolean = false): String {
+    val pattern = if (is24Hour) "MMMM dd, yyyy 'at' HH:mm" else "MMMM dd, yyyy 'at' hh:mm a"
+    val sdf = SimpleDateFormat(pattern, Locale.getDefault())
     return sdf.format(Date(this))
 }
 
@@ -86,8 +87,10 @@ fun Long.toLocalTime(): LocalTime =
 fun LocalDate.toFullDate(): String =
     this.format(DateTimeFormatter.ofPattern("MMMM dd, yyyy", Locale.getDefault()))
 
-fun LocalTime.toFullTime(): String =
-    this.format(DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
+fun LocalTime.toFullTime(is24Hour: Boolean = false): String {
+    val pattern = if (is24Hour) "HH:mm" else "hh:mm a"
+    return this.format(DateTimeFormatter.ofPattern(pattern, Locale.getDefault()))
+}
 
 fun combineDateAndTime(date: LocalDate, time: LocalTime?): Long {
     val dateTime = if (time != null) {

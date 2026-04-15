@@ -24,8 +24,8 @@ data class AppState(
 class MainVM(
     themePrefs: ThemePreferences,
     privacyPrefs: PrivacyPreferences,
-    private val syncManager: SyncManager,
-    private val syncPrefs: SyncPreferences
+    syncManager: SyncManager,
+    syncPrefs: SyncPreferences
 ) : ViewModel() {
 
     private val themeFlow = combine(

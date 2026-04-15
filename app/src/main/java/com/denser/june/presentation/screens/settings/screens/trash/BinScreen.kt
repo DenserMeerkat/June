@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.components.JuneTopAppBar
@@ -32,6 +33,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun BinScreen() {
     val binVM: BinVM = koinViewModel()
+    val timeFormat by binVM.timeFormat.collectAsStateWithLifecycle()
+    val is24Hour = timeFormat == TimeFormat.TWENTY_FOUR_HOUR
     val deletedJournals by binVM.deletedJournals.collectAsStateWithLifecycle()
     val navigator = koinInject<AppNavigator>()
 
@@ -223,6 +226,7 @@ fun BinScreen() {
             ) {
                 JournalOptionsSheet(
                     journal = currentJournalForOptions,
+                    is24Hour = is24Hour,
                     onToggleBookmark = { dismissOptionsSheet { binVM.toggleBookmark(currentJournalForOptions.id) } },
                     onDeleteOrRestore = { dismissOptionsSheet { binVM.restoreJournal(currentJournalForOptions.id) } },
                     onPermanentDelete = {

@@ -14,7 +14,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -50,6 +49,7 @@ import com.denser.june.presentation.screens.editor.components.JuneLinkMenu
 
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
 import com.denser.june.presentation.screens.editor.components.EditorToolbar
@@ -89,9 +89,9 @@ fun JournalScreen() {
     val showSaveButton = if (state.isDraft) state.hasContent else state.isDirty
 
     val formattedDate = remember(state.dateTime) { state.dateTime.toDateWithDay() }
-    val formattedTime = remember(state.dateTime) {
+    val formattedTime = remember(state.dateTime, state.timeFormat) {
         val time = state.dateTime.toLocalTime()
-        if (time != LocalTime.MIDNIGHT) time.toFullTime() else null
+        if (time != LocalTime.MIDNIGHT) time.toFullTime(is24Hour = state.timeFormat == TimeFormat.TWENTY_FOUR_HOUR) else null
     }
 
     val onBack = {
@@ -500,6 +500,7 @@ fun JournalScreen() {
         ) {
             JournalOptionsSheet(
                 journal = journalPreview,
+                is24Hour = state.timeFormat == TimeFormat.TWENTY_FOUR_HOUR,
                 onToggleBookmark = { viewModel.onAction(EditorAction.ToggleBookmark) },
                 onDeleteOrRestore = {
                     if (state.isDeleted) {

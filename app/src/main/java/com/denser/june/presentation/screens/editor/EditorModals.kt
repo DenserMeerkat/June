@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
+import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.FileUtils
 import com.denser.june.presentation.components.JuneDialog
 import com.denser.june.presentation.screens.editor.components.AddItemSheet
@@ -136,6 +137,7 @@ fun EditorModals(
         JournalDatePickerDialog(
             initialDateMillis = editorState.dateTime,
             startOfWeek = editorState.startOfWeek,
+            is24Hour = editorState.timeFormat == TimeFormat.TWENTY_FOUR_HOUR,
             onDateSelected = { millis ->
                 onAction(EditorAction.ChangeDateTime(millis))
                 dialogState.showDatePicker = false

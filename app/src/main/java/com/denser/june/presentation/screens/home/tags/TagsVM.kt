@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.TagCategory
+import com.denser.june.core.domain.model.enums.TimeFormat
+import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.presentation.utils.TagUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -12,7 +14,8 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TagsVM(
-    private val repository: JournalRepository
+    private val repository: JournalRepository,
+    private val journalPrefs: JournalPreferences
 ) : ViewModel() {
 
     private val _selectedCategory = MutableStateFlow(TagCategory.Spaces)
@@ -23,6 +26,13 @@ class TagsVM(
 
     private val _selectedFilters = MutableStateFlow<Set<String>>(emptySet())
     val selectedFilters = _selectedFilters.asStateFlow()
+
+    val timeFormat: StateFlow<TimeFormat> = journalPrefs.timeFormat()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = TimeFormat.TWELVE_HOUR
+        )
 
     val allUniqueTags: StateFlow<List<String>?> = repository.getUniqueTags()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)

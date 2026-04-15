@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -108,7 +109,7 @@ fun SettingsItem(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Box(
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.defaultMinSize(minWidth = 40.dp, minHeight = 40.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     trailingContent()

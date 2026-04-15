@@ -25,6 +25,7 @@ import com.denser.june.presentation.screens.settings.components.JuneTimePickerDi
 import com.denser.june.presentation.screens.settings.section.SettingSection
 import com.denser.june.presentation.screens.settings.section.SettingsItem
 import com.denser.june.core.utils.toFullTime
+import com.denser.june.core.domain.model.enums.TimeFormat
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import java.time.DayOfWeek
@@ -41,6 +42,7 @@ fun ReminderScreen() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     var showTimePicker by remember { mutableStateOf(false) }
+    val is24Hour = state.timeFormat == TimeFormat.TWENTY_FOUR_HOUR
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -128,7 +130,7 @@ fun ReminderScreen() {
             SettingSection(title = "Schedule") {
                 SettingsItem(
                     title = "Reminder time",
-                    subtitle = LocalTime.parse(state.time).toFullTime(),
+                    subtitle = LocalTime.parse(state.time).toFullTime(is24Hour = is24Hour),
                     enabled = state.isEnabled,
                     leadingContent = {
                         Icon(
@@ -197,6 +199,7 @@ fun ReminderScreen() {
     if (showTimePicker) {
         JuneTimePickerDialog(
             initialTime = LocalTime.parse(state.time),
+            is24Hour = is24Hour,
             onTimeSelected = { time ->
                 viewModel.updateTime(time)
                 showTimePicker = false

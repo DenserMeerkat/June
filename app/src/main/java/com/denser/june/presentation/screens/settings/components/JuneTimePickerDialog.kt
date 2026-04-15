@@ -17,13 +17,14 @@ import java.time.LocalTime
 @Composable
 fun JuneTimePickerDialog(
     initialTime: LocalTime,
+    is24Hour: Boolean = false,
     onTimeSelected: (LocalTime) -> Unit,
     onDismiss: () -> Unit
 ) {
     val timePickerState = rememberTimePickerState(
         initialHour = initialTime.hour,
         initialMinute = initialTime.minute,
-        is24Hour = false
+        is24Hour = is24Hour
     )
 
     Box(

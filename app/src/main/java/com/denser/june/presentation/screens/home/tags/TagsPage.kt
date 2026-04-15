@@ -21,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TagCategory
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import com.denser.june.presentation.screens.home.components.JournalCard
@@ -38,6 +39,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun TagsPage() {
     val viewModel: TagsVM = koinViewModel()
+    val timeFormat by viewModel.timeFormat.collectAsStateWithLifecycle()
+    val is24Hour = timeFormat == TimeFormat.TWENTY_FOUR_HOUR
 
     val allTags by viewModel.allUniqueTags.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
@@ -310,6 +313,7 @@ fun TagsPage() {
             ) {
                 JournalOptionsSheet(
                     journal = currentJournalForOptions,
+                    is24Hour = is24Hour,
                     onToggleBookmark = {
                         viewModel.toggleBookmark(currentJournalForOptions.id)
                     },

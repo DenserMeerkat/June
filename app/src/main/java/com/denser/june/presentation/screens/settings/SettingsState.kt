@@ -6,6 +6,7 @@ import com.denser.june.core.domain.backup.ExportState
 import com.denser.june.core.domain.backup.RestoreState
 import com.denser.june.core.domain.model.AppTheme
 import com.denser.june.core.domain.model.enums.LockType
+import com.denser.june.core.domain.model.enums.TimeFormat
 import java.time.DayOfWeek
 
 @Stable
@@ -20,5 +21,6 @@ data class SettingsState(
     val pinHash: String? = null,
     val isScreenPrivacyEnabled: Boolean = false,
     val isAutoTimeEnabled: Boolean = false,
-    val startOfWeek: DayOfWeek = DayOfWeek.SUNDAY
+    val startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
+    val timeFormat: TimeFormat = TimeFormat.TWELVE_HOUR
 )

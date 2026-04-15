@@ -13,6 +13,7 @@ import com.denser.june.core.domain.backup.RestoreResult
 import com.denser.june.core.domain.backup.RestoreState
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.domain.model.enums.Fonts
+import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.enums.LockType
 import java.time.DayOfWeek
 import com.materialkolor.PaletteStyle
@@ -50,7 +51,8 @@ class SettingsVM(
             privacyPrefs.getPinHashFlow(),
             privacyPrefs.getScreenPrivacyFlow(),
             journalPrefs.isAutoTimeEnabled(),
-            journalPrefs.startOfWeek()
+            journalPrefs.startOfWeek(),
+            journalPrefs.timeFormat()
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -62,6 +64,7 @@ class SettingsVM(
             isScreenPrivacyEnabled = array[10] as Boolean,
             isAutoTimeEnabled = array[11] as Boolean,
             startOfWeek = array[12] as DayOfWeek,
+            timeFormat = array[13] as TimeFormat,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -127,6 +130,7 @@ class SettingsVM(
                 is SettingsAction.OnScreenPrivacyToggle -> privacyPrefs.updateScreenPrivacy(action.enabled)
                 is SettingsAction.OnAutoTimeToggle -> journalPrefs.setAutoTimeEnabled(action.enabled)
                 is SettingsAction.OnStartOfWeekChange -> journalPrefs.setStartOfWeek(action.startOfWeek)
+                is SettingsAction.OnTimeFormatChange -> journalPrefs.setTimeFormat(action.timeFormat)
             }
         }
     }

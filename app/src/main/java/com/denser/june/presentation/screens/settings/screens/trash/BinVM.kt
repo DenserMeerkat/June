@@ -4,14 +4,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.repository.JournalRepository
+import com.denser.june.core.domain.model.enums.TimeFormat
+import com.denser.june.core.domain.preferences.JournalPreferences
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class BinVM(
-    private val repository: JournalRepository
+    private val repository: JournalRepository,
+    private val journalPrefs: JournalPreferences
 ) : ViewModel() {
+
+    val timeFormat: StateFlow<TimeFormat> = journalPrefs.timeFormat()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = TimeFormat.TWELVE_HOUR
+        )
 
     val deletedJournals: StateFlow<List<Journal>> = repository.getDeletedJournals()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
