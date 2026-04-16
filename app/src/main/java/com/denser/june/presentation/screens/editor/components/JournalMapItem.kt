@@ -109,11 +109,6 @@ fun JournalMapItem(
                         )
                     )
                 )
-            } else {
-                InternetRestrictedIndicator(
-                    modifier = Modifier.fillMaxSize().padding(top = 32.dp),
-                    description = "Maps require internet access to load tiles."
-                )
             }
             Box(
                 modifier = Modifier
@@ -174,6 +169,14 @@ fun JournalMapItem(
                         )
                     }
             )
+
+            if (!isInternetAllowed) {
+                InternetRestrictedIndicator(
+                    modifier = Modifier.fillMaxSize().padding(top = 32.dp),
+                    description = "Maps require internet access to load tiles."
+                )
+            }
+
             if (isInternetAllowed) {
                 Box(modifier = Modifier.align(Alignment.Center)) {
                     MapLocationPin()

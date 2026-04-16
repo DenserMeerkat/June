@@ -159,7 +159,7 @@ fun ReminderScreen() {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween, Alignment.End)
                     ) {
-                        Spacer(Modifier.width(32.dp))
+                        Spacer(Modifier.width(16.dp))
                         val days = DayOfWeek.entries
                         days.forEachIndexed { index, day ->
                             val isSelected = state.days.contains(day)
@@ -185,7 +185,7 @@ fun ReminderScreen() {
                             ) {
                                 Text(
                                     text = day.getDisplayName(TextStyle.NARROW, Locale.getDefault()),
-                                    style = MaterialTheme.typography.labelLarge,
+                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
