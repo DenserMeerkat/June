@@ -14,6 +14,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.toDayOfMonth
 import com.denser.june.core.utils.toFullDate
@@ -42,6 +43,15 @@ fun JournalCard(
 
     val mediaOperations = MediaOperations(onMediaClick = null)
 
+    val semanticColor = when (journal.aiColorWeight?.lowercase()) {
+        "red" -> MaterialTheme.colorScheme.errorContainer
+        "blue", "cyan" -> MaterialTheme.colorScheme.primaryContainer
+        "green" -> MaterialTheme.colorScheme.tertiaryContainer
+        "purple", "magenta" -> MaterialTheme.colorScheme.secondaryContainer
+        "yellow", "orange" -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MaterialTheme.colorScheme.surfaceContainer
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -52,7 +62,7 @@ fun JournalCard(
                 onLongClick = onLongClick
             ),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+            containerColor = semanticColor
         ),
         shape = RoundedCornerShape(24.dp)
     ) {
@@ -155,6 +165,15 @@ fun RecentJournalCard(
 
         val mediaOperations = MediaOperations(onMediaClick = null)
 
+        val semanticColor = when (journal.aiColorWeight?.lowercase()) {
+            "red" -> MaterialTheme.colorScheme.errorContainer
+            "blue", "cyan" -> MaterialTheme.colorScheme.primaryContainer
+            "green" -> MaterialTheme.colorScheme.tertiaryContainer
+            "purple", "magenta" -> MaterialTheme.colorScheme.secondaryContainer
+            "yellow", "orange" -> MaterialTheme.colorScheme.surfaceVariant
+            else -> MaterialTheme.colorScheme.surfaceContainer
+        }
+
         Card(
             modifier = modifier
                 .fillMaxWidth()
@@ -169,7 +188,7 @@ fun RecentJournalCard(
                     onLongClick = onLongClick
                 ),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
+                containerColor = semanticColor
             ),
             shape = RoundedCornerShape(24.dp)
         ) {

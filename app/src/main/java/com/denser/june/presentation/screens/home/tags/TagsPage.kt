@@ -32,6 +32,8 @@ import com.denser.june.presentation.screens.home.tags.components.FilterFab
 import com.denser.june.presentation.screens.home.tags.components.RenameTagDialog
 import com.denser.june.presentation.utils.TagUtils
 import com.denser.june.presentation.utils.UiUtils
+import com.denser.june.presentation.screens.home.tags.components.ImprovementCard
+import com.denser.june.presentation.screens.home.tags.components.MicroWinCard
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -47,6 +49,9 @@ fun TagsPage() {
 
     val primaryTags by viewModel.primaryTags.collectAsStateWithLifecycle()
     val journals by viewModel.journals.collectAsStateWithLifecycle()
+
+    val improvements by viewModel.improvements.collectAsStateWithLifecycle()
+    val microWins by viewModel.microWins.collectAsStateWithLifecycle()
 
     val selectedPrimaryTag by viewModel.selectedPrimaryTag.collectAsStateWithLifecycle()
     val tagCounts by viewModel.tagCounts.collectAsStateWithLifecycle()
@@ -111,7 +116,107 @@ fun TagsPage() {
                 }
             }
 
-            if (primaryTags == null) {
+            if (selectedCategory == TagCategory.Spaces) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item {
+                        Text(
+                            text = "Improvement Bank",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Track your personal growth and resolve recurring friction.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    if (improvements.isEmpty()) {
+                        item {
+                            JunePlaceholderPage(
+                                modifier = Modifier.height(200.dp),
+                                icon = R.drawable.auto_stories_24px,
+                                title = "No improvements yet",
+                                subtitle = "AI will automatically extract recurring friction from your entries."
+                            )
+                        }
+                    } else {
+                        val activeImprovements = improvements.filter { !it.isArchived }
+                        val archivedImprovements = improvements.filter { it.isArchived }
+
+                        items(activeImprovements, key = { it.id }) { improvement ->
+                            ImprovementCard(
+                                improvement = improvement,
+                                onToggle = { viewModel.toggleImprovement(improvement) },
+                                onArchive = { viewModel.archiveImprovement(improvement) },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+
+                        if (archivedImprovements.isNotEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Archived",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            items(archivedImprovements, key = { it.id }) { improvement ->
+                                ImprovementCard(
+                                    improvement = improvement,
+                                    onToggle = { viewModel.toggleImprovement(improvement) },
+                                    onArchive = { viewModel.archiveImprovement(improvement) },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
+                        }
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = "Micro-Win Dashboard",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "A feed of your momentum and successes.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    if (microWins.isEmpty()) {
+                        item {
+                            JunePlaceholderPage(
+                                modifier = Modifier.height(200.dp),
+                                icon = R.drawable.auto_stories_24px,
+                                title = "No wins yet",
+                                subtitle = "AI will automatically extract your daily wins and proofs of momentum."
+                            )
+                        }
+                    } else {
+                        items(microWins, key = { it.id }) { win ->
+                            MicroWinCard(
+                                microWin = win,
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
+                }
+            } else if (primaryTags == null) {
                 JunePlaceholderPage(
                     modifier = Modifier.weight(1f),
                     isLoading = true

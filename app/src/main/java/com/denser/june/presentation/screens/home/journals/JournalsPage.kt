@@ -22,6 +22,9 @@ import com.denser.june.core.domain.model.Journal
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import com.denser.june.presentation.screens.home.components.JournalCard
+import com.denser.june.presentation.screens.home.journals.components.SummaryCard
+import com.denser.june.core.domain.ai.AiManager
+import org.koin.compose.koinInject
 import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
 import com.denser.june.presentation.screens.home.components.RecentJournalCard
 import com.denser.june.presentation.utils.UiUtils
@@ -208,6 +211,18 @@ fun JournalsPage(
                             }
                         } else {
                             if (recentJournal != null) {
+                                item(key = "ai_weekly_summary") {
+                                    val aiManager: AiManager = koinInject()
+                                    val recentContent = nonDrafts?.take(7)?.joinToString("\n---\n") { "Date: ${it.dateTime}\nContent: ${it.content}" } ?: ""
+                                    SummaryCard(
+                                        aiManager = aiManager,
+                                        journalsContent = recentContent,
+                                        modifier = Modifier
+                                            .animateItem()
+                                            .padding(bottom = 8.dp)
+                                    )
+                                }
+
                                 item(key = "header_recent") {
                                     SectionHeader(
                                         title = "Recent",

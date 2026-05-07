@@ -28,4 +28,10 @@ data class JournalEntity(
     val deletedAt: Long? = null,
     val syncedAt: Long? = null,
     val cloudId: String? = null,
+
+    // AI Generated Fields
+    val aiFormattedContent: String? = null,
+    val aiReflection: String? = null,
+    val aiColorWeight: String? = null,
+    val dominantEmotion: String? = null,
 )

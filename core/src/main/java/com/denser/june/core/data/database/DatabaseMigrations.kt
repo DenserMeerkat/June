@@ -123,4 +123,36 @@ object DatabaseMigrations {
             db.execSQL("ALTER TABLE tags_new RENAME TO tags")
         }
     }
+
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `journals` ADD COLUMN `aiFormattedContent` TEXT")
+            db.execSQL("ALTER TABLE `journals` ADD COLUMN `aiReflection` TEXT")
+            db.execSQL("ALTER TABLE `journals` ADD COLUMN `aiColorWeight` TEXT")
+            db.execSQL("ALTER TABLE `journals` ADD COLUMN `dominantEmotion` TEXT")
+
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `improvements` (
+                    `id` TEXT NOT NULL,
+                    `journalId` TEXT NOT NULL,
+                    `content` TEXT NOT NULL,
+                    `isCompleted` INTEGER NOT NULL,
+                    `isArchived` INTEGER NOT NULL,
+                    `createdAt` INTEGER NOT NULL,
+                    PRIMARY KEY(`id`)
+                )
+            """.trimIndent())
+
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `micro_wins` (
+                    `id` TEXT NOT NULL,
+                    `journalId` TEXT NOT NULL,
+                    `action` TEXT NOT NULL,
+                    `proof` TEXT NOT NULL,
+                    `createdAt` INTEGER NOT NULL,
+                    PRIMARY KEY(`id`)
+                )
+            """.trimIndent())
+        }
+    }
 }

@@ -15,7 +15,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalCoroutinesApi::class)
 class TagsVM(
     private val repository: JournalRepository,
-    private val journalPrefs: JournalPreferences
+    private val journalPrefs: JournalPreferences,
+    private val aiDao: com.denser.june.core.data.database.journal.AiDao
 ) : ViewModel() {
 
     private val _selectedCategory = MutableStateFlow(TagCategory.Spaces)
@@ -142,5 +143,19 @@ class TagsVM(
 
     fun restoreJournal(id: String) {
         viewModelScope.launch { repository.restoreJournal(id) }
+    }
+    val improvements = aiDao.getAllImprovements().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val microWins = aiDao.getAllMicroWins().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun toggleImprovement(improvement: com.denser.june.core.data.database.journal.ImprovementEntity) {
+        viewModelScope.launch {
+            aiDao.updateImprovement(improvement.copy(isCompleted = !improvement.isCompleted))
+        }
+    }
+
+    fun archiveImprovement(improvement: com.denser.june.core.data.database.journal.ImprovementEntity) {
+        viewModelScope.launch {
+            aiDao.updateImprovement(improvement.copy(isArchived = true))
+        }
     }
 }

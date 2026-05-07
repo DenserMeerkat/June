@@ -24,6 +24,10 @@ data class Journal(
     val deletedAt: Long? = null,
     val syncedAt: Long? = null,
     val cloudId: String? = null,
+    val aiFormattedContent: String? = null,
+    val aiReflection: String? = null,
+    val aiColorWeight: String? = null,
+    val dominantEmotion: String? = null,
 ) {
     val isDeleted: Boolean get() = deletedAt != null
 }

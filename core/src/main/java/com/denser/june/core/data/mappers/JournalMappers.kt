@@ -21,7 +21,11 @@ fun JournalEntity.asDomain(): Journal {
         isDraft = isDraft,
         deletedAt = deletedAt,
         syncedAt = syncedAt,
-        cloudId = cloudId
+        cloudId = cloudId,
+        aiFormattedContent = aiFormattedContent,
+        aiReflection = aiReflection,
+        aiColorWeight = aiColorWeight,
+        dominantEmotion = dominantEmotion
     )
 }
 
@@ -43,7 +47,11 @@ fun Journal.asEntity(): JournalEntity {
         isDraft = isDraft,
         deletedAt = deletedAt,
         syncedAt = syncedAt,
-        cloudId = cloudId
+        cloudId = cloudId,
+        aiFormattedContent = aiFormattedContent,
+        aiReflection = aiReflection,
+        aiColorWeight = aiColorWeight,
+        dominantEmotion = dominantEmotion
     )
 }
 

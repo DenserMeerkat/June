@@ -89,11 +89,14 @@ fun TimelineCalendarPage(
                                 bottomEnd = endRadius
                             )
 
+                            val dominantEmotionColor = dayJournals?.firstNotNullOfOrNull { it.aiColorWeight }
+
                             Box(modifier = Modifier.weight(1f)) {
                                 CalendarDayTile(
                                     date = date,
                                     entryCount = count,
                                     emoji = emoji,
+                                    dominantEmotionColor = dominantEmotionColor,
                                     shape = dynamicShape,
                                     onClick = { onDateSelected(date) }
                                 )
@@ -113,19 +116,30 @@ fun CalendarDayTile(
     date: LocalDate,
     entryCount: Int,
     emoji: String?,
+    dominantEmotionColor: String?,
     shape: androidx.compose.ui.graphics.Shape,
     onClick: () -> Unit
 ) {
     val isToday = date == LocalDate.now()
     val hasJournals = entryCount > 0
 
+    val semanticColor = when (dominantEmotionColor?.lowercase()) {
+        "red" -> MaterialTheme.colorScheme.errorContainer
+        "blue", "cyan" -> MaterialTheme.colorScheme.primaryContainer
+        "green" -> MaterialTheme.colorScheme.tertiaryContainer
+        "purple", "magenta" -> MaterialTheme.colorScheme.secondaryContainer
+        "yellow", "orange" -> MaterialTheme.colorScheme.surfaceVariant
+        null -> MaterialTheme.colorScheme.tertiaryContainer
+        else -> MaterialTheme.colorScheme.surfaceContainer
+    }
+
     val backgroundColor = when {
-        hasJournals -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+        hasJournals -> semanticColor.copy(alpha = 0.5f)
         else -> Color.Transparent
     }
 
     val textColor = when {
-        hasJournals -> MaterialTheme.colorScheme.onTertiaryContainer
+        hasJournals -> MaterialTheme.colorScheme.onSurface
         isToday -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.onSurface
     }
