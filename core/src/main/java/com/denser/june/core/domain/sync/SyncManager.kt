@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -471,8 +472,10 @@ class SyncManager(
 
             val orphans = remoteMedia.filter { it !in localReferencedMedia }
             if (orphans.isNotEmpty()) {
-                orphans.forEach { filename ->
-                    provider.deleteMedia(filename)
+                coroutineScope {
+                    orphans.forEach { filename ->
+                        launch { provider.deleteMedia(filename) }
+                    }
                 }
             }
         } catch (e: Exception) {
