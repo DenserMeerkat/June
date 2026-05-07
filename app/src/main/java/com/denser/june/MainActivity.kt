@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import android.graphics.Color as AndroidColor
+import android.graphics.Color
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
@@ -110,7 +110,7 @@ class MainActivity : FragmentActivity() {
         setContent {
             val systemDark = isSystemInDarkTheme()
             val systemColorScheme = if (systemDark) darkColorScheme() else lightColorScheme()
-            val colorBackground = if (systemDark) AndroidColor.BLACK else AndroidColor.WHITE
+            val colorBackground = if (systemDark) Color.BLACK else Color.WHITE
             window.setBackgroundDrawable(colorBackground.toDrawable())
 
             MaterialTheme(colorScheme = systemColorScheme) {
