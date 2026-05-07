@@ -26,12 +26,12 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     kotlin {
         compilerOptions {
-            jvmToolchain(17)
+            jvmToolchain(21)
         }
     }
     buildFeatures {
@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.google.ai.edge.aicore)
     implementation(libs.kotlinx.serialization.json)
 
     // Essential

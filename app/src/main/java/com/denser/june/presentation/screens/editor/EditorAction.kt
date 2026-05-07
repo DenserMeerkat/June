@@ -24,6 +24,7 @@ sealed interface EditorAction {
 
     data object ToggleBookmark : EditorAction
     data object ToggleArchive : EditorAction
+    data object ToggleAutoFormat : EditorAction
 
     data object SaveJournal : EditorAction
     data object NavigateBack : EditorAction

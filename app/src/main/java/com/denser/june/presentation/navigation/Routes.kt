@@ -58,4 +58,7 @@ sealed interface Route {
 
     @Serializable
     data object PinSetup : Route
+
+    @Serializable
+    data object AiSettings : Route
 }

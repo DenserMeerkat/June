@@ -29,7 +29,12 @@ data class EditorState(
     val syncedAt: Long? = null,
     val cloudId: String? = null,
     val startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
-    val timeFormat: TimeFormat = TimeFormat.TWELVE_HOUR
+    val timeFormat: TimeFormat = TimeFormat.TWELVE_HOUR,
+    val isAutoFormatEnabled: Boolean = false,
+    val aiFormattedContent: String? = null,
+    val aiReflection: String? = null,
+    val dominantEmotion: String? = null,
+    val aiColorWeight: String? = null,
 ) {
     val isDeleted: Boolean get() = deletedAt != null
     val hasContent: Boolean

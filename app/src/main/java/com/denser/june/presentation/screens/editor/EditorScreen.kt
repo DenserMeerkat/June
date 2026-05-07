@@ -5,6 +5,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.draw.scale
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -377,26 +379,60 @@ fun JournalScreen() {
                     }
                 }
 
-                HyphenTextField(
-                    state = hyphenState,
-                    linkConfig = linkConfig,
-                    onMarkdownChange = {
-                        viewModel.onAction(EditorAction.ChangeContent(it))
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
-                        .defaultMinSize(minHeight = 84.dp)
-                        .focusRequester(contentFocusRequester)
-                        .onFocusChanged { focusState ->
-                            isEditorFocused = focusState.isFocused
-                        },
-                    placeholder = {
+                if (!state.aiFormattedContent.isNullOrBlank()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            "What's on your mind?",
-                            style = MaterialTheme.typography.bodyLarge,
+                            text = "Auto-Format",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    },
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Switch(
+                            checked = state.isAutoFormatEnabled,
+                            onCheckedChange = { viewModel.onAction(EditorAction.ToggleAutoFormat) },
+                            modifier = Modifier.scale(0.8f)
+                        )
+                    }
+                }
+
+                val aiFormattedContent = state.aiFormattedContent
+                if (state.isAutoFormatEnabled && aiFormattedContent != null && !isEditorFocused) {
+                    Text(
+                        text = aiFormattedContent,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .clickable { contentFocusRequester.requestFocus() },
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                } else {
+                    HyphenTextField(
+                        state = hyphenState,
+                        linkConfig = linkConfig,
+                        onMarkdownChange = {
+                            viewModel.onAction(EditorAction.ChangeContent(it))
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp)
+                            .defaultMinSize(minHeight = 84.dp)
+                            .focusRequester(contentFocusRequester)
+                            .onFocusChanged { focusState ->
+                                isEditorFocused = focusState.isFocused
+                            },
+                        placeholder = {
+                            Text(
+                                "What's on your mind?",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        },
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                     ),
@@ -458,6 +494,49 @@ fun JournalScreen() {
                         )
                     )
                 )
+                }
+
+                if (!state.aiReflection.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    var isReflectionExpanded by remember { mutableStateOf(false) }
+                    ElevatedCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .animateContentSize(),
+                        onClick = { isReflectionExpanded = !isReflectionExpanded },
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(R.drawable.auto_stories_24px),
+                                    contentDescription = "AI Reflection",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "AI Reflection",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            val aiReflection = state.aiReflection
+                            if (isReflectionExpanded && aiReflection != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    aiReflection,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+
                 Spacer(Modifier.height(24.dp))
             }
         }

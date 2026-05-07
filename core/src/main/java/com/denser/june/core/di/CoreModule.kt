@@ -41,12 +41,16 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.denser.june.core.domain.ai.AiManager
 
 val coreModule = module {
     singleOf(::DatabaseFactory)
     singleOf(::DatastoreFactory)
     single { get<DatabaseFactory>().createJournalDatabase().build() }
     single { get<JournalDatabase>().journalDao() }
+    single { get<JournalDatabase>().aiDao() }
+
+    single { AiManager(get()) }
 
     singleOf(::ExportImpl).bind<ExportRepo>()
     singleOf(::RestoreImpl).bind<RestoreRepo>()

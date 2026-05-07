@@ -11,6 +11,10 @@ import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.FileUtils
 import com.denser.june.core.utils.getTodayAtMidnight
+import com.denser.june.core.data.database.journal.AiDao
+import com.denser.june.core.data.database.journal.ImprovementEntity
+import com.denser.june.core.data.database.journal.MicroWinEntity
+import java.util.UUID
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import kotlinx.coroutines.FlowPreview
@@ -26,6 +30,8 @@ class EditorVM(
     private val journalPrefs: JournalPreferences,
     private val songRepo: SongRepository,
     private val privacyPreferences: com.denser.june.core.domain.preferences.PrivacyPreferences,
+    private val aiManager: com.denser.june.core.domain.ai.AiManager,
+    private val aiDao: AiDao,
     private val navigator: AppNavigator
 ) : ViewModel() {
     private val editorRoute = savedStateHandle.tryRoute<Route.Editor>()
@@ -130,6 +136,7 @@ class EditorVM(
 
             is EditorAction.ToggleBookmark -> toggleBookmark()
             is EditorAction.ToggleArchive -> toggleArchive()
+            is EditorAction.ToggleAutoFormat -> _state.update { it.copy(isAutoFormatEnabled = !it.isAutoFormatEnabled) }
             is EditorAction.SaveJournal -> saveJournal()
             is EditorAction.NavigateBack -> {
                 if (_state.value.isDirty) {
@@ -227,7 +234,12 @@ class EditorVM(
                         syncedAt = journal.syncedAt,
                         cloudId = journal.cloudId,
                         isLoading = false,
-                        isDirty = false
+                        isDirty = false,
+                        aiFormattedContent = journal.aiFormattedContent,
+                        aiReflection = journal.aiReflection,
+                        dominantEmotion = journal.dominantEmotion,
+                        aiColorWeight = journal.aiColorWeight,
+                        isAutoFormatEnabled = !journal.aiFormattedContent.isNullOrBlank() // Enable if available by default
                     )
                 }
             } else {
@@ -316,6 +328,71 @@ class EditorVM(
             }
 
             _state.update { it.copy(isDirty = false, isDraft = false) }
+
+            // Run AI Processing in Background
+            existingJournal?.let { processAiFeatures(it) }
+        }
+    }
+
+    private fun processAiFeatures(journal: Journal) {
+        viewModelScope.launch {
+            if (!aiManager.isModelDownloaded.value) {
+                aiManager.checkModelStatus()
+            }
+            if (!aiManager.isModelDownloaded.value || journal.content.isBlank()) return@launch
+
+            // 1. Auto-format content
+            val formatted = aiManager.generateContent("Format this journal entry into clean paragraphs or bullet points: ${journal.content}")
+
+            // 2. AI Reflection
+            val reflection = aiManager.generateContent("Provide a short, clinical AI analysis of the cognitive patterns and emotional baseline in this journal entry: ${journal.content}")
+
+            // 3. Dominant Emotion
+            val emotion = aiManager.generateContent("Respond with exactly ONE emoji that represents the dominant emotion of this journal entry: ${journal.content}")
+
+            // 4. Semantic Color Weight
+            val colorWeight = aiManager.generateContent("Respond with exactly one word representing the semantic color weight (e.g. Red, Blue, Yellow, Green, Purple, Grey) for this journal: ${journal.content}")
+
+            // Update Journal with AI fields
+            val updatedJournal = journal.copy(
+                aiFormattedContent = formatted,
+                aiReflection = reflection,
+                dominantEmotion = emotion,
+                aiColorWeight = colorWeight
+            )
+            journalRepo.updateJournal(updatedJournal)
+
+            // 5. Extract Improvements
+            val improvementsRaw = aiManager.generateContent("Extract any recurring self-doubt, social anxieties, or overthinking from this text as a comma-separated list of actionable items to resolve. Text: ${journal.content}")
+            if (improvementsRaw.isNotBlank() && !improvementsRaw.contains("AI Error")) {
+                improvementsRaw.split(",").map { it.trim() }.filter { it.isNotEmpty() }.forEach {
+                    aiDao.insertImprovement(ImprovementEntity(
+                        id = UUID.randomUUID().toString(),
+                        journalId = journal.id,
+                        content = it,
+                        isCompleted = false,
+                        isArchived = false,
+                        createdAt = System.currentTimeMillis()
+                    ))
+                }
+            }
+
+            // 6. Extract Micro-Wins (Actions and Proofs)
+            val microWinsRaw = aiManager.generateContent("Extract any daily actions and proof statements of momentum or success from this text. Format as Action|Proof separated by newlines. Text: ${journal.content}")
+            if (microWinsRaw.isNotBlank() && !microWinsRaw.contains("AI Error")) {
+                microWinsRaw.split("\n").forEach { line ->
+                    val parts = line.split("|")
+                    if (parts.size == 2) {
+                        aiDao.insertMicroWin(MicroWinEntity(
+                            id = UUID.randomUUID().toString(),
+                            journalId = journal.id,
+                            action = parts[0].trim(),
+                            proof = parts[1].trim(),
+                            createdAt = System.currentTimeMillis()
+                        ))
+                    }
+                }
+            }
         }
     }
 

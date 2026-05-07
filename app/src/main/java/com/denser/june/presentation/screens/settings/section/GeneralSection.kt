@@ -31,6 +31,19 @@ fun GeneralSection(
 
     SettingSection(title = "General") {
         SettingsItem(
+            title = "AI Settings",
+            subtitle = "Manage Gemini Nano features",
+            leadingContent = {
+                Icon(
+                    painter = painterResource(R.drawable.auto_stories_24px),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+            },
+            onClick = { navigator.navigateTo(Route.AiSettings) }
+        )
+
+        SettingsItem(
             title = "Start of the week",
             subtitle = state.startOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault()),
             leadingContent = {
