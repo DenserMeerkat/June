@@ -27,6 +27,8 @@ import com.denser.june.presentation.screens.settings.screens.PinSetupScreen
 import com.denser.june.presentation.screens.settings.screens.reminder.ReminderScreen
 import com.denser.june.presentation.screens.settings.screens.sync.SyncScreen
 import com.denser.june.presentation.screens.settings.screens.trash.BinScreen
+import com.denser.june.presentation.screens.settings.screens.AiSettingsPage
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -135,6 +137,13 @@ fun JuneNavHost(
 
         composable<Route.ReminderSettings> {
             ReminderScreen()
+        }
+
+        composable<Route.AiSettings> {
+            val navigator = koinInject<AppNavigator>()
+            AiSettingsPage(
+                onNavigateBack = { navigator.navigateBack() }
+            )
         }
     }
 }
