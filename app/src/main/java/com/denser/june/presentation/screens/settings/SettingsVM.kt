@@ -12,6 +12,8 @@ import com.denser.june.core.domain.backup.RestoreRepo
 import com.denser.june.core.domain.backup.RestoreResult
 import com.denser.june.core.domain.backup.RestoreState
 import com.denser.june.core.domain.model.enums.ThemeMode
+import com.denser.june.core.domain.model.enums.AiModel
+import com.denser.june.core.domain.preferences.AiPreferences
 import com.denser.june.core.domain.model.enums.Fonts
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.enums.LockType
@@ -32,7 +34,8 @@ class SettingsVM(
     private val privacyPrefs: PrivacyPreferences,
     private val journalPrefs: JournalPreferences,
     private val exportRepo: ExportRepo,
-    private val restoreRepo: RestoreRepo
+    private val restoreRepo: RestoreRepo,
+    private val aiPrefs: AiPreferences
 ) : ViewModel() {
 
     private val _localState = MutableStateFlow(SettingsState())
@@ -52,7 +55,8 @@ class SettingsVM(
             privacyPrefs.getScreenPrivacyFlow(),
             journalPrefs.isAutoTimeEnabled(),
             journalPrefs.startOfWeek(),
-            journalPrefs.timeFormat()
+            journalPrefs.timeFormat(),
+            aiPrefs.getAiModel()
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -65,6 +69,7 @@ class SettingsVM(
             isAutoTimeEnabled = array[11] as Boolean,
             startOfWeek = array[12] as DayOfWeek,
             timeFormat = array[13] as TimeFormat,
+            aiModel = array[14] as AiModel,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -131,6 +136,7 @@ class SettingsVM(
                 is SettingsAction.OnAutoTimeToggle -> journalPrefs.setAutoTimeEnabled(action.enabled)
                 is SettingsAction.OnStartOfWeekChange -> journalPrefs.setStartOfWeek(action.startOfWeek)
                 is SettingsAction.OnTimeFormatChange -> journalPrefs.setTimeFormat(action.timeFormat)
+                is SettingsAction.OnAiModelChange -> aiPrefs.setAiModel(action.model)
             }
         }
     }
