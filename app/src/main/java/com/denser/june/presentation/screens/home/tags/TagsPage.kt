@@ -232,11 +232,11 @@ fun TagsPage() {
                         val isSelected = selectedPrimaryTag == fullTag
                         val count = tagCounts[fullTag] ?: 0
 
-                        FilterChip(
+                        FilterChip(shape = RoundedCornerShape(24.dp),
                             selected = isSelected,
                             onClick = { viewModel.selectPrimaryTag(fullTag) },
                             modifier = Modifier.height(40.dp),
-                            shape = RoundedCornerShape(16.dp),
+
                             label = {
                                 Text(
                                     text = fullTag,
@@ -264,7 +264,7 @@ fun TagsPage() {
                                             expanded = showMenu,
                                             onDismissRequest = { showMenu = false },
                                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                            shape = RoundedCornerShape(24.dp),
+
                                             tonalElevation = 3.dp
                                         ) {
                                             DropdownMenuItem(

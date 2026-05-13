@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.presentation.screens.home.HomeTab
 import kotlinx.coroutines.launch
@@ -36,82 +36,121 @@ fun HomeBottomBar(
             .navigationBarsPadding(),
         contentAlignment = Alignment.BottomCenter
     ) {
-        HorizontalFloatingToolbar(
-            expanded = true,
-            colors = FloatingToolbarDefaults.standardFloatingToolbarColors(
-                toolbarContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-            ),
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = onFabClick,
-                    shape = RoundedCornerShape(20.dp),
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.add_2_24px),
-                        contentDescription = "New Journal"
-                    )
-                }
-            },
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.End
         ) {
-            HomeTab.entries.forEachIndexed { index, tab ->
-                val isSelected = pagerState.currentPage == index
-
-                ToolbarTab(
-                    selected = isSelected,
-                    iconRes = tab.iconRes,
-                    filledIconRes = tab.filledIconRes,
-                    label = tab.label,
-                    onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(index)
-                        }
-                    }
+            // FAB above the bottom navigation
+            FloatingActionButton(
+                onClick = onFabClick,
+                shape = RoundedCornerShape(24.dp), // Squircle matching screenshot
+                containerColor = MaterialTheme.colorScheme.primary, // Using primary for the cyan/blue look in screenshot
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier
+                    .padding(end = 16.dp, bottom = 16.dp)
+                    .size(72.dp) // Large FAB
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.edit_24px), // Changing to edit icon as in screenshot
+                    contentDescription = "New Journal",
+                    modifier = Modifier.size(28.dp)
                 )
+            }
+
+            // Custom Bottom Navigation Bar
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceContainerLow, // Added subtle background color for navigation bar
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HomeTab.entries.forEachIndexed { index, tab ->
+                        val isSelected = pagerState.currentPage == index
+
+                        BottomNavItem(
+                            selected = isSelected,
+                            iconRes = tab.iconRes,
+                            filledIconRes = tab.filledIconRes,
+                            label = tab.label,
+                            onClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            }
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ToolbarTab(
+private fun BottomNavItem(
     selected: Boolean,
     onClick: () -> Unit,
     iconRes: Int,
     filledIconRes: Int,
     label: String
 ) {
-    val backgroundColor = when {
-        selected -> MaterialTheme.colorScheme.secondaryContainer
+    val iconBackgroundColor = when {
+        selected -> MaterialTheme.colorScheme.primaryContainer
         else -> Color.Transparent
     }
 
-    val contentColor = when {
-        selected -> MaterialTheme.colorScheme.onSecondaryContainer
+    val iconContentColor = when {
+        selected -> MaterialTheme.colorScheme.onPrimaryContainer
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    Surface(
-        color = backgroundColor,
-        shape = CircleShape,
+    val textColor = when {
+        selected -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .padding(vertical = 4.dp, horizontal = 2.dp)
-            .size(52.dp, 40.dp)
-            .clip(CircleShape)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) { onClick() }
+            .padding(8.dp)
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
+        Surface(
+            color = iconBackgroundColor,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .height(32.dp)
+                .width(64.dp)
+                .clip(RoundedCornerShape(16.dp))
         ) {
-            Icon(
-                painter = painterResource(if (selected)  filledIconRes else iconRes),
-                contentDescription = label,
-                tint = contentColor,
-                modifier = Modifier.size(24.dp)
-            )
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Icon(
+                    painter = painterResource(if (selected) filledIconRes else iconRes),
+                    contentDescription = label,
+                    tint = iconContentColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+            ),
+            color = textColor
+        )
     }
 }
