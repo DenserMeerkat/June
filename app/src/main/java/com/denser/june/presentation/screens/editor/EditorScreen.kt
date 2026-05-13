@@ -507,8 +507,7 @@ fun JournalScreen() {
                         onClick = { isReflectionExpanded = !isReflectionExpanded },
                         colors = CardDefaults.elevatedCardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                        ),
-                        shape = RoundedCornerShape(24.dp)
+                        )
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {

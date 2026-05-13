@@ -66,7 +66,7 @@ fun SettingsItem(
         color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = if (enabled) 1f else 0.5f),
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(10.dp))
             .clickable(enabled = enabled, onClick = onClick)
     ) {
         Column(

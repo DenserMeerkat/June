@@ -35,7 +35,6 @@ fun TimelineTabs(
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.primary,
                 divider = {}
-                // Removed the custom indicator to fix M3 API changes where indicator now takes TabIndicatorScope
             ) {
                 TimelineTab.entries.forEach { tab ->
                     Tab(
