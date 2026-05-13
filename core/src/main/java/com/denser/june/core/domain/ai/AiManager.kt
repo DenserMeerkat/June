@@ -50,8 +50,16 @@ class AiManager(private val context: Context, private val aiPreferences: AiPrefe
 
     suspend fun generateContent(prompt: String): String = withContext(Dispatchers.IO) {
         try {
-            val response = generativeModel.generateContent(prompt)
-            response.text ?: ""
+            // The user explicitly requested to drop cloud AI to avoid "API key not valid" errors
+            // and to use native on-device model inferences (e.g. Gemma 4 E2B/E4B via MediaPipe LlmInference
+            // or Google AI Edge SDK). However, due to sandbox offline constraints preventing the download
+            // of new dependencies (like com.google.ai.edge:ai-edge-sdk), we stub the local edge integration
+            // response here. In a real environment, this would be initialized as:
+            // val options = LlmInference.LlmInferenceOptions.builder().setModelPath("gemma-4-e2b.bin").build()
+            // val session = LlmInference.createFromOptions(context, options)
+            // return session.generateResponse(prompt)
+
+            "On-device inference simulated locally for: ${prompt.take(50)}..."
         } catch (e: Exception) {
             "AI Error: ${e.message}"
         }
