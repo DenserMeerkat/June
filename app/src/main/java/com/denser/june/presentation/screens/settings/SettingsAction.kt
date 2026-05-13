@@ -7,7 +7,10 @@ import com.denser.june.core.domain.model.enums.LockType
 import java.time.DayOfWeek
 import com.materialkolor.PaletteStyle
 
+import com.denser.june.core.domain.model.enums.AiModel
+
 sealed interface SettingsAction {
+    data class OnAiModelChange(val model: AiModel): SettingsAction
     data class OnSeedColorChange(val color: Int): SettingsAction
     data class OnThemeSwitch(val themeMode: ThemeMode): SettingsAction
     data class OnAmoledSwitch(val amoled: Boolean): SettingsAction

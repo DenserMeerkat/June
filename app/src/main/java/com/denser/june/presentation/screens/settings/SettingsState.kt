@@ -22,5 +22,6 @@ data class SettingsState(
     val isScreenPrivacyEnabled: Boolean = false,
     val isAutoTimeEnabled: Boolean = false,
     val startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
-    val timeFormat: TimeFormat = TimeFormat.TWELVE_HOUR
+    val timeFormat: TimeFormat = TimeFormat.TWELVE_HOUR,
+    val aiModel: com.denser.june.core.domain.model.enums.AiModel = com.denser.june.core.domain.model.enums.AiModel.AICORE
 )

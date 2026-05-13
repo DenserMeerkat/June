@@ -5,6 +5,7 @@ import com.denser.june.core.data.backup.RestoreImpl
 import com.denser.june.core.data.database.DatabaseFactory
 import com.denser.june.core.data.database.journal.JournalDatabase
 import com.denser.june.core.data.datastore.DatastoreFactory
+import com.denser.june.core.data.preferences.AiPreferencesImpl
 import com.denser.june.core.data.preferences.JournalPreferencesImpl
 import com.denser.june.core.data.preferences.PrivacyPreferencesImpl
 import com.denser.june.core.data.preferences.SyncPreferencesImpl
@@ -18,6 +19,7 @@ import com.denser.june.core.domain.reminder.ReminderScheduler
 import com.denser.june.core.data.reminder.ReminderSchedulerImpl
 import com.denser.june.core.domain.backup.ExportRepo
 import com.denser.june.core.domain.backup.RestoreRepo
+import com.denser.june.core.domain.preferences.AiPreferences
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.preferences.SyncPreferences
@@ -50,7 +52,7 @@ val coreModule = module {
     single { get<JournalDatabase>().journalDao() }
     single { get<JournalDatabase>().aiDao() }
 
-    single { AiManager(get()) }
+    single { AiManager(get(), get()) }
 
     singleOf(::ExportImpl).bind<ExportRepo>()
     singleOf(::RestoreImpl).bind<RestoreRepo>()
@@ -62,6 +64,7 @@ val coreModule = module {
     single { ThemePreferencesImpl(get(named("PreferencesDataStore"))) }.bind<ThemePreferences>()
     single { PrivacyPreferencesImpl(get(named("PreferencesDataStore"))) }.bind<PrivacyPreferences>()
     single { JournalPreferencesImpl(get(named("PreferencesDataStore"))) }.bind<JournalPreferences>()
+    single { AiPreferencesImpl(get(named("PreferencesDataStore"))) }.bind<AiPreferences>()
 
     single { OkHttpClient() }
     single {
