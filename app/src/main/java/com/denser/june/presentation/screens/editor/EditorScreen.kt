@@ -8,25 +8,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,12 +32,8 @@ import com.denser.june.presentation.screens.editor.components.MediaOperations
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import com.denser.hyphen.state.rememberHyphenTextState
-import com.denser.hyphen.ui.style.HyphenStyleConfig
-import com.denser.hyphen.ui.style.ListItemStyle
-import com.denser.hyphen.ui.material3.HyphenTextField
-import com.denser.hyphen.ui.link.HyphenLinkConfig
-import com.denser.june.presentation.screens.editor.components.JuneLinkSheet
-import com.denser.june.presentation.screens.editor.components.JuneLinkMenu
+import com.denser.june.presentation.screens.editor.components.JournalContentEditor
+import com.denser.hyphen.model.TriggerConfig
 
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
@@ -61,7 +49,7 @@ import java.time.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JournalScreen() {
+fun EditorScreen() {
     val viewModel: EditorVM = koinViewModel()
     val navigator = koinInject<AppNavigator>()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -69,10 +57,31 @@ fun JournalScreen() {
     val context = LocalContext.current
 
     val dialogState = rememberEditorDialogState()
-    var showMenu by remember { mutableStateOf(false) }
     var showOptionsSheet by remember { mutableStateOf(false) }
     val isEditorReady = !state.isLoading
     val hyphenState = rememberHyphenTextState()
+
+    LaunchedEffect(Unit) {
+        hyphenState.triggerConfigs = listOf(
+            TriggerConfig(trigger = "@", scheme = "person"),
+            TriggerConfig(trigger = "#", scheme = "topic")
+        )
+    }
+
+    val activeTrigger = hyphenState.activeTrigger
+    val activeTagQuery = activeTrigger
+        ?.takeIf { it.config.trigger == "@" || it.config.trigger == "#" }
+        ?.let { it.config.trigger + it.query }
+    LaunchedEffect(activeTagQuery) {
+        viewModel.onAction(EditorAction.SearchTags(activeTagQuery ?: ""))
+    }
+
+    val onTagSelect: (String) -> Unit = { tag ->
+        val trimmed = tag.trim().lowercase()
+        if (trimmed.isNotBlank() && trimmed !in state.tags) {
+            viewModel.onAction(EditorAction.UpdateTags(state.tags + trimmed))
+        }
+    }
 
     LaunchedEffect(isEditorReady) {
         if (isEditorReady && state.content.isNotEmpty()) {
@@ -132,26 +141,6 @@ fun JournalScreen() {
         )
     }
 
-    val linkConfig = remember {
-        HyphenLinkConfig(
-            dropdownContent = { span, menuOffset, onDismiss, onEditRequest ->
-                JuneLinkMenu(
-                    span = span,
-                    menuOffset = menuOffset,
-                    onDismiss = onDismiss,
-                    onEditRequest = onEditRequest
-                )
-            },
-            dialogContent = { span, onDismiss, onConfirm ->
-                JuneLinkSheet(
-                    span = span,
-                    initialText = hyphenState.text.substring(span.start, span.end),
-                    onDismiss = onDismiss,
-                    onConfirm = onConfirm
-                )
-            }
-        )
-    }
 
     Scaffold(
         topBar = {
@@ -255,6 +244,10 @@ fun JournalScreen() {
             if (isEditorFocused) {
                 EditorToolbar(
                     state = hyphenState,
+                    activeTrigger = activeTrigger,
+                    tagSuggestions = state.tagSuggestions,
+                    currentTags = state.tags,
+                    onTagSelect = onTagSelect,
                     modifier = Modifier
                         .navigationBarsPadding()
                         .imePadding()
@@ -369,7 +362,7 @@ fun JournalScreen() {
                             SuggestionChip(
                                 onClick = { dialogState.showTagsDialog = true },
                                 label = { Text(tag, fontSize = 12.sp) },
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 border = null,
                                 colors = TagUtils.getTagSuggestionChipColors(tag)
                             )
@@ -377,86 +370,17 @@ fun JournalScreen() {
                     }
                 }
 
-                HyphenTextField(
+                JournalContentEditor(
                     state = hyphenState,
-                    linkConfig = linkConfig,
                     onMarkdownChange = {
                         viewModel.onAction(EditorAction.ChangeContent(it))
                     },
+                    onFocusChanged = { isEditorFocused = it },
+                    focusRequester = contentFocusRequester,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp)
                         .defaultMinSize(minHeight = 84.dp)
-                        .focusRequester(contentFocusRequester)
-                        .onFocusChanged { focusState ->
-                            isEditorFocused = focusState.isFocused
-                        },
-                    placeholder = {
-                        Text(
-                            "What's on your mind?",
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                    ),
-                    colors = UiUtils.getTransparentTextFieldColors().copy(
-                        unfocusedPlaceholderColor =  MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        focusedPlaceholderColor =  MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                    ),
-                    styleConfig = HyphenStyleConfig(
-                        boldStyle = SpanStyle(
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        ),
-                        italicStyle = SpanStyle(
-                            fontStyle = FontStyle.Italic,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        ),
-                        strikethroughStyle = SpanStyle(
-                            textDecoration = TextDecoration.LineThrough,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                        ),
-                        highlightStyle = SpanStyle(
-                            background = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        ),
-                        inlineCodeStyle = SpanStyle(
-                            background = MaterialTheme.colorScheme.surfaceVariant,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 14.sp
-                        ),
-                        blockquoteSpanStyle = SpanStyle(
-                            fontStyle = FontStyle.Italic,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            background = MaterialTheme.colorScheme.surfaceContainerHighest
-                        ),
-
-                        h1Style = SpanStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-                        h2Style = SpanStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-                        h3Style = SpanStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-                        h4Style = SpanStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-                        h5Style = SpanStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-                        h6Style = SpanStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp),
-
-                        bulletListStyle = ListItemStyle(
-                            prefixStyle = SpanStyle(
-                                color = MaterialTheme.colorScheme.tertiary
-                            )
-                        ),
-                        orderedListStyle = ListItemStyle(
-                            prefixStyle = SpanStyle(
-                                color = MaterialTheme.colorScheme.tertiary
-                            )
-                        ),
-                        linkStyle = SpanStyle(
-                            color = MaterialTheme.colorScheme.primary,
-                            textDecoration = TextDecoration.Underline,
-                        )
-                    )
                 )
                 Spacer(Modifier.height(24.dp))
             }

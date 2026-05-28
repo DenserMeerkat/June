@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.BackHandler
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.DayOfWeek
@@ -56,6 +57,8 @@ fun JournalDatePickerDialog(
     onDateSelected: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
+    BackHandler(onBack = onDismiss)
+
     val scope = rememberCoroutineScope()
     val initialDate = remember(initialDateMillis) { initialDateMillis.toLocalDate() }
     val initialTime = remember(initialDateMillis) { initialDateMillis.toLocalTime() }

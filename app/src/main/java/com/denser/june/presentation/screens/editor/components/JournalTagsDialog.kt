@@ -328,7 +328,8 @@ fun TagInputArea(
 
     val isInputValid = remember(tagInput) {
         val trimmed = tagInput.trim()
-        trimmed.isNotBlank() && trimmed != "@" && trimmed != "#"
+        val isPersonOrTopic = trimmed.startsWith("@") || trimmed.startsWith("#")
+        trimmed.isNotBlank() && trimmed != "@" && trimmed != "#" && (!isPersonOrTopic || !trimmed.contains(" "))
     }
 
     Surface(
@@ -406,7 +407,17 @@ fun TagInputArea(
                 TextField(
                     value = textFieldValue,
                     onValueChange = { newValue ->
-                        if (newValue.text.length <= charLimit) {
+                        val text = newValue.text
+                        val isPersonOrTopic = text.startsWith("@") || text.startsWith("#")
+                        
+                        val isValidChars = if (isPersonOrTopic) {
+                            val body = text.removePrefix("@").removePrefix("#")
+                            body.all { it.isLetterOrDigit() || it == '_' || it == '-' }
+                        } else {
+                            text.all { it.isLetterOrDigit() || it == '_' || it == '-' || it == ' ' }
+                        }
+
+                        if (isValidChars && text.length <= charLimit && (!isPersonOrTopic || !text.contains(" "))) {
                             textFieldValue = newValue
                             onInputChange(newValue.text)
                         }
