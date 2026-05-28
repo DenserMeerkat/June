@@ -23,6 +23,14 @@ import com.denser.hyphen.ui.material3.HyphenTextField
 import com.denser.hyphen.ui.style.HyphenStyleConfig
 import com.denser.hyphen.ui.style.ListItemStyle
 import com.denser.june.presentation.utils.UiUtils
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import com.denser.hyphen.model.MarkupStyleRange
 
 @Composable
 fun JournalContentEditor(
@@ -49,6 +57,53 @@ fun JournalContentEditor(
                     onDismiss = onDismiss,
                     onConfirm = onConfirm
                 )
+            }
+        )
+    }
+
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+
+    val activeLink = state.activeLinkForEditing
+    var linkSpanToShowDialog by remember { mutableStateOf<MarkupStyleRange?>(null) }
+
+    LaunchedEffect(activeLink) {
+        if (activeLink != null) {
+            keyboardController?.hide()
+            focusManager.clearFocus()
+            delay(200)
+            linkSpanToShowDialog = activeLink
+        } else {
+            linkSpanToShowDialog = null
+        }
+    }
+
+    val refocusEditor = {
+        focusRequester.requestFocus()
+        keyboardController?.show()
+    }
+
+    val activeLinkToShow = linkSpanToShowDialog
+    if (activeLinkToShow != null) {
+        val currentText = remember(activeLinkToShow, state.text) {
+            state.text.substring(
+                activeLinkToShow.start.coerceAtMost(state.text.length),
+                activeLinkToShow.end.coerceAtMost(state.text.length)
+            )
+        }
+        JuneLinkSheet(
+            span = activeLinkToShow,
+            initialText = currentText,
+            onDismiss = {
+                state.activeLinkForEditing = null
+                linkSpanToShowDialog = null
+                refocusEditor()
+            },
+            onConfirm = { newText, newUrl ->
+                state.updateLink(activeLinkToShow, newText, newUrl)
+                state.activeLinkForEditing = null
+                linkSpanToShowDialog = null
+                refocusEditor()
             }
         )
     }
