@@ -1,11 +1,6 @@
-package com.denser.june.presentation.screens.editor.components
+package com.denser.june.presentation.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -15,9 +10,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,29 +37,54 @@ import com.denser.june.core.utils.toLocalTime
 import com.denser.june.core.utils.combineDateAndTime
 import com.denser.june.core.utils.toFullDate
 import com.denser.june.core.utils.toFullTime
-import com.denser.june.presentation.components.DaysOfWeekHeader
-import com.denser.june.presentation.components.InfiniteMonthStrip
-import com.denser.june.presentation.components.YearHeader
 import java.time.format.TextStyle
 import java.util.Locale
 
+enum class JuneDateTimePickerMode {
+    DATE_ONLY,
+    TIME_ONLY,
+    BOTH
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JournalDatePickerDialog(
-    initialDateMillis: Long,
+fun JuneDateTimePicker(
+    initialDateTimeMillis: Long,
+    mode: JuneDateTimePickerMode = JuneDateTimePickerMode.BOTH,
     startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
     is24Hour: Boolean = false,
-    onDateSelected: (Long) -> Unit,
+    initialTab: Int = 0,
+    onDateTimeSelected: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
     BackHandler(onBack = onDismiss)
 
     val scope = rememberCoroutineScope()
-    val initialDate = remember(initialDateMillis) { initialDateMillis.toLocalDate() }
-    val initialTime = remember(initialDateMillis) { initialDateMillis.toLocalTime() }
+    val initialDate = remember(initialDateTimeMillis) { initialDateTimeMillis.toLocalDate() }
+    val initialTime = remember(initialDateTimeMillis) { initialDateTimeMillis.toLocalTime() }
     val anchorMonth = remember { YearMonth.from(initialDate) }
     var selectedDate by remember { mutableStateOf(initialDate) }
-    var includeTime by remember { mutableStateOf(initialTime != LocalTime.MIDNIGHT) }
+    var includeTime by remember {
+        mutableStateOf(
+            when (mode) {
+                JuneDateTimePickerMode.DATE_ONLY -> false
+                JuneDateTimePickerMode.TIME_ONLY -> true
+                JuneDateTimePickerMode.BOTH -> (initialTime != LocalTime.MIDNIGHT || initialTab == 1)
+            }
+        )
+    }
+    
+    var selectedTab by remember {
+        mutableIntStateOf(
+            when (mode) {
+                JuneDateTimePickerMode.DATE_ONLY -> 0
+                JuneDateTimePickerMode.TIME_ONLY -> 1
+                JuneDateTimePickerMode.BOTH -> initialTab
+            }
+        )
+    }
+    
+    var showDialMode by remember { mutableStateOf(false) }
     val timePickerState = rememberTimePickerState(
         initialHour = initialTime.hour,
         initialMinute = initialTime.minute,
@@ -107,6 +127,67 @@ fun JournalDatePickerDialog(
                     .verticalScroll(rememberScrollState())
                     .padding(vertical = 16.dp)
             ) {
+                val selectedTime = remember(timePickerState.hour, timePickerState.minute) {
+                    LocalTime.of(timePickerState.hour, timePickerState.minute)
+                }
+
+                if (mode == JuneDateTimePickerMode.BOTH) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                shape = CircleShape
+                            )
+                            .padding(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val segments = listOf("Date", "Time")
+                        segments.forEachIndexed { index, label ->
+                            val isSelected = selectedTab == index
+                            val bgContainerColor = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent
+                            val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+
+                            Box(
+                                modifier = Modifier
+                                    .height(36.dp)
+                                    .clip(CircleShape)
+                                    .background(bgContainerColor)
+                                    .clickable {
+                                        selectedTab = index
+                                        if (index == 1) {
+                                            includeTime = true
+                                        }
+                                    }
+                                    .padding(horizontal = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(
+                                            if (index == 0) R.drawable.today_24px else R.drawable.schedule_24px
+                                        ),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = contentColor
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = contentColor
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -115,131 +196,117 @@ fun JournalDatePickerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = selectedDate.toFullDate(),
+                        text = if (selectedTab == 0) selectedDate.toFullDate() else selectedTime.toFullTime(is24Hour),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Button(
-                        onClick = {
-                            val today = LocalDate.now()
-                            selectedDate = today
-                            val monthsDiff = ChronoUnit.MONTHS.between(anchorMonth, YearMonth.from(today))
-                            scope.launch {
-                                pagerState.animateScrollToPage(initialPageIndex + monthsDiff.toInt())
-                            }
-                        },
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
-                        modifier = Modifier.height(32.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.today_24px),
-                            contentDescription = "Jump to Today",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Today", style = MaterialTheme.typography.labelMedium)
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp)
-                ) {
-                    DialogDateMonthStrip(
-                        currentMonth = currentMonth,
-                        onMonthSelect = { targetMonth ->
-                            val monthsDiff = ChronoUnit.MONTHS.between(anchorMonth, targetMonth)
-                            scope.launch {
-                                pagerState.animateScrollToPage(initialPageIndex + monthsDiff.toInt())
-                            }
-                        }
-                    )
-                }
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .padding(horizontal = 16.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
-                        .padding(8.dp, 12.dp),
-                    verticalAlignment = Alignment.Top
-                ) { page ->
-                    val monthForPage = remember(page) {
-                        val monthsToAdd = page - initialPageIndex
-                        anchorMonth.plusMonths(monthsToAdd.toLong())
-                    }
-                    CalendarPage(
-                        yearMonth = monthForPage,
-                        selectedDate = selectedDate,
-                        startOfWeek = startOfWeek,
-                        onDateClick = { selectedDate = it }
-                    )
-                }
-                AnimatedVisibility(
-                    visible = includeTime,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut()
-                ) {
-                    Column {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 20.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 20.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            val selectedTime = remember(timePickerState.hour, timePickerState.minute) {
-                                LocalTime.of(timePickerState.hour, timePickerState.minute)
-                            }
-                            Text(
-                                text = selectedTime.toFullTime(is24Hour),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                    if (selectedTab == 0) {
+                        Button(
+                            onClick = {
+                                val today = LocalDate.now()
+                                selectedDate = today
+                                val monthsDiff = ChronoUnit.MONTHS.between(anchorMonth, YearMonth.from(today))
+                                scope.launch {
+                                    pagerState.animateScrollToPage(initialPageIndex + monthsDiff.toInt())
+                                }
+                            },
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                            modifier = Modifier.height(32.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Button(
-                                onClick = {
-                                    val now = LocalTime.now()
-                                    timePickerState.hour = now.hour
-                                    timePickerState.minute = now.minute
-                                },
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
-                                modifier = Modifier.height(32.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.schedule_24px),
-                                    contentDescription = "Jump to Now",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Now", style = MaterialTheme.typography.labelMedium)
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
                         ) {
+                            Icon(
+                                painter = painterResource(R.drawable.today_24px),
+                                contentDescription = "Jump to Today",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Today", style = MaterialTheme.typography.labelMedium)
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                val now = LocalTime.now()
+                                timePickerState.hour = now.hour
+                                timePickerState.minute = now.minute
+                                includeTime = true
+                            },
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                            modifier = Modifier.height(32.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.schedule_24px),
+                                contentDescription = "Jump to Now",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Now", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (selectedTab == 0) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp)
+                    ) {
+                        DialogDateMonthStrip(
+                            currentMonth = currentMonth,
+                            onMonthSelect = { targetMonth ->
+                                val monthsDiff = ChronoUnit.MONTHS.between(anchorMonth, targetMonth)
+                                scope.launch {
+                                    pagerState.animateScrollToPage(initialPageIndex + monthsDiff.toInt())
+                                }
+                            }
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(horizontal = 16.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                            .padding(8.dp, 12.dp),
+                        verticalAlignment = Alignment.Top
+                    ) { page ->
+                        val monthForPage = remember(page) {
+                            val monthsToAdd = page - initialPageIndex
+                            anchorMonth.plusMonths(monthsToAdd.toLong())
+                        }
+                        CalendarPage(
+                            yearMonth = monthForPage,
+                            selectedDate = selectedDate,
+                            startOfWeek = startOfWeek,
+                            onDateClick = { selectedDate = it }
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (showDialMode) {
+                            TimePicker(state = timePickerState)
+                        } else {
                             TimeInput(state = timePickerState)
                         }
                     }
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier
@@ -248,18 +315,27 @@ fun JournalDatePickerDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Switch(
-                        checked = includeTime,
-                        onCheckedChange = { includeTime = it },
-                        thumbContent = {
-                            Icon(
-                                painter = painterResource(R.drawable.schedule_24px),
-                                contentDescription = "Set time",
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    )
-                    Row {
+                    if (selectedTab == 1) {
+                        Switch(
+                            checked = showDialMode,
+                            onCheckedChange = { showDialMode = it },
+                            thumbContent = {
+                                Icon(
+                                    painter = painterResource(
+                                        if (showDialMode) R.drawable.schedule_24px else R.drawable.edit_24px
+                                    ),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                                )
+                            }
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.size(1.dp))
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         OutlinedButton(onClick = onDismiss) {
                             Text("Cancel")
                         }
@@ -271,7 +347,7 @@ fun JournalDatePickerDialog(
                                 } else null
 
                                 val millis = combineDateAndTime(selectedDate, time)
-                                onDateSelected(millis)
+                                onDateTimeSelected(millis)
                             }
                         ) {
                             Text("OK")

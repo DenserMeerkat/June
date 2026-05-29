@@ -21,7 +21,11 @@ import com.denser.june.core.R
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
-import com.denser.june.presentation.screens.settings.components.JuneTimePickerDialog
+import com.denser.june.presentation.components.JuneDateTimePicker
+import com.denser.june.presentation.components.JuneDateTimePickerMode
+import com.denser.june.core.utils.combineDateAndTime
+import com.denser.june.core.utils.toLocalTime
+import java.time.LocalDate
 import com.denser.june.presentation.screens.settings.section.SettingSection
 import com.denser.june.presentation.screens.settings.section.SettingsItem
 import com.denser.june.core.utils.toFullTime
@@ -197,11 +201,15 @@ fun ReminderScreen() {
     }
 
     if (showTimePicker) {
-        JuneTimePickerDialog(
-            initialTime = LocalTime.parse(state.time),
+        val initialDateTime = remember(state.time) {
+            combineDateAndTime(LocalDate.now(), LocalTime.parse(state.time))
+        }
+        JuneDateTimePicker(
+            initialDateTimeMillis = initialDateTime,
+            mode = JuneDateTimePickerMode.TIME_ONLY,
             is24Hour = is24Hour,
-            onTimeSelected = { time ->
-                viewModel.updateTime(time)
+            onDateTimeSelected = { millis ->
+                viewModel.updateTime(millis.toLocalTime())
                 showTimePicker = false
             },
             onDismiss = { showTimePicker = false }

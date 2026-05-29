@@ -11,10 +11,11 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.FileUtils
 import com.denser.june.presentation.components.JuneDialog
+import com.denser.june.presentation.components.JuneDateTimePicker
+import com.denser.june.presentation.components.JuneDateTimePickerMode
 import com.denser.june.presentation.screens.editor.components.AddItemSheet
 import com.denser.june.presentation.screens.editor.components.AddLocationDialog
 import com.denser.june.presentation.screens.editor.components.AddSongSheet
-import com.denser.june.presentation.screens.editor.components.JournalDatePickerDialog
 import com.denser.june.presentation.screens.editor.components.JournalEmojiPickerDialog
 import com.denser.june.presentation.screens.editor.components.JournalTagsDialog
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
@@ -23,6 +24,7 @@ class EditorDialogState {
     var showExitDialog by mutableStateOf(false)
     var showDeleteConfirmation by mutableStateOf(false)
     var showDatePicker by mutableStateOf(false)
+    var datePickerInitialTab by mutableIntStateOf(0)
     var showAddItemSheet by mutableStateOf(false)
     var showEmojiPicker by mutableStateOf(false)
     var showCameraSelectionDialog by mutableStateOf(false)
@@ -129,11 +131,13 @@ fun EditorModals(
     }
 
     if (dialogState.showDatePicker) {
-        JournalDatePickerDialog(
-            initialDateMillis = editorState.dateTime,
+        JuneDateTimePicker(
+            initialDateTimeMillis = editorState.dateTime,
+            mode = JuneDateTimePickerMode.BOTH,
             startOfWeek = editorState.startOfWeek,
             is24Hour = editorState.timeFormat == TimeFormat.TWENTY_FOUR_HOUR,
-            onDateSelected = { millis ->
+            initialTab = dialogState.datePickerInitialTab,
+            onDateTimeSelected = { millis ->
                 onAction(EditorAction.ChangeDateTime(millis))
                 dialogState.showDatePicker = false
             },
