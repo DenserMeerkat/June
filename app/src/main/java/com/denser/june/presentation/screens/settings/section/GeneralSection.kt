@@ -62,6 +62,7 @@ fun GeneralSection(
                         onCheckedChange = { onAction(SettingsAction.OnStartOfWeekChange(day)) },
                         shapes = shape,
                         modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(4.dp),
                         colors = ToggleButtonDefaults.toggleButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,

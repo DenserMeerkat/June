@@ -179,6 +179,7 @@ fun ReminderScreen() {
                                 enabled = state.isEnabled,
                                 shapes = shape,
                                 modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(4.dp),
                                 colors = ToggleButtonDefaults.toggleButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,

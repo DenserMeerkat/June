@@ -5,8 +5,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -20,7 +18,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,7 +41,6 @@ import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
 import com.denser.june.presentation.screens.editor.components.EditorToolbar
-import com.denser.june.presentation.utils.TagUtils
 import com.denser.june.presentation.utils.UiUtils
 import kotlinx.coroutines.launch
 import java.time.LocalTime
@@ -80,8 +76,8 @@ fun EditorScreen() {
     }
 
     val onTagSelect: (String) -> Unit = { tag ->
-        val trimmed = tag.trim().lowercase()
-        if (trimmed.isNotBlank() && trimmed !in state.tags) {
+        val trimmed = tag.trim()
+        if (trimmed.isNotBlank() && state.tags.none { it.equals(trimmed, ignoreCase = true) }) {
             viewModel.onAction(EditorAction.UpdateTags(state.tags + trimmed))
         }
     }
@@ -214,7 +210,11 @@ fun EditorScreen() {
 
                     Box {
                         IconButton(
-                            onClick = { showOptionsSheet = true },
+                            onClick = {
+                                keyboardController?.hide()
+                                focusManager.clearFocus(force = true)
+                                showOptionsSheet = true
+                            },
                             colors = IconButtonDefaults.iconButtonColors(
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                                     alpha = 0.75f
