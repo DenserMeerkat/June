@@ -25,8 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import com.denser.june.presentation.components.JuneFullScreenDialog
 import androidx.core.content.ContextCompat
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.JournalLocation
@@ -217,12 +216,8 @@ fun AddLocationDialog(
         }
     }
 
-    Dialog(
+    JuneFullScreenDialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
-        )
     ) {
         Box(
             modifier = Modifier

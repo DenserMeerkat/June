@@ -16,20 +16,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TagCategory
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneDialog
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
+import com.denser.june.presentation.components.JuneFullScreenDialog
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.utils.TagUtils
 import com.denser.june.presentation.utils.UiUtils
@@ -51,9 +51,14 @@ fun JournalTagsDialog(
     var showInfoDialog by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
 
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
     fun onInsertPrefix(prefix: String) {
         tagInput = prefix
         onSearchTags(prefix)
+        focusManager.clearFocus()
+        focusRequester.requestFocus()
     }
 
     fun handleDismiss() {
@@ -90,12 +95,8 @@ fun JournalTagsDialog(
         )
     }
 
-    Dialog(
+    JuneFullScreenDialog(
         onDismissRequest = ::handleDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
-        )
     ) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -180,7 +181,8 @@ fun JournalTagsDialog(
                             tagInput = ""
                             onSearchTags("")
                         },
-                        onInsertPrefix = ::onInsertPrefix
+                        onInsertPrefix = ::onInsertPrefix,
+                        focusRequester = focusRequester
                     )
                 }
             }
@@ -206,7 +208,14 @@ fun JournalTagsDialog(
                             localTags = localTags - tagToRemove
                         },
                         emptyMessage = spec.emptyMessage,
-                        tintColor = spec.color
+                        tintColor = spec.color,
+                        onAddClick = {
+                            val prefix = category.prefix ?: ""
+                            tagInput = prefix
+                            onSearchTags(prefix)
+                            focusManager.clearFocus()
+                            focusRequester.requestFocus()
+                        }
                     )
                 }
                 Spacer(modifier = Modifier.height(120.dp))
@@ -224,7 +233,8 @@ fun TagSectionCard(
     tags: List<String>,
     onRemove: (String) -> Unit,
     emptyMessage: String,
-    tintColor: Color
+    tintColor: Color,
+    onAddClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -266,6 +276,24 @@ fun TagSectionCard(
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(modifier = Modifier.weight(1f))
+                val plusColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                val backgroundColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f)
+                FilledIconButton(
+                    onClick = onAddClick,
+                    modifier = Modifier.size(36.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = backgroundColor,
+                        contentColor = plusColor
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.add_2_24px),
+                        contentDescription = "Add $title tag",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(Modifier.width(4.dp))
             }
             Spacer(modifier = Modifier.height(16.dp))
             if (tags.isEmpty()) {
@@ -277,8 +305,7 @@ fun TagSectionCard(
                 )
             } else {
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     tags.forEach { tag ->
                         InputChip(
@@ -309,9 +336,9 @@ fun TagInputArea(
     onInputChange: (String) -> Unit,
     suggestions: List<String>,
     onAddTag: (String) -> Unit,
-    onInsertPrefix: (String) -> Unit
+    onInsertPrefix: (String) -> Unit,
+    focusRequester: FocusRequester
 ) {
-    val focusRequester = remember { FocusRequester() }
     val charLimit = TagUtils.TAG_CHARACTER_LIMIT
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(text = tagInput, selection = TextRange(tagInput.length)))
@@ -347,7 +374,7 @@ fun TagInputArea(
 
             if (showSuggestions) {
                 LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {

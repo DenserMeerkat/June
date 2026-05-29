@@ -17,8 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import com.denser.june.presentation.components.JuneFullScreenDialog
 import androidx.emoji2.emojipicker.EmojiPickerView
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.presentation.theme.LocalAppTheme
@@ -40,12 +39,8 @@ fun JournalEmojiPickerDialog(
             ThemeMode.LIGHT -> false
         }
     }
-    Dialog(
+    JuneFullScreenDialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
-        )
     ) {
         Box(
             modifier = Modifier

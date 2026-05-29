@@ -11,8 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import com.denser.june.presentation.components.JuneFullScreenDialog
 import com.denser.june.core.R
 import com.denser.june.core.domain.sync.SyncAnalysis
 
@@ -25,9 +24,8 @@ fun SyncDetailsDialog(
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Journals", "Media")
 
-    Dialog(
+    JuneFullScreenDialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
             modifier = Modifier
