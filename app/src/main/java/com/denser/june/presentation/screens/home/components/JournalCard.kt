@@ -228,7 +228,7 @@ fun RecentJournalCard(
                     enablePlayback = false,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(210.dp),
+                        .aspectRatio(1.7f),
                     operations = mediaOperations,
                     roundedCornerShape = RoundedCornerShape(16.dp)
                 )

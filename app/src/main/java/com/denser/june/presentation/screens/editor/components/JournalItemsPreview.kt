@@ -2,10 +2,12 @@ package com.denser.june.presentation.screens.editor.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -126,67 +128,82 @@ fun JournalItemsPreview(
     )
 
     Column {
-        VerticalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(240.dp),
-            pageSpacing = 8.dp,
-            beyondViewportPageCount = 2
-        ) { pageIndex ->
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                when (val slide = verticalSlides[pageIndex]) {
-                    is JournalPreviewItem.Song -> {
-                        Box(Modifier.padding(horizontal = 16.dp)) {
-                            JournalSongItem(
-                                details = slide.details,
-                                isFetching = false,
-                                onRemove = mediaOperations.onRemoveSong,
-                                onEdit = { mediaOperations.onSongSheetToggle(true) },
-                            )
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val pagerHeight = maxWidth / 1.7f
+            VerticalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(pagerHeight),
+                pageSpacing = 8.dp,
+                beyondViewportPageCount = 2
+            ) { pageIndex ->
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    when (val slide = verticalSlides[pageIndex]) {
+                        is JournalPreviewItem.Song -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                                contentAlignment = androidx.compose.ui.Alignment.Center
+                            ) {
+                                JournalSongItem(
+                                    details = slide.details,
+                                    isFetching = false,
+                                    onRemove = mediaOperations.onRemoveSong,
+                                    onEdit = { mediaOperations.onSongSheetToggle(true) },
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
-                    }
-                    is JournalPreviewItem.Map -> {
-                        Box(Modifier.padding(horizontal = 16.dp)) {
-                            JournalMapItem(
-                                location = slide.location,
-                                onMapClick = { mediaOperations.onLocationDialogToggle(true) },
-                                onRemove = mediaOperations.onRemoveLocation,
-                            )
+                        is JournalPreviewItem.Map -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                                contentAlignment = androidx.compose.ui.Alignment.Center
+                            ) {
+                                JournalMapItem(
+                                    location = slide.location,
+                                    onMapClick = { mediaOperations.onLocationDialogToggle(true) },
+                                    onRemove = mediaOperations.onRemoveLocation,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
-                    }
-                    is JournalPreviewItem.Images -> {
-                        val chunks = remember(slide.paths) {
-                            slide.paths.reversed().chunked(3)
-                        }
-                        val widthFraction = if (chunks.size > 1) 0.95f else 1f
+                        is JournalPreviewItem.Images -> {
+                            val chunks = remember(slide.paths) {
+                                slide.paths.reversed().chunked(3)
+                            }
+                            val widthFraction = if (chunks.size > 1) 0.95f else 1f
 
-                        LazyRow(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = if (chunks.size == 1) 16.dp else 0.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            if (chunks.size > 1) {
-                                item { Spacer(modifier = Modifier.width(0.dp)) }
-                            }
-                            items(chunks) { chunk ->
-                                Box(
-                                    modifier = Modifier
-                                        .fillParentMaxWidth(widthFraction)
-                                        .fillMaxHeight()
-                                ) {
-                                    JournalMosaicCard(
-                                        modifier = Modifier.fillMaxSize(),
-                                        mediaList = chunk,
-                                        operations = mediaOperations,
-                                    )
+                            LazyRow(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = if (chunks.size == 1) 16.dp else 0.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                if (chunks.size > 1) {
+                                    item { Spacer(modifier = Modifier.width(0.dp)) }
                                 }
-                            }
-                            if (chunks.size > 1) {
-                                item { Spacer(modifier = Modifier.width(0.dp)) }
+                                items(chunks) { chunk ->
+                                    Box(
+                                        modifier = Modifier
+                                            .fillParentMaxWidth(widthFraction)
+                                            .fillMaxHeight()
+                                    ) {
+                                        JournalMosaicCard(
+                                            modifier = Modifier.fillMaxSize(),
+                                            mediaList = chunk,
+                                            operations = mediaOperations,
+                                        )
+                                    }
+                                }
+                                if (chunks.size > 1) {
+                                    item { Spacer(modifier = Modifier.width(0.dp)) }
+                                }
                             }
                         }
                     }
@@ -225,7 +242,7 @@ fun JournalItemsPreview(
                                 disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             ),
                             contentPadding = PaddingValues(6.dp),
-                            modifier = Modifier.height(36.dp).width(48 .dp)
+                            modifier = Modifier.height(32.dp).width(48 .dp)
                         ) {
                             Icon(
                                 painter = painterResource(if (config.isSelected) config.filledIconRes else config.iconRes),

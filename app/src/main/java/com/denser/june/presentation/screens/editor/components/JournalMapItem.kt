@@ -45,7 +45,8 @@ import org.maplibre.spatialk.geojson.Position
 fun JournalMapItem(
     location: JournalLocation,
     onMapClick: () -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier.fillMaxWidth().aspectRatio(1.7f)
 ) {
     val privacyPreferences = koinInject<PrivacyPreferences>()
     val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
@@ -82,9 +83,7 @@ fun JournalMapItem(
     }
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(240.dp),
+        modifier = modifier,
         shape = RoundedCornerShape(32.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {

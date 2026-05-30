@@ -152,6 +152,7 @@ fun JournalsPage(
                         onCheckedChange = { viewModel.onTabSelected(tab) },
                         shapes = shape,
                         modifier = Modifier.weight(tab.widthWeight),
+                        contentPadding = PaddingValues(6.dp, 4.dp),
                         colors = ToggleButtonDefaults.toggleButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,

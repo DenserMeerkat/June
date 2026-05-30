@@ -39,6 +39,7 @@ import com.denser.june.core.utils.toFullDate
 import com.denser.june.core.utils.toFullTime
 import java.time.format.TextStyle
 import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 enum class JuneDateTimePickerMode {
     DATE_ONLY,
@@ -102,6 +103,7 @@ fun JuneDateTimePicker(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.32f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -112,80 +114,84 @@ fun JuneDateTimePicker(
             .imePadding(),
         contentAlignment = Alignment.TopCenter
     ) {
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        Column(
             modifier = Modifier
                 .widthIn(max = 400.dp)
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp)
-                .clickable(enabled = false) {}
-                .animateContentSize()
+                .padding(top = 10.dp, start = 4.dp, end = 4.dp, bottom = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
+            if (mode == JuneDateTimePickerMode.BOTH) {
+                Row(
+                    modifier = Modifier
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            shape = CircleShape
+                        )
+                        .padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val segments = listOf("Date", "Time")
+                    segments.forEachIndexed { index, label ->
+                        val isSelected = selectedTab == index
+                        val bgContainerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                        val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+
+                        Box(
+                            modifier = Modifier
+                                .height(36.dp)
+                                .clip(CircleShape)
+                                .background(bgContainerColor)
+                                .clickable {
+                                    selectedTab = index
+                                    if (index == 1) {
+                                        includeTime = true
+                                    }
+                                }
+                                .padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(
+                                        if (index == 0) R.drawable.today_24px else R.drawable.schedule_24px
+                                    ),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = contentColor
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = contentColor
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            Surface(
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = false) {}
+                    .animateContentSize()
+            ) {
+                Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .padding(vertical = 16.dp)
             ) {
                 val selectedTime = remember(timePickerState.hour, timePickerState.minute) {
                     LocalTime.of(timePickerState.hour, timePickerState.minute)
-                }
-
-                if (mode == JuneDateTimePickerMode.BOTH) {
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .background(
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                shape = CircleShape
-                            )
-                            .padding(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val segments = listOf("Date", "Time")
-                        segments.forEachIndexed { index, label ->
-                            val isSelected = selectedTab == index
-                            val bgContainerColor = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent
-                            val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-
-                            Box(
-                                modifier = Modifier
-                                    .height(36.dp)
-                                    .clip(CircleShape)
-                                    .background(bgContainerColor)
-                                    .clickable {
-                                        selectedTab = index
-                                        if (index == 1) {
-                                            includeTime = true
-                                        }
-                                    }
-                                    .padding(horizontal = 16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        painter = painterResource(
-                                            if (index == 0) R.drawable.today_24px else R.drawable.schedule_24px
-                                        ),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = contentColor
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = label,
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = contentColor
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 Row(
@@ -358,6 +364,7 @@ fun JuneDateTimePicker(
         }
     }
 }
+}
 
 @Composable
 fun CalendarPage(
@@ -456,7 +463,7 @@ fun DialogDateMonthStrip(
             )
         },
         monthContent = { ym, isSelected ->
-            val label = ym.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+            val label = ym.month.getDisplayName(TextStyle.SHORT, LocalLocale.current.platformLocale)
 
             val backgroundColor = if (isSelected) {
                 MaterialTheme.colorScheme.primaryContainer

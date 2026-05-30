@@ -42,92 +42,78 @@ fun JournalEmojiPickerDialog(
     JuneFullScreenDialog(
         onDismissRequest = onDismiss,
     ) {
-        Box(
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onDismiss
-                )
-                .statusBarsPadding()
-                .navigationBarsPadding(),
-            contentAlignment = Alignment.Center
+                .widthIn(max = 400.dp)
+                .fillMaxWidth()
+                .height(600.dp)
+                .padding(horizontal = 16.dp)
+                .clickable(enabled = false) {}
         ) {
-            Surface(
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                contentColor = MaterialTheme.colorScheme.onSurface,
+            Column(
                 modifier = Modifier
-                    .widthIn(max = 400.dp)
-                    .fillMaxWidth()
-                    .height(600.dp)
-                    .padding(horizontal = 16.dp)
-                    .clickable(enabled = false) {}
+                    .fillMaxSize()
+                    .padding(20.dp, 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
+                Text(
+                    text = "Pick a Mood",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                EmojiDialogPreview(selectedEmoji = currentSelection)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp, 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Pick a Mood",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    EmojiDialogPreview(selectedEmoji = currentSelection)
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .background(
-                                MaterialTheme.colorScheme.surfaceContainer,
-                                RoundedCornerShape(16.dp)
-                            )
-                            .clip(RoundedCornerShape(16.dp))
-                    ) {
-                        AndroidView(
-                            modifier = Modifier.fillMaxSize(),
-                            factory = { context ->
-                                val themeResId = if (isDarkTheme) {
-                                    android.R.style.Theme_DeviceDefault
-                                } else {
-                                    android.R.style.Theme_DeviceDefault_Light
-                                }
-                                val themedContext = ContextThemeWrapper(context, themeResId)
-
-                                EmojiPickerView(themedContext).apply {
-                                    emojiGridColumns = 8
-                                    setOnEmojiPickedListener { item ->
-                                        currentSelection = item.emoji
-                                    }
-                                }
-                            }
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.surfaceContainer,
+                            RoundedCornerShape(16.dp)
                         )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedButton(onClick = onDismiss) {
-                            Text("Cancel")
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                currentSelection?.let { onEmojiSelected(it) }
-                                if (currentSelection == null) onDismiss()
+                        .clip(RoundedCornerShape(16.dp))
+                ) {
+                    AndroidView(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { context ->
+                            val themeResId = if (isDarkTheme) {
+                                android.R.style.Theme_DeviceDefault
+                            } else {
+                                android.R.style.Theme_DeviceDefault_Light
                             }
-                        ) {
-                            Text("Done")
+                            val themedContext = ContextThemeWrapper(context, themeResId)
+
+                            EmojiPickerView(themedContext).apply {
+                                emojiGridColumns = 8
+                                setOnEmojiPickedListener { item ->
+                                    currentSelection = item.emoji
+                                }
+                            }
                         }
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            currentSelection?.let { onEmojiSelected(it) }
+                            if (currentSelection == null) onDismiss()
+                        }
+                    ) {
+                        Text("Done")
                     }
                 }
             }

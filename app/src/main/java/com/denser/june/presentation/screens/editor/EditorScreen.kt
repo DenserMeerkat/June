@@ -58,14 +58,14 @@ fun EditorScreen() {
     val dialogState = rememberEditorDialogState()
     var showOptionsSheet by remember { mutableStateOf(false) }
     val isEditorReady = !state.isLoading
-    val hyphenState = rememberHyphenTextState()
-
-    LaunchedEffect(Unit) {
-        hyphenState.triggerConfigs = listOf(
-            TriggerConfig(trigger = "@", scheme = "person"),
-            TriggerConfig(trigger = "#", scheme = "topic")
-        )
-    }
+    val hyphenState = rememberHyphenTextState(
+        triggerConfigs = remember {
+            listOf(
+                TriggerConfig(trigger = "@", scheme = "person"),
+                TriggerConfig(trigger = "#", scheme = "topic")
+            )
+        }
+    )
 
     val activeTrigger = hyphenState.activeTrigger
     val activeTagQuery = activeTrigger

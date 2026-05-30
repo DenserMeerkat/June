@@ -10,12 +10,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -77,7 +78,8 @@ fun JuneSongPlayerCard(
     onSeek: (Float) -> Unit,
     onSeekFinished: () -> Unit,
     onToggleRepeat: () -> Unit,
-    isInternetAllowed: Boolean = true
+    isInternetAllowed: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val themeColors = rememberDynamicThemeColors(if (isInternetAllowed) details.thumbnailUrl else null)
@@ -118,16 +120,18 @@ fun JuneSongPlayerCard(
         ).filter { it.second != null }
     }
 
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Surface(
-            color = themeColors.surface,
-            contentColor = themeColors.onSurface,
-            shape = RoundedCornerShape(32.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(240.dp)
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
+    Surface(
+        color = themeColors.surface,
+        contentColor = themeColors.onSurface,
+        shape = RoundedCornerShape(32.dp),
+        modifier = modifier,
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val heightVal = maxHeight
+                val albumSize = heightVal * 0.45f
+                val rippleSize = heightVal * 0.2f
+                val iconSize = heightVal * 0.1f
+
                 RestrictedAsyncImage(
                     imageUrl = details.thumbnailUrl,
                     isInternetAllowed = isInternetAllowed,
@@ -144,7 +148,7 @@ fun JuneSongPlayerCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(rippleSize)
                             .scale(rippleScale.value)
                             .alpha(rippleAlpha.value)
                             .background(themeColors.primaryContainer.copy(alpha = 0.5f), CircleShape)
@@ -160,7 +164,7 @@ fun JuneSongPlayerCard(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(108.dp)
+                                .size(albumSize)
                                 .clip(RoundedCornerShape(16.dp))
                                 .shadow(8.dp, RoundedCornerShape(16.dp))
                                 .background(themeColors.secondaryContainer)
@@ -198,7 +202,7 @@ fun JuneSongPlayerCard(
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .size(24.dp)
+                                .size(iconSize)
                                 .clip(CircleShape)
                                 .clickable {
                                     val intent = Intent(Intent.ACTION_VIEW, spotifyUrl?.toUri())
@@ -206,7 +210,7 @@ fun JuneSongPlayerCard(
                                 }
                         ) {
                             Surface(
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(iconSize * 0.83f),
                                 shape = CircleShape,
                                 color = themeColors.onPrimaryContainer,
                                 content = {}
@@ -214,7 +218,7 @@ fun JuneSongPlayerCard(
                             Icon(
                                 painter = painterResource(R.drawable.spotify),
                                 contentDescription = "Open Spotify",
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(iconSize),
                                 tint = themeColors.primaryContainer
                             )
                         }
@@ -274,7 +278,7 @@ fun JuneSongPlayerCard(
                         FilledIconToggleButton(
                             checked = isRepeatEnabled,
                             onCheckedChange = { onToggleRepeat() },
-                            modifier = Modifier.size(32.dp),
+                            modifier = Modifier.size(heightVal * 0.13f),
                             shapes = IconButtonDefaults.toggleableShapes(),
                             colors = IconButtonDefaults.filledIconToggleButtonColors(
                                 containerColor = Color.Transparent,
@@ -285,7 +289,7 @@ fun JuneSongPlayerCard(
                                 painter = painterResource(R.drawable.repeat_24px),
                                 contentDescription = "Toggle Repeat",
                                 tint = if (isRepeatEnabled) themeColors.onPrimaryContainer else themeColors.onSurface,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(heightVal * 0.08f)
                             )
                         }
                     }
@@ -311,7 +315,6 @@ fun JuneSongPlayerCard(
                 }
             }
         }
-    }
 }
 
 @Composable
@@ -381,6 +384,7 @@ fun PlayPauseButton(
     onClick: () -> Unit,
     containerColor: Color,
     contentColor: Color,
+    modifier: Modifier = Modifier.size(width = 64.dp, height = 48.dp)
 ) {
     val buttonScale = remember { Animatable(1f) }
     val coroutineScope = rememberCoroutineScope()
@@ -397,7 +401,7 @@ fun PlayPauseButton(
             }
         },
         enabled = enabled,
-        modifier = Modifier.scale(buttonScale.value).size(width = 64.dp, height = 48.dp),
+        modifier = modifier.scale(buttonScale.value),
         shapes = IconButtonDefaults.toggleableShapes(
             checkedShape = RoundedCornerShape(16.dp)
         ),

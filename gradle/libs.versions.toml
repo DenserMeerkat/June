@@ -44,7 +44,7 @@ jsonPath = "3.0.0"
 emojipicker = "1.6.0"
 biometric = "1.2.0-alpha05"
 googleFonts = "1.11.2"
-hyphen = "0.5.0-alpha03"
+hyphen = "0.5.0-alpha04"
 
 [libraries]
 # Core

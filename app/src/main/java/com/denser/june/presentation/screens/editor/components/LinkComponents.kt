@@ -11,6 +11,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import com.denser.hyphen.ui.LocalHyphenRawClipboard
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpOffset
@@ -31,7 +32,7 @@ fun JuneLinkMenu(
     onEditRequest: (MarkupStyleRange) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
-    val clipboard = LocalClipboard.current
+    val clipboard = LocalHyphenRawClipboard.current ?: LocalClipboard.current
     val scope = rememberCoroutineScope()
     val url = remember(span.style) { (span.style as? MarkupStyle.Link).getDisplayUrl() }
 

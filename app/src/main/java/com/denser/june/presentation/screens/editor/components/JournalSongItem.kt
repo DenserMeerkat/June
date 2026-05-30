@@ -31,6 +31,7 @@ fun JournalSongItem(
     isFetching: Boolean,
     onRemove: () -> Unit,
     onEdit: () -> Unit,
+    modifier: Modifier = Modifier.fillMaxWidth().aspectRatio(1.7f)
 ) {
     val privacyPreferences = koinInject<PrivacyPreferences>()
     val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
@@ -47,88 +48,86 @@ fun JournalSongItem(
 
     when {
         isFetching -> {
-            SongCardPlaceholder(isLoading = true)
+            SongCardPlaceholder(isLoading = true, modifier = modifier)
         }
 
         details != null -> {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(32.dp))
-                        .indication(interactionSource, LocalIndication.current)
-                        .then(
-                            Modifier.pointerInput(Unit) {
-                                detectTapGestures(
-                                    onTap = { onEdit() },
-                                    onLongPress = { offset ->
-                                        showMenu = true
-                                        pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
-                                    },
-                                    onPress = { offset ->
-                                        val press = PressInteraction.Press(offset)
-                                        interactionSource.emit(press)
-                                        tryAwaitRelease()
-                                        interactionSource.emit(PressInteraction.Release(press))
-                                    },
-                                )
-                            }
-                        )
-                ) {
-                    JuneSongPlayerCard(
-                        details = details,
-                        isPlaying = playerState.isPlaying,
-                        isLoading = playerState.isLoading,
-                        sliderValue = playerState.sliderValue,
-                        isRepeatEnabled = playerState.isRepeatEnabled,
-                        onPlayPause = playerState.onPlayPause,
-                        onSeek = playerState.onSeek,
-                        onSeekFinished = playerState.onSeekFinished,
-                        onToggleRepeat = playerState.onToggleRepeat,
-                        isInternetAllowed = isInternetAllowed
+            Box(
+                modifier = modifier
+                    .clip(RoundedCornerShape(32.dp))
+                    .indication(interactionSource, LocalIndication.current)
+                    .then(
+                        Modifier.pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = { onEdit() },
+                                onLongPress = { offset ->
+                                    showMenu = true
+                                    pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                                },
+                                onPress = { offset ->
+                                    val press = PressInteraction.Press(offset)
+                                    interactionSource.emit(press)
+                                    tryAwaitRelease()
+                                    interactionSource.emit(PressInteraction.Release(press))
+                                },
+                            )
+                        }
                     )
+            ) {
+                JuneSongPlayerCard(
+                    details = details,
+                    isPlaying = playerState.isPlaying,
+                    isLoading = playerState.isLoading,
+                    sliderValue = playerState.sliderValue,
+                    isRepeatEnabled = playerState.isRepeatEnabled,
+                    onPlayPause = playerState.onPlayPause,
+                    onSeek = playerState.onSeek,
+                    onSeekFinished = playerState.onSeekFinished,
+                    onToggleRepeat = playerState.onToggleRepeat,
+                    isInternetAllowed = isInternetAllowed,
+                    modifier = Modifier.fillMaxSize()
+                )
 
-                    if (showMenu) {
-                        Box(
+                if (showMenu) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .wrapContentSize(align = Alignment.TopStart)
+                            .offset(x = pressOffset.x, y = pressOffset.y)
+                            .size(1.dp)
+                    ) {
+                        DropdownMenu(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .wrapContentSize(align = Alignment.TopStart)
-                                .offset(x = pressOffset.x, y = pressOffset.y)
-                                .size(1.dp)
+                                .defaultMinSize(minWidth = 200.dp)
+                                .padding(horizontal = 8.dp),
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            shape = RoundedCornerShape(24.dp),
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            tonalElevation = 3.dp,
                         ) {
-                            DropdownMenu(
-                                modifier = Modifier
-                                    .defaultMinSize(minWidth = 200.dp)
-                                    .padding(horizontal = 8.dp),
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false },
-                                shape = RoundedCornerShape(24.dp),
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                tonalElevation = 3.dp,
-                            ) {
-                                DropdownMenuItem(
-                                    modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                    text = { Text("Edit Song") },
-                                    onClick = {
-                                        showMenu = false
-                                        onEdit()
-                                    },
-                                    leadingIcon = {
-                                        Icon(painterResource(R.drawable.edit_24px), null)
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                    text = { Text("Remove") },
-                                    onClick = {
-                                        showMenu = false
-                                        onRemove()
-                                    },
-                                    leadingIcon = {
-                                        Icon(painterResource(R.drawable.delete_24px), null)
-                                    }
-                                )
-                            }
+                            DropdownMenuItem(
+                                modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                                text = { Text("Edit Song") },
+                                onClick = {
+                                    showMenu = false
+                                    onEdit()
+                                },
+                                leadingIcon = {
+                                    Icon(painterResource(R.drawable.edit_24px), null)
+                                }
+                            )
+                            DropdownMenuItem(
+                                modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                                text = { Text("Remove") },
+                                onClick = {
+                                    showMenu = false
+                                    onRemove()
+                                },
+                                leadingIcon = {
+                                    Icon(painterResource(R.drawable.delete_24px), null)
+                                }
+                            )
                         }
                     }
                 }
@@ -136,7 +135,7 @@ fun JournalSongItem(
         }
 
         else -> {
-            SongCardPlaceholder(isLoading = false)
+            SongCardPlaceholder(isLoading = false, modifier = modifier)
         }
     }
 }
@@ -144,14 +143,13 @@ fun JournalSongItem(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SongCardPlaceholder(
-    isLoading: Boolean
+    isLoading: Boolean,
+    modifier: Modifier = Modifier
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
         shape = RoundedCornerShape(32.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(220.dp)
+        modifier = modifier,
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
