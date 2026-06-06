@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -115,7 +116,11 @@ fun TimelineMapTab(
 
     val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
     val onPrimaryColor = MaterialTheme.colorScheme.onPrimary.toArgb()
-    val mutedLineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f).toArgb()
+    val mutedLineColor = if (isDarkMap) {
+        Color.White.copy(alpha = 0.3f).toArgb()
+    } else {
+        Color.Black.copy(alpha = 0.3f).toArgb()
+    }
 
     val styleUrl by produceState(initialValue = "", mapStyleProvider, isDarkMap) {
         value = MapProviderUtils.getStyleUrl(mapStyleProvider, isDarkMap)
@@ -222,7 +227,7 @@ fun TimelineMapTab(
         if (isInternetAllowed) {
             MapViewLifecycleEffect(mapView)
 
-            LaunchedEffect(styleUrl) {
+            LaunchedEffect(styleUrl, sortedPoints) {
                 if (styleUrl.isBlank()) return@LaunchedEffect
                 mapView.getMapAsync { mapboxMap ->
                     mapboxMap.uiSettings.isAttributionEnabled = false
@@ -242,15 +247,10 @@ fun TimelineMapTab(
             Column(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(start = 16.dp, top = 12.dp),
+                    .padding(16.dp),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                MapAttributions(
-                    provider = mapStyleProvider,
-                    isDarkMode = isDarkMap
-                )
-
                 val currentJournal = sortedPoints.getOrNull(selectedIndex)
                 val dayText = remember(currentJournal) { currentJournal?.dateTime?.toDayOfMonth() ?: "" }
                 val monthText = remember(currentJournal) { currentJournal?.dateTime?.toShortMonth()?.uppercase() ?: "" }
@@ -271,7 +271,7 @@ fun TimelineMapTab(
             Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 36.dp, end = 16.dp),
+                    .padding(16.dp),
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -280,6 +280,17 @@ fun TimelineMapTab(
                     isDarkMode = isDarkMap,
                     onToggleDarkMode = { isDarkMap = !isDarkMap },
                     onToggleFullscreen = { viewModel.setCalendarExpanded(isMapExpanded) }
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 16.dp, bottom = 16.dp)
+            ) {
+                MapAttributions(
+                    provider = mapStyleProvider,
+                    isDarkMode = isDarkMap
                 )
             }
         } else {

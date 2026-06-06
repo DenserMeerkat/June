@@ -16,6 +16,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.sqrt
 
 data class LocationGroup(
     val location: JournalLocation,
@@ -93,10 +94,22 @@ object TimelineMapUtils {
     fun createArchedPoints(start: LatLng, end: LatLng, segments: Int = 60): List<LatLng> {
         val latDiff = end.latitude - start.latitude
         val lngDiff = end.longitude - start.longitude
-        val distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff).coerceAtLeast(1e-9)
+        val distance = sqrt(latDiff * latDiff + lngDiff * lngDiff).coerceAtLeast(1e-9)
         val archHeight = distance * 0.15
-        val controlLat = (start.latitude + end.latitude) / 2.0 + (-lngDiff / distance) * archHeight
-        val controlLng = (start.longitude + end.longitude) / 2.0 + (latDiff / distance) * archHeight
+        
+        val offsetLat = (-lngDiff / distance) * archHeight
+        val offsetLng = (latDiff / distance) * archHeight
+
+        val shouldInvert = if (abs(offsetLat) > 1e-9) {
+            offsetLat < 0
+        } else {
+            offsetLng < 0
+        }
+        
+        val factor = if (shouldInvert) -1.0 else 1.0
+        val controlLat = (start.latitude + end.latitude) / 2.0 + offsetLat * factor
+        val controlLng = (start.longitude + end.longitude) / 2.0 + offsetLng * factor
+
         return (0..segments).map { i ->
             val t = i.toDouble() / segments
             val u = 1.0 - t
