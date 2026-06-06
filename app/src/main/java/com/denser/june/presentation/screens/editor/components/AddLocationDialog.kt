@@ -238,7 +238,13 @@ fun AddLocationDialog(
 
     val dialogBgColor = if (isMapDarkMode) Color(0xFF121212) else Color(0xFFFFFFFF)
     JuneFullScreenDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            if (isSearchFocused) {
+                focusManager.clearFocus()
+            } else {
+                onDismiss()
+            }
+        },
         isDarkTheme = isMapDarkMode,
         windowBackgroundColor = dialogBgColor
     ) {

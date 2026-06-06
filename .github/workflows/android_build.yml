@@ -39,7 +39,6 @@ jobs:
         RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
         RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-        MAPTILER_API_KEY: ${{ secrets.MAPTILER_API_KEY }}
       run: ./gradlew assembleRelease
 
     - name: Upload APK

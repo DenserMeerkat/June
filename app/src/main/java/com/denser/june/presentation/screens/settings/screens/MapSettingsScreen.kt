@@ -78,6 +78,8 @@ import com.denser.june.presentation.components.InternetRestrictedBanner
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.components.MapLibreInitializer
 import com.denser.june.presentation.components.MapViewLifecycleEffect
+import com.denser.june.presentation.components.rememberMapDarkMode
+import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.screens.settings.tiles.DefaultMapThemeTile
@@ -134,8 +136,9 @@ fun MapSettingsScreen() {
 
     val lifecycleOwner = LocalLifecycleOwner.current
     val isInternetAllowed = LocalInternetAllowed.current
-    val isSystemDark = isSystemInDarkTheme()
-    var isPreviewDarkMode by remember { mutableStateOf(isSystemDark) }
+    val savedMapTheme by journalPreferences.mapTheme()
+        .collectAsStateWithLifecycle(initialValue = MapTheme.APP)
+    var isPreviewDarkMode by rememberMapDarkMode(savedMapTheme)
 
     MapLibreInitializer(isInternetAllowed)
 

@@ -82,7 +82,7 @@ June is built with modern Android development practices, leveraging **Jetpack Co
 
 - **Image Loading:** [Coil](https://coil-kt.github.io/coil/)
 - **Video/Audio:** [Media3 (ExoPlayer)](https://developer.android.com/media/media3)
-- **Maps:** [MapLibre](https://maplibre.org/) & [MapTiler](https://www.maptiler.com/) (Vector-based rendering)
+- **Maps:** Vector-based rendering with custom style providers support (Carto, MapTiler, Mapbox, Stadia, OSM) via [MapLibre](https://maplibre.org/)
 - **Theming:** [MaterialKolor](https://github.com/jordond/MaterialKolor) (Dynamic Material You colors)
 
 ## Building Locally
@@ -101,21 +101,7 @@ git clone https://github.com/DenserMeerkat/June.git
 cd June
 ```
 
-### 3. Configure API Keys
-
-June uses **MapTiler** for map rendering.
-
-1.  Get a free API key from [MapTiler Cloud](https://cloud.maptiler.com/).
-2.  Copy the `local.properties.example` file to `local.properties`:
-    ```bash
-    cp local.properties.example local.properties
-    ```
-3.  Open `local.properties` and replace the placeholder with your key:
-    ```properties
-    MAPTILER_API_KEY=your_actual_key_here
-    ```
-
-### 4. Build & Run
+### 3. Build & Run
 
 1. Open the project in Android Studio and let Gradle sync.
 2. Select the debug build variant (default).
