@@ -6,6 +6,7 @@ import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.preferences.ThemePreferences
 import com.denser.june.core.domain.preferences.FontPreferences
 import com.denser.june.core.domain.model.AppTheme
+import com.denser.june.core.domain.model.getAppThemeFlow
 import com.denser.june.core.domain.preferences.SyncPreferences
 import com.denser.june.core.domain.sync.SyncManager
 import com.denser.june.core.domain.sync.SyncStatus
@@ -23,6 +24,7 @@ data class AppState(
 )
 
 class MainVM(
+    initialAppTheme: AppTheme,
     themePrefs: ThemePreferences,
     privacyPrefs: PrivacyPreferences,
     fontPrefs: FontPreferences,
@@ -30,43 +32,24 @@ class MainVM(
     syncPrefs: SyncPreferences
 ) : ViewModel() {
 
-    private val themeFlow = combine(
-        themePrefs.getSeedColorFlow(),
-        themePrefs.getThemeMode(),
-        themePrefs.getAmoledPrefFlow(),
-        themePrefs.getPaletteStyle(),
-        themePrefs.getMaterialYouFlow()
-    ) { seed, themeMode, amoled, style, matYou ->
-        AppTheme(
-            seedColor = seed,
-            themeMode = themeMode,
-            withAmoled = amoled,
-            style = style,
-            materialTheme = matYou
-        )
-    }
-
     val state = combine(
-        themeFlow,
-        fontPrefs.getAppFont(),
+        themePrefs.getAppThemeFlow(fontPrefs),
         privacyPrefs.getAppLockFlow(),
         syncManager.status,
         syncPrefs.getSyncEnabled(),
         privacyPrefs.getIsInternetAllowedFlow()
-    ) { args: Array<Any?> ->
-        val baseTheme = args[0] as AppTheme
-
+    ) { appTheme, isAppLockEnabled, syncStatus, isSyncEnabled, isInternetAllowed ->
         AppState(
-            appTheme = baseTheme.copy(appFont = args[1] as String),
-            isAppLockEnabled = args[2] as Boolean,
+            appTheme = appTheme,
+            isAppLockEnabled = isAppLockEnabled,
             isLoading = false,
-            syncStatus = args[3] as SyncStatus,
-            isSyncEnabled = args[4] as Boolean,
-            isInternetAllowed = args[5] as Boolean
+            syncStatus = syncStatus,
+            isSyncEnabled = isSyncEnabled,
+            isInternetAllowed = isInternetAllowed
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = AppState()
+        initialValue = AppState(appTheme = initialAppTheme)
     )
 }

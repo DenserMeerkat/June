@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -15,7 +16,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.core.domain.preferences.JournalPreferences
-import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.screens.home.components.HomeBottomBar
@@ -41,7 +41,9 @@ enum class HomeTab(val label: String, val iconRes: Int, val filledIconRes: Int) 
 @Composable
 fun HomeScreen() {
     val navigator = koinInject<AppNavigator>()
-    val mainVM: MainVM = koinViewModel()
+    val mainVM: MainVM = koinViewModel(
+        viewModelStoreOwner = LocalContext.current as androidx.activity.ComponentActivity
+    )
     val appState by mainVM.state.collectAsStateWithLifecycle()
     val journalPrefs = koinInject<JournalPreferences>()
     val isAutoTimeEnabled by journalPrefs.isAutoTimeEnabled().collectAsStateWithLifecycle(initialValue = false)
@@ -114,7 +116,7 @@ fun HomeScreen() {
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(top = innerPadding.calculateTopPadding())
             ) { page ->
                 when (HomeTab.entries[page]) {
                     HomeTab.Journals -> JournalsPage(isSelected = pagerState.currentPage == 0)

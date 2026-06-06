@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
@@ -37,11 +38,12 @@ fun JuneTheme(
 
     val view = LocalView.current
     if (!view.isInEditMode) {
-        androidx.compose.runtime.SideEffect {
+        SideEffect {
             val window = (view.context as android.app.Activity).window
             val insetsController = WindowCompat.getInsetsController(window, view)
 
             insetsController.isAppearanceLightStatusBars = !isDarkMode
+            insetsController.isAppearanceLightNavigationBars = !isDarkMode
         }
     }
     DynamicMaterialTheme(

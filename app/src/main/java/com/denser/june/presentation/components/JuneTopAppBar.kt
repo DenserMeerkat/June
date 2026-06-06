@@ -2,6 +2,7 @@ package com.denser.june.presentation.components
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -28,10 +29,10 @@ fun JuneTopAppBar(
         scrolledContainerColor = MaterialTheme.colorScheme.surface
     ),
     scrollBehavior: TopAppBarScrollBehavior? = null,
-    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets.add(
+        WindowInsets(left = 8.dp, right = 8.dp)
+    ),
 ) {
-    val globalModifier = modifier.padding(horizontal = 8.dp)
-
     when (type) {
         JuneAppBarType.Small -> {
             TopAppBar(
@@ -41,7 +42,7 @@ fun JuneTopAppBar(
                 colors = colors,
                 scrollBehavior = scrollBehavior,
                 windowInsets = windowInsets,
-                modifier = globalModifier
+                modifier = modifier
             )
         }
 
@@ -53,7 +54,7 @@ fun JuneTopAppBar(
                 colors = colors,
                 scrollBehavior = scrollBehavior,
                 windowInsets = windowInsets,
-                modifier = globalModifier
+                modifier = modifier
             )
         }
 
@@ -65,7 +66,7 @@ fun JuneTopAppBar(
                 colors = colors,
                 scrollBehavior = scrollBehavior,
                 windowInsets = windowInsets,
-                modifier = globalModifier
+                modifier = modifier
             )
         }
 
@@ -77,7 +78,7 @@ fun JuneTopAppBar(
                 colors = colors,
                 scrollBehavior = scrollBehavior,
                 windowInsets = windowInsets,
-                modifier = globalModifier
+                modifier = modifier
             )
         }
     }

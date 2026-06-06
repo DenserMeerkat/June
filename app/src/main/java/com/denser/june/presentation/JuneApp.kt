@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.denser.june.MainVM
+import com.denser.june.core.domain.model.AppTheme
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.JuneNavHost
 import com.denser.june.presentation.navigation.NavigationIntent
@@ -18,10 +19,11 @@ import com.denser.june.presentation.theme.LocalAppTheme
 import com.denser.june.presentation.theme.LocalInternetAllowed
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
-fun JuneApp() {
-    val mainVM: MainVM = koinViewModel()
+fun JuneApp(initialAppTheme: AppTheme) {
+    val mainVM: MainVM = koinViewModel(parameters = { parametersOf(initialAppTheme) })
     val appState by mainVM.state.collectAsStateWithLifecycle()
 
     val navigator = koinInject<AppNavigator>()
@@ -33,7 +35,6 @@ fun JuneApp() {
                 is NavigationIntent.NavigateBack -> {
                     navController.navigateUp()
                 }
-
                 is NavigationIntent.NavigateTo -> {
                     navController.navigate(intent.route) {
                         intent.popUpToRoute?.let { popUpRoute ->

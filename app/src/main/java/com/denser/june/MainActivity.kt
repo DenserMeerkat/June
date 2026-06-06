@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.SystemBarStyle
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.Image
@@ -30,12 +31,17 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.denser.june.core.domain.preferences.PrivacyPreferences
+import com.denser.june.core.domain.preferences.ThemePreferences
+import com.denser.june.core.domain.preferences.FontPreferences
+import com.denser.june.core.domain.model.AppTheme
+import com.denser.june.core.domain.model.getAppThemeFlow
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.presentation.components.PinLockScreen
 import com.denser.june.core.utils.SecurityUtils
 import com.denser.june.presentation.JuneApp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.inject
 import com.denser.june.core.R
 import androidx.core.graphics.drawable.toDrawable
@@ -50,6 +56,8 @@ enum class LockState {
 class MainActivity : FragmentActivity() {
 
     private val privacyPreferences: PrivacyPreferences by inject()
+    private val themePrefs: ThemePreferences by inject()
+    private val fontPrefs: FontPreferences by inject()
     private var lockState by mutableStateOf(LockState.LOADING)
 
     private var isPinError by mutableStateOf(false)
@@ -59,6 +67,10 @@ class MainActivity : FragmentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val initialAppTheme = runBlocking {
+            themePrefs.getAppThemeFlow(fontPrefs).first()
+        }
 
         splashScreen.setKeepOnScreenCondition { lockState == LockState.LOADING }
 
@@ -75,7 +87,6 @@ class MainActivity : FragmentActivity() {
                         lockState = LockState.LOCKED_BIOMETRIC
                         checkBiometricAndAuthenticate()
                     }
-
                     LockType.PIN -> {
                         if (storedPinHash != null) {
                             lockState = LockState.LOCKED_PIN
@@ -109,7 +120,7 @@ class MainActivity : FragmentActivity() {
             MaterialTheme(colorScheme = systemColorScheme) {
                 when (lockState) {
                     LockState.UNLOCKED -> {
-                        JuneApp()
+                        JuneApp(initialAppTheme = initialAppTheme)
                     }
 
                     LockState.LOCKED_PIN -> {
