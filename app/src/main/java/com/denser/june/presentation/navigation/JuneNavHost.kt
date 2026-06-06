@@ -20,12 +20,12 @@ import com.denser.june.presentation.screens.home.HomeScreen
 import com.denser.june.presentation.screens.search.SearchScreen
 import com.denser.june.presentation.screens.settings.screens.FontSelectionScreen
 import com.denser.june.presentation.screens.settings.SettingsScreen
-import com.denser.june.presentation.screens.settings.screens.AboutLibrariesScreen
 import com.denser.june.presentation.screens.settings.screens.BackupScreen
 import com.denser.june.presentation.screens.settings.screens.LockMethodScreen
 import com.denser.june.presentation.screens.settings.screens.PermissionsScreen
 import com.denser.june.presentation.screens.settings.screens.PinSetupScreen
 import com.denser.june.presentation.screens.settings.screens.GeneralSettingsScreen
+import com.denser.june.presentation.screens.settings.screens.MapSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.AppearanceSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.PrivacySecuritySettingsScreen
 import com.denser.june.presentation.screens.settings.screens.SyncBackupSettingsScreen
@@ -115,6 +115,10 @@ fun JuneNavHost(
             GeneralSettingsScreen()
         }
 
+        composable<Route.MapSettings> {
+            MapSettingsScreen()
+        }
+
         composable<Route.AppearanceSettings> {
             AppearanceSettingsScreen()
         }
@@ -137,10 +141,6 @@ fun JuneNavHost(
 
         composable<Route.Permissions> {
             PermissionsScreen()
-        }
-
-        composable<Route.AboutLibraries> {
-            AboutLibrariesScreen()
         }
 
         composable<Route.LockMethod> {

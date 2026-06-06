@@ -24,15 +24,16 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.JournalLocation
-import com.denser.june.core.domain.model.enums.ThemeMode
+import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.presentation.components.MapLocationPin
 import com.denser.june.presentation.components.MapAttributions
-import com.denser.june.presentation.theme.LocalAppTheme
-import com.denser.june.presentation.utils.MapTilerUtils
+import com.denser.june.presentation.components.MapLibreInitializer
+import com.denser.june.presentation.components.rememberMapDarkMode
+import com.denser.june.presentation.utils.MapProviderUtils
 import com.denser.june.core.domain.preferences.JournalPreferences
 import org.koin.compose.koinInject
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.maplibre.android.MapLibre
+import com.denser.june.core.domain.model.enums.MapStyleProvider
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.map.GestureOptions
@@ -57,11 +58,12 @@ fun JournalMapItem(
     val context = LocalContext.current
     val journalPreferences = koinInject<JournalPreferences>()
     val savedMapTheme by journalPreferences.mapTheme()
-        .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
+        .collectAsStateWithLifecycle(initialValue = MapTheme.APP)
 
-    remember(isInternetAllowed) {
-        if (isInternetAllowed) MapLibre.getInstance(context) else null
-    }
+    val mapStyleProvider by journalPreferences.mapStyleProvider()
+        .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
+
+    MapLibreInitializer(isInternetAllowed)
 
     val cameraState = rememberCameraState(
         firstPosition = CameraPosition(
@@ -70,25 +72,12 @@ fun JournalMapItem(
         )
     )
 
-    val currentTheme = LocalAppTheme.current.themeMode
-    val systemDark = isSystemInDarkTheme()
-    val initialMapTheme = remember(savedMapTheme, currentTheme, systemDark) {
-        when (savedMapTheme) {
-            ThemeMode.SYSTEM -> when (currentTheme) {
-                ThemeMode.SYSTEM -> systemDark
-                ThemeMode.DARK -> true
-                ThemeMode.LIGHT -> false
-            }
-            ThemeMode.DARK -> true
-            ThemeMode.LIGHT -> false
-        }
-    }
-    var isMapDarkMode by remember { mutableStateOf(initialMapTheme) }
-    LaunchedEffect(initialMapTheme) {
-        isMapDarkMode = initialMapTheme
-    }
-    val mapStyleUrl = remember(isMapDarkMode) {
-        if (isMapDarkMode) MapTilerUtils.STYLE_DARK else MapTilerUtils.STYLE_LIGHT
+    val isMapDarkMode by rememberMapDarkMode(savedMapTheme)
+    val mapStyleUrl by produceState("", mapStyleProvider, isMapDarkMode) {
+        value = MapProviderUtils.getStyleUrl(
+            provider = mapStyleProvider,
+            isDark = isMapDarkMode
+        )
     }
 
     Surface(
@@ -124,7 +113,7 @@ fun JournalMapItem(
                     .padding(start = 12.dp, bottom = 12.dp)
             ) {
                 if (isInternetAllowed) {
-                    MapAttributions(isDarkMode = isMapDarkMode)
+                    MapAttributions(provider = mapStyleProvider, isDarkMode = isMapDarkMode)
                 }
             }
             Surface(

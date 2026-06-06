@@ -61,9 +61,6 @@ sealed interface Route {
     data object AboutSettings : Route
 
     @Serializable
-    data object AboutLibraries : Route
-
-    @Serializable
     data object Backup : Route
 
     @Serializable
@@ -77,4 +74,7 @@ sealed interface Route {
 
     @Serializable
     data class Fonts(val type: FontType = FontType.APP) : Route
+
+    @Serializable
+    data object MapSettings : Route
 }

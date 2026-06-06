@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -60,11 +61,12 @@ fun SettingsItem(
     leadingContent: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     onClick: () -> Unit = {},
     content: (@Composable ColumnScope.() -> Unit)? = null
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = if (enabled) 1f else 0.5f),
+        color = containerColor.copy(alpha = if (enabled) 1f else 0.5f),
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))

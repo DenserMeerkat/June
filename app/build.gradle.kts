@@ -55,12 +55,6 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-
-        val mapTilerKey = (localProperties.getProperty("MAPTILER_API_KEY") 
-            ?: System.getenv("MAPTILER_API_KEY") 
-            ?: "").trim()
-        buildConfigField("String", "MAPTILER_API_KEY", "\"$mapTilerKey\"")
-        manifestPlaceholders["MAPTILER_API_KEY"] = mapTilerKey
     }
 
     applicationVariants.all {

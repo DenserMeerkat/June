@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.presentation.screens.home.timeline.TimelineTab
+import com.denser.june.presentation.components.JunePlaceholderPage
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -84,18 +85,11 @@ fun TimelineTabs(
     }
 }
 
+
 @Composable
 fun EmptyStateMessage(message: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 100.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+    JunePlaceholderPage(
+        modifier = Modifier.padding(bottom = 100.dp),
+        subtitle = message
+    )
 }

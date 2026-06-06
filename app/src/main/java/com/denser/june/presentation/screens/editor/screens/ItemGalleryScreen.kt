@@ -157,6 +157,9 @@ fun ItemGalleryScreen(
             onLocationSelected = { loc ->
                 viewModel.onAction(EditorAction.SetLocation(loc))
             },
+            onRemoveLocation = {
+                viewModel.onAction(EditorAction.RemoveLocation)
+            },
             onDismiss = { showLocationDialog = false }
         )
     }

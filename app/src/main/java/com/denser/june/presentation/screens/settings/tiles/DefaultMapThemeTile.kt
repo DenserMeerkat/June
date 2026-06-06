@@ -10,7 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
-import com.denser.june.core.domain.model.enums.ThemeMode
+import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.screens.settings.components.SettingsItem
@@ -22,18 +22,17 @@ fun DefaultMapThemeTile() {
     val viewModel: SettingsVM = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-
     SettingsItem(
         title = "Default map theme",
         leadingContent = {
             Icon(
-                painter = painterResource(R.drawable.explore_24px),
+                painter = painterResource(R.drawable.routine_24px),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.secondary
             )
         }
     ) {
-        val themeModes = ThemeMode.entries
+        val themeModes = MapTheme.entries
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween, Alignment.End)
@@ -47,9 +46,9 @@ fun DefaultMapThemeTile() {
                 }
 
                 val iconRes = when (mode) {
-                    ThemeMode.SYSTEM -> R.drawable.devices_24px
-                    ThemeMode.LIGHT -> R.drawable.light_mode_24px
-                    ThemeMode.DARK -> R.drawable.dark_mode_24px
+                    MapTheme.APP -> R.drawable.devices_24px
+                    MapTheme.LIGHT -> R.drawable.light_mode_24px
+                    MapTheme.DARK -> R.drawable.dark_mode_24px
                 }
 
                 ToggleButton(

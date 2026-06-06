@@ -6,7 +6,7 @@ import com.denser.june.core.domain.backup.ExportState
 import com.denser.june.core.domain.backup.RestoreState
 import com.denser.june.core.domain.model.AppTheme
 import com.denser.june.core.domain.model.enums.LockType
-import com.denser.june.core.domain.model.enums.ThemeMode
+import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.enums.FontType
 import java.time.DayOfWeek
@@ -28,6 +28,6 @@ data class SettingsState(
     val selectedFontType: FontType = FontType.APP,
     val pendingFontName: String? = null,
     val isInternetAllowed: Boolean = true,
-    val mapTheme: ThemeMode = ThemeMode.SYSTEM,
+    val mapTheme: MapTheme = MapTheme.APP,
     val isMarkdownEnabled: Boolean = true
 )

@@ -1,8 +1,9 @@
-package com.denser.june.presentation.screens.settings.screens
+package com.denser.june.presentation.screens.settings.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -11,55 +12,53 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mikepenz.aboutlibraries.entity.Library
 import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.denser.june.core.R
-import com.denser.june.presentation.navigation.AppNavigator
-import com.denser.june.presentation.components.JuneTopAppBar
-import com.denser.june.presentation.screens.settings.components.SettingsItem
-import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutLibrariesScreen() {
-    val navigator = koinInject<AppNavigator>()
+fun AboutLibrariesBottomSheet(
+    setShowSheet: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val libsState = produceLibraries()
     val uriHandler = LocalUriHandler.current
     var selectedLibraryForLicense by remember { mutableStateOf<Library?>(null) }
 
-    Scaffold(
-        modifier = Modifier.widthIn(max = 1000.dp),
-        topBar = {
-            JuneTopAppBar(
-                title = { Text(stringResource(R.string.about_libraries)) },
-                navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
-        }
-    ) { padding ->
+    ModalBottomSheet(
+        onDismissRequest = { setShowSheet(false) },
+        modifier = modifier
+    ) {
         val libs = libsState.value
         val libraryList = libs?.libraries ?: emptyList()
 
         LazyColumn(
             modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 16.dp)
         ) {
+            item {
+                Text(
+                    text = stringResource(R.string.about_libraries),
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 4.dp)
+                )
+                Text(
+                    text = "Open Source Licenses & Dependencies",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+            }
             items(libraryList, key = { it.uniqueId }) { library ->
                 val firstLicense = library.licenses.firstOrNull()
                 val licenseName = firstLicense?.name ?: "Unknown License"
@@ -69,6 +68,7 @@ fun AboutLibrariesScreen() {
                 SettingsItem(
                     title = library.name,
                     subtitle = versionText,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     onClick = { selectedLibraryForLicense = library },
                     trailingContent = if (!url.isNullOrBlank()) {
                         {
@@ -78,7 +78,7 @@ fun AboutLibrariesScreen() {
                                 Icon(
                                     painter = painterResource(R.drawable.open_in_new_24px),
                                     contentDescription = "Open Website",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -92,6 +92,7 @@ fun AboutLibrariesScreen() {
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }

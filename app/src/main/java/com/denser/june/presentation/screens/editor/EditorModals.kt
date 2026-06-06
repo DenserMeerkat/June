@@ -159,6 +159,7 @@ fun EditorModals(
         AddLocationDialog(
             existingLocation = editorState.location,
             onLocationSelected = { loc -> onAction(EditorAction.SetLocation(loc)) },
+            onRemoveLocation = { onAction(EditorAction.RemoveLocation) },
             onDismiss = { dialogState.showLocationDialog = false }
         )
     }

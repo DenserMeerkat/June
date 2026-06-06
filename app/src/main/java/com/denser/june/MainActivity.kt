@@ -39,7 +39,6 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import com.denser.june.core.R
 import androidx.core.graphics.drawable.toDrawable
-import com.denser.june.presentation.utils.MapTilerUtils
 
 enum class LockState {
     LOADING,

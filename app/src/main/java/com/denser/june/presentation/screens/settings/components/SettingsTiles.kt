@@ -16,7 +16,9 @@ import com.denser.june.core.domain.model.enums.TimeFormat
 data class SettingsTriggers(
     val onDeleteAllJournals: () -> Unit = {},
     val onColorPickerClick: () -> Unit = {},
-    val onLicenseClick: () -> Unit = {}
+    val onLicenseClick: () -> Unit = {},
+    val onMapAttributionsClick: () -> Unit = {},
+    val onAboutLibrariesClick: () -> Unit = {}
 )
 
 val LocalSettingsTriggers = staticCompositionLocalOf { SettingsTriggers() }
@@ -72,18 +74,12 @@ object SettingsTileRegistry {
                     content = { TimeFormatTile() }
                 ),
                 SettingTile(
-                    key = "DEFAULT_MAP_THEME",
-                    title = "Default map theme",
-                    subtitle = { _, state ->
-                        when (state.mapTheme) {
-                            ThemeMode.SYSTEM -> "System"
-                            ThemeMode.LIGHT -> "Light"
-                            ThemeMode.DARK -> "Dark"
-                        }
-                    },
+                    key = "MAP_SETTINGS",
+                    title = "Map settings",
+                    subtitle = { _, _ -> "Select style and manage API keys" },
                     category = "General",
-                    keywords = listOf("map", "theme", "dark", "light", "location", "style"),
-                    content = { DefaultMapThemeTile() }
+                    keywords = listOf("map", "maptiler", "stadia", "mapbox", "key", "style", "settings", "maptiler", "mapbox", "stadia", "carto"),
+                    content = { MapSettingsTile() }
                 ),
                 SettingTile(
                     key = "MARKDOWN_EDITOR",
@@ -234,6 +230,14 @@ object SettingsTileRegistry {
                     category = "About",
                     keywords = listOf("libraries", "licenses", "open", "source", "dependency"),
                     content = { AboutLibrariesTile() }
+                ),
+                SettingTile(
+                    key = "MAP_CREDITS",
+                    title = "Map Credits",
+                    subtitle = { _, _ -> "Credits and licenses for map data" },
+                    category = "About",
+                    keywords = listOf("map", "attributions", "licenses", "credits", "osm", "maptiler", "mapbox", "stadia", "carto"),
+                    content = { MapCreditsTile() }
                 )
             )
         }

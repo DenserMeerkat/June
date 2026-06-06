@@ -21,6 +21,11 @@
     <string name="cancel">Cancel</string>
     <string name="close">Close</string>
     <string name="confirm">Confirm</string>
-    <string name="color_picker">Color Picker</string>
-
+    <string name="app_follow_theme">App</string>
+    <string name="maptiler">MapTiler</string>
+    <string name="stadia">Stadia Maps</string>
+    <string name="carto">CARTO</string>
+    <string name="mapbox">Mapbox</string>
+    <string name="api_key_valid">API Key is valid and verified!</string>
+    <string name="api_key_invalid">Invalid API Key. Please verify.</string>
 </resources>

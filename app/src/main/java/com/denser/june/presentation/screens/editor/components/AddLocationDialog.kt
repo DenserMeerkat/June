@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -27,19 +28,24 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.denser.june.presentation.components.JuneFullScreenDialog
 import androidx.core.content.ContextCompat
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.JournalLocation
-import com.denser.june.core.domain.model.enums.ThemeMode
+import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.presentation.components.MapControlColumn
 import com.denser.june.presentation.components.MapLocationPin
 import com.denser.june.presentation.components.MapAttributions
 import com.denser.june.presentation.components.InternetRestrictedBanner
+import com.denser.june.presentation.components.MapLibreInitializer
+import com.denser.june.presentation.components.rememberMapDarkMode
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.preferences.PrivacyPreferences
-import com.denser.june.presentation.theme.LocalAppTheme
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.koinInject
-import com.denser.june.presentation.utils.MapTilerUtils
+import com.denser.june.presentation.utils.MapProviderUtils
+import com.denser.june.presentation.utils.MapSearchResult
+import com.denser.june.core.domain.model.enums.MapStyleProvider
 import com.denser.june.presentation.utils.UiUtils
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationRequest
@@ -48,7 +54,6 @@ import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.maplibre.android.MapLibre
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -67,27 +72,31 @@ import java.util.Locale
 fun AddLocationDialog(
     existingLocation: JournalLocation? = null,
     onLocationSelected: (JournalLocation) -> Unit = {},
+    onRemoveLocation: (() -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     val privacyPreferences = koinInject<PrivacyPreferences>()
     val journalPreferences = koinInject<JournalPreferences>()
     val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
-        .collectAsStateWithLifecycle(initialValue = false)
+        .collectAsStateWithLifecycle(initialValue = true)
     val savedMapTheme by journalPreferences.mapTheme()
-        .collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
+        .collectAsStateWithLifecycle(initialValue = MapTheme.APP)
+
+    val mapStyleProvider by journalPreferences.mapStyleProvider()
+        .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
-    remember(isInternetAllowed) {
-        if (isInternetAllowed) MapLibre.getInstance(context) else null
-    }
+    MapLibreInitializer(isInternetAllowed)
 
     var searchQuery by remember { mutableStateOf("") }
     var isSearching by remember { mutableStateOf(false) }
     var isFetchingLocation by remember { mutableStateOf(false) }
     var isAddressLoading by remember { mutableStateOf(false) }
+    var searchResults by remember { mutableStateOf<List<MapSearchResult>>(emptyList()) }
+    var isSearchFocused by remember { mutableStateOf(false) }
 
     var currentLocation by remember {
         mutableStateOf(existingLocation ?: JournalLocation(0.0, 0.0, name = "Move map to select"))
@@ -119,35 +128,35 @@ fun AddLocationDialog(
         }
     }
 
-    val currentTheme = LocalAppTheme.current.themeMode
-    val systemDark = isSystemInDarkTheme()
-    val initialMapTheme = remember(savedMapTheme, currentTheme, systemDark) {
-        when (savedMapTheme) {
-            ThemeMode.SYSTEM -> when (currentTheme) {
-                ThemeMode.SYSTEM -> systemDark
-                ThemeMode.DARK -> true
-                ThemeMode.LIGHT -> false
-            }
-            ThemeMode.DARK -> true
-            ThemeMode.LIGHT -> false
-        }
-    }
-    var isMapDarkMode by remember { mutableStateOf(initialMapTheme) }
-    LaunchedEffect(initialMapTheme) {
-        isMapDarkMode = initialMapTheme
-    }
-    val mapStyleUrl = remember(isMapDarkMode) {
-        if (isMapDarkMode) MapTilerUtils.STYLE_DARK else MapTilerUtils.STYLE_LIGHT
+    var isMapDarkMode by rememberMapDarkMode(savedMapTheme)
+    val mapStyleUrl by produceState("", mapStyleProvider, isMapDarkMode) {
+        value = MapProviderUtils.getStyleUrl(
+            provider = mapStyleProvider,
+            isDark = isMapDarkMode
+        )
     }
 
+    val lastFetchedLatLng = remember { mutableStateOf<LatLng?>(null) }
+
     LaunchedEffect(cameraState.position.target, isInternetAllowed) {
+        val target = cameraState.position.target
+        if (target.latitude == 0.0 && target.longitude == 0.0) return@LaunchedEffect
+
+        val newLatLng = LatLng(target.latitude, target.longitude)
+        val lastFetched = lastFetchedLatLng.value
+
+        if (lastFetched != null) {
+            val latDiff = abs(newLatLng.latitude - lastFetched.latitude)
+            val lngDiff = abs(newLatLng.longitude - lastFetched.longitude)
+            if (latDiff < 1e-5 && lngDiff < 1e-5) {
+                return@LaunchedEffect
+            }
+        }
+
         isAddressLoading = true
         delay(800)
-        val target = cameraState.position.target
-        if (target.latitude != 0.0 || target.longitude != 0.0) {
-            val latLng = LatLng(target.latitude, target.longitude)
-            currentLocation = MapTilerUtils.updateLocationFromCenter(context, latLng)
-        }
+        currentLocation = MapProviderUtils.updateLocationFromCenter(context, newLatLng)
+        lastFetchedLatLng.value = newLatLng
         isAddressLoading = false
     }
 
@@ -166,7 +175,7 @@ fun AddLocationDialog(
     fun performLocationFetch() {
         isFetchingLocation = true
         scope.launch {
-            val location = MapTilerUtils.fetchCurrentLocation(context)
+            val location = MapProviderUtils.fetchCurrentLocation(context)
             if (location != null && (location.latitude != 0.0 || location.longitude != 0.0)) {
                 animateToLocation(LatLng(location.latitude, location.longitude))
             }
@@ -227,14 +236,19 @@ fun AddLocationDialog(
         }
     }
 
+    val dialogBgColor = if (isMapDarkMode) Color(0xFF121212) else Color(0xFFFFFFFF)
     JuneFullScreenDialog(
         onDismissRequest = onDismiss,
+        isDarkTheme = isMapDarkMode,
+        windowBackgroundColor = dialogBgColor
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = dialogBgColor
         ) {
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
             if (isInternetAllowed) {
                 MaplibreMap(
                     modifier = Modifier.fillMaxSize(),
@@ -257,36 +271,6 @@ fun AddLocationDialog(
                 )
             }
 
-            Column(
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                MapSearchBar(
-                    query = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    onSearch = {
-                        focusManager.clearFocus()
-                        scope.launch {
-                            isSearching = true
-                            MapTilerUtils.searchLocation(context, searchQuery)?.let { result ->
-                                animateToLocation(LatLng(result.latitude, result.longitude))
-                            }
-                            isSearching = false
-                        }
-                    },
-                    isSearching = isSearching,
-                    onBack = onDismiss,
-                    enabled = isInternetAllowed
-                )
-
-                if (!isInternetAllowed) {
-                    InternetRestrictedBanner(
-                        description = "Maps and search require internet access."
-                    )
-                }
-            }
             if (isInternetAllowed) {
                 Box(modifier = Modifier.align(Alignment.Center)) {
                     MapLocationPin(
@@ -294,6 +278,7 @@ fun AddLocationDialog(
                     )
                 }
             }
+
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -329,6 +314,7 @@ fun AddLocationDialog(
                         }
                     )
                     MapAttributions(
+                        provider = mapStyleProvider,
                         modifier = Modifier.padding(start = 8.dp),
                         isDarkMode = isMapDarkMode
                     )
@@ -351,11 +337,109 @@ fun AddLocationDialog(
                         onLocationSelected(currentLocation)
                         onDismiss()
                     },
+                    onRemove = if (existingLocation != null) {
+                        {
+                            onRemoveLocation?.invoke()
+                            onDismiss()
+                        }
+                    } else null,
                     enabled = isInternetAllowed
                 )
             }
+
+            Column(
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                MapSearchBar(
+                    query = searchQuery,
+                    onQueryChange = {
+                        searchQuery = it
+                        if (it.isBlank()) {
+                            searchResults = emptyList()
+                        }
+                    },
+                    onSearch = {
+                        focusManager.clearFocus()
+                        scope.launch {
+                            isSearching = true
+                            searchResults = MapProviderUtils.searchLocation(context, searchQuery)
+                            isSearching = false
+                        }
+                    },
+                    isSearching = isSearching,
+                    onBack = onDismiss,
+                    enabled = isInternetAllowed,
+                    onFocusChanged = { isSearchFocused = it }
+                )
+
+                if (isSearchFocused && searchResults.isNotEmpty()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                        ) {
+                            searchResults.forEach { result ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            focusManager.clearFocus()
+                                            animateToLocation(LatLng(result.latitude, result.longitude))
+                                            searchQuery = result.name
+                                            searchResults = emptyList()
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.location_on_24px),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            text = result.name,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = result.address,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!isInternetAllowed) {
+                    InternetRestrictedBanner(
+                        description = "Maps and search require internet access."
+                    )
+                }
+            }
         }
     }
+}
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -366,6 +450,7 @@ fun MapBottomBar(
     isAtTarget: Boolean,
     onLocationIconClick: (() -> Unit)? = null,
     onConfirm: () -> Unit,
+    onRemove: (() -> Unit)? = null,
     enabled: Boolean = true
 ) {
     Surface(
@@ -387,8 +472,7 @@ fun MapBottomBar(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (isLoading) "Locating..." else (location.name
-                            ?: "Unknown Place"),
+                        text = if (isLoading) "Locating..." else (location.name ?: "Unknown Place"),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -396,16 +480,15 @@ fun MapBottomBar(
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    if (!isLoading) {
-                        Text(
-                            text = location.address ?: "No address available",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
+                    Text(
+                        text = if (isLoading) "Fetching address..." else (location.address ?: "No address available"),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isLoading) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        minLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
 
                 Surface(
@@ -450,7 +533,7 @@ fun MapBottomBar(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${
+                        text = if (isLoading) "Locating..." else "${
                             String.format(
                                 Locale.US,
                                 "%.5f",
@@ -479,20 +562,47 @@ fun MapBottomBar(
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-            Button(
-                onClick = onConfirm,
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(20.dp),
-                enabled = !isLoading && enabled
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    "Confirm Location",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
+                if (onRemove != null) {
+                    FilledIconButton(
+                        onClick = onRemove,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .fillMaxHeight(),
+                        shape = RoundedCornerShape(20.dp),
+                        enabled = !isLoading && enabled,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.delete_24px),
+                            contentDescription = "Remove Location",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    shape = RoundedCornerShape(20.dp),
+                    enabled = !isLoading && enabled
+                ) {
+                    Text(
+                        "Confirm Location",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }
@@ -507,7 +617,8 @@ fun MapSearchBar(
     isSearching: Boolean,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    onFocusChanged: (Boolean) -> Unit = {}
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -540,7 +651,11 @@ fun MapSearchBar(
                         overflow = TextOverflow.Ellipsis
                     )
                 },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .onFocusChanged { focusState ->
+                        onFocusChanged(focusState.isFocused)
+                    },
                 singleLine = true,
                 enabled = enabled,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),

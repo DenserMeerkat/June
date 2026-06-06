@@ -22,6 +22,8 @@ fun AboutSettingsScreen() {
     val navigator = koinInject<AppNavigator>()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var showLicenseSheet by remember { mutableStateOf(false) }
+    var showMapCreditsSheet by remember { mutableStateOf(false) }
+    var showAboutLibrariesSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -49,7 +51,9 @@ fun AboutSettingsScreen() {
     ) { innerPadding ->
         val triggers = remember {
             SettingsTriggers(
-                onLicenseClick = { showLicenseSheet = true }
+                onLicenseClick = { showLicenseSheet = true },
+                onMapAttributionsClick = { showMapCreditsSheet = true },
+                onAboutLibrariesClick = { showAboutLibrariesSheet = true }
             )
         }
 
@@ -74,6 +78,7 @@ fun AboutSettingsScreen() {
                         SettingSection {
                             SettingsTileRegistry.getTile("LICENSE")?.content?.invoke()
                             SettingsTileRegistry.getTile("ABOUT_LIBRARIES")?.content?.invoke()
+                            SettingsTileRegistry.getTile("MAP_CREDITS")?.content?.invoke()
                         }
                     }
                 }
@@ -87,6 +92,18 @@ fun AboutSettingsScreen() {
     if (showLicenseSheet) {
         LicenseBottomSheet(
             setShowSheet = { showLicenseSheet = it }
+        )
+    }
+
+    if (showMapCreditsSheet) {
+        MapCreditsBottomSheet(
+            setShowSheet = { showMapCreditsSheet = it }
+        )
+    }
+
+    if (showAboutLibrariesSheet) {
+        AboutLibrariesBottomSheet(
+            setShowSheet = { showAboutLibrariesSheet = it }
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.denser.june.presentation.screens.settings
 
+import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.enums.LockType
@@ -28,6 +29,6 @@ sealed interface SettingsAction {
     data class OnAutoTimeToggle(val enabled: Boolean) : SettingsAction
     data class OnStartOfWeekChange(val startOfWeek: DayOfWeek) : SettingsAction
     data class OnTimeFormatChange(val timeFormat: TimeFormat) : SettingsAction
-    data class OnMapThemeChange(val theme: ThemeMode) : SettingsAction
+    data class OnMapThemeChange(val theme: MapTheme) : SettingsAction
     data class OnMarkdownToggle(val enabled: Boolean) : SettingsAction
 }

@@ -4,24 +4,23 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.presentation.screens.settings.components.LocalSettingsTriggers
 import com.denser.june.presentation.screens.settings.components.SettingsItem
 
 @Composable
-fun AboutLibrariesTile() {
+fun MapCreditsTile() {
     val triggers = LocalSettingsTriggers.current
     SettingsItem(
-        title = stringResource(R.string.about_libraries),
-        subtitle = "View licenses of third-party libraries",
+        title = "Map Credits",
+        subtitle = "Credits for map styles and data",
         leadingContent = {
             Icon(
-                painter = painterResource(R.drawable.license_24px),
+                painter = painterResource(R.drawable.map_pin_review_24px),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.secondary
             )
         },
-        onClick = { triggers.onAboutLibrariesClick() }
+        onClick = { triggers.onMapAttributionsClick() }
     )
 }

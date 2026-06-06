@@ -28,13 +28,16 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.ui.text.TextStyle
+
 @Composable
 fun JuneTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    leadingIcon: Int,
+    leadingIcon: Int? = null,
     placeholder: String = "",
+    placeholderStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     enabled: Boolean = true,
     errorText: String? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
@@ -42,12 +45,14 @@ fun JuneTextField(
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.9f),
-            modifier = Modifier.padding(start = 4.dp)
-        )
+        if (label.isNotBlank()) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.9f),
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -57,19 +62,22 @@ fun JuneTextField(
             placeholder = { 
                 Text(
                     text = placeholder,
+                    style = placeholderStyle,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     softWrap = false
                 ) 
             },
-            leadingIcon = {
-                Icon(
-                    painterResource(leadingIcon),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = if (errorText != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                )
+            leadingIcon = leadingIcon?.let { icon ->
+                {
+                    Icon(
+                        painterResource(icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = if (errorText != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    )
+                }
             },
             trailingIcon = trailingIcon,
             singleLine = true,

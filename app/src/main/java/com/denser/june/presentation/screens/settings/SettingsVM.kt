@@ -13,6 +13,7 @@ import com.denser.june.core.domain.backup.RestoreRepo
 import com.denser.june.core.domain.backup.RestoreResult
 import com.denser.june.core.domain.backup.RestoreState
 import com.denser.june.core.domain.model.enums.ThemeMode
+import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.core.domain.model.enums.FontType
@@ -71,7 +72,7 @@ class SettingsVM(
             startOfWeek = array[11] as DayOfWeek,
             timeFormat = array[12] as TimeFormat,
             isInternetAllowed = array[14] as Boolean,
-            mapTheme = array[15] as ThemeMode,
+            mapTheme = array[15] as MapTheme,
             isMarkdownEnabled = array[16] as Boolean,
 
             appTheme = local.appTheme.copy(

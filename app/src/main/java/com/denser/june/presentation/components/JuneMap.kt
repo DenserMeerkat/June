@@ -17,32 +17,40 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
+import com.denser.june.core.domain.model.enums.MapStyleProvider
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.denser.june.core.domain.model.enums.ThemeMode
+import com.denser.june.core.domain.model.enums.MapTheme
+import com.denser.june.presentation.theme.LocalAppTheme
+import org.maplibre.android.MapLibre
+import org.maplibre.android.maps.MapView
 
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MapControlColumn(
-    isDarkMode: Boolean,
-    onToggleDarkMode: () -> Unit,
     isFetchingLocation: Boolean = false,
     onMyLocationClick: (() -> Unit)? = null,
-    isTerrainMode: Boolean = false,
-    onToggleTerrain: (() -> Unit)? = null,
     isMapExpanded: Boolean = false,
     onToggleFullscreen: (() -> Unit)? = null,
-    onZoomIn: () -> Unit,
-    onZoomOut: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isDarkMode: Boolean = false,
+    onToggleDarkMode: (() -> Unit)? = null,
+    onZoomIn: (() -> Unit)? = null,
+    onZoomOut: (() -> Unit)? = null
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (onToggleFullscreen != null) {
             FilledIconButton(
                 onClick = onToggleFullscreen,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(18.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurface
@@ -56,31 +64,28 @@ fun MapControlColumn(
                 )
             }
         }
-        FilledIconButton(
-            onClick = onToggleDarkMode,
-            shape = RoundedCornerShape(16.dp),
-            colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            ),
-            modifier = Modifier.size(48.dp)
-        ) {
-            Icon(
-                painter = painterResource(if (isDarkMode) R.drawable.light_mode_24px else R.drawable.dark_mode_24px),
-                contentDescription = "Toggle Dark Mode",
-                modifier = Modifier.size(20.dp)
-            )
+        if (onToggleDarkMode != null) {
+            FilledIconButton(
+                onClick = onToggleDarkMode,
+                shape = RoundedCornerShape(18.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    painter = painterResource(if (isDarkMode) R.drawable.light_mode_24px else R.drawable.dark_mode_24px),
+                    contentDescription = "Toggle Dark Mode",
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (onZoomIn != null) {
             FilledIconButton(
                 onClick = onZoomIn,
-                shape = RoundedCornerShape(
-                    topStart = 16.dp,
-                    topEnd = 16.dp,
-                    bottomStart = 4.dp,
-                    bottomEnd = 4.dp
-                ),
+                shape = RoundedCornerShape(18.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurface
@@ -93,15 +98,12 @@ fun MapControlColumn(
                     modifier = Modifier.size(24.dp)
                 )
             }
+        }
 
+        if (onZoomOut != null) {
             FilledIconButton(
                 onClick = onZoomOut,
-                shape = RoundedCornerShape(
-                    topStart = 4.dp,
-                    topEnd = 4.dp,
-                    bottomStart = 16.dp,
-                    bottomEnd = 16.dp
-                ),
+                shape = RoundedCornerShape(18.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurface
@@ -120,9 +122,9 @@ fun MapControlColumn(
             FilledIconButton(
                 onClick = onMyLocationClick,
                 enabled = !isFetchingLocation,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 ),
@@ -192,7 +194,11 @@ fun MapLocationPin(
 
 
 @Composable
-fun MapAttributions(isDarkMode: Boolean, modifier: Modifier = Modifier) {
+fun MapAttributions(
+    provider: MapStyleProvider,
+    isDarkMode: Boolean,
+    modifier: Modifier = Modifier
+) {
     val contentColor = if (isDarkMode)
         Color.White.copy(alpha = 0.7f)
     else
@@ -202,11 +208,86 @@ fun MapAttributions(isDarkMode: Boolean, modifier: Modifier = Modifier) {
         modifier = modifier.wrapContentSize(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(R.drawable.maptiler_logo),
-            contentDescription = "MapTiler Logo",
-            tint = contentColor,
-            modifier = Modifier.height(20.dp)
-        )
+        when (provider) {
+            MapStyleProvider.MAPTILER -> {
+                Text(
+                    text = "© MapTiler © OpenStreetMap",
+                    color = contentColor,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+            MapStyleProvider.STADIA -> {
+                Text(
+                    text = "© Stadia Maps © OpenStreetMap",
+                    color = contentColor,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+            MapStyleProvider.CARTO -> {
+                Text(
+                    text = "© CARTO © OpenStreetMap",
+                    color = contentColor,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+            MapStyleProvider.MAPBOX -> {
+                Text(
+                    text = "© Mapbox © OpenStreetMap",
+                    color = contentColor,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MapLibreInitializer(isInternetAllowed: Boolean) {
+    val context = LocalContext.current
+    remember(isInternetAllowed) {
+        if (isInternetAllowed) MapLibre.getInstance(context) else null
+    }
+}
+
+@Composable
+fun rememberMapDarkMode(savedMapTheme: MapTheme): MutableState<Boolean> {
+    val currentTheme = LocalAppTheme.current.themeMode
+    val systemDark = isSystemInDarkTheme()
+    val resolvedDarkMode = remember(savedMapTheme, currentTheme, systemDark) {
+        when (savedMapTheme) {
+            MapTheme.APP -> when (currentTheme) {
+                ThemeMode.SYSTEM -> systemDark
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+            }
+            MapTheme.DARK -> true
+            MapTheme.LIGHT -> false
+        }
+    }
+    val state = remember { mutableStateOf(resolvedDarkMode) }
+    LaunchedEffect(resolvedDarkMode) {
+        state.value = resolvedDarkMode
+    }
+    return state
+}
+
+@Composable
+fun MapViewLifecycleEffect(mapView: MapView) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> mapView.onResume()
+                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
+                Lifecycle.Event.ON_START -> mapView.onStart()
+                Lifecycle.Event.ON_STOP -> mapView.onStop()
+                Lifecycle.Event.ON_DESTROY -> mapView.onDestroy()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 }
