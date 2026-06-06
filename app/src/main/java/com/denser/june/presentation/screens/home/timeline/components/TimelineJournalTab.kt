@@ -12,7 +12,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -96,12 +95,11 @@ fun TimelineJournalTile(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                val titleText = journal.title.ifBlank { "Untitled" }
-
                 Text(
-                    text = titleText,
+                    text = journal.title,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
+                    minLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -114,11 +112,6 @@ fun TimelineJournalTile(
                         show = true,
                         icon = if (journal.cloudId != null) R.drawable.cloud_24px else R.drawable.devices_24px,
                         label = if (journal.cloudId != null) "Cloud" else "Local"
-                    )
-                    JuneBadge(
-                        show = wordCount > 0,
-                        icon = R.drawable.article_24px,
-                        label = "$wordCount ${if (wordCount == 1) "word" else "words"}"
                     )
                     JuneBadge(
                         show = mediaCount > 0,

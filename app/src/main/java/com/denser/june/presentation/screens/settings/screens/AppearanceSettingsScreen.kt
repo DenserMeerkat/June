@@ -70,29 +70,56 @@ fun AppearanceSettingsScreen() {
         }
 
         CompositionLocalProvider(LocalSettingsTriggers provides triggers) {
+            val appearanceTiles = SettingsTileRegistry.getTilesForCategory("Appearance").associateBy { it.key }
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                item {
-                    SettingSection {
-                        val appearanceTiles = SettingsTileRegistry.getTilesForCategory("Appearance")
-                        appearanceTiles.forEach { tile ->
-                            if (tile.key == "SEED_COLOR") {
-                                AnimatedVisibility(
-                                    visible = !state.appTheme.materialTheme,
-                                    enter = expandVertically(),
-                                    exit = shrinkVertically()
-                                ) {
+                val themeGroup = listOfNotNull(
+                    appearanceTiles["APP_THEME"],
+                    appearanceTiles["AMOLED"]
+                )
+                if (themeGroup.isNotEmpty()) {
+                    item {
+                        SettingSection {
+                            themeGroup.forEach { it.content() }
+                        }
+                    }
+                }
+
+                val colorGroupKeys = listOf("MATERIAL_THEME", "SEED_COLOR", "PALETTE_SELECTION")
+                val colorGroup = colorGroupKeys.mapNotNull { appearanceTiles[it] }
+                if (colorGroup.isNotEmpty()) {
+                    item {
+                        SettingSection {
+                            colorGroup.forEach { tile ->
+                                if (tile.key == "SEED_COLOR") {
+                                    AnimatedVisibility(
+                                        visible = !state.appTheme.materialTheme,
+                                        enter = expandVertically(),
+                                        exit = shrinkVertically()
+                                    ) {
+                                        tile.content()
+                                    }
+                                } else {
                                     tile.content()
                                 }
-                            } else {
-                                tile.content()
                             }
                         }
                     }
                 }
+
+                val fontTile = appearanceTiles["APP_FONT"]
+                if (fontTile != null) {
+                    item {
+                        SettingSection {
+                            fontTile.content()
+                        }
+                    }
+                }
+
                 item {
                     Spacer(modifier = Modifier.height(32.dp))
                 }

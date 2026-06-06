@@ -60,19 +60,56 @@ fun GeneralSettingsScreen() {
         }
 
         CompositionLocalProvider(LocalSettingsTriggers provides triggers) {
+            val generalTiles = SettingsTileRegistry.getTilesForCategory("General").associateBy { it.key }
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                item {
-                    SettingSection {
-                        val generalTiles = SettingsTileRegistry.getTilesForCategory("General")
-                        generalTiles.forEach { tile ->
-                            tile.content()
+                val timeGroup = listOfNotNull(
+                    generalTiles["START_OF_WEEK"],
+                    generalTiles["TIME_FORMAT"],
+                    generalTiles["INCLUDE_TIME"]
+                )
+                if (timeGroup.isNotEmpty()) {
+                    item {
+                        SettingSection {
+                            timeGroup.forEach { it.content() }
                         }
                     }
                 }
+
+                val editorGroup = listOfNotNull(
+                    generalTiles["REMINDERS"],
+                    generalTiles["MARKDOWN_EDITOR"]
+                )
+                if (editorGroup.isNotEmpty()) {
+                    item {
+                        SettingSection {
+                            editorGroup.forEach { it.content() }
+                        }
+                    }
+                }
+
+                val mapTile = generalTiles["MAP_SETTINGS"]
+                if (mapTile != null) {
+                    item {
+                        SettingSection {
+                            mapTile.content()
+                        }
+                    }
+                }
+
+                val deleteTile = generalTiles["DELETE_ALL_JOURNALS"]
+                if (deleteTile != null) {
+                    item {
+                        SettingSection {
+                            deleteTile.content()
+                        }
+                    }
+                }
+
                 item {
                     Spacer(modifier = Modifier.height(32.dp))
                 }

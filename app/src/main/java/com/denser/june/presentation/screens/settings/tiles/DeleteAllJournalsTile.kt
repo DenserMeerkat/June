@@ -18,7 +18,7 @@ fun DeleteAllJournalsTile() {
             Icon(
                 painter = painterResource(R.drawable.warning_24px),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary
+                tint = MaterialTheme.colorScheme.error
             )
         },
         onClick = { triggers.onDeleteAllJournals() }
