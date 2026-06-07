@@ -17,11 +17,11 @@ val appId = "com.denser.june"
 val appNamespace = "com.denser.june"
 val apkNamePrefix = "june"
 
-val versionMajor = 1
-val versionMinor = 0
+val versionMajor = 0
+val versionMinor = 9
 val versionPatch = 0
-val appVersionCode = 12
-val appVersionName = "$versionMajor.$versionMinor.$versionPatch-beta01"
+val appVersionCode = 11
+val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
@@ -92,23 +92,26 @@ android {
         }
     }
 
+    val isBuildingBundle = project.gradle.startParameter.taskNames.any { it.contains("Bundle", ignoreCase = true) }
 
-    applicationVariants.all {
-        val variant = this
-        variant.outputs.configureEach {
-            val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
-            val abi = output.getFilter(com.android.build.OutputFile.ABI)
-            if (abi != null) {
-                output.outputFileName = "$apkNamePrefix-${variant.versionName}-${abi}.apk"
-            } else {
-                output.outputFileName = "$apkNamePrefix-${variant.versionName}-universal.apk"
+    if (!isBuildingBundle) {
+        applicationVariants.all {
+            val variant = this
+            variant.outputs.configureEach {
+                val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
+                val abi = output.getFilter(com.android.build.OutputFile.ABI)
+                if (abi != null) {
+                    output.outputFileName = "$apkNamePrefix-${variant.versionName}-${abi}.apk"
+                } else {
+                    output.outputFileName = "$apkNamePrefix-${variant.versionName}-universal.apk"
+                }
             }
         }
     }
 
     splits {
         abi {
-            isEnable = true
+            isEnable = !isBuildingBundle
             reset()
             include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
             isUniversalApk = true
