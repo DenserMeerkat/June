@@ -2,6 +2,7 @@ package com.denser.june;
 
 import android.app.Application
 import com.denser.june.di.juneModules
+import com.denser.june.di.flavorModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -21,7 +22,7 @@ class JuneApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@JuneApplication)
-            modules(juneModules)
+            modules(juneModules, flavorModule)
         }
         
         NotificationsHelper(this).createNotificationChannel()

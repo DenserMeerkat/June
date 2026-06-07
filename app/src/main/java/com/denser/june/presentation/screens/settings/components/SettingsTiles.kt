@@ -18,7 +18,10 @@ data class SettingsTriggers(
     val onColorPickerClick: () -> Unit = {},
     val onLicenseClick: () -> Unit = {},
     val onMapAttributionsClick: () -> Unit = {},
-    val onAboutLibrariesClick: () -> Unit = {}
+    val onAboutLibrariesClick: () -> Unit = {},
+    val onChangelogClick: () -> Unit = {},
+    val onCheckForUpdatesClick: () -> Unit = {},
+    val onAboutHeaderClick: () -> Unit = {}
 )
 
 val LocalSettingsTriggers = staticCompositionLocalOf { SettingsTriggers() }
@@ -238,7 +241,23 @@ object SettingsTileRegistry {
                     category = "About",
                     keywords = listOf("map", "attributions", "licenses", "credits", "osm", "maptiler", "mapbox", "stadia", "carto"),
                     content = { MapCreditsTile() }
-                )
+                ),
+                SettingTile(
+                    key = "CHANGELOG",
+                    title = "Changelog",
+                    subtitle = { _, _ -> "View release history" },
+                    category = "About",
+                    keywords = listOf("changelog", "release", "history", "notes", "version", "updates"),
+                    content = { ChangelogTile() }
+                ),
+                SettingTile(
+                    key = "CHECK_FOR_UPDATES",
+                    title = "Check for Updates",
+                    subtitle = { _, _ -> "Check if a newer version is available" },
+                    category = "About",
+                    keywords = listOf("update", "check", "version", "github", "playstore", "latest"),
+                    content = { CheckForUpdatesTile() }
+                ),
             )
         }
     }

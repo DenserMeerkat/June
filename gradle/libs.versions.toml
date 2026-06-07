@@ -45,6 +45,7 @@ emojipicker = "1.6.0"
 biometric = "1.2.0-alpha05"
 googleFonts = "1.11.2"
 hyphen = "0.5.0-alpha06"
+playAppUpdate = "2.1.0"
 
 [libraries]
 # Core
@@ -107,6 +108,7 @@ json-path = { group = "com.jayway.jsonpath", name = "json-path", version.ref = "
 androidx-emoji2-emojipicker = { group = "androidx.emoji2", name = "emoji2-emojipicker", version.ref = "emojipicker" }
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 hyphen = { group = "io.github.densermeerkat", name = "hyphen-android", version.ref = "hyphen" }
+play-app-update = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playAppUpdate" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

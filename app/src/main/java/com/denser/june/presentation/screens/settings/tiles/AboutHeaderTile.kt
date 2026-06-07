@@ -18,12 +18,24 @@ import com.denser.june.BuildConfig
 import com.denser.june.core.R
 import com.denser.june.core.utils.Constants
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import com.denser.june.presentation.screens.settings.components.LocalSettingsTriggers
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AboutHeaderTile() {
     val uriHandler = LocalUriHandler.current
+    val triggers = LocalSettingsTriggers.current
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier
+            .clip(RoundedCornerShape(24.dp))
+            .combinedClickable(
+                onLongClick = triggers.onAboutHeaderClick,
+                onClick = {}
+            )
     ) {
         Row(
             modifier = Modifier

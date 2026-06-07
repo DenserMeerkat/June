@@ -9,28 +9,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import com.denser.june.core.R
 import com.denser.june.core.utils.Constants
-import okhttp3.OkHttpClient
 import org.koin.compose.koinInject
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 
 @Composable
 fun DeveloperTile() {
     val uriHandler = LocalUriHandler.current
-    val context = LocalContext.current
-    val okHttpClient = koinInject<OkHttpClient>()
-    val imageLoader = remember {
-        ImageLoader.Builder(context)
-            .callFactory(okHttpClient)
-            .build()
-    }
+    val imageLoader = koinInject<ImageLoader>()
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = Modifier

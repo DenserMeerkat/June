@@ -1,14 +1,14 @@
 package com.denser.june.presentation.screens.editor.components
 
 import android.Manifest
-import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.provider.Settings
+import android.location.LocationManager
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,11 +47,6 @@ import com.denser.june.presentation.utils.MapProviderUtils
 import com.denser.june.presentation.utils.MapSearchResult
 import com.denser.june.core.domain.model.enums.MapStyleProvider
 import com.denser.june.presentation.utils.UiUtils
-import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationSettingsRequest
-import com.google.android.gms.location.Priority
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -184,31 +179,21 @@ fun AddLocationDialog(
     }
 
     val locationSettingsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult()
+        contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) performLocationFetch()
-        else isFetchingLocation = false
+        performLocationFetch()
     }
 
     fun checkSettingsAndFetch() {
-        val locationRequest =
-            LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000).build()
-        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
-        val client = LocationServices.getSettingsClient(context)
-
-        client.checkLocationSettings(builder.build())
-            .addOnSuccessListener { performLocationFetch() }
-            .addOnFailureListener { exception ->
-                if (exception is ResolvableApiException) {
-                    try {
-                        locationSettingsLauncher.launch(
-                            IntentSenderRequest.Builder(exception.resolution).build()
-                        )
-                    } catch (e: Exception) {
-                        isFetchingLocation = false
-                    }
-                } else isFetchingLocation = false
-            }
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val gpsEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        val networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        if (gpsEnabled || networkEnabled) {
+            performLocationFetch()
+        } else {
+            val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            locationSettingsLauncher.launch(intent)
+        }
     }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(

@@ -3,6 +3,7 @@ package com.denser.june.core.utils
 
 object Constants {
     const val GITHUB_URL = "https://github.com/DenserMeerkat/June"
+    const val GITHUB_RELEASES_LATEST_URL = "https://api.github.com/repos/DenserMeerkat/June/releases/latest"
     const val ODESIL_URL = "https://api.song.link/"
     const val DEVELOPER_GITHUB_URL = "https://github.com/DenserMeerkat"
     const val DEVELOPER_EMAIL = "mailto:densermeerkat11@gmail.com"

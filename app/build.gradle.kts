@@ -17,11 +17,11 @@ val appId = "com.denser.june"
 val appNamespace = "com.denser.june"
 val apkNamePrefix = "june"
 
-val versionMajor = 0
-val versionMinor = 9
+val versionMajor = 1
+val versionMinor = 0
 val versionPatch = 0
-val appVersionCode = 11
-val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
+val appVersionCode = 12
+val appVersionName = "$versionMajor.$versionMinor.$versionPatch-beta01"
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
@@ -35,10 +35,15 @@ if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
 
-val storeFileVar = System.getenv("RELEASE_STORE_FILE") ?: keystoreProperties["storeFile"] as String?
-val storePasswordVar = System.getenv("RELEASE_STORE_PASSWORD") ?: keystoreProperties["storePassword"] as String?
-val keyAliasVar = System.getenv("RELEASE_KEY_ALIAS") ?: keystoreProperties["keyAlias"] as String?
-val keyPasswordVar = System.getenv("RELEASE_KEY_PASSWORD") ?: keystoreProperties["keyPassword"] as String?
+val fossStoreFile = System.getenv("RELEASE_STORE_FILE") ?: keystoreProperties["storeFile"] as String?
+val fossStorePassword = System.getenv("RELEASE_STORE_PASSWORD") ?: keystoreProperties["storePassword"] as String?
+val fossKeyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: keystoreProperties["keyAlias"] as String?
+val fossKeyPassword = System.getenv("RELEASE_KEY_PASSWORD") ?: keystoreProperties["keyPassword"] as String?
+
+val playStoreFile = System.getenv("PLAY_RELEASE_STORE_FILE") ?: keystoreProperties["playStoreFile"] as String?
+val playStorePassword = System.getenv("PLAY_RELEASE_STORE_PASSWORD") ?: keystoreProperties["playStorePassword"] as String?
+val playKeyAlias = System.getenv("PLAY_RELEASE_KEY_ALIAS") ?: keystoreProperties["playKeyAlias"] as String?
+val playKeyPassword = System.getenv("PLAY_RELEASE_KEY_PASSWORD") ?: keystoreProperties["playKeyPassword"] as String?
 
 android {
     namespace = appNamespace
@@ -57,6 +62,37 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = fossKeyAlias
+            keyPassword = fossKeyPassword
+            storePassword = fossStorePassword
+            storeFile = fossStoreFile?.let { file(it) }
+        }
+        create("playRelease") {
+            keyAlias = playKeyAlias
+            keyPassword = playKeyPassword
+            storePassword = playStorePassword
+            storeFile = playStoreFile?.let { file(it) }
+        }
+    }
+
+    flavorDimensions += "distribution"
+
+    productFlavors {
+        create("foss") {
+            dimension = "distribution"
+            signingConfig = signingConfigs.getByName("release")
+        }
+        create("play") {
+            dimension = "distribution"
+            applicationIdSuffix = ".play"
+            versionNameSuffix = "-play"
+            signingConfig = signingConfigs.getByName("playRelease")
+        }
+    }
+
+
     applicationVariants.all {
         val variant = this
         variant.outputs.configureEach {
@@ -67,15 +103,6 @@ android {
             } else {
                 output.outputFileName = "$apkNamePrefix-${variant.versionName}-universal.apk"
             }
-        }
-    }
-
-    signingConfigs {
-        create("release") {
-            keyAlias = keyAliasVar
-            keyPassword = keyPasswordVar
-            storePassword = storePasswordVar
-            storeFile = storeFileVar?.let { file(it) }
         }
     }
 
@@ -96,7 +123,6 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
             resValue("string", "app_name", appName)
             isMinifyEnabled = true
             isShrinkResources = true
@@ -106,20 +132,8 @@ android {
             )
         }
 
-        create("beta") {
-            signingConfig = signingConfigs.getByName("release")
-            resValue("string", "app_name", "$appName (Beta)")
-            applicationIdSuffix = ".beta"
-            versionNameSuffix = "-beta"
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-
         debug {
+            signingConfig = signingConfigs.getByName("debug")
             applicationIdSuffix = ".debug"
             resValue("string", "app_name", "$appName (Debug)")
             versionNameSuffix = "-dev"
@@ -189,8 +203,6 @@ dependencies {
     // June
     implementation(libs.maplibre.compose)
     implementation(libs.osmdroid)
-    implementation(libs.gms.location)
-    implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.coil.compose)
     implementation(libs.coil.video)
     implementation(libs.media3.exoplayer)
@@ -201,6 +213,11 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.hyphen)
+
+    // Play
+    "playImplementation"(libs.gms.location)
+    "playImplementation"(libs.kotlinx.coroutines.play.services)
+    "playImplementation"(libs.play.app.update)
 }
 aboutLibraries {
     export.excludeFields.add("generated")

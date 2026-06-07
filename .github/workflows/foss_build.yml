@@ -1,4 +1,4 @@
-name: Build Android apk
+name: FOSS Release Build
 
 on:
   push:
@@ -39,18 +39,18 @@ jobs:
         RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
         RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-      run: ./gradlew assembleRelease
+      run: ./gradlew assembleFossRelease
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: release-apk
-        path: app/build/outputs/apk/release/*.apk
+        path: app/build/outputs/apk/foss/release/*.apk
 
     - name: Generate Artifact Attestation
       uses: actions/attest-build-provenance@v1
       with:
-        subject-path: 'app/build/outputs/apk/release/*.apk'
+        subject-path: 'app/build/outputs/apk/foss/release/*.apk'
 
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
@@ -59,4 +59,4 @@ jobs:
         draft: true
         generate_release_notes: true
         files: |
-          app/build/outputs/apk/release/*.apk
+          app/build/outputs/apk/foss/release/*.apk

@@ -1,0 +1,99 @@
+[
+  {
+    "version": "v0.9.0",
+    "changes": [
+      "Added dynamic font customization with Google Fonts.",
+      "Updated date-time picker to a unified flow.",
+      "Added tag autocomplete for People and Topics in the editor.",
+      "Added settings to disable Markdown and select Map Theme.",
+      "Fully redesigned settings screens and layout.",
+      "Fixed status bar contrast in full-screen dialogs."
+    ]
+  },
+  {
+    "version": "v0.8.0",
+    "changes": [
+      "Added screen privacy settings to prevent screenshots.",
+      "Added a dedicated reminders manager.",
+      "Added a global network toggle to disable internet.",
+      "Added 12h/24h time format and start of week options.",
+      "Added long-press shortcut for journal options sheet.",
+      "Added setting to auto-include time in new entries.",
+      "Fixed tag sync by using unique names instead of IDs.",
+      "Improved background synchronization reliability."
+    ]
+  },
+  {
+    "version": "v0.7.0",
+    "changes": [
+      "Added Cloud Sync using WebDAV.",
+      "Added a Bin system for soft-deleted journals.",
+      "Added markdown links support in the editor.",
+      "Fixed chronological sorting of journal entries.",
+      "Fixed formatting loss issues when saving."
+    ]
+  },
+  {
+    "version": "v0.6.0",
+    "changes": [
+      "Added rich text formatting in the editor.",
+      "Fixed soft keyboard padding issues.",
+      "Fixed timeline filter to exclude draft entries."
+    ]
+  },
+  {
+    "version": "v0.5.1",
+    "changes": [
+      "Fixed save button visibility issues in the editor."
+    ]
+  },
+  {
+    "version": "v0.5.0",
+    "changes": [
+      "Removed toggle mode; journal screen is now always editable.",
+      "Added dynamic colors in music player matching album art.",
+      "Added timeline metadata badges for media, tags, and location.",
+      "Improved search screen navigation and empty states.",
+      "Fixed database cleanup to automatically purge unused tags."
+    ]
+  },
+  {
+    "version": "v0.4.1",
+    "changes": [
+      "Fixed database migration crashes from older versions.",
+      "Ensured old journal data remains intact during updates."
+    ]
+  },
+  {
+    "version": "v0.4.0",
+    "changes": [
+      "Added Spaces, People (@), and Topics (#) tagging.",
+      "Added smart autocomplete for tag inputs.",
+      "Added advanced search filtering for tags.",
+      "Added automatic merging when renaming tags.",
+      "Fixed video rendering boundaries in the grid.",
+      "Disabled inline video playback temporarily."
+    ]
+  },
+  {
+    "version": "v0.3.0",
+    "changes": [
+      "Added secure independent PIN lock option.",
+      "Refined settings screens layout."
+    ]
+  },
+  {
+    "version": "v0.2.0",
+    "changes": [
+      "Switched to MapLibre and MapTiler for vector maps.",
+      "Updated date picker with timeline month navigation.",
+      "Split downloads by architecture to reduce size."
+    ]
+  },
+  {
+    "version": "v0.1.0-beta",
+    "changes": [
+      "Initial beta release of June."
+    ]
+  }
+]

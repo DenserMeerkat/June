@@ -6,12 +6,8 @@ import androidx.annotation.RequiresPermission
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.enums.MapStyleProvider
 import com.denser.june.core.domain.preferences.JournalPreferences
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -28,6 +24,7 @@ object MapProviderUtils : KoinComponent {
     private val client: OkHttpClient by inject()
     private val journalPreferences: JournalPreferences by inject()
     private val context: Context by inject()
+    private val locationProvider: LocationProvider by inject()
 
     fun getStyleUrlWithKeys(
         provider: MapStyleProvider,
@@ -69,22 +66,7 @@ object MapProviderUtils : KoinComponent {
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     suspend fun fetchCurrentLocation(context: Context): JournalLocation? {
-        return try {
-            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-            val cancellationTokenSource = CancellationTokenSource()
-
-            val location = fusedLocationClient.getCurrentLocation(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                cancellationTokenSource.token
-            ).await()
-
-            location?.let {
-                updateLocationFromCenter(context, LatLng(it.latitude, it.longitude))
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
+        return locationProvider.fetchCurrentLocation(context)
     }
 
     private suspend fun performGetRequest(context: Context, url: String): String? {

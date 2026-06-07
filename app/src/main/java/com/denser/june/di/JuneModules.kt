@@ -1,5 +1,9 @@
 package com.denser.june.di
 
+import android.content.Context
+import coil.ImageLoader
+import coil.memory.MemoryCache
+import okhttp3.OkHttpClient
 import com.denser.june.MainVM
 import com.denser.june.core.di.coreModule
 import com.denser.june.core.domain.model.AppTheme
@@ -22,6 +26,18 @@ import org.koin.dsl.module
 
 val juneModules = module {
     includes(coreModule)
+
+    single {
+        val context = get<Context>()
+        ImageLoader.Builder(context)
+            .callFactory(get<OkHttpClient>())
+            .memoryCache {
+                MemoryCache.Builder(context)
+                    .maxSizePercent(0.15)
+                    .build()
+            }
+            .build()
+    }
 
     viewModel { params ->
         MainVM(
