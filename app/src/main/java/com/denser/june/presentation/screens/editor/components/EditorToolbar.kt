@@ -160,7 +160,7 @@ private fun TagChipsContent(
                     onTagSelect(tag)
                     hyphenState.completeMention(
                         id = tag.removePrefix(prefix),
-                        display = tag,
+                        display = tag.removePrefix(prefix),
                         trigger = trigger,
                     )
                 },
@@ -278,6 +278,20 @@ private fun FormatButtonsContent(state: HyphenTextState) {
             isActive = state.hasStyle(MarkupStyle.OrderedList),
             onClick = { state.toggleStyle(MarkupStyle.OrderedList) }
         )
+        FormatToggleButton(
+            icon = R.drawable.checklist_24px,
+            contentDescription = "Task List",
+            isActive = state.hasStyle(MarkupStyle.CheckboxUnchecked) || state.hasStyle(MarkupStyle.CheckboxChecked),
+            onClick = { state.toggleStyle(MarkupStyle.CheckboxUnchecked) }
+        )
+        val isCheckboxChecked = state.hasStyle(MarkupStyle.CheckboxChecked)
+        FormatToggleButton(
+            icon = R.drawable.check_box_24px,
+            contentDescription = if (isCheckboxChecked) "Mark as Undone" else "Mark as Done",
+            isActive = isCheckboxChecked,
+            onClick = { state.toggleCheckbox() },
+            enabled = state.hasStyle(MarkupStyle.CheckboxUnchecked) || isCheckboxChecked,
+        )
 
         VerticalDivider(
             modifier = Modifier.height(16.dp).padding(horizontal = 2.dp),
@@ -330,11 +344,13 @@ private fun FormatToggleButton(
     isActive: Boolean,
     onClick: () -> Unit,
     icon: Int,
-    contentDescription: String? = null
+    contentDescription: String? = null,
+    enabled: Boolean = true,
 ) {
     IconToggleButton(
         checked = isActive,
         onCheckedChange = { onClick() },
+        enabled = enabled,
         modifier = Modifier
             .size(40.dp)
             .focusProperties { canFocus = false },

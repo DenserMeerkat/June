@@ -29,11 +29,12 @@ import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
 import com.denser.june.presentation.screens.editor.components.JournalItemsPreview
 import com.denser.june.presentation.screens.editor.components.MediaOperations
+import com.denser.june.presentation.screens.editor.components.JournalContentEditor
+import com.denser.june.presentation.screens.editor.components.EditorToolbar
 import com.denser.june.core.domain.preferences.JournalPreferences
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import com.denser.hyphen.state.rememberHyphenTextState
-import com.denser.june.presentation.screens.editor.components.JournalContentEditor
 import com.denser.hyphen.model.TriggerConfig
 
 import com.denser.june.core.R
@@ -41,7 +42,6 @@ import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
-import com.denser.june.presentation.screens.editor.components.EditorToolbar
 import com.denser.june.presentation.utils.UiUtils
 import kotlinx.coroutines.launch
 import java.time.LocalTime
@@ -461,7 +461,6 @@ fun EditorScreen() {
                     isMarkdownEnabled = isMarkdownEnabled,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
                         .defaultMinSize(minHeight = 84.dp)
                 )
                 Spacer(Modifier.height(24.dp + innerPadding.calculateBottomPadding()))

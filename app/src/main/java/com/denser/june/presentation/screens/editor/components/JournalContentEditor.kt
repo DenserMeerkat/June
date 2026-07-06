@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.denser.hyphen.state.HyphenTextState
 import com.denser.hyphen.ui.link.HyphenLinkConfig
 import com.denser.hyphen.ui.material3.HyphenTextField
+import com.denser.hyphen.ui.style.BlockquoteStyle
 import com.denser.hyphen.ui.style.HyphenStyleConfig
 import com.denser.hyphen.ui.style.ListItemStyle
 import com.denser.june.presentation.utils.UiUtils
@@ -194,8 +195,11 @@ fun JournalContentEditor(
             ),
             blockquoteSpanStyle = SpanStyle(
                 fontStyle = FontStyle.Italic,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                background = MaterialTheme.colorScheme.surfaceContainerHighest
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+            ),
+            blockquoteStyle = BlockquoteStyle(
+                backgroundColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
+                borderColor = MaterialTheme.colorScheme.tertiary,
             ),
             h1Style = SpanStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
             h2Style = SpanStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
