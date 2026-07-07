@@ -58,7 +58,9 @@ class SettingsVM(
             fontPrefs.getAppFont(),
             privacyPrefs.getIsInternetAllowedFlow(),
             journalPrefs.mapTheme(),
-            journalPrefs.isMarkdownEnabled()
+            journalPrefs.isMarkdownEnabled(),
+            privacyPrefs.getSecurityQuestionFlow(),
+            privacyPrefs.getSecurityAnswerHashFlow()
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -74,6 +76,8 @@ class SettingsVM(
             isInternetAllowed = array[14] as Boolean,
             mapTheme = array[15] as MapTheme,
             isMarkdownEnabled = array[16] as Boolean,
+            securityQuestion = array[17] as String?,
+            securityAnswerHash = array[18] as String?,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -147,6 +151,7 @@ class SettingsVM(
                 is SettingsAction.OnAppLockToggle -> privacyPrefs.updateAppLock(action.enabled)
                 is SettingsAction.UpdateLockType -> privacyPrefs.updateLockType(action.type)
                 is SettingsAction.UpdatePinHash -> privacyPrefs.updatePinHash(action.hash)
+                is SettingsAction.UpdateSecurityQuestionAndAnswer -> privacyPrefs.updateSecurityQuestionAndAnswer(action.question, action.answerHash)
                 is SettingsAction.OnScreenPrivacyToggle -> privacyPrefs.updateScreenPrivacy(action.enabled)
                 is SettingsAction.OnAutoTimeToggle -> journalPrefs.setAutoTimeEnabled(action.enabled)
                 is SettingsAction.OnStartOfWeekChange -> journalPrefs.setStartOfWeek(action.startOfWeek)

@@ -24,6 +24,7 @@ import com.denser.june.presentation.screens.settings.screens.BackupScreen
 import com.denser.june.presentation.screens.settings.screens.LockMethodScreen
 import com.denser.june.presentation.screens.settings.screens.PermissionsScreen
 import com.denser.june.presentation.screens.settings.screens.PinSetupScreen
+import com.denser.june.presentation.screens.settings.screens.RecoverySetupScreen
 import com.denser.june.presentation.screens.settings.screens.GeneralSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.MapSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.AppearanceSettingsScreen
@@ -149,6 +150,10 @@ fun JuneNavHost(
 
         composable<Route.PinSetup> {
             PinSetupScreen()
+        }
+
+        composable<Route.RecoverySetup> {
+            RecoverySetupScreen()
         }
 
         composable<Route.Bin> {

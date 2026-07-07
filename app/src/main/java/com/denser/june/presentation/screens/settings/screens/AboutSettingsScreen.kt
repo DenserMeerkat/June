@@ -216,7 +216,7 @@ fun AboutSettingsScreen() {
                 }
             },
             dismissButton = {
-                TextButton(onClick = { updateInfo = null }) {
+                OutlinedButton(onClick = { updateInfo = null }) {
                     Text("Later")
                 }
             }

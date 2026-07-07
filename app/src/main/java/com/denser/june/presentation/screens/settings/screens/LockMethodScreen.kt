@@ -29,7 +29,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +53,12 @@ import com.denser.june.presentation.screens.settings.components.SettingsItem
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import com.denser.june.presentation.components.JuneDialog
+import com.denser.june.presentation.components.JuneTextField
+import com.denser.june.presentation.components.PinLockScreen
+import com.denser.june.core.utils.SecurityUtils
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +68,9 @@ fun LockMethodScreen() {
     val onAction = settingsVM::onAction
     val navigator = koinInject<AppNavigator>()
     var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var isVerifyingPinForSetup by remember { mutableStateOf(false) }
+    var pinVerificationError by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     val safeSwitch: (() -> Unit) -> Unit = { action ->
@@ -69,8 +81,31 @@ fun LockMethodScreen() {
         }
     }
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+    if (isVerifyingPinForSetup) {
+        BackHandler {
+            isVerifyingPinForSetup = false
+            pinVerificationError = false
+        }
+        PinLockScreen(
+            title = "Enter PIN to verify",
+            isError = pinVerificationError,
+            onPinSubmitted = { pin ->
+                val inputHash = SecurityUtils.hashPin(pin)
+                if (inputHash == state.pinHash) {
+                    navigator.navigateTo(Route.RecoverySetup)
+                    coroutineScope.launch {
+                        delay(500)
+                        isVerifyingPinForSetup = false
+                        pinVerificationError = false
+                    }
+                } else {
+                    pinVerificationError = true
+                }
+            }
+        )
+    } else {
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
@@ -160,42 +195,62 @@ fun LockMethodScreen() {
                 }, onClick = { safeSwitch(onNoLockClick) })
             }
             Spacer(modifier = Modifier.size(24.dp))
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                    .padding(16.dp)
-            ) {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(R.drawable.warning_24px),
-                            contentDescription = "Warning",
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
+
+            val isPinSelected = state.isAppLockEnabled && state.lockType == LockType.PIN
+            if (isPinSelected) {
+                Spacer(modifier = Modifier.size(24.dp))
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(R.drawable.warning_24px),
+                                contentDescription = "Warning",
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Important",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+                        Spacer(modifier = Modifier.size(8.dp))
+                        val warningText = if (state.securityQuestion != null) {
+                            "If you forget your Custom PIN, you can recover/reset it using your configured security question."
+                        } else {
+                            "If you forget your Custom PIN, you will lose access to your journal. There is no recovery option. Please configure a recovery question."
+                        }
                         Text(
-                            text = "Important",
-                            style = MaterialTheme.typography.titleSmall
+                            text = warningText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { isVerifyingPinForSetup = true },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = if (state.securityQuestion != null) "Change recovery" else "Setup recovery"
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(
-                        text = "If you forget your Custom PIN, you will lose access to your journal. There is no recovery option.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
             Spacer(modifier = Modifier.height(32.dp + padding.calculateBottomPadding()))
         }
+    }
 
         if (pendingAction != null) {
             JuneDialog(
                 onDismissRequest = { pendingAction = null },
-                title = "Change lock method?",
+                title = "Change lock?",
                 icon = R.drawable.warning_24px,
                 confirmButton = {
                     Button(

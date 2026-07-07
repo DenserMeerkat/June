@@ -21,6 +21,8 @@ data class SettingsState(
     val isAppLockEnabled: Boolean = false,
     val lockType: LockType = LockType.BIOMETRIC,
     val pinHash: String? = null,
+    val securityQuestion: String? = null,
+    val securityAnswerHash: String? = null,
     val isScreenPrivacyEnabled: Boolean = false,
     val isAutoTimeEnabled: Boolean = false,
     val startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,

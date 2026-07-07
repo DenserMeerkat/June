@@ -11,6 +11,7 @@ import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.components.PinLockScreen
 import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.core.utils.SecurityUtils
+import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.settings.SettingsVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -47,9 +48,11 @@ fun PinSetupScreen() {
                         if (pin == firstPin) {
                             val hash = SecurityUtils.hashPin(pin)
                             onAction(SettingsAction.UpdatePinHash(hash))
-                            onAction(SettingsAction.UpdateLockType(LockType.PIN))
-                            onAction(SettingsAction.OnAppLockToggle(true))
-                            navigator.navigateBack()
+                            navigator.navigateTo(
+                                route = Route.RecoverySetup,
+                                popUpToRoute = Route.PinSetup,
+                                inclusive = true
+                            )
                         } else {
                             isError = true
                             step = SetupStep.CREATE

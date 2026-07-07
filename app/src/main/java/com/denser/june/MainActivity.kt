@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.SystemBarStyle
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.Image
@@ -33,10 +32,10 @@ import androidx.lifecycle.lifecycleScope
 import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.preferences.ThemePreferences
 import com.denser.june.core.domain.preferences.FontPreferences
-import com.denser.june.core.domain.model.AppTheme
 import com.denser.june.core.domain.model.getAppThemeFlow
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.presentation.components.PinLockScreen
+import com.denser.june.presentation.components.PinRecoveryScreen
 import com.denser.june.core.utils.SecurityUtils
 import com.denser.june.presentation.JuneApp
 import kotlinx.coroutines.flow.first
@@ -50,6 +49,7 @@ enum class LockState {
     LOADING,
     LOCKED_BIOMETRIC,
     LOCKED_PIN,
+    LOCKED_SECURITY_QUESTION,
     UNLOCKED
 }
 
@@ -62,6 +62,8 @@ class MainActivity : FragmentActivity() {
 
     private var isPinError by mutableStateOf(false)
     private var storedPinHash: String? = null
+    private var storedSecurityQuestion: String? = null
+    private var storedSecurityAnswerHash: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -78,6 +80,8 @@ class MainActivity : FragmentActivity() {
             val isLockEnabled = privacyPreferences.getAppLockFlow().first()
             val lockType = privacyPreferences.getLockTypeFlow().first()
             storedPinHash = privacyPreferences.getPinHashFlow().first()
+            storedSecurityQuestion = privacyPreferences.getSecurityQuestionFlow().first()
+            storedSecurityAnswerHash = privacyPreferences.getSecurityAnswerHashFlow().first()
 
             if (!isLockEnabled) {
                 lockState = LockState.UNLOCKED
@@ -127,6 +131,9 @@ class MainActivity : FragmentActivity() {
                         PinLockScreen(
                             title = "Enter PIN",
                             isError = isPinError,
+                            onForgotPin = if (storedSecurityQuestion != null) {
+                                { lockState = LockState.LOCKED_SECURITY_QUESTION }
+                            } else null,
                             onPinSubmitted = { inputPin ->
                                 val inputHash = SecurityUtils.hashPin(inputPin)
                                 if (inputHash == storedPinHash) {
@@ -135,6 +142,22 @@ class MainActivity : FragmentActivity() {
                                 } else {
                                     isPinError = true
                                 }
+                            }
+                        )
+                    }
+
+                    LockState.LOCKED_SECURITY_QUESTION -> {
+                        PinRecoveryScreen(
+                            question = storedSecurityQuestion ?: "Security Question",
+                            storedAnswerHash = storedSecurityAnswerHash ?: "",
+                            onBackClick = { lockState = LockState.LOCKED_PIN },
+                            onPinResetSuccess = {
+                                lifecycleScope.launch {
+                                    privacyPreferences.updatePinHash(null)
+                                    privacyPreferences.updateSecurityQuestionAndAnswer(null, null)
+                                    privacyPreferences.updateAppLock(false)
+                                }
+                                lockState = LockState.UNLOCKED
                             }
                         )
                     }

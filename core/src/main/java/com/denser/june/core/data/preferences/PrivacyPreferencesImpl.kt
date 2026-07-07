@@ -18,6 +18,8 @@ class PrivacyPreferencesImpl(
         private val appLock = booleanPreferencesKey("app_lock")
         private val lockType = stringPreferencesKey("lock_type")
         private val pinHash = stringPreferencesKey("pin_hash")
+        private val securityQuestion = stringPreferencesKey("security_question")
+        private val securityAnswerHash = stringPreferencesKey("security_answer_hash")
         private val screenPrivacy = booleanPreferencesKey("screen_privacy")
         private val isInternetAllowed = booleanPreferencesKey("is_internet_allowed")
         private val lastChangelogShown = stringPreferencesKey("last_changelog_shown")
@@ -48,6 +50,27 @@ class PrivacyPreferencesImpl(
     override suspend fun updatePinHash(hash: String?) {
         dataStore.edit {
             if (hash == null) it.remove(pinHash) else it[pinHash] = hash
+        }
+    }
+
+    override fun getSecurityQuestionFlow(): Flow<String?> = dataStore.data
+        .map { preferences -> preferences[securityQuestion] }
+
+    override fun getSecurityAnswerHashFlow(): Flow<String?> = dataStore.data
+        .map { preferences -> preferences[securityAnswerHash] }
+
+    override suspend fun updateSecurityQuestionAndAnswer(question: String?, answerHash: String?) {
+        dataStore.edit { preferences ->
+            if (question == null) {
+                preferences.remove(securityQuestion)
+            } else {
+                preferences[securityQuestion] = question
+            }
+            if (answerHash == null) {
+                preferences.remove(securityAnswerHash)
+            } else {
+                preferences[securityAnswerHash] = answerHash
+            }
         }
     }
 

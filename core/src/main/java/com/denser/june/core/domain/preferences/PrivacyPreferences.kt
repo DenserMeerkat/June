@@ -13,6 +13,10 @@ interface PrivacyPreferences {
     fun getPinHashFlow(): Flow<String?>
     suspend fun updatePinHash(hash: String?)
 
+    fun getSecurityQuestionFlow(): Flow<String?>
+    fun getSecurityAnswerHashFlow(): Flow<String?>
+    suspend fun updateSecurityQuestionAndAnswer(question: String?, answerHash: String?)
+
     fun getScreenPrivacyFlow(): Flow<Boolean>
     suspend fun updateScreenPrivacy(enabled: Boolean)
 

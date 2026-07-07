@@ -11,6 +11,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -32,6 +33,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,6 +49,7 @@ fun PinLockScreen(
     title: String = "Enter PIN",
     isError: Boolean = false,
     maxPinLength: Int = 6,
+    onForgotPin: (() -> Unit)? = null,
     onPinSubmitted: (String) -> Unit
 ) {
     var pin by remember { mutableStateOf("") }
@@ -68,51 +71,85 @@ fun PinLockScreen(
         }
     }
 
-    Column(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 24.dp, vertical = 48.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
     ) {
+        val screenWidth = maxWidth
+        val screenHeight = maxHeight
+
+        val buttonSize = if (screenWidth < 360.dp) 64.dp else if (screenWidth < 400.dp) 72.dp else 80.dp
+        val horizontalGap = if (screenWidth < 360.dp) 12.dp else if (screenWidth < 400.dp) 18.dp else 24.dp
+        val verticalGap = if (screenHeight < 640.dp) 8.dp else 16.dp
+
+        val topPadding = if (screenHeight < 640.dp) 16.dp else 48.dp
+        val spacerHeight1 = if (screenHeight < 640.dp) 12.dp else 24.dp
+        val spacerHeight2 = if (screenHeight < 640.dp) 24.dp else 48.dp
+        val middleSpacerHeight = if (screenHeight < 640.dp) 24.dp else 48.dp
+
         Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp)
+                .padding(vertical = if (screenHeight < 640.dp) 24.dp else 48.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(top = 48.dp)
+            verticalArrangement = Arrangement.Center
         ) {
-            AppIconDisplay()
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                AppIconDisplay()
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(spacerHeight1))
 
-            Text(
-                text = if (isError) "Wrong PIN. Try again." else title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Medium
-            )
+                Text(
+                    text = if (isError) "Wrong PIN. Try again." else title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium
+                )
 
-            Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(spacerHeight2))
 
-            PinIndicatorRow(pinLength = pin.length, maxPinLength = maxPinLength)
+                PinIndicatorRow(pinLength = pin.length, maxPinLength = maxPinLength)
+            }
+
+            Spacer(modifier = Modifier.height(middleSpacerHeight))
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(verticalGap)
+            ) {
+                NumberPad(
+                    pinLength = pin.length,
+                    waveTrigger = waveTrigger,
+                    buttonSize = buttonSize,
+                    horizontalGap = horizontalGap,
+                    verticalGap = verticalGap,
+                    onForgotPin = onForgotPin,
+                    onNumberClick = {
+                        if (pin.length < maxPinLength) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            pin += it
+                        }
+                    },
+                    onDeleteClick = {
+                        if (pin.isNotEmpty()) {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            pin = pin.dropLast(1)
+                        }
+                    },
+                    onClearAll = {
+                        if (pin.isNotEmpty()) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            pin = ""
+                        }
+                    }
+                )
+            }
         }
-
-        NumberPad(pinLength = pin.length, waveTrigger = waveTrigger, onNumberClick = {
-            if (pin.length < maxPinLength) {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                pin += it
-            }
-        }, onDeleteClick = {
-            if (pin.isNotEmpty()) {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                pin = pin.dropLast(1)
-            }
-        }, onClearAll = {
-            if (pin.isNotEmpty()) {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                pin = ""
-            }
-        })
     }
 }
 
@@ -235,6 +272,10 @@ private fun PinDot(isFilled: Boolean, isLastInput: Boolean, popShape: Shape) {
 private fun NumberPad(
     pinLength: Int,
     waveTrigger: Int,
+    buttonSize: Dp,
+    horizontalGap: Dp,
+    verticalGap: Dp,
+    onForgotPin: (() -> Unit)? = null,
     onNumberClick: (String) -> Unit,
     onDeleteClick: () -> Unit,
     onClearAll: () -> Unit,
@@ -257,49 +298,67 @@ private fun NumberPad(
     }
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(verticalGap),
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
         (1..9).chunked(3).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(horizontalGap)) {
                 row.forEach { number ->
-                    NumberButton(number.toString(), buttonScales[number].value, onNumberClick)
+                    NumberButton(number.toString(), buttonScales[number].value, buttonSize, onNumberClick)
                 }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(horizontalGap)) {
             PadButton(
                 onClick = onDeleteClick,
                 onLongClick = onClearAll,
                 backgroundColor = Color.Transparent,
                 contentColor = MaterialTheme.colorScheme.onSurface,
-                enabled = pinLength > 0
+                enabled = pinLength > 0,
+                buttonSize = buttonSize
             ) {
                 Icon(
                     painterResource(R.drawable.backspace_24px_fill),
                     contentDescription = "Delete",
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(buttonSize * 0.45f)
                 )
             }
-            NumberButton("0", buttonScales[0].value, onNumberClick)
-            Spacer(modifier = Modifier.size(80.dp))
+            NumberButton("0", buttonScales[0].value, buttonSize, onNumberClick)
+            
+            if (onForgotPin != null) {
+                PadButton(
+                    onClick = onForgotPin,
+                    backgroundColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    buttonSize = buttonSize
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.passkey_24px),
+                        contentDescription = "Forgot PIN",
+                        modifier = Modifier.size(buttonSize * 0.45f)
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.size(buttonSize))
+            }
         }
     }
 }
 
 @Composable
-private fun NumberButton(number: String, externalScale: Float, onClick: (String) -> Unit) {
+private fun NumberButton(number: String, externalScale: Float, buttonSize: Dp, onClick: (String) -> Unit) {
     PadButton(
         onClick = { onClick(number) },
         backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        externalScale = externalScale
+        externalScale = externalScale,
+        buttonSize = buttonSize
     ) {
         Text(
             text = number,
             style = MaterialTheme.typography.titleLarge,
-            fontSize = 28.sp,
+            fontSize = if (buttonSize < 72.dp) 22.sp else 28.sp,
             fontWeight = FontWeight.Normal
         )
     }
@@ -315,6 +374,7 @@ private fun PadButton(
     shape: Shape = CircleShape,
     enabled: Boolean = true,
     externalScale: Float = 1f,
+    buttonSize: Dp,
     content: @Composable () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -325,7 +385,7 @@ private fun PadButton(
 
     Surface(
         modifier = Modifier
-            .size(80.dp)
+            .size(buttonSize)
             .scale(pressScale * externalScale)
             .alpha(alpha)
             .clip(shape)

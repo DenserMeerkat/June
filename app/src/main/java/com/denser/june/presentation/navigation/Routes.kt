@@ -73,6 +73,9 @@ sealed interface Route {
     data object PinSetup : Route
 
     @Serializable
+    data object RecoverySetup : Route
+
+    @Serializable
     data class Fonts(val type: FontType = FontType.APP) : Route
 
     @Serializable
