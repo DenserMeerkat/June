@@ -53,6 +53,14 @@ object SettingsTileRegistry {
         ) {
             listOf(
                 SettingTile(
+                    key = "ALWAYS_OPEN_NEW_NOTE",
+                    title = "Open editor on startup",
+                    subtitle = { _, _ -> "Always open a new note when launching the app" },
+                    category = "General",
+                    keywords = listOf("open", "new", "note", "start", "startup", "always", "editor"),
+                    content = { AlwaysOpenNewNoteTile() }
+                ),
+                SettingTile(
                     key = "REMINDERS",
                     title = "Reminders",
                     subtitle = { _, _ -> "Set journaling reminders" },

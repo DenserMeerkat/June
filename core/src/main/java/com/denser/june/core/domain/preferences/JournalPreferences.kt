@@ -46,4 +46,7 @@ interface JournalPreferences {
 
     fun isMapProviderVerified(provider: MapStyleProvider): Flow<Boolean>
     suspend fun setMapProviderVerified(provider: MapStyleProvider, verified: Boolean)
+
+    fun alwaysOpenNewNote(): Flow<Boolean>
+    suspend fun setAlwaysOpenNewNote(enabled: Boolean)
 }

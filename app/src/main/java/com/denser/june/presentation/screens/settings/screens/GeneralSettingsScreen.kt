@@ -83,6 +83,7 @@ fun GeneralSettingsScreen() {
 
                 val editorGroup = listOfNotNull(
                     generalTiles["REMINDERS"],
+                    generalTiles["ALWAYS_OPEN_NEW_NOTE"],
                     generalTiles["MARKDOWN_EDITOR"]
                 )
                 if (editorGroup.isNotEmpty()) {

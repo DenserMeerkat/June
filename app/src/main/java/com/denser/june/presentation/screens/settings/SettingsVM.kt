@@ -60,7 +60,8 @@ class SettingsVM(
             journalPrefs.mapTheme(),
             journalPrefs.isMarkdownEnabled(),
             privacyPrefs.getSecurityQuestionFlow(),
-            privacyPrefs.getSecurityAnswerHashFlow()
+            privacyPrefs.getSecurityAnswerHashFlow(),
+            journalPrefs.alwaysOpenNewNote()
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -78,6 +79,7 @@ class SettingsVM(
             isMarkdownEnabled = array[16] as Boolean,
             securityQuestion = array[17] as String?,
             securityAnswerHash = array[18] as String?,
+            alwaysOpenNewNote = array[19] as Boolean,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -158,6 +160,7 @@ class SettingsVM(
                 is SettingsAction.OnTimeFormatChange -> journalPrefs.setTimeFormat(action.timeFormat)
                 is SettingsAction.OnMapThemeChange -> journalPrefs.setMapTheme(action.theme)
                 is SettingsAction.OnMarkdownToggle -> journalPrefs.setMarkdownEnabled(action.enabled)
+                is SettingsAction.OnAlwaysOpenNewNoteToggle -> journalPrefs.setAlwaysOpenNewNote(action.enabled)
             }
         }
     }

@@ -14,6 +14,7 @@ import com.denser.june.core.domain.model.AppTheme
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.JuneNavHost
 import com.denser.june.presentation.navigation.NavigationIntent
+import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.theme.JuneTheme
 import com.denser.june.presentation.theme.LocalAppTheme
 import com.denser.june.presentation.theme.LocalInternetAllowed
@@ -25,7 +26,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
-fun JuneApp(initialAppTheme: AppTheme) {
+fun JuneApp(initialAppTheme: AppTheme, openNewNote: Boolean = false) {
     val mainVM: MainVM = koinViewModel(parameters = { parametersOf(initialAppTheme) })
     val appState by mainVM.state.collectAsStateWithLifecycle()
 
@@ -41,7 +42,13 @@ fun JuneApp(initialAppTheme: AppTheme) {
         navigator.navigationActions.collect { intent ->
             when (intent) {
                 is NavigationIntent.NavigateBack -> {
-                    navController.navigateUp()
+                    if (navController.previousBackStackEntry != null) {
+                        navController.navigateUp()
+                    } else {
+                        navController.navigate(Route.Home) {
+                            popUpTo(Route.Editor()) { inclusive = true }
+                        }
+                    }
                 }
                 is NavigationIntent.NavigateTo -> {
                     navController.navigate(intent.route) {
@@ -63,6 +70,7 @@ fun JuneApp(initialAppTheme: AppTheme) {
             Surface(modifier = Modifier.fillMaxSize()) {
                 JuneNavHost(
                     navController = navController,
+                    startDestination = if (openNewNote) Route.Editor() else Route.Home
                 )
             }
 

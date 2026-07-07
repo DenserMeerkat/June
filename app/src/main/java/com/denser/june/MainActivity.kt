@@ -32,6 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.preferences.ThemePreferences
 import com.denser.june.core.domain.preferences.FontPreferences
+import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.model.getAppThemeFlow
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.presentation.components.PinLockScreen
@@ -58,7 +59,9 @@ class MainActivity : FragmentActivity() {
     private val privacyPreferences: PrivacyPreferences by inject()
     private val themePrefs: ThemePreferences by inject()
     private val fontPrefs: FontPreferences by inject()
+    private val journalPreferences: JournalPreferences by inject()
     private var lockState by mutableStateOf(LockState.LOADING)
+    private var openNewNote by mutableStateOf(false)
 
     private var isPinError by mutableStateOf(false)
     private var storedPinHash: String? = null
@@ -82,6 +85,13 @@ class MainActivity : FragmentActivity() {
             storedPinHash = privacyPreferences.getPinHashFlow().first()
             storedSecurityQuestion = privacyPreferences.getSecurityQuestionFlow().first()
             storedSecurityAnswerHash = privacyPreferences.getSecurityAnswerHashFlow().first()
+
+            if (intent.getBooleanExtra("OPEN_NEW_NOTE", false)) {
+                openNewNote = true
+                intent.removeExtra("OPEN_NEW_NOTE")
+            } else if (savedInstanceState == null && journalPreferences.alwaysOpenNewNote().first()) {
+                openNewNote = true
+            }
 
             if (!isLockEnabled) {
                 lockState = LockState.UNLOCKED
@@ -124,7 +134,10 @@ class MainActivity : FragmentActivity() {
             MaterialTheme(colorScheme = systemColorScheme) {
                 when (lockState) {
                     LockState.UNLOCKED -> {
-                        JuneApp(initialAppTheme = initialAppTheme)
+                        JuneApp(
+                            initialAppTheme = initialAppTheme,
+                            openNewNote = openNewNote
+                        )
                     }
 
                     LockState.LOCKED_PIN -> {

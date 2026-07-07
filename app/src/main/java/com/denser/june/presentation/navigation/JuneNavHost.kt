@@ -38,11 +38,12 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun JuneNavHost(
-    navController: NavHostController
+    navController: NavHostController,
+    startDestination: Route = Route.Home
 ) {
     NavHost(
         navController = navController,
-        startDestination = Route.Home,
+        startDestination = startDestination,
         enterTransition = {
             slideInHorizontally(initialOffsetX = { it }) + fadeIn()
         },

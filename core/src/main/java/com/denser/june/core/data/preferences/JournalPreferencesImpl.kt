@@ -34,6 +34,7 @@ class JournalPreferencesImpl(
         val MAPTILER_KEY_VERIFIED = booleanPreferencesKey("maptiler_key_verified")
         val STADIA_KEY_VERIFIED = booleanPreferencesKey("stadia_key_verified")
         val MAPBOX_KEY_VERIFIED = booleanPreferencesKey("mapbox_key_verified")
+        val ALWAYS_OPEN_NEW_NOTE = booleanPreferencesKey("always_open_new_note")
         const val DEFAULT_REMINDER_TIME = "21:14"
     }
 
@@ -192,6 +193,15 @@ class JournalPreferencesImpl(
                 MapStyleProvider.STADIA -> preferences[STADIA_KEY_VERIFIED] = verified
                 MapStyleProvider.MAPBOX -> preferences[MAPBOX_KEY_VERIFIED] = verified
             }
+        }
+    }
+
+    override fun alwaysOpenNewNote(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[ALWAYS_OPEN_NEW_NOTE] ?: false }
+
+    override suspend fun setAlwaysOpenNewNote(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[ALWAYS_OPEN_NEW_NOTE] = enabled
         }
     }
 }

@@ -203,7 +203,7 @@ fun PermissionsScreen() {
                     }
                 )
                 SettingsItem(
-                    title = "Reminders",
+                    title = "Notification",
                     subtitle = if (hasNotificationPermission)
                         "Permission granted. Used to show journaling reminders."
                     else
