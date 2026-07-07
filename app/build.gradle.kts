@@ -228,13 +228,16 @@ dependencies {
     "playImplementation"(libs.gms.auth)
     "playImplementation"(libs.google.api.services.drive) {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")
+        exclude(group = "org.apache.httpcomponents", module = "httpcore")
     }
     "playImplementation"(libs.google.api.client.android) {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")
+        exclude(group = "org.apache.httpcomponents", module = "httpcore")
     }
     "playImplementation"(libs.google.http.client.gson) {
         exclude(group = "org.json", module = "json")
         exclude(group = "org.apache.httpcomponents", module = "httpclient")
+        exclude(group = "org.apache.httpcomponents", module = "httpcore")
     }
 
 }

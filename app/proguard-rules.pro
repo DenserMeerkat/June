@@ -26,3 +26,17 @@
 }
 -keep class com.denser.june.core.domain.backup.** { *; }
 -keep class com.denser.june.core.domain.data_classes.** { *; }
+
+# Google API Client & Google Drive API
+-keep class com.google.api.client.** { *; }
+-keep class com.google.api.services.drive.** { *; }
+-keepclassmembers class * {
+    @com.google.api.client.util.Key <fields>;
+}
+
+# Google Play Services Auth
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+-keep class com.google.android.gms.internal.auth.** { *; }
+
+-dontwarn org.apache.http.**
