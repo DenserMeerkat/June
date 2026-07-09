@@ -1,5 +1,20 @@
 [
     {
+        "version": "v1.0.0-beta03",
+        "changes": [
+          "Added security question and answer recovery option for App Lock.",
+          "Added option to always open a new note on startup.",
+          "Tapping reminder notifications now opens a new note.",
+          "Added checklist toggle buttons to the editor toolbar.",
+          "Improved blockquote formatting and visual styling in the editor.",
+          "Added settings toggles for keyboard auto-capitalization and auto-correction preferences.",
+          {
+            "text": "Fixed Google account linking to use G-Drive sync.",
+            "flavors": ["play"]
+          }
+        ]
+    },
+    {
         "version": "v1.0.0-beta02",
         "changes": [
           {
