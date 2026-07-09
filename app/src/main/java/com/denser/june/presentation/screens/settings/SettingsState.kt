@@ -32,5 +32,7 @@ data class SettingsState(
     val isInternetAllowed: Boolean = true,
     val mapTheme: MapTheme = MapTheme.APP,
     val isMarkdownEnabled: Boolean = true,
-    val alwaysOpenNewNote: Boolean = false
+    val alwaysOpenNewNote: Boolean = false,
+    val isKeyboardAutocorrectEnabled: Boolean = true,
+    val isKeyboardCapitalizationEnabled: Boolean = true
 )

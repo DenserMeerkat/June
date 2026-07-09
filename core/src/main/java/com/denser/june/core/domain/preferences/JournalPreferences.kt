@@ -49,4 +49,10 @@ interface JournalPreferences {
 
     fun alwaysOpenNewNote(): Flow<Boolean>
     suspend fun setAlwaysOpenNewNote(enabled: Boolean)
+
+    fun isKeyboardAutocorrectEnabled(): Flow<Boolean>
+    suspend fun setKeyboardAutocorrectEnabled(enabled: Boolean)
+
+    fun isKeyboardCapitalizationEnabled(): Flow<Boolean>
+    suspend fun setKeyboardCapitalizationEnabled(enabled: Boolean)
 }

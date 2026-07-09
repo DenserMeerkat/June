@@ -33,4 +33,6 @@ sealed interface SettingsAction {
     data class OnMapThemeChange(val theme: MapTheme) : SettingsAction
     data class OnMarkdownToggle(val enabled: Boolean) : SettingsAction
     data class OnAlwaysOpenNewNoteToggle(val enabled: Boolean) : SettingsAction
+    data class OnKeyboardAutocorrectToggle(val enabled: Boolean) : SettingsAction
+    data class OnKeyboardCapitalizationToggle(val enabled: Boolean) : SettingsAction
 }

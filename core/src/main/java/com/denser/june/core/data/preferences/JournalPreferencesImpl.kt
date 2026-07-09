@@ -35,6 +35,8 @@ class JournalPreferencesImpl(
         val STADIA_KEY_VERIFIED = booleanPreferencesKey("stadia_key_verified")
         val MAPBOX_KEY_VERIFIED = booleanPreferencesKey("mapbox_key_verified")
         val ALWAYS_OPEN_NEW_NOTE = booleanPreferencesKey("always_open_new_note")
+        val KEYBOARD_AUTOCORRECT_ENABLED = booleanPreferencesKey("keyboard_autocorrect_enabled")
+        val KEYBOARD_CAPITALIZATION_ENABLED = booleanPreferencesKey("keyboard_capitalization_enabled")
         const val DEFAULT_REMINDER_TIME = "21:14"
     }
 
@@ -202,6 +204,24 @@ class JournalPreferencesImpl(
     override suspend fun setAlwaysOpenNewNote(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[ALWAYS_OPEN_NEW_NOTE] = enabled
+        }
+    }
+
+    override fun isKeyboardAutocorrectEnabled(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[KEYBOARD_AUTOCORRECT_ENABLED] ?: true }
+
+    override suspend fun setKeyboardAutocorrectEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEYBOARD_AUTOCORRECT_ENABLED] = enabled
+        }
+    }
+
+    override fun isKeyboardCapitalizationEnabled(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[KEYBOARD_CAPITALIZATION_ENABLED] ?: true }
+
+    override suspend fun setKeyboardCapitalizationEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEYBOARD_CAPITALIZATION_ENABLED] = enabled
         }
     }
 }

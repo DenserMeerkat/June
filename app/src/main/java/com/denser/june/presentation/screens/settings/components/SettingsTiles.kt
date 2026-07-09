@@ -101,6 +101,22 @@ object SettingsTileRegistry {
                     content = { MarkdownEditorTile() }
                 ),
                 SettingTile(
+                    key = "KEYBOARD_CAPITALIZATION",
+                    title = "Auto capitalization",
+                    subtitle = { _, state -> if (state.isKeyboardCapitalizationEnabled) "Capitalize first word of sentences" else "Disabled" },
+                    category = "General",
+                    keywords = listOf("keyboard", "capitalization", "casing", "auto", "letters", "sentences"),
+                    content = { KeyboardCapitalizationTile() }
+                ),
+                SettingTile(
+                    key = "KEYBOARD_AUTOCORRECT",
+                    title = "Auto correction",
+                    subtitle = { _, state -> if (state.isKeyboardAutocorrectEnabled) "Correct misspelled words" else "Disabled" },
+                    category = "General",
+                    keywords = listOf("keyboard", "autocorrect", "correction", "spellcheck", "spelling", "auto"),
+                    content = { KeyboardAutocorrectTile() }
+                ),
+                SettingTile(
                     key = "START_OF_WEEK",
                     title = "Start of the week",
                     subtitle = { _, state -> state.startOfWeek.getDisplayName(TextStyle.FULL, java.util.Locale.getDefault()) },

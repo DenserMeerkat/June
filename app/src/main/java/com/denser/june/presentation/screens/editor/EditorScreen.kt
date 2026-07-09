@@ -56,6 +56,10 @@ fun EditorScreen() {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isMarkdownEnabled by journalPreferences.isMarkdownEnabled()
         .collectAsStateWithLifecycle(initialValue = true)
+    val isKeyboardAutocorrectEnabled by journalPreferences.isKeyboardAutocorrectEnabled()
+        .collectAsStateWithLifecycle(initialValue = true)
+    val isKeyboardCapitalizationEnabled by journalPreferences.isKeyboardCapitalizationEnabled()
+        .collectAsStateWithLifecycle(initialValue = true)
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
@@ -308,7 +312,8 @@ fun EditorScreen() {
                         )
                     },
                     keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences
+                        capitalization = if (isKeyboardCapitalizationEnabled) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
+                        autoCorrectEnabled = isKeyboardAutocorrectEnabled
                     ),
                     textStyle = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.SemiBold
@@ -459,6 +464,8 @@ fun EditorScreen() {
                     onFocusChanged = { isEditorFocused = it },
                     focusRequester = contentFocusRequester,
                     isMarkdownEnabled = isMarkdownEnabled,
+                    isKeyboardAutocorrectEnabled = isKeyboardAutocorrectEnabled,
+                    isKeyboardCapitalizationEnabled = isKeyboardCapitalizationEnabled,
                     modifier = Modifier
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = 84.dp)

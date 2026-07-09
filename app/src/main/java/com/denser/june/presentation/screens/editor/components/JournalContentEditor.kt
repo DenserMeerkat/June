@@ -1,6 +1,7 @@
 package com.denser.june.presentation.screens.editor.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import com.denser.hyphen.model.MarkupStyleRange
 
@@ -43,6 +45,8 @@ fun JournalContentEditor(
     onFocusChanged: (Boolean) -> Unit,
     focusRequester: FocusRequester,
     isMarkdownEnabled: Boolean = true,
+    isKeyboardAutocorrectEnabled: Boolean = true,
+    isKeyboardCapitalizationEnabled: Boolean = true,
 ) {
     val linkConfig = remember {
         HyphenLinkConfig(
@@ -112,6 +116,11 @@ fun JournalContentEditor(
         )
     }
 
+    val keyboardOptions = KeyboardOptions(
+        capitalization = if (isKeyboardCapitalizationEnabled) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
+        autoCorrectEnabled = isKeyboardAutocorrectEnabled
+    )
+
     if (!isMarkdownEnabled) {
         TextField(
             value = rawContent,
@@ -131,9 +140,7 @@ fun JournalContentEditor(
                     style = MaterialTheme.typography.bodyLarge,
                 )
             },
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Sentences,
-            ),
+            keyboardOptions = keyboardOptions,
             colors = UiUtils.getTransparentTextFieldColors().copy(
                 unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                 focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
@@ -161,9 +168,7 @@ fun JournalContentEditor(
                 style = MaterialTheme.typography.bodyLarge,
             )
         },
-        keyboardOptions = KeyboardOptions(
-            capitalization = KeyboardCapitalization.Sentences,
-        ),
+        keyboardOptions = keyboardOptions,
         colors = UiUtils.getTransparentTextFieldColors().copy(
             unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
             focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),

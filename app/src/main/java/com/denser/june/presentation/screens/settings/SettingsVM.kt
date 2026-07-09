@@ -61,7 +61,9 @@ class SettingsVM(
             journalPrefs.isMarkdownEnabled(),
             privacyPrefs.getSecurityQuestionFlow(),
             privacyPrefs.getSecurityAnswerHashFlow(),
-            journalPrefs.alwaysOpenNewNote()
+            journalPrefs.alwaysOpenNewNote(),
+            journalPrefs.isKeyboardAutocorrectEnabled(),
+            journalPrefs.isKeyboardCapitalizationEnabled()
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -80,6 +82,8 @@ class SettingsVM(
             securityQuestion = array[17] as String?,
             securityAnswerHash = array[18] as String?,
             alwaysOpenNewNote = array[19] as Boolean,
+            isKeyboardAutocorrectEnabled = array[20] as Boolean,
+            isKeyboardCapitalizationEnabled = array[21] as Boolean,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -161,6 +165,8 @@ class SettingsVM(
                 is SettingsAction.OnMapThemeChange -> journalPrefs.setMapTheme(action.theme)
                 is SettingsAction.OnMarkdownToggle -> journalPrefs.setMarkdownEnabled(action.enabled)
                 is SettingsAction.OnAlwaysOpenNewNoteToggle -> journalPrefs.setAlwaysOpenNewNote(action.enabled)
+                is SettingsAction.OnKeyboardAutocorrectToggle -> journalPrefs.setKeyboardAutocorrectEnabled(action.enabled)
+                is SettingsAction.OnKeyboardCapitalizationToggle -> journalPrefs.setKeyboardCapitalizationEnabled(action.enabled)
             }
         }
     }

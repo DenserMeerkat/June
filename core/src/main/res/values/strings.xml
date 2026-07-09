@@ -28,4 +28,8 @@
     <string name="mapbox">Mapbox</string>
     <string name="api_key_valid">API Key is valid and verified!</string>
     <string name="api_key_invalid">Invalid API Key. Please verify.</string>
+    <string name="keyboard_capitalization">Auto capitalization</string>
+    <string name="keyboard_capitalization_desc">Capitalize the first word of each sentence</string>
+    <string name="keyboard_autocorrect">Auto correction</string>
+    <string name="keyboard_autocorrect_desc">Correct misspelled words automatically</string>
 </resources>
