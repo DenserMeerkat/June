@@ -4,6 +4,7 @@ import java.io.File
 
 interface ExportRepo {
     suspend fun exportData(includeMedia: Boolean = true): File?
+    suspend fun exportAsMarkdown(includeMedia: Boolean = true): File?
 }
 
 interface RestoreRepo {

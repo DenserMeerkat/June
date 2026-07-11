@@ -17,6 +17,7 @@ data class SettingsState(
     val appTheme: AppTheme = AppTheme(),
     val deleteButtonEnabled: Boolean = true,
     val exportState: ExportState = ExportState.Idle,
+    val exportMarkdownState: ExportState = ExportState.Idle,
     val restoreState: RestoreState = RestoreState.Idle,
     val isAppLockEnabled: Boolean = false,
     val lockType: LockType = LockType.BIOMETRIC,

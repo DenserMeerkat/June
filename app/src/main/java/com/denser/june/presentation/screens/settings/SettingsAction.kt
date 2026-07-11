@@ -22,6 +22,7 @@ sealed interface SettingsAction {
     data object ResetBackup: SettingsAction
     data class OnRestoreJournals(val path: String): SettingsAction
     data class OnExportJournals(val includeMedia: Boolean = true) : SettingsAction
+    data class OnExportMarkdown(val includeMedia: Boolean = true) : SettingsAction
     data class OnAppLockToggle(val enabled: Boolean) : SettingsAction
     data class UpdateLockType(val type: LockType) : SettingsAction
     data class UpdatePinHash(val hash: String?) : SettingsAction

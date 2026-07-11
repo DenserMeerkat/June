@@ -117,6 +117,14 @@ class SettingsVM(
                     }
                 }
 
+                is SettingsAction.OnExportMarkdown -> {
+                    _localState.update { it.copy(exportMarkdownState = ExportState.Exporting) }
+                    val result = exportRepo.exportAsMarkdown(includeMedia = action.includeMedia)
+                    _localState.update {
+                        it.copy(exportMarkdownState = if (result != null) ExportState.ExportReady(result) else ExportState.Error)
+                    }
+                }
+
                 is SettingsAction.OnRestoreJournals -> {
                     _localState.update { it.copy(restoreState = RestoreState.Restoring) }
                     when (val res = restoreRepo.restoreData(action.path)) {
@@ -134,7 +142,8 @@ class SettingsVM(
                 SettingsAction.ResetBackup -> _localState.update {
                     it.copy(
                         restoreState = RestoreState.Idle,
-                        exportState = ExportState.Idle
+                        exportState = ExportState.Idle,
+                        exportMarkdownState = ExportState.Idle
                     )
                 }
                 is SettingsAction.OnSeedColorChange -> themePrefs.updateSeedColor(action.color)
