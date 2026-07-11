@@ -10,13 +10,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.domain.backup.ExportState
@@ -33,6 +31,8 @@ import com.denser.june.core.domain.backup.RestoreFailedException
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.screens.settings.components.SettingsItem
+import com.denser.june.presentation.screens.settings.components.ExportBottomSheet
+import com.denser.june.presentation.screens.settings.components.ExportFormat
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -47,8 +47,6 @@ fun BackupScreen() {
 
     var showExportDialog by remember { mutableStateOf(false) }
     var showRestoreWarning by remember { mutableStateOf<String?>(null) }
-
-    var includeMedia by remember { mutableStateOf(true) }
 
     val saveLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/zip")
@@ -70,6 +68,26 @@ fun BackupScreen() {
         }
     }
 
+    val saveMarkdownLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri ->
+        uri?.let { targetUri ->
+            if (state.exportMarkdownState is ExportState.ExportReady) {
+                try {
+                    val tempFile = state.exportMarkdownState.file
+                    context.contentResolver.openOutputStream(targetUri)?.use { output ->
+                        tempFile.inputStream().use { input -> input.copyTo(output) }
+                    }
+                    Toast.makeText(context, "Markdown export saved successfully", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Failed to save file", Toast.LENGTH_SHORT).show()
+                } finally {
+                    onAction(SettingsAction.ResetBackup)
+                }
+            }
+        }
+    }
+
     val restoreLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -82,6 +100,13 @@ fun BackupScreen() {
         if (state.exportState is ExportState.ExportReady) {
             val fileName = "June_Backup_${System.currentTimeMillis()}.zip"
             saveLauncher.launch(fileName)
+        }
+    }
+
+    LaunchedEffect(state.exportMarkdownState) {
+        if (state.exportMarkdownState is ExportState.ExportReady) {
+            val fileName = "June_Markdown_Export_${System.currentTimeMillis()}.zip"
+            saveMarkdownLauncher.launch(fileName)
         }
     }
 
@@ -161,22 +186,23 @@ fun BackupScreen() {
                         }
                     ) {
                         Spacer(modifier = Modifier.height(12.dp))
+                        val isExporting = state.exportState is ExportState.Exporting || state.exportMarkdownState is ExportState.Exporting
                         Button(
                             onClick = {
-                                if (state.exportState !is ExportState.Exporting) {
+                                if (!isExporting) {
                                     showExportDialog = true
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = state.exportState !is ExportState.Exporting
+                            enabled = !isExporting
                         ) {
-                            if (state.exportState is ExportState.Exporting) {
+                            if (isExporting) {
                                 CircularWavyProgressIndicator(
                                     modifier = Modifier.size(20.dp),
                                     color = MaterialTheme.colorScheme.onPrimary,
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Creating Backup...")
+                                Text("Exporting...")
                             } else {
                                 Icon(
                                     painterResource(R.drawable.save_24px),
@@ -184,7 +210,7 @@ fun BackupScreen() {
                                     Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Create Backup")
+                                Text("Start Export")
                             }
                         }
                     }
@@ -237,50 +263,13 @@ fun BackupScreen() {
     }
 
     if (showExportDialog) {
-        JuneDialog(
-            onDismissRequest = { showExportDialog = false },
-            title = "Create Backup?",
-            icon = R.drawable.upload_24px,
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showExportDialog = false
-                        onAction(SettingsAction.OnExportJournals(includeMedia))
-                    }
-                ) { Text("Create") }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showExportDialog = false }) { Text("Cancel") }
-            },
-            text = {
-                Column {
-                    Text("This will create a ZIP file containing your journal entries.")
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Include Media",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Switch(
-                            checked = includeMedia,
-                            onCheckedChange = { includeMedia = it }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = if (includeMedia) "Backup size might be large. Photos & videos will be included." else "Photos & videos will not be saved. Faster and smaller.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+        ExportBottomSheet(
+            onDismiss = { showExportDialog = false },
+            onExport = { format, includeMedia ->
+                if (format == ExportFormat.JSON) {
+                    onAction(SettingsAction.OnExportJournals(includeMedia))
+                } else {
+                    onAction(SettingsAction.OnExportMarkdown(includeMedia))
                 }
             }
         )
