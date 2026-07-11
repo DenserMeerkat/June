@@ -26,7 +26,11 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
-fun JuneApp(initialAppTheme: AppTheme, openNewNote: Boolean = false) {
+fun JuneApp(
+    initialAppTheme: AppTheme,
+    openNewNote: Boolean = false,
+    openSyncSettings: Boolean = false
+) {
     val mainVM: MainVM = koinViewModel(parameters = { parametersOf(initialAppTheme) })
     val appState by mainVM.state.collectAsStateWithLifecycle()
 
@@ -36,6 +40,12 @@ fun JuneApp(initialAppTheme: AppTheme, openNewNote: Boolean = false) {
     val startupManager = koinInject<StartupManager>()
     val pendingWhatsChanged by startupManager.pendingWhatsChanged.collectAsStateWithLifecycle(initialValue = null)
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+
+    LaunchedEffect(openSyncSettings) {
+        if (openSyncSettings) {
+            navController.navigate(Route.SyncSettings)
+        }
+    }
 
     LaunchedEffect(Unit) {
         startupManager.checkStartupFlows()

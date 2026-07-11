@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.work.*
 import com.denser.june.core.domain.sync.SyncManager
 import com.denser.june.core.domain.logging.AppLogger
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
@@ -16,20 +18,38 @@ class SyncWorker(
     private val syncManager: SyncManager by inject()
 
     override suspend fun doWork(): Result {
-        return try {
-            val isFullRevalidation = inputData.getBoolean("is_full_revalidation", false)
-            AppLogger.d(AppLogger.Category.SYNC, "SyncWorker", "Starting SyncWorker doWork(). Full revalidation: $isFullRevalidation")
-            val result = syncManager.sync(isFullRevalidation)
-            if (result.isSuccess) {
-                AppLogger.d(AppLogger.Category.SYNC, "SyncWorker", "SyncWorker completed successfully.")
-                Result.success()
-            } else {
-                AppLogger.w(AppLogger.Category.SYNC, "SyncWorker", "SyncWorker sync failed. Attempt: $runAttemptCount")
+        val notificationHelper = SyncNotificationHelper(applicationContext)
+
+        return coroutineScope {
+            val statusCollector = launch {
+                syncManager.status.collect { status ->
+                    notificationHelper.updateProgress(status)
+                }
+            }
+
+            try {
+                val isFullRevalidation = inputData.getBoolean("is_full_revalidation", false)
+                AppLogger.d(AppLogger.Category.SYNC, "SyncWorker", "Starting SyncWorker doWork(). Full revalidation: $isFullRevalidation")
+                val result = syncManager.sync(isFullRevalidation)
+                statusCollector.cancel()
+                notificationHelper.cancelProgressNotification()
+
+                if (result.isSuccess) {
+                    AppLogger.d(AppLogger.Category.SYNC, "SyncWorker", "SyncWorker completed successfully.")
+                    Result.success()
+                } else {
+                    val errorMsg = result.exceptionOrNull()?.message ?: "Unknown error"
+                    AppLogger.w(AppLogger.Category.SYNC, "SyncWorker", "SyncWorker sync failed. Attempt: $runAttemptCount")
+                    notificationHelper.showFailureNotification(errorMsg)
+                    if (runAttemptCount < 3) Result.retry() else Result.failure()
+                }
+            } catch (e: Exception) {
+                statusCollector.cancel()
+                notificationHelper.cancelProgressNotification()
+                AppLogger.e(AppLogger.Category.SYNC, "SyncWorker", "SyncWorker encountered exception. Attempt: $runAttemptCount", e)
+                notificationHelper.showFailureNotification(e.message ?: "Unknown exception")
                 if (runAttemptCount < 3) Result.retry() else Result.failure()
             }
-        } catch (e: Exception) {
-            AppLogger.e(AppLogger.Category.SYNC, "SyncWorker", "SyncWorker encountered exception. Attempt: $runAttemptCount", e)
-            if (runAttemptCount < 3) Result.retry() else Result.failure()
         }
     }
 

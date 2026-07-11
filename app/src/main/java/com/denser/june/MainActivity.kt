@@ -62,6 +62,7 @@ class MainActivity : FragmentActivity() {
     private val journalPreferences: JournalPreferences by inject()
     private var lockState by mutableStateOf(LockState.LOADING)
     private var openNewNote by mutableStateOf(false)
+    private var openSyncSettings by mutableStateOf(false)
 
     private var isPinError by mutableStateOf(false)
     private var storedPinHash: String? = null
@@ -89,6 +90,9 @@ class MainActivity : FragmentActivity() {
             if (intent.getBooleanExtra("OPEN_NEW_NOTE", false)) {
                 openNewNote = true
                 intent.removeExtra("OPEN_NEW_NOTE")
+            } else if (intent.getBooleanExtra("OPEN_SYNC_SETTINGS", false)) {
+                openSyncSettings = true
+                intent.removeExtra("OPEN_SYNC_SETTINGS")
             } else if (savedInstanceState == null && journalPreferences.alwaysOpenNewNote().first()) {
                 openNewNote = true
             }
@@ -136,7 +140,8 @@ class MainActivity : FragmentActivity() {
                     LockState.UNLOCKED -> {
                         JuneApp(
                             initialAppTheme = initialAppTheme,
-                            openNewNote = openNewNote
+                            openNewNote = openNewNote,
+                            openSyncSettings = openSyncSettings
                         )
                     }
 
