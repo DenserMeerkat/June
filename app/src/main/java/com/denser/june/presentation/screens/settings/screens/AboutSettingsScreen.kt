@@ -29,12 +29,15 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.foundation.text.selection.SelectionContainer
 import org.koin.compose.koinInject
+import com.denser.june.core.domain.preferences.SyncPreferences
+import com.denser.june.BuildConfig
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AboutSettingsScreen() {
     val navigator = koinInject<AppNavigator>()
     val updateChecker = koinInject<UpdateChecker>()
+    val syncPrefs = koinInject<SyncPreferences>()
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -125,6 +128,24 @@ fun AboutSettingsScreen() {
                             SettingsTileRegistry.getTile("DEVELOPER")?.content?.invoke()
                         }
 
+                        val isDevMode by syncPrefs.isDeveloperModeEnabled().collectAsState(initial = false)
+                        if (isDevMode) {
+                            SettingSection {
+                                SettingsItem(
+                                    title = "Developer options",
+                                    subtitle = "Logging settings and console",
+                                    leadingContent = {
+                                        Icon(
+                                            painter = painterResource(R.drawable.code_24px),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.secondary
+                                        )
+                                    },
+                                    onClick = { navigator.navigateTo(Route.DeveloperSettings) }
+                                )
+                            }
+                        }
+
                         SettingSection {
                             SettingsTileRegistry.getTile("CHANGELOG")?.content?.invoke()
                             SettingsTileRegistry.getTile("CHECK_FOR_UPDATES")?.content?.invoke()
@@ -185,22 +206,29 @@ fun AboutSettingsScreen() {
     }
 
     updateInfo?.let { (versionName, changelog, downloadUrl) ->
+        val isPlayStoreUpdate = downloadUrl.startsWith("market:") || downloadUrl.contains("play.google.com")
         JuneDialog(
             onDismissRequest = { updateInfo = null },
-            title = "Update Available ($versionName)",
+            title = "Update Available" + if (isPlayStoreUpdate) "" else " ($versionName)",
             text = {
                 Column {
                     Text(
-                        text = "A new version of June is available. Here is what's new:",
+                        text = if (isPlayStoreUpdate) {
+                            "A new version of June is available on the Google Play Store."
+                        } else {
+                            "A new version of June is available. Here is what's new:"
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = changelog,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (!isPlayStoreUpdate && changelog.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = changelog,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             },
             confirmButton = {
@@ -212,7 +240,7 @@ fun AboutSettingsScreen() {
                         }
                     }
                 ) {
-                    Text("Download")
+                    Text(if (isPlayStoreUpdate) "Update" else "Download")
                 }
             },
             dismissButton = {
@@ -309,6 +337,7 @@ fun AboutSettingsScreen() {
             Version Name: $versionName
             Version Code: $versionCode
             Signing Key SHA-256: $sha256
+            Hyphen Version: ${BuildConfig.HYPHEN_VERSION}
             
             Device: $deviceModel
             Android OS: $androidOS
@@ -329,6 +358,7 @@ fun AboutSettingsScreen() {
                         DiagnosticRow(label = "Version Name", value = versionName)
                         DiagnosticRow(label = "Version Code", value = versionCode.toString())
                         DiagnosticRow(label = "Signing Key SHA-256", value = sha256)
+                        DiagnosticRow(label = "Hyphen Version", value = BuildConfig.HYPHEN_VERSION)
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 4.dp),
                             color = MaterialTheme.colorScheme.outlineVariant

@@ -37,6 +37,7 @@ import okio.BufferedSink
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
+import com.denser.june.core.domain.logging.AppLogger
 import com.denser.june.core.domain.sync.serialize
 import com.denser.june.core.domain.sync.deserializeJournal
 
@@ -100,11 +101,14 @@ class GoogleDriveProvider(
     }
 
     override suspend fun connect(): Result<Unit> = withContext(Dispatchers.IO) {
+        AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Connecting to Google Drive...")
         if (getDriveService() != null) {
             _isConnected.value = true
+            AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Successfully authenticated and connected to Google Drive.")
             Result.success(Unit)
         } else {
             _isConnected.value = false
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to connect: Google Sign-In required")
             Result.failure(Exception("Google Sign-In required"))
         }
     }
@@ -365,20 +369,38 @@ class GoogleDriveProvider(
     }
 
     override suspend fun uploadJournal(journal: Journal): Result<String> {
+        val filename = "${journal.id}.json"
+        AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Uploading journal $filename to Drive...")
         val jsonStr = journal.serialize()
-        val folderId = getOrCreateSubfolder("journals").getOrElse { return Result.failure(it) }
-        return uploadFile("${journal.id}.json", "application/json", jsonStr.toByteArray(Charsets.UTF_8), folderId)
+        val folderId = getOrCreateSubfolder("journals").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve parent journals folder", it)
+            return Result.failure(it)
+        }
+        return uploadFile(filename, "application/json", jsonStr.toByteArray(Charsets.UTF_8), folderId).onSuccess {
+            AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Successfully uploaded journal $filename. Drive File ID: $it")
+        }.onFailure {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to upload journal $filename", it)
+        }
     }
 
     override suspend fun downloadJournal(cloudId: String): Result<Journal> {
-        val folderId = getOrCreateSubfolder("journals").getOrElse { return Result.failure(it) }
+        AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Downloading journal $cloudId from Drive...")
+        val folderId = getOrCreateSubfolder("journals").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve parent journals folder", it)
+            return Result.failure(it)
+        }
         return downloadFileContent(cloudId, folderId).map { bytes ->
             val jsonStr = String(bytes, Charsets.UTF_8)
             jsonStr.deserializeJournal()
+        }.onSuccess {
+            AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Successfully downloaded journal $cloudId.")
+        }.onFailure {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to download journal $cloudId", it)
         }
     }
 
     override suspend fun uploadMedia(journalId: String, file: File): Result<String> {
+        AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Uploading media file ${file.name} for journal $journalId...")
         val mimeType = when (file.extension.lowercase()) {
             "jpg", "jpeg" -> "image/jpeg"
             "png" -> "image/png"
@@ -386,17 +408,30 @@ class GoogleDriveProvider(
             "mp4" -> "video/mp4"
             else -> "application/octet-stream"
         }
-        val mediaRootId = getOrCreateSubfolder("media").getOrElse { return Result.failure(it) }
-        val folderId = getOrCreateJournalMediaFolder(journalId, mediaRootId).getOrElse { return Result.failure(it) }
+        val mediaRootId = getOrCreateSubfolder("media").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve media root folder", it)
+            return Result.failure(it)
+        }
+        val folderId = getOrCreateJournalMediaFolder(journalId, mediaRootId).getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve subfolder for journal $journalId", it)
+            return Result.failure(it)
+        }
         val uploadResult = uploadFile(file.name, mimeType, file, folderId)
         if (uploadResult.isSuccess) {
+            AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Successfully uploaded media ${file.name}. Deleting legacy duplicate if any.")
             deleteFileByName(file.name, mediaRootId)
+        } else {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to upload media file ${file.name}", uploadResult.exceptionOrNull())
         }
         return uploadResult
     }
 
     override suspend fun downloadMedia(journalId: String, cloudId: String, targetFile: File): Result<File> = withContext(Dispatchers.IO) {
-        val mediaRootId = getOrCreateSubfolder("media").getOrElse { return@withContext Result.failure(it) }
+        AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Downloading media file $cloudId for journal $journalId...")
+        val mediaRootId = getOrCreateSubfolder("media").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve media root folder", it)
+            return@withContext Result.failure(it)
+        }
         
         val journalFolderId = getOrCreateJournalMediaFolder(journalId, mediaRootId).getOrNull()
         val fileBytes = if (journalFolderId != null) {
@@ -409,11 +444,14 @@ class GoogleDriveProvider(
             try {
                 targetFile.parentFile?.mkdirs()
                 targetFile.writeBytes(fileBytes)
+                AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Successfully downloaded media $cloudId from namespaced folder.")
                 Result.success(targetFile)
             } catch (e: Exception) {
+                AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to save downloaded media file $cloudId", e)
                 Result.failure(e)
             }
         } else {
+            AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Media $cloudId not in namespaced folder. Checking legacy root folder...")
             val legacyBytesResult = downloadFileContent(cloudId, mediaRootId)
             if (legacyBytesResult.isSuccess) {
                 val bytes = legacyBytesResult.getOrThrow()
@@ -422,6 +460,7 @@ class GoogleDriveProvider(
                     targetFile.writeBytes(bytes)
                     
                     if (journalFolderId != null) {
+                        AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Migrating legacy media file $cloudId to namespaced path...")
                         val mimeType = when (targetFile.extension.lowercase()) {
                             "jpg", "jpeg" -> "image/jpeg"
                             "png" -> "image/png"
@@ -432,11 +471,14 @@ class GoogleDriveProvider(
                         uploadFile(cloudId, mimeType, bytes, journalFolderId)
                         deleteFileByName(cloudId, mediaRootId)
                     }
+                    AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Successfully downloaded legacy media $cloudId.")
                     Result.success(targetFile)
                 } catch (e: Exception) {
+                    AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to write or migrate legacy media $cloudId", e)
                     Result.failure(e)
                 }
             } else {
+                AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Media $cloudId not found in cloud anywhere.")
                 Result.failure(legacyBytesResult.exceptionOrNull() ?: Exception("Media file not found in cloud"))
             }
         }
@@ -525,18 +567,31 @@ class GoogleDriveProvider(
 
 
     override suspend fun deleteMedia(journalId: String, filename: String): Result<Unit> {
-        val mediaRootId = getOrCreateSubfolder("media").getOrElse { return Result.failure(it) }
+        AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Deleting media file $filename for journal $journalId...")
+        val mediaRootId = getOrCreateSubfolder("media").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve media root folder", it)
+            return Result.failure(it)
+        }
         val journalFolderId = getOrCreateJournalMediaFolder(journalId, mediaRootId).getOrNull()
         if (journalFolderId != null) {
             deleteFileByName(filename, journalFolderId)
         }
         deleteFileByName(filename, mediaRootId)
+        AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Successfully requested deletion of media file $filename.")
         return Result.success(Unit)
     }
 
     override suspend fun deleteJournal(cloudId: String): Result<Unit> {
-        val folderId = getOrCreateSubfolder("journals").getOrElse { return Result.failure(it) }
-        return deleteFileByName(cloudId, folderId)
+        AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Deleting journal file $cloudId...")
+        val folderId = getOrCreateSubfolder("journals").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve journals folder", it)
+            return Result.failure(it)
+        }
+        return deleteFileByName(cloudId, folderId).onSuccess {
+            AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Successfully requested deletion of journal $cloudId.")
+        }.onFailure {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to delete journal $cloudId", it)
+        }
     }
 }
 

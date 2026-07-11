@@ -27,6 +27,10 @@ class SyncPreferencesImpl(
         private val gdJournalsFolderId = stringPreferencesKey("gd_journals_folder_id")
         private val gdMediaFolderId = stringPreferencesKey("gd_media_folder_id")
         private val completedDataRepairVersion = intPreferencesKey("completed_data_repair_version")
+        private val syncLoggingEnabled = booleanPreferencesKey("sync_logging_enabled")
+        private val backupLoggingEnabled = booleanPreferencesKey("backup_logging_enabled")
+        private val databaseLoggingEnabled = booleanPreferencesKey("database_logging_enabled")
+        private val developerModeEnabled = booleanPreferencesKey("developer_mode_enabled")
     }
 
     override fun getLastSyncTime(): Flow<Long> = dataStore.data
@@ -113,6 +117,42 @@ class SyncPreferencesImpl(
     override fun getGoogleDriveMediaFolderId(): Flow<String?> = dataStore.data.map { it[gdMediaFolderId] }
     override suspend fun setGoogleDriveMediaFolderId(id: String?) {
         dataStore.edit { it.updateOrRemove(gdMediaFolderId, id) }
+    }
+
+    override fun getSyncLoggingEnabled(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[syncLoggingEnabled] ?: false }
+
+    override suspend fun setSyncLoggingEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[syncLoggingEnabled] = enabled
+        }
+    }
+
+    override fun getBackupLoggingEnabled(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[backupLoggingEnabled] ?: false }
+
+    override suspend fun setBackupLoggingEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[backupLoggingEnabled] = enabled
+        }
+    }
+
+    override fun getDatabaseLoggingEnabled(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[databaseLoggingEnabled] ?: false }
+
+    override suspend fun setDatabaseLoggingEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[databaseLoggingEnabled] = enabled
+        }
+    }
+
+    override fun isDeveloperModeEnabled(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[developerModeEnabled] ?: false }
+
+    override suspend fun setDeveloperModeEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[developerModeEnabled] = enabled
+        }
     }
 
     override fun getLastCompletedDataRepairVersion(): Flow<Int> = dataStore.data.map { it[completedDataRepairVersion] ?: 0 }

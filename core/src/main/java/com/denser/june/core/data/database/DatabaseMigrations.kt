@@ -2,11 +2,17 @@ package com.denser.june.core.data.database
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.denser.june.core.domain.logging.AppLogger
 
 object DatabaseMigrations {
 
     val MIGRATION_1_2 = object : Migration(1, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
+            AppLogger.d(
+                AppLogger.Category.DATABASE,
+                "DatabaseMigrations",
+                "Running database migration from version 1 to 2..."
+            )
             db.execSQL("""
                 CREATE TABLE IF NOT EXISTS `tags` (
                     `tagId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
@@ -23,11 +29,21 @@ object DatabaseMigrations {
             """.trimIndent())
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_journal_tag_cross_ref_tagId` ON `journal_tag_cross_ref` (`tagId`)")
             db.execSQL("ALTER TABLE `journals` ADD COLUMN `tags` TEXT NOT NULL DEFAULT ''")
+            AppLogger.d(
+                AppLogger.Category.DATABASE,
+                "DatabaseMigrations",
+                "Successfully completed database migration from version 1 to 2."
+            )
         }
     }
 
     val MIGRATION_2_3 = object : Migration(2, 3) {
         override fun migrate(db: SupportSQLiteDatabase) {
+            AppLogger.d(
+                AppLogger.Category.DATABASE,
+                "DatabaseMigrations",
+                "Running database migration from version 2 to 3..."
+            )
             db.execSQL("""
                 CREATE TABLE IF NOT EXISTS `journals_new` (
                     `id` TEXT NOT NULL, 
@@ -83,11 +99,21 @@ object DatabaseMigrations {
                     PRIMARY KEY(`id`)
                 )
             """.trimIndent())
+            AppLogger.d(
+                AppLogger.Category.DATABASE,
+                "DatabaseMigrations",
+                "Successfully completed database migration from version 2 to 3."
+            )
         }
     }
 
     val MIGRATION_3_4 = object : Migration(3, 4) {
         override fun migrate(db: SupportSQLiteDatabase) {
+            AppLogger.d(
+                AppLogger.Category.DATABASE,
+                "DatabaseMigrations",
+                "Running database migration from version 3 to 4..."
+            )
             db.execSQL("""
                 CREATE TABLE IF NOT EXISTS `tags_new` (
                     `name` TEXT NOT NULL,
@@ -121,6 +147,11 @@ object DatabaseMigrations {
 
             db.execSQL("DROP TABLE tags")
             db.execSQL("ALTER TABLE tags_new RENAME TO tags")
+            AppLogger.d(
+                AppLogger.Category.DATABASE,
+                "DatabaseMigrations",
+                "Successfully completed database migration from version 3 to 4."
+            )
         }
     }
 }

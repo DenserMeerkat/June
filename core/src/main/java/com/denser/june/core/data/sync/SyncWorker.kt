@@ -3,6 +3,7 @@ package com.denser.june.core.data.sync
 import android.content.Context
 import androidx.work.*
 import com.denser.june.core.domain.sync.SyncManager
+import com.denser.june.core.domain.logging.AppLogger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
@@ -17,13 +18,17 @@ class SyncWorker(
     override suspend fun doWork(): Result {
         return try {
             val isFullRevalidation = inputData.getBoolean("is_full_revalidation", false)
+            AppLogger.d(AppLogger.Category.SYNC, "SyncWorker", "Starting SyncWorker doWork(). Full revalidation: $isFullRevalidation")
             val result = syncManager.sync(isFullRevalidation)
             if (result.isSuccess) {
+                AppLogger.d(AppLogger.Category.SYNC, "SyncWorker", "SyncWorker completed successfully.")
                 Result.success()
             } else {
+                AppLogger.w(AppLogger.Category.SYNC, "SyncWorker", "SyncWorker sync failed. Attempt: $runAttemptCount")
                 if (runAttemptCount < 3) Result.retry() else Result.failure()
             }
         } catch (e: Exception) {
+            AppLogger.e(AppLogger.Category.SYNC, "SyncWorker", "SyncWorker encountered exception. Attempt: $runAttemptCount", e)
             if (runAttemptCount < 3) Result.retry() else Result.failure()
         }
     }
@@ -38,6 +43,7 @@ class SyncWorker(
             immediate: Boolean = false,
             isFullRevalidation: Boolean = false
         ) {
+            AppLogger.d(AppLogger.Category.SYNC, "SyncWorker", "Enqueuing SyncWorker. onlyWifi: $onlyWifi, immediate: $immediate, isFullRevalidation: $isFullRevalidation")
             val networkType = if (onlyWifi && !immediate) NetworkType.UNMETERED else NetworkType.CONNECTED
 
             val constraints = Constraints.Builder()

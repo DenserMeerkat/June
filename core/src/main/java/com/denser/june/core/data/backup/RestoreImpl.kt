@@ -1,7 +1,6 @@
 package com.denser.june.core.data.backup
 
 import android.content.Context
-import android.util.Log
 import androidx.core.net.toUri
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.backup.ExportSchema
@@ -9,6 +8,7 @@ import com.denser.june.core.domain.backup.RestoreFailedException
 import com.denser.june.core.domain.backup.RestoreRepo
 import com.denser.june.core.domain.backup.RestoreResult
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.logging.AppLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
@@ -34,7 +34,7 @@ class RestoreImpl(
                 val journalsList = mutableListOf<Journal>()
                 var isLegacy = false
 
-                Log.d("RestoreDebug", "Starting restore from: $path")
+                AppLogger.d(AppLogger.Category.BACKUP, TAG, "Starting restore from provided backup path")
 
                 context.contentResolver.openInputStream(path.toUri())?.use { inputStream ->
                     ZipInputStream(inputStream).use { zis ->
@@ -48,6 +48,8 @@ class RestoreImpl(
                         }
                     }
                 }
+
+                AppLogger.d(AppLogger.Category.BACKUP, TAG, "Backup type detected - isLegacy: $isLegacy")
 
                 context.contentResolver.openInputStream(path.toUri())?.use { inputStream ->
                     ZipInputStream(inputStream).use { zis ->
@@ -91,26 +93,28 @@ class RestoreImpl(
                 }
 
                 if (journalsList.isEmpty()) {
-                    Log.e("RestoreDebug", "No journals found to restore")
+                    AppLogger.e(AppLogger.Category.BACKUP, TAG, "No journals found in backup file to restore")
                     return@withContext RestoreResult.Failure(RestoreFailedException.InvalidFile)
                 }
 
-                Log.d("RestoreDebug", "Inserting ${journalsList.size} journals into DB")
+                AppLogger.d(AppLogger.Category.BACKUP, TAG, "Found ${journalsList.size} journals to import. Inserting into DB...")
 
                 journalsList.forEach { journal ->
                     val updatedJournal = remapMediaPaths(journal, mediaDir)
                     val id = journalRepo.insertJournal(updatedJournal)
-                    Log.d("RestoreDebug", "Inserted Journal ID: $id") 
+                    AppLogger.d(AppLogger.Category.BACKUP, TAG, "Successfully imported journal with ID: $id")
                 }
+                
+                AppLogger.d(AppLogger.Category.BACKUP, TAG, "Restore completed successfully.")
                 RestoreResult.Success
             } catch (e: IllegalArgumentException) {
-                Log.e(TAG, "Restore failed: Invalid URI", e)
+                AppLogger.e(AppLogger.Category.BACKUP, TAG, "Restore failed: Invalid URI", e)
                 RestoreResult.Failure(RestoreFailedException.InvalidFile)
             } catch (e: SerializationException) {
-                Log.e(TAG, "Restore failed: Schema Mismatch or Malformed JSON.", e)
+                AppLogger.e(AppLogger.Category.BACKUP, TAG, "Restore failed: Schema Mismatch or Malformed JSON.", e)
                 RestoreResult.Failure(RestoreFailedException.OldSchema)
             } catch (e: Exception) {
-                Log.e(TAG, "Restore failed: Unexpected error during ZIP extraction or DB insertion", e)
+                AppLogger.e(AppLogger.Category.BACKUP, TAG, "Restore failed: Unexpected error during ZIP extraction or DB insertion", e)
                 RestoreResult.Failure(RestoreFailedException.InvalidFile)
             }
         }

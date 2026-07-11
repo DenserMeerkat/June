@@ -38,6 +38,18 @@ interface SyncPreferences {
     fun getGoogleDriveMediaFolderId(): Flow<String?>
     suspend fun setGoogleDriveMediaFolderId(id: String?)
 
+    fun getSyncLoggingEnabled(): Flow<Boolean>
+    suspend fun setSyncLoggingEnabled(enabled: Boolean)
+
+    fun getBackupLoggingEnabled(): Flow<Boolean>
+    suspend fun setBackupLoggingEnabled(enabled: Boolean)
+
+    fun getDatabaseLoggingEnabled(): Flow<Boolean>
+    suspend fun setDatabaseLoggingEnabled(enabled: Boolean)
+
+    fun isDeveloperModeEnabled(): Flow<Boolean>
+    suspend fun setDeveloperModeEnabled(enabled: Boolean)
+
     fun getLastCompletedDataRepairVersion(): Flow<Int>
     suspend fun setLastCompletedDataRepairVersion(version: Int)
 }

@@ -4,6 +4,7 @@ import android.util.Log
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.preferences.SyncPreferences
+import com.denser.june.core.domain.logging.AppLogger
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.debounce
 import com.denser.june.core.data.sync.SyncWorker
 import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.data.database.journal.JournalDatabase
@@ -78,6 +78,22 @@ class SyncManager(
     val status: StateFlow<SyncStatus> = _status.asStateFlow()
 
     init {
+        applicationScope.launch {
+            syncPrefs.getSyncLoggingEnabled().collect { enabled ->
+                AppLogger.setCategoryEnabled(AppLogger.Category.SYNC, enabled)
+            }
+        }
+        applicationScope.launch {
+            syncPrefs.getBackupLoggingEnabled().collect { enabled ->
+                AppLogger.setCategoryEnabled(AppLogger.Category.BACKUP, enabled)
+            }
+        }
+        applicationScope.launch {
+            syncPrefs.getDatabaseLoggingEnabled().collect { enabled ->
+                AppLogger.setCategoryEnabled(AppLogger.Category.DATABASE, enabled)
+            }
+        }
+
         applicationScope.launch(Dispatchers.IO) {
             if (syncPrefs.getLastCompletedDataRepairVersion().first() < CURRENT_DATA_REPAIR_VERSION) {
                 repairDoubleConcatenatedImages()
@@ -134,8 +150,12 @@ class SyncManager(
 
     private suspend fun repairDoubleConcatenatedImages() {
         try {
+            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Starting programmatic startup image path repair...")
             val journals = journalRepo.getAllJournalsIncludeDeletedSync()
+            var checkedCount = 0
+            var repairedCount = 0
             journals.forEach { journal ->
+                checkedCount++
                 var modified = false
                 val cleanedImages = journal.images.map { path ->
                     val file = File(path)
@@ -150,12 +170,18 @@ class SyncManager(
                     }
                 }
                 if (modified) {
+                    repairedCount++
                     journalRepo.insertJournal(journal.copy(images = cleanedImages))
                 }
             }
             syncPrefs.setLastCompletedDataRepairVersion(CURRENT_DATA_REPAIR_VERSION)
+            AppLogger.d(
+                AppLogger.Category.SYNC, 
+                "SyncManager", 
+                "Startup repair completed. Checked $checkedCount journals, repaired $repairedCount journals."
+            )
         } catch (e: Exception) {
-            android.util.Log.e("SyncManager", "Error repairing double-concatenated image paths", e)
+            AppLogger.e(AppLogger.Category.SYNC, "SyncManager", "Error repairing double-concatenated image paths", e)
         }
     }
 
@@ -172,8 +198,11 @@ class SyncManager(
         val isSyncEnabled = syncPrefs.getSyncEnabled().first()
         if (!isSyncEnabled) return@withLock Result.failure(Exception("Sync is disabled"))
 
+        AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Starting sync analysis...")
+
         try {
             val provider = getActiveProvider()
+            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Active provider: ${provider.name}")
             provider.connect().getOrThrow()
 
             val remoteJournals = provider.listJournals().getOrThrow()
@@ -187,7 +216,6 @@ class SyncManager(
                 .map { File(it).name }
                 .distinct()
             val localMediaFiles = referencedMediaNames.toSet()
-
 
             val mediaToUpload = localMediaFiles.filter { name ->
                 val localExists = File(mediaDir, name).exists()
@@ -247,6 +275,15 @@ class SyncManager(
                 }
             }
 
+            AppLogger.d(
+                AppLogger.Category.SYNC,
+                "SyncManager",
+                "Analysis complete. Local journals: ${allLocalJournals.size}, remote: ${remoteJournals.size}, " +
+                        "pending uploads: ${realPendingUploads.size}, pending downloads: ${realPendingDownloads.size + remoteDeletions.size}, " +
+                        "media uploads: ${mediaToUpload.size}, media downloads: ${mediaToDownload.size}, " +
+                        "local deletions: ${localDeletions.size}, remote deletions: ${remoteDeletions.size}"
+            )
+
             Result.success(
                 SyncAnalysis(
                     localJournals = allLocalJournals.size,
@@ -267,6 +304,7 @@ class SyncManager(
                 )
             )
         } catch (e: Exception) {
+            AppLogger.e(AppLogger.Category.SYNC, "SyncManager", "Analysis failed", e)
             Result.failure(e)
         }
     }
@@ -306,21 +344,27 @@ class SyncManager(
         if (!isSyncEnabled) return@withLock Result.failure(Exception("Sync is disabled"))
 
         _status.value = SyncStatus.Preparing
+        AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Starting sync. isFullRevalidation: $isFullRevalidation")
 
         try {
             val provider = getActiveProvider()
+            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Active provider: ${provider.name}. Connecting...")
             provider.connect().getOrThrow()
 
+            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Fetching remote manifest...")
             val remoteManifest = provider.getManifest().getOrNull()
             if (remoteManifest != null && remoteManifest.schemaVersion > 2) {
                 throw Exception("A newer version of the app is required to sync with this cloud database.")
             }
             val remoteDeletedIds = remoteManifest?.deletedIds ?: emptyList()
+            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Remote manifest fetched. Deleted IDs in cloud: ${remoteDeletedIds.size}")
 
-
-            remoteDeletedIds.forEach { id ->
-                journalRepo.hardDeleteJournal(id)
-                journalRepo.deleteTombstone(id)
+            if (remoteDeletedIds.isNotEmpty()) {
+                remoteDeletedIds.forEach { id ->
+                    journalRepo.hardDeleteJournal(id)
+                    journalRepo.deleteTombstone(id)
+                }
+                AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Processed ${remoteDeletedIds.size} remote deletions locally.")
             }
 
             val remoteMetaList = provider.listJournals().getOrThrow()
@@ -402,6 +446,12 @@ class SyncManager(
                 toUpload.retainAll { it.id in actuallyModified }
             }
 
+            AppLogger.d(
+                AppLogger.Category.SYNC,
+                "SyncManager",
+                "Sync execution plan - To download: ${toDownload.size}, To upload: ${toUpload.size}, Tombstones: ${tombstones.size}"
+            )
+
             val totalOperations = toUpload.size + toDownload.size
             var completedOperations = 0
             var uploadCount = 0
@@ -431,7 +481,7 @@ class SyncManager(
                     uploadCount = uploadCount,
                     downloadCount = downloadCount,
                     totalOperations = totalOperations,
-                    currentOperation = "Pushing ${journal.title.ifBlank { "changes" }}..."
+                    currentOperation = "Pushing changes..."
                 )
 
                 pushJournal(journal).onSuccess {
@@ -442,17 +492,29 @@ class SyncManager(
                 }
             }
 
-            processTombstones(provider, tombstones)
+            if (tombstones.isNotEmpty()) {
+                AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Processing tombstones: ${tombstones.size}")
+                processTombstones(provider, tombstones)
+            }
+
+            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Purging old bin items from remote...")
             purgeOldBin(provider)
 
+            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Verifying local media attachments are downloaded...")
             val currentLocals = journalRepo.getAllJournalsIncludeDeletedSync()
+            var downloadedMediaCount = 0
             currentLocals.forEach { journal ->
                 journal.images.forEach { imgPath ->
                     val file = File(imgPath)
                     if (!file.exists() || file.length() == 0L) {
-                        provider.downloadMedia(journal.id, file.name, file)
+                        provider.downloadMedia(journal.id, file.name, file).onSuccess {
+                            downloadedMediaCount++
+                        }
                     }
                 }
+            }
+            if (downloadedMediaCount > 0) {
+                AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Downloaded $downloadedMediaCount missing media files.")
             }
 
             if (failedCount == 0) {
@@ -467,18 +529,22 @@ class SyncManager(
                     cleanupCloudOrphanedMedia(provider, currentLocals)
                 }
 
+                AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Updating remote manifest...")
                 val finalManifest = createCurrentManifest(remoteDeletedIds)
                 provider.updateManifest(finalManifest).getOrThrow()
                 syncPrefs.setLastSyncTime(System.currentTimeMillis())
 
                 _status.value = SyncStatus.Success
+                AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Sync successfully completed.")
                 Result.success(Unit)
             } else {
                 _status.value = SyncStatus.Error("Sync completed with $failedCount failures")
+                AppLogger.w(AppLogger.Category.SYNC, "SyncManager", "Sync completed with $failedCount failures")
                 Result.failure(Exception("Sync completed with $failedCount failures"))
             }
         } catch (e: Exception) {
             _status.value = SyncStatus.Error(e.message ?: "Sync failed")
+            AppLogger.e(AppLogger.Category.SYNC, "SyncManager", "Sync failed with exception", e)
             Result.failure(e)
         }
     }
@@ -487,6 +553,7 @@ class SyncManager(
         val provider = getActiveProvider()
         val filename = "$id.json"
 
+        AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Downloading journal: $id")
         return provider.downloadJournal(filename).onSuccess { journal ->
             val local = journalRepo.getJournalById(id)
 
@@ -525,10 +592,10 @@ class SyncManager(
                     Result.success(targetFile)
                 }
             }
-            if (downloadResults.any { it.isFailure }) {
-                Log.w("SyncManager", "Some media files failed to download for journal $id. Will retry on next sync.")
+            val failedDownloads = downloadResults.filter { it.isFailure }
+            if (failedDownloads.isNotEmpty()) {
+                AppLogger.w(AppLogger.Category.SYNC, "SyncManager", "${failedDownloads.size} media files failed to download for journal $id. Will retry on next sync.")
             }
-
 
             journalRepo.insertJournal(
                 finalJournal.copy(
@@ -542,6 +609,7 @@ class SyncManager(
 
     private suspend fun pushJournal(journal: Journal): Result<Unit> {
         val provider = getActiveProvider()
+        AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Pushing journal: ${journal.id}")
         
         val uploadResults = journal.images.map { localPath ->
             val file = File(localPath)
@@ -553,7 +621,7 @@ class SyncManager(
         }
         val failedUploads = uploadResults.filter { it.isFailure }
         if (failedUploads.isNotEmpty()) {
-            Log.w("SyncManager", "${failedUploads.size} media files failed to upload for journal ${journal.id}. Will retry on next sync.")
+            AppLogger.w(AppLogger.Category.SYNC, "SyncManager", "${failedUploads.size} media files failed to upload for journal ${journal.id}. Will retry on next sync.")
         }
 
         val sanitizedImages = journal.images.map { File(it).name }
@@ -569,16 +637,19 @@ class SyncManager(
         journals: List<Journal>
     ) {
         try {
+            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Cleaning up orphaned cloud media...")
             val remoteMedia = provider.listMedia().getOrNull() ?: return
             val localReferencedMedia = journals.flatMap { it.images }.map { File(it).name }.toSet()
 
             val orphans = remoteMedia.filter { it !in localReferencedMedia }
             if (orphans.isNotEmpty()) {
+                AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Deleting ${orphans.size} orphaned media files from cloud.")
                 orphans.forEach { filename ->
                     provider.deleteMedia("", filename)
                 }
             }
         } catch (e: Exception) {
+            AppLogger.e(AppLogger.Category.SYNC, "SyncManager", "Orphaned media cleanup failed", e)
         }
     }
 
@@ -599,13 +670,13 @@ class SyncManager(
             totalMedia = totalMedia,
             deletedIds = allDeletedIds
         )
-
     }
 
     private suspend fun processTombstones(provider: CloudProvider, tombstones: List<String>) {
         tombstones.forEach { id ->
             _status.value = SyncStatus.Syncing(currentOperation = "Cleaning up cloud deletion...")
             val filename = "$id.json"
+            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Deleting remote journal for tombstone: $id")
             provider.deleteJournal(filename).onSuccess {
                 journalRepo.deleteTombstone(id)
             }
@@ -616,11 +687,14 @@ class SyncManager(
         val thirtyDaysAgo = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000)
         val oldDeleted = journalRepo.getOldDeletedJournals(thirtyDaysAgo)
 
-        oldDeleted.forEach { local ->
-            _status.value = SyncStatus.Syncing(currentOperation = "Purging old items in bin...")
-            val filename = "${local.id}.json"
-            provider.deleteJournal(filename).onSuccess {
-                journalRepo.hardDeleteJournal(local.id)
+        if (oldDeleted.isNotEmpty()) {
+            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Found ${oldDeleted.size} items in bin past 30 days. Purging...")
+            oldDeleted.forEach { local ->
+                _status.value = SyncStatus.Syncing(currentOperation = "Purging old items in bin...")
+                val filename = "${local.id}.json"
+                provider.deleteJournal(filename).onSuccess {
+                    journalRepo.hardDeleteJournal(local.id)
+                }
             }
         }
     }

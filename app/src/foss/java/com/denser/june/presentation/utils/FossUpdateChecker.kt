@@ -69,11 +69,16 @@ class FossUpdateChecker(
     }
 
     private fun isNewerVersion(current: String, latest: String): Boolean {
-        val currentClean = current.removePrefix("v").substringBefore("-")
-        val latestClean = latest.removePrefix("v").substringBefore("-")
+        if (current == latest) return false
 
-        val currentParts = currentClean.split(".").mapNotNull { it.toIntOrNull() }
-        val latestParts = latestClean.split(".").mapNotNull { it.toIntOrNull() }
+        val currentClean = current.removePrefix("v")
+        val latestClean = latest.removePrefix("v")
+
+        val currentBase = currentClean.substringBefore("-")
+        val latestBase = latestClean.substringBefore("-")
+
+        val currentParts = currentBase.split(".").mapNotNull { it.toIntOrNull() }
+        val latestParts = latestBase.split(".").mapNotNull { it.toIntOrNull() }
 
         val length = maxOf(currentParts.size, latestParts.size)
         for (i in 0 until length) {
@@ -82,6 +87,22 @@ class FossUpdateChecker(
             if (latestPart > currentPart) return true
             if (currentPart > latestPart) return false
         }
+
+        val currentHasSuffix = currentClean.contains("-")
+        val latestHasSuffix = latestClean.contains("-")
+
+        if (currentHasSuffix && !latestHasSuffix) {
+            return true
+        }
+        if (!currentHasSuffix && latestHasSuffix) {
+            return false
+        }
+        if (currentHasSuffix && latestHasSuffix) {
+            val currentSuffix = currentClean.substringAfter("-")
+            val latestSuffix = latestClean.substringAfter("-")
+            return latestSuffix.compareTo(currentSuffix) > 0
+        }
+
         return false
     }
 }

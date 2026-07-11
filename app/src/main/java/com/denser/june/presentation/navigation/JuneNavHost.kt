@@ -31,6 +31,7 @@ import com.denser.june.presentation.screens.settings.screens.AppearanceSettingsS
 import com.denser.june.presentation.screens.settings.screens.PrivacySecuritySettingsScreen
 import com.denser.june.presentation.screens.settings.screens.SyncBackupSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.AboutSettingsScreen
+import com.denser.june.presentation.screens.settings.screens.DeveloperSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.reminder.ReminderScreen
 import com.denser.june.presentation.screens.settings.screens.sync.SyncScreen
 import com.denser.june.presentation.screens.settings.screens.trash.BinScreen
@@ -172,6 +173,10 @@ fun JuneNavHost(
         composable<Route.Fonts> { backStackEntry ->
             val args = backStackEntry.toRoute<Route.Fonts>()
             FontSelectionScreen(type = args.type)
+        }
+
+        composable<Route.DeveloperSettings> {
+            DeveloperSettingsScreen()
         }
     }
 }

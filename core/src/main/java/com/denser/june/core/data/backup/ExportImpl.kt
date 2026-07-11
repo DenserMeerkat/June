@@ -1,7 +1,7 @@
 package com.denser.june.core.data.backup
 
 import android.content.Context
-import android.util.Log
+import com.denser.june.core.domain.logging.AppLogger
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.backup.ExportRepo
@@ -24,9 +24,10 @@ class ExportImpl(
 
     override suspend fun exportData(includeMedia: Boolean): File? = withContext(Dispatchers.IO) {
         return@withContext try {
+            AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Starting export process. Include media: $includeMedia")
             val journals = journalRepo.getAllJournals()
 
-            Log.d("ExportDebug", "Found ${journals.size} journals to export")
+            AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Found ${journals.size} journals to export")
 
             val mediaDir = File(context.filesDir, "journal_media")
             val cleanedJournals = journals.map { journal ->
@@ -67,6 +68,7 @@ class ExportImpl(
 
                 if (includeMedia) {
                     val processedFileNames = mutableSetOf<Pair<String, String>>()
+                    var packedMediaCount = 0
 
                     cleanedJournals.forEach { journal ->
                         journal.images.forEach { absolutePath ->
@@ -80,18 +82,25 @@ class ExportImpl(
                                         fis.copyTo(zos)
                                     }
                                     zos.closeEntry()
+                                    packedMediaCount++
                                 } catch (e: Exception) {
-                                    Log.e("ExportImpl", "Failed to pack file: $absolutePath", e)
+                                    AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack media file: ${file.name}", e)
                                 }
                             }
                         }
                     }
+                    AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Packed $packedMediaCount media files")
                 }
             }
 
+            AppLogger.d(
+                AppLogger.Category.BACKUP,
+                "ExportImpl",
+                "Export completed successfully. Created zip: ${backupFile.name} (size: ${backupFile.length()} bytes)"
+            )
             backupFile
         } catch (e: Exception) {
-            Log.wtf("ExportImpl", e)
+            AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Export failed with exception", e)
             null
         }
     }

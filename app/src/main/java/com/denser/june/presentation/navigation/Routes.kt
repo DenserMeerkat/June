@@ -80,4 +80,7 @@ sealed interface Route {
 
     @Serializable
     data object MapSettings : Route
+
+    @Serializable
+    data object DeveloperSettings : Route
 }
