@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -51,6 +52,7 @@ class GoogleDriveProvider(
     private var syncFolderId: String? = null
     private var journalsFolderId: String? = null
     private var mediaFolderId: String? = null
+    private val journalFolderCache = java.util.concurrent.ConcurrentHashMap<String, String>()
     private val _folderUrl = MutableStateFlow<String?>(null)
     val folderUrl: Flow<String?> = _folderUrl.asStateFlow()
 
@@ -123,6 +125,7 @@ class GoogleDriveProvider(
             syncFolderId = null
             journalsFolderId = null
             mediaFolderId = null
+            journalFolderCache.clear()
             _folderUrl.value = null
             _isConnected.value = false
         } catch (e: Exception) {
@@ -142,15 +145,27 @@ class GoogleDriveProvider(
 
     private suspend fun getOrCreateSyncFolder(): Result<String> = withContext(Dispatchers.IO) {
         if (syncFolderId != null && !isFolderTrashed(syncFolderId!!)) return@withContext Result.success(syncFolderId!!)
+        val cachedId = syncPrefs.getGoogleDriveSyncFolderId().first()
+        if (cachedId != null && !isFolderTrashed(cachedId)) {
+            syncFolderId = cachedId
+            _folderUrl.value = "https://drive.google.com/drive/folders/$cachedId"
+            return@withContext Result.success(cachedId)
+        }
+
         val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
         try {
             val result = service.files().list()
                 .setQ("mimeType = 'application/vnd.google-apps.folder' and name = 'June' and trashed = false")
                 .setFields("files(id)")
                 .execute()
-            val existingId = result.files?.firstOrNull()?.id
+            val files = result.files ?: emptyList()
+            if (files.size > 1) {
+                android.util.Log.w("JuneAuth", "Multiple June folders found in Drive. Picking the first one.")
+            }
+            val existingId = files.firstOrNull()?.id
             if (existingId != null) {
                 syncFolderId = existingId
+                syncPrefs.setGoogleDriveSyncFolderId(existingId)
                 _folderUrl.value = "https://drive.google.com/drive/folders/$existingId"
                 return@withContext Result.success(existingId)
             }
@@ -162,6 +177,7 @@ class GoogleDriveProvider(
             val created = service.files().create(metadata).setFields("id").execute()
             val createdId = created.id ?: throw Exception("Folder creation returned empty ID")
             syncFolderId = createdId
+            syncPrefs.setGoogleDriveSyncFolderId(createdId)
             _folderUrl.value = "https://drive.google.com/drive/folders/$createdId"
             Result.success(createdId)
         } catch (e: Exception) {
@@ -174,6 +190,13 @@ class GoogleDriveProvider(
         if (name == "journals" && journalsFolderId != null && !isFolderTrashed(journalsFolderId!!)) return@withContext Result.success(journalsFolderId!!)
         if (name == "media" && mediaFolderId != null && !isFolderTrashed(mediaFolderId!!)) return@withContext Result.success(mediaFolderId!!)
 
+        val cachedId = if (name == "journals") syncPrefs.getGoogleDriveJournalsFolderId().first() else syncPrefs.getGoogleDriveMediaFolderId().first()
+        if (cachedId != null && !isFolderTrashed(cachedId)) {
+            if (name == "journals") journalsFolderId = cachedId
+            if (name == "media") mediaFolderId = cachedId
+            return@withContext Result.success(cachedId)
+        }
+
         val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
         val rootId = getOrCreateSyncFolder().getOrElse { return@withContext Result.failure(it) }
 
@@ -184,8 +207,14 @@ class GoogleDriveProvider(
                 .execute()
             val existingId = result.files?.firstOrNull()?.id
             if (existingId != null) {
-                if (name == "journals") journalsFolderId = existingId
-                if (name == "media") mediaFolderId = existingId
+                if (name == "journals") {
+                    journalsFolderId = existingId
+                    syncPrefs.setGoogleDriveJournalsFolderId(existingId)
+                }
+                if (name == "media") {
+                    mediaFolderId = existingId
+                    syncPrefs.setGoogleDriveMediaFolderId(existingId)
+                }
                 return@withContext Result.success(existingId)
             }
 
@@ -196,11 +225,46 @@ class GoogleDriveProvider(
             }
             val created = service.files().create(metadata).setFields("id").execute()
             val createdId = created.id ?: throw Exception("Folder creation returned empty ID for subfolder $name")
-            if (name == "journals") journalsFolderId = createdId
-            if (name == "media") mediaFolderId = createdId
+            if (name == "journals") {
+                journalsFolderId = createdId
+                syncPrefs.setGoogleDriveJournalsFolderId(createdId)
+            }
+            if (name == "media") {
+                mediaFolderId = createdId
+                syncPrefs.setGoogleDriveMediaFolderId(createdId)
+            }
             Result.success(createdId)
         } catch (e: Exception) {
             android.util.Log.e("JuneAuth", "Failed to get or create subfolder $name", e)
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun getOrCreateJournalMediaFolder(journalId: String, mediaRootId: String): Result<String> = withContext(Dispatchers.IO) {
+        val cachedId = journalFolderCache[journalId]
+        if (cachedId != null) return@withContext Result.success(cachedId)
+
+        val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
+        try {
+            val result = service.files().list()
+                .setQ("mimeType = 'application/vnd.google-apps.folder' and '$mediaRootId' in parents and name = '$journalId' and trashed = false")
+                .setFields("files(id)")
+                .execute()
+            val existingId = result.files?.firstOrNull()?.id
+            if (existingId != null) {
+                journalFolderCache[journalId] = existingId
+                return@withContext Result.success(existingId)
+            }
+            val metadata = DriveFile().apply {
+                this.name = journalId
+                mimeType = "application/vnd.google-apps.folder"
+                parents = listOf(mediaRootId)
+            }
+            val created = service.files().create(metadata).setFields("id").execute()
+            val createdId = created.id ?: throw Exception("Folder creation returned empty ID for journal subfolder $journalId")
+            journalFolderCache[journalId] = createdId
+            Result.success(createdId)
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
@@ -253,6 +317,28 @@ class GoogleDriveProvider(
         }
     }
 
+    private suspend fun uploadFile(name: String, mimeType: String, file: File, parentFolderId: String): Result<String> = withContext(Dispatchers.IO) {
+        val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
+        try {
+            val fileId = findFileIdByName(name, parentFolderId)
+            val metadata = DriveFile().apply {
+                this.name = name
+                if (fileId == null) {
+                    parents = listOf(parentFolderId)
+                }
+            }
+            val mediaContent = com.google.api.client.http.FileContent(mimeType, file)
+            val executedFile = if (fileId != null) {
+                service.files().update(fileId, metadata, mediaContent).execute()
+            } else {
+                service.files().create(metadata, mediaContent).execute()
+            }
+            Result.success(executedFile.id ?: "")
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private suspend fun downloadFileContent(name: String, parentFolderId: String): Result<ByteArray> = withContext(Dispatchers.IO) {
         val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
         try {
@@ -292,8 +378,7 @@ class GoogleDriveProvider(
         }
     }
 
-    override suspend fun uploadMedia(file: File): Result<String> {
-        val bytes = file.readBytes()
+    override suspend fun uploadMedia(journalId: String, file: File): Result<String> {
         val mimeType = when (file.extension.lowercase()) {
             "jpg", "jpeg" -> "image/jpeg"
             "png" -> "image/png"
@@ -301,16 +386,59 @@ class GoogleDriveProvider(
             "mp4" -> "video/mp4"
             else -> "application/octet-stream"
         }
-        val folderId = getOrCreateSubfolder("media").getOrElse { return Result.failure(it) }
-        return uploadFile(file.name, mimeType, bytes, folderId)
+        val mediaRootId = getOrCreateSubfolder("media").getOrElse { return Result.failure(it) }
+        val folderId = getOrCreateJournalMediaFolder(journalId, mediaRootId).getOrElse { return Result.failure(it) }
+        val uploadResult = uploadFile(file.name, mimeType, file, folderId)
+        if (uploadResult.isSuccess) {
+            deleteFileByName(file.name, mediaRootId)
+        }
+        return uploadResult
     }
 
-    override suspend fun downloadMedia(cloudId: String, targetFile: File): Result<File> {
-        val folderId = getOrCreateSubfolder("media").getOrElse { return Result.failure(it) }
-        return downloadFileContent(cloudId, folderId).map { bytes ->
-            targetFile.parentFile?.mkdirs()
-            targetFile.writeBytes(bytes)
-            targetFile
+    override suspend fun downloadMedia(journalId: String, cloudId: String, targetFile: File): Result<File> = withContext(Dispatchers.IO) {
+        val mediaRootId = getOrCreateSubfolder("media").getOrElse { return@withContext Result.failure(it) }
+        
+        val journalFolderId = getOrCreateJournalMediaFolder(journalId, mediaRootId).getOrNull()
+        val fileBytes = if (journalFolderId != null) {
+            downloadFileContent(cloudId, journalFolderId).getOrNull()
+        } else {
+            null
+        }
+        
+        if (fileBytes != null) {
+            try {
+                targetFile.parentFile?.mkdirs()
+                targetFile.writeBytes(fileBytes)
+                Result.success(targetFile)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        } else {
+            val legacyBytesResult = downloadFileContent(cloudId, mediaRootId)
+            if (legacyBytesResult.isSuccess) {
+                val bytes = legacyBytesResult.getOrThrow()
+                try {
+                    targetFile.parentFile?.mkdirs()
+                    targetFile.writeBytes(bytes)
+                    
+                    if (journalFolderId != null) {
+                        val mimeType = when (targetFile.extension.lowercase()) {
+                            "jpg", "jpeg" -> "image/jpeg"
+                            "png" -> "image/png"
+                            "webp" -> "image/webp"
+                            "mp4" -> "video/mp4"
+                            else -> "application/octet-stream"
+                        }
+                        uploadFile(cloudId, mimeType, bytes, journalFolderId)
+                        deleteFileByName(cloudId, mediaRootId)
+                    }
+                    Result.success(targetFile)
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            } else {
+                Result.failure(legacyBytesResult.exceptionOrNull() ?: Exception("Media file not found in cloud"))
+            }
         }
     }
 
@@ -318,6 +446,21 @@ class GoogleDriveProvider(
         val jsonStr = manifest.serialize()
         val rootId = getOrCreateSyncFolder().getOrElse { return Result.failure(it) }
         return uploadFile("sync_manifest.json", "application/json", jsonStr.toByteArray(Charsets.UTF_8), rootId).map { Unit }
+    }
+
+    override suspend fun getManifest(): Result<SyncManifest?> = withContext(Dispatchers.IO) {
+        val rootId = getOrCreateSyncFolder().getOrElse { return@withContext Result.failure(it) }
+        downloadFileContent("sync_manifest.json", rootId).map { bytes ->
+            val jsonStr = String(bytes, Charsets.UTF_8)
+            val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true; coerceInputValues = true }
+            json.decodeFromString<SyncManifest>(jsonStr)
+        }.recover { exception ->
+            if (exception.message?.contains("File not found") == true) {
+                null
+            } else {
+                throw exception
+            }
+        }
     }
 
     override suspend fun listJournals(): Result<List<RemoteFileMeta>> = withContext(Dispatchers.IO) {
@@ -343,25 +486,52 @@ class GoogleDriveProvider(
 
     override suspend fun listMedia(): Result<List<String>> = withContext(Dispatchers.IO) {
         val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
-        val folderId = getOrCreateSubfolder("media").getOrElse { return@withContext Result.failure(it) }
+        val mediaRootId = getOrCreateSubfolder("media").getOrElse { return@withContext Result.failure(it) }
         try {
-            val result = service.files().list()
-                .setQ("'$folderId' in parents and trashed = false")
+            val subdirsResult = service.files().list()
+                .setQ("'$mediaRootId' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false")
+                .setFields("files(id, name)")
+                .execute()
+            val subdirs = subdirsResult.files ?: emptyList()
+            
+            val allMediaFiles = mutableListOf<String>()
+            
+            subdirs.forEach { subdir ->
+                try {
+                    val res = service.files().list()
+                        .setQ("'${subdir.id}' in parents and trashed = false")
+                        .setFields("files(name)")
+                        .execute()
+                    res.files?.forEach { file ->
+                        if (file.name != null) allMediaFiles.add(file.name)
+                    }
+                } catch (e: Exception) {
+                }
+            }
+            
+            val rootRes = service.files().list()
+                .setQ("'$mediaRootId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false")
                 .setFields("files(name)")
                 .execute()
-
-            val list = result.files?.filter {
-                it.name != null
-            }?.map { it.name } ?: emptyList()
-            Result.success(list)
+            rootRes.files?.forEach { file ->
+                if (file.name != null) allMediaFiles.add(file.name)
+            }
+            
+            Result.success(allMediaFiles.distinct())
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    override suspend fun deleteMedia(filename: String): Result<Unit> {
-        val folderId = getOrCreateSubfolder("media").getOrElse { return Result.failure(it) }
-        return deleteFileByName(filename, folderId)
+
+    override suspend fun deleteMedia(journalId: String, filename: String): Result<Unit> {
+        val mediaRootId = getOrCreateSubfolder("media").getOrElse { return Result.failure(it) }
+        val journalFolderId = getOrCreateJournalMediaFolder(journalId, mediaRootId).getOrNull()
+        if (journalFolderId != null) {
+            deleteFileByName(filename, journalFolderId)
+        }
+        deleteFileByName(filename, mediaRootId)
+        return Result.success(Unit)
     }
 
     override suspend fun deleteJournal(cloudId: String): Result<Unit> {
@@ -456,8 +626,8 @@ class StreamingRequestBody(
 }
 
 class OkHttp3Response(private val response: Response) : LowLevelHttpResponse() {
-    override fun getContent(): InputStream? {
-        return response.body?.byteStream()
+    override fun getContent(): InputStream {
+        return response.body.byteStream()
     }
 
     override fun getContentEncoding(): String? {
@@ -465,7 +635,7 @@ class OkHttp3Response(private val response: Response) : LowLevelHttpResponse() {
     }
 
     override fun getContentLength(): Long {
-        return response.body?.contentLength() ?: -1L
+        return response.body.contentLength()
     }
 
     override fun getContentType(): String? {
@@ -476,12 +646,12 @@ class OkHttp3Response(private val response: Response) : LowLevelHttpResponse() {
         return response.code
     }
 
-    override fun getStatusLine(): String? {
+    override fun getStatusLine(): String {
         val protocolStr = response.protocol.toString().uppercase()
         return "$protocolStr ${response.code} ${response.message}"
     }
 
-    override fun getReasonPhrase(): String? {
+    override fun getReasonPhrase(): String {
         return response.message
     }
 

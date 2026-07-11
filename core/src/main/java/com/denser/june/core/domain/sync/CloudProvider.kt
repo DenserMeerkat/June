@@ -57,18 +57,23 @@ interface CloudProvider {
     /**
      * Upload a media file to the cloud.
      */
-    suspend fun uploadMedia(file: File): Result<String>
+    suspend fun uploadMedia(journalId: String, file: File): Result<String>
 
     /**
      * Download a media file from the cloud.
      */
-    suspend fun downloadMedia(cloudId: String, targetFile: File): Result<File>
+    suspend fun downloadMedia(journalId: String, cloudId: String, targetFile: File): Result<File>
 
 
     /**
      * Update the sync manifest in the cloud.
      */
     suspend fun updateManifest(manifest: SyncManifest): Result<Unit>
+
+    /**
+     * Get the current sync manifest from the cloud.
+     */
+    suspend fun getManifest(): Result<SyncManifest?>
 
     /**
      * List all journal filenames and metadata in the cloud.
@@ -83,7 +88,7 @@ interface CloudProvider {
     /**
      * Delete a media file from the cloud.
      */
-    suspend fun deleteMedia(filename: String): Result<Unit>
+    suspend fun deleteMedia(journalId: String, filename: String): Result<Unit>
 
     /**
      * Delete a journal file from the cloud.

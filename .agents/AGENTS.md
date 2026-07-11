@@ -1,0 +1,37 @@
+# June Developer Rules: Versioning & Migration Checklist
+
+Any developer or AI agent modifying database schemas, sync manifests, or export/import models in this repository must follow this checklist.
+
+---
+
+## 1. Database Schema Changes
+* **File**: [JournalDatabase.kt](core/src/main/java/com/denser/june/core/data/database/journal/JournalDatabase.kt) -> `VERSION`
+* **Action**: If you modify any Room entity class (e.g., adding, removing, or changing database fields):
+  1. Increment `JournalDatabase.VERSION` by 1.
+  2. Implement a new Room `Migration` in [DatabaseMigrations.kt](core/src/main/java/com/denser/june/core/data/database/DatabaseMigrations.kt).
+  3. Register the new migration in [DatabaseFactory.kt](core/src/main/java/com/denser/june/core/data/database/DatabaseFactory.kt).
+
+---
+
+## 2. Programmatic Startup Repairs (Data-Repair Migrations)
+* **File**: [SyncManager.kt](core/src/main/java/com/denser/june/core/domain/sync/SyncManager.kt) -> `CURRENT_DATA_REPAIR_VERSION`
+* **Action**: If you need to fix existing corrupted data (like incorrect paths or fields) programmatically on app launch:
+  1. Increment `CURRENT_DATA_REPAIR_VERSION` by 1.
+  2. Implement the repair task inside `SyncManager.repairDoubleConcatenatedImages()` (or add a new specialized function).
+  3. Ensure it writes the new version to `syncPrefs.setLastCompletedDataRepairVersion(CURRENT_DATA_REPAIR_VERSION)` once it completes successfully.
+
+---
+
+## 3. Sync Manifest & Cloud File Layout Changes
+* **File**: [CloudProvider.kt](core/src/main/java/com/denser/june/core/domain/sync/CloudProvider.kt) -> `SyncManifest` -> `schemaVersion`
+* **Action**: If you modify how journals or media are structured remotely in the cloud (WebDAV/Google Drive):
+  1. Increment `schemaVersion` in `SyncManifest`.
+  2. Ensure the providers retain fallback reading/resolving logic for older `schemaVersion` configurations to avoid breaking existing users' remote states.
+
+---
+
+## 4. Local Backup (ZIP) Format Changes
+* **Files**: [ExportImpl.kt](core/src/main/java/com/denser/june/core/data/backup/ExportImpl.kt) & [RestoreImpl.kt](core/src/main/java/com/denser/june/core/data/backup/RestoreImpl.kt)
+* **Action**: If you update the backup ZIP contents or formatting:
+  1. If introducing a new format, define a new manifest file marker (like `manifest.json`).
+  2. Update `RestoreImpl.kt` to run conditional parsing blocks (e.g. format detection) to guarantee older backup files (like legacy ZIPs containing `journal_data.json` at schema version 3) remain fully restorable.

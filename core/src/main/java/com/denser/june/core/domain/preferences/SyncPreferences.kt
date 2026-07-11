@@ -28,4 +28,16 @@ interface SyncPreferences {
     suspend fun setAutomaticSyncEnabled(enabled: Boolean)
 
     suspend fun getDeviceId(): String
+
+    fun getGoogleDriveSyncFolderId(): Flow<String?>
+    suspend fun setGoogleDriveSyncFolderId(id: String?)
+
+    fun getGoogleDriveJournalsFolderId(): Flow<String?>
+    suspend fun setGoogleDriveJournalsFolderId(id: String?)
+
+    fun getGoogleDriveMediaFolderId(): Flow<String?>
+    suspend fun setGoogleDriveMediaFolderId(id: String?)
+
+    fun getLastCompletedDataRepairVersion(): Flow<Int>
+    suspend fun setLastCompletedDataRepairVersion(version: Int)
 }

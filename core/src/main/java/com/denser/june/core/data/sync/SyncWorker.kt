@@ -16,7 +16,8 @@ class SyncWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            val result = syncManager.sync()
+            val isFullRevalidation = inputData.getBoolean("is_full_revalidation", false)
+            val result = syncManager.sync(isFullRevalidation)
             if (result.isSuccess) {
                 Result.success()
             } else {
@@ -31,16 +32,26 @@ class SyncWorker(
         private const val WORK_NAME = "com.denser.june.sync_worker"
         private const val COALESCING_DELAY_SECONDS = 3L
 
-        fun enqueue(context: Context, onlyWifi: Boolean) {
-            val networkType = if (onlyWifi) NetworkType.UNMETERED else NetworkType.CONNECTED
+        fun enqueue(
+            context: Context,
+            onlyWifi: Boolean,
+            immediate: Boolean = false,
+            isFullRevalidation: Boolean = false
+        ) {
+            val networkType = if (onlyWifi && !immediate) NetworkType.UNMETERED else NetworkType.CONNECTED
 
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(networkType)
                 .build()
 
+            val inputData = Data.Builder()
+                .putBoolean("is_full_revalidation", isFullRevalidation)
+                .build()
+
             val request = OneTimeWorkRequestBuilder<SyncWorker>()
                 .setConstraints(constraints)
-                .setInitialDelay(COALESCING_DELAY_SECONDS, TimeUnit.SECONDS)
+                .setInputData(inputData)
+                .setInitialDelay(if (immediate) 0L else COALESCING_DELAY_SECONDS, TimeUnit.SECONDS)
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
                 .build()
 
@@ -48,4 +59,4 @@ class SyncWorker(
                 .enqueueUniqueWork(WORK_NAME, ExistingWorkPolicy.REPLACE, request)
         }
     }
-}
+}

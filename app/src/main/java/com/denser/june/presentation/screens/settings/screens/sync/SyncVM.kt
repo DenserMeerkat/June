@@ -209,10 +209,7 @@ class SyncVM(
 
     fun revalidate() {
         if (!validateInputs()) return
-        viewModelScope.launch {
-            syncManager.sync(isFullRevalidation = true)
-            analyzeSync()
-        }
+        syncManager.launchSync(isFullRevalidation = true)
     }
 
     fun analyzeSync() {

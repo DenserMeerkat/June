@@ -23,6 +23,10 @@ class SyncPreferencesImpl(
         private val webDavPassword = stringPreferencesKey("webdav_password")
         private val automaticSyncEnabled = booleanPreferencesKey("automatic_sync_enabled")
         private val deviceId = stringPreferencesKey("device_id")
+        private val gdSyncFolderId = stringPreferencesKey("gd_sync_folder_id")
+        private val gdJournalsFolderId = stringPreferencesKey("gd_journals_folder_id")
+        private val gdMediaFolderId = stringPreferencesKey("gd_media_folder_id")
+        private val completedDataRepairVersion = intPreferencesKey("completed_data_repair_version")
     }
 
     override fun getLastSyncTime(): Flow<Long> = dataStore.data
@@ -94,6 +98,26 @@ class SyncPreferencesImpl(
             dataStore.edit { it[deviceId] = newId }
             newId
         }
+    }
+
+    override fun getGoogleDriveSyncFolderId(): Flow<String?> = dataStore.data.map { it[gdSyncFolderId] }
+    override suspend fun setGoogleDriveSyncFolderId(id: String?) {
+        dataStore.edit { it.updateOrRemove(gdSyncFolderId, id) }
+    }
+
+    override fun getGoogleDriveJournalsFolderId(): Flow<String?> = dataStore.data.map { it[gdJournalsFolderId] }
+    override suspend fun setGoogleDriveJournalsFolderId(id: String?) {
+        dataStore.edit { it.updateOrRemove(gdJournalsFolderId, id) }
+    }
+
+    override fun getGoogleDriveMediaFolderId(): Flow<String?> = dataStore.data.map { it[gdMediaFolderId] }
+    override suspend fun setGoogleDriveMediaFolderId(id: String?) {
+        dataStore.edit { it.updateOrRemove(gdMediaFolderId, id) }
+    }
+
+    override fun getLastCompletedDataRepairVersion(): Flow<Int> = dataStore.data.map { it[completedDataRepairVersion] ?: 0 }
+    override suspend fun setLastCompletedDataRepairVersion(version: Int) {
+        dataStore.edit { it[completedDataRepairVersion] = version }
     }
 
     private fun <T> MutablePreferences.updateOrRemove(key: Preferences.Key<T>, value: T?) {

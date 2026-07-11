@@ -31,7 +31,8 @@ class RestoreImpl(
         withContext(Dispatchers.IO) {
             return@withContext try {
                 val mediaDir = File(context.filesDir, MEDIA_FOLDER).apply { if (!exists()) mkdirs() }
-                var schema: ExportSchema? = null
+                val journalsList = mutableListOf<Journal>()
+                var isLegacy = false
 
                 Log.d("RestoreDebug", "Starting restore from: $path")
 
@@ -39,20 +40,47 @@ class RestoreImpl(
                     ZipInputStream(inputStream).use { zis ->
                         var entry = zis.nextEntry
                         while (entry != null) {
-                            val entryName = entry.name
-                            Log.d("RestoreDebug", "Found ZIP entry: $entryName")
-                            when {
-                                entryName == "journal_data.json" -> {
-                                    val jsonString = String(zis.readBytes(), Charsets.UTF_8)
+                            if (entry.name == "journal_data.json") {
+                                isLegacy = true
+                            }
+                            zis.closeEntry()
+                            entry = zis.nextEntry
+                        }
+                    }
+                }
 
-                                    val json = Json { ignoreUnknownKeys = true }
-                                    schema = json.decodeFromString<ExportSchema>(jsonString)
+                context.contentResolver.openInputStream(path.toUri())?.use { inputStream ->
+                    ZipInputStream(inputStream).use { zis ->
+                        var entry = zis.nextEntry
+                        while (entry != null) {
+                            val entryName = entry.name
+                            when {
+                                isLegacy -> {
+                                    if (entryName == "journal_data.json") {
+                                        val jsonString = String(zis.readBytes(), Charsets.UTF_8)
+                                        val json = Json { ignoreUnknownKeys = true }
+                                        val schema = json.decodeFromString<ExportSchema>(jsonString)
+                                        journalsList.addAll(schema.journals)
+                                    } else if (entryName.startsWith("media/") && !entry.isDirectory) {
+                                        val fileName = File(entryName).name
+                                        val targetFile = File(mediaDir, fileName)
+                                        FileOutputStream(targetFile).use { fos ->
+                                            zis.copyTo(fos)
+                                        }
+                                    }
                                 }
-                                entryName.startsWith("media/") && !entry.isDirectory -> {
-                                    val fileName = File(entryName).name
-                                    val targetFile = File(mediaDir, fileName)
-                                    FileOutputStream(targetFile).use { fos ->
-                                        zis.copyTo(fos)
+                                else -> {
+                                    if (entryName.startsWith("journals/") && entryName.endsWith(".json")) {
+                                        val jsonString = String(zis.readBytes(), Charsets.UTF_8)
+                                        val json = Json { ignoreUnknownKeys = true }
+                                        val journal = json.decodeFromString<Journal>(jsonString)
+                                        journalsList.add(journal)
+                                    } else if (entryName.startsWith("media/") && !entry.isDirectory) {
+                                        val fileName = File(entryName).name
+                                        val targetFile = File(mediaDir, fileName)
+                                        FileOutputStream(targetFile).use { fos ->
+                                            zis.copyTo(fos)
+                                        }
                                     }
                                 }
                             }
@@ -61,14 +89,15 @@ class RestoreImpl(
                         }
                     }
                 }
-                if (schema == null) {
-                    Log.e("RestoreDebug", "Schema is null after reading zip")
+
+                if (journalsList.isEmpty()) {
+                    Log.e("RestoreDebug", "No journals found to restore")
                     return@withContext RestoreResult.Failure(RestoreFailedException.InvalidFile)
                 }
 
-                Log.d("RestoreDebug", "Inserting ${schema!!.journals.size} journals into DB")
+                Log.d("RestoreDebug", "Inserting ${journalsList.size} journals into DB")
 
-                schema!!.journals.forEach { journal ->
+                journalsList.forEach { journal ->
                     val updatedJournal = remapMediaPaths(journal, mediaDir)
                     val id = journalRepo.insertJournal(updatedJournal)
                     Log.d("RestoreDebug", "Inserted Journal ID: $id") 
@@ -78,7 +107,7 @@ class RestoreImpl(
                 Log.e(TAG, "Restore failed: Invalid URI", e)
                 RestoreResult.Failure(RestoreFailedException.InvalidFile)
             } catch (e: SerializationException) {
-                Log.e(TAG, "Restore failed: Schema Mismatch or Malformed JSON. This might be an old backup format that needs migration logic.", e)
+                Log.e(TAG, "Restore failed: Schema Mismatch or Malformed JSON.", e)
                 RestoreResult.Failure(RestoreFailedException.OldSchema)
             } catch (e: Exception) {
                 Log.e(TAG, "Restore failed: Unexpected error during ZIP extraction or DB insertion", e)
