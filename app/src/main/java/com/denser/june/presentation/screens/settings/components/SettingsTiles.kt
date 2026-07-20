@@ -219,14 +219,6 @@ object SettingsTileRegistry {
                     content = { CloudSyncTile() }
                 ),
                 SettingTile(
-                    key = "LOCAL_BACKUP",
-                    title = "Local Backup",
-                    subtitle = { _, _ -> "Restore or export data locally" },
-                    category = "Sync & Backup",
-                    keywords = listOf("backup", "restore", "export", "import", "local", "json"),
-                    content = { LocalBackupTile() }
-                ),
-                SettingTile(
                     key = "ABOUT_HEADER",
                     title = "About June",
                     subtitle = { _, _ -> "version and github link" },

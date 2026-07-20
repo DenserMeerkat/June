@@ -20,7 +20,7 @@ import com.denser.june.presentation.screens.home.HomeScreen
 import com.denser.june.presentation.screens.search.SearchScreen
 import com.denser.june.presentation.screens.settings.screens.FontSelectionScreen
 import com.denser.june.presentation.screens.settings.SettingsScreen
-import com.denser.june.presentation.screens.settings.screens.BackupScreen
+
 import com.denser.june.presentation.screens.settings.screens.LockMethodScreen
 import com.denser.june.presentation.screens.settings.screens.PermissionsScreen
 import com.denser.june.presentation.screens.settings.screens.PinSetupScreen
@@ -138,9 +138,6 @@ fun JuneNavHost(
             AboutSettingsScreen()
         }
 
-        composable<Route.Backup> {
-            BackupScreen()
-        }
 
         composable<Route.Permissions> {
             PermissionsScreen()

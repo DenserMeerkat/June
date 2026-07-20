@@ -60,8 +60,6 @@ sealed interface Route {
     @Serializable
     data object AboutSettings : Route
 
-    @Serializable
-    data object Backup : Route
 
     @Serializable
     data object Permissions : Route

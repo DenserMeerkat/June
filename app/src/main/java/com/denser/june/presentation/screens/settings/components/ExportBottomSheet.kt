@@ -3,6 +3,8 @@ package com.denser.june.presentation.screens.settings.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +20,7 @@ enum class ExportFormat {
     JSON, MARKDOWN
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ExportBottomSheet(
     onDismiss: () -> Unit,
@@ -64,60 +66,77 @@ fun ExportBottomSheet(
             }
 
             Text(
-                text = "Select format and options for exporting your journal entries:",
+                text = "Select format and options for exporting your journal entries.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "Format",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+            val formats = ExportFormat.entries
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
             ) {
-                SettingsItem(
-                    title = "JSON (Backup)",
-                    subtitle = "Full database backup. Best for restoring data.",
-                    leadingContent = {
-                        RadioButton(
-                            selected = exportFormat == ExportFormat.JSON,
-                            onClick = { exportFormat = ExportFormat.JSON }
-                        )
-                    },
-                    containerColor = if (exportFormat == ExportFormat.JSON) {
-                        MaterialTheme.colorScheme.secondaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    },
-                    onClick = { exportFormat = ExportFormat.JSON }
-                )
+                formats.forEachIndexed { index, format ->
+                    val isSelected = exportFormat == format
+                    val shape = when (index) {
+                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                        formats.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    }
 
-                SettingsItem(
-                    title = "Markdown",
-                    subtitle = "Plain text files. Ideal for offline reading and editing.",
-                    leadingContent = {
-                        RadioButton(
-                            selected = exportFormat == ExportFormat.MARKDOWN,
-                            onClick = { exportFormat = ExportFormat.MARKDOWN }
+                    ToggleButton(
+                        checked = isSelected,
+                        onCheckedChange = { if (it) exportFormat = format },
+                        shapes = shape,
+                        modifier = Modifier.weight(1f),
+                        colors = ToggleButtonDefaults.toggleButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                         )
-                    },
-                    containerColor = if (exportFormat == ExportFormat.MARKDOWN) {
-                        MaterialTheme.colorScheme.secondaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    },
-                    onClick = { exportFormat = ExportFormat.MARKDOWN }
-                )
+                    ) {
+                        Text(
+                            text = if (format == ExportFormat.JSON) "JSON (Backup)" else "Markdown",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
+            Text(
+                text = if (exportFormat == ExportFormat.JSON) {
+                    "Full database backup. Best for restoring data."
+                } else {
+                    "Plain text files. Ideal for offline reading and editing."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                minLines = 2
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Media Options",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -125,7 +144,7 @@ fun ExportBottomSheet(
             ) {
                 Text(
                     text = "Include Media",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
                 Switch(
@@ -133,13 +152,11 @@ fun ExportBottomSheet(
                     onCheckedChange = { includeMedia = it }
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = if (includeMedia) "Export size might be large. Photos & videos will be included." else "Photos & videos will not be saved. Faster and smaller.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
