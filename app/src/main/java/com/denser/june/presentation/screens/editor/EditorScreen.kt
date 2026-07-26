@@ -2,18 +2,54 @@ package com.denser.june.presentation.screens.editor
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.*
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -22,28 +58,27 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.denser.june.core.utils.toDateWithDay
-import com.denser.june.presentation.navigation.AppNavigator
-import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.components.JuneTopAppBar
-import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
-import com.denser.june.presentation.screens.editor.components.JournalItemsPreview
-import com.denser.june.presentation.screens.editor.components.MediaOperations
-import com.denser.june.presentation.screens.editor.components.JournalContentEditor
-import com.denser.june.presentation.screens.editor.components.EditorToolbar
-import com.denser.june.core.domain.preferences.JournalPreferences
-import org.koin.compose.koinInject
-import org.koin.compose.viewmodel.koinViewModel
-import com.denser.hyphen.state.rememberHyphenTextState
 import com.denser.hyphen.model.TriggerConfig
-
+import com.denser.hyphen.state.rememberHyphenTextState
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.TimeFormat
+import com.denser.june.core.domain.preferences.JournalPreferences
+import com.denser.june.core.utils.toDateWithDay
 import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
+import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.navigation.AppNavigator
+import com.denser.june.presentation.navigation.Route
+import com.denser.june.presentation.screens.editor.components.EditorToolbar
+import com.denser.june.presentation.screens.editor.components.JournalContentEditor
+import com.denser.june.presentation.screens.editor.components.JournalItemsPreview
+import com.denser.june.presentation.screens.editor.components.MediaOperations
+import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
 import com.denser.june.presentation.utils.UiUtils
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import java.time.LocalTime
 
 
@@ -99,7 +134,7 @@ fun EditorScreen() {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val contentFocusRequester = remember { FocusRequester() }
-    val interactionSource = remember { MutableInteractionSource() }
+
 
     var isEditorFocused by remember { mutableStateOf(false) }
     val showSaveButton = if (state.isDraft) state.hasContent else state.isDirty
@@ -246,9 +281,238 @@ fun EditorScreen() {
                 }
             )
         },
-        bottomBar = {
-            if (isEditorFocused) {
-                if (isMarkdownEnabled) {
+        bottomBar = {},
+        containerColor = MaterialTheme.colorScheme.surface
+    ) { innerPadding ->
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = innerPadding.calculateTopPadding())
+                .imePadding()
+        ) {
+            val availableHeight = maxHeight
+            var fixedContentHeight by remember { mutableStateOf(0.dp) }
+            var toolbarHeight by remember { mutableStateOf(0.dp) }
+            val density = LocalDensity.current
+
+            Column(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onSizeChanged { size ->
+                                fixedContentHeight = with(density) { size.height.toDp() }
+                            }
+                    ) {
+                        if (state.images.isNotEmpty() || state.songDetails != null || state.location != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            JournalItemsPreview(
+                                mediaPaths = state.images,
+                                mediaOperations = mediaOperations,
+                                songDetails = state.songDetails,
+                                location = state.location,
+                                onShowAllClick = {
+                                    navigator.navigateTo(
+                                        Route.JournalMedia(journalId = state.journalId ?: ""),
+                                        isSingleTop = true
+                                    )
+                                }
+                            )
+                        }
+
+                        TextField(
+                            value = state.title,
+                            onValueChange = { viewModel.onAction(EditorAction.ChangeTitle(it)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = {
+                                Text(
+                                    "Add title",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = if (isKeyboardCapitalizationEnabled) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
+                                autoCorrectEnabled = isKeyboardAutocorrectEnabled
+                            ),
+                            textStyle = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            colors = UiUtils.getTransparentTextFieldColors()
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 0.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                onClick = {
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus()
+                                    dialogState.datePickerInitialTab = 0
+                                    dialogState.showDatePicker = true
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                        alpha = 0.4f
+                                    ),
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                shape = ButtonGroupDefaults.connectedLeadingButtonShapes().shape,
+                                contentPadding = PaddingValues(0.dp),
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .width(38.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.today_24px),
+                                    contentDescription = "Date and Time Picker",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Button(
+                                onClick = {
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus()
+                                    dialogState.datePickerInitialTab = 0
+                                    dialogState.showDatePicker = true
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                        alpha = 0.4f
+                                    ),
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                shape = ButtonGroupDefaults.connectedMiddleButtonShapes().shape,
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text(
+                                    text = formattedDate,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    softWrap = false
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Button(
+                                onClick = {
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus()
+                                    dialogState.datePickerInitialTab = 1
+                                    dialogState.showDatePicker = true
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                        alpha = 0.4f
+                                    ),
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                shape = ButtonGroupDefaults.connectedTrailingButtonShapes().shape,
+                                contentPadding = PaddingValues(
+                                    horizontal = if (formattedTime != null) 12.dp else 0.dp,
+                                    vertical = 0.dp
+                                ),
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .then(if (formattedTime == null) Modifier.width(38.dp) else Modifier)
+                            ) {
+                                if (formattedTime == null) {
+                                    Icon(
+                                        painterResource(R.drawable.schedule_24px),
+                                        null,
+                                        Modifier.size(16.dp)
+                                    )
+                                } else {
+                                    Text(
+                                        text = formattedTime,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                        softWrap = false
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Button(
+                                onClick = {
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus()
+                                    dialogState.showTagsDialog = true
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (state.tags.isNotEmpty()) {
+                                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                                    },
+                                    contentColor = if (state.tags.isNotEmpty()) {
+                                        MaterialTheme.colorScheme.secondary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
+                                ),
+                                shape = RoundedCornerShape(50),
+                                contentPadding = PaddingValues(
+                                    horizontal = if (state.tags.isNotEmpty()) 12.dp else 0.dp,
+                                    vertical = 0.dp
+                                ),
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .then(if (state.tags.isEmpty()) Modifier.width(38.dp) else Modifier)
+                            ) {
+                                Icon(
+                                    painter = painterResource(
+                                        if (state.tags.isNotEmpty()) R.drawable.sell_24px_fill else R.drawable.sell_24px
+                                    ),
+                                    contentDescription = "Tags",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                if (state.tags.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = state.tags.size.toString(),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                        softWrap = false
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    JournalContentEditor(
+                        state = hyphenState,
+                        rawContent = state.content,
+                        onMarkdownChange = {
+                            viewModel.onAction(EditorAction.ChangeContent(it))
+                        },
+                        onFocusChanged = { isEditorFocused = it },
+                        focusRequester = contentFocusRequester,
+                        isMarkdownEnabled = isMarkdownEnabled,
+                        isKeyboardAutocorrectEnabled = isKeyboardAutocorrectEnabled,
+                        isKeyboardCapitalizationEnabled = isKeyboardCapitalizationEnabled,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(
+                                minHeight = (availableHeight - fixedContentHeight - toolbarHeight).coerceAtLeast(
+                                    84.dp
+                                )
+                            ).padding(bottom = 16.dp)
+                    )
+                }
+                if (isEditorFocused && isMarkdownEnabled) {
                     EditorToolbar(
                         state = hyphenState,
                         activeTrigger = activeTrigger,
@@ -256,221 +520,13 @@ fun EditorScreen() {
                         currentTags = state.tags,
                         onTagSelect = onTagSelect,
                         modifier = Modifier
-                            .imePadding()
-                    )
-                } else {
-                    Spacer(
-                        modifier = Modifier
+                            .fillMaxWidth()
                             .navigationBarsPadding()
-                            .imePadding()
-                    )
-                }
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.surface
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = { contentFocusRequester.requestFocus() }
-                )
-        ) {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(scrollState)
-            ) {
-                if (state.images.isNotEmpty() || state.songDetails != null || state.location != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    JournalItemsPreview(
-                        mediaPaths = state.images,
-                        mediaOperations = mediaOperations,
-                        songDetails = state.songDetails,
-                        location = state.location,
-                        onShowAllClick = {
-                            navigator.navigateTo(
-                                Route.JournalMedia(journalId = state.journalId ?: ""),
-                                isSingleTop = true
-                            )
-                        }
-                    )
-                }
-
-                TextField(
-                    value = state.title,
-                    onValueChange = { viewModel.onAction(EditorAction.ChangeTitle(it)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            "Add title",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = if (isKeyboardCapitalizationEnabled) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
-                        autoCorrectEnabled = isKeyboardAutocorrectEnabled
-                    ),
-                    textStyle = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    colors = UiUtils.getTransparentTextFieldColors()
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 0.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = {
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                            dialogState.datePickerInitialTab = 0
-                            dialogState.showDatePicker = true
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        shape = ButtonGroupDefaults.connectedLeadingButtonShapes().shape,
-                        contentPadding = PaddingValues(0.dp),
-                        modifier = Modifier
-                            .height(32.dp)
-                            .width(38.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.today_24px),
-                            contentDescription = "Date and Time Picker",
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Button(
-                        onClick = {
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                            dialogState.datePickerInitialTab = 0
-                            dialogState.showDatePicker = true
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        shape = ButtonGroupDefaults.connectedMiddleButtonShapes().shape,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                        modifier = Modifier.height(32.dp)
-                    ) {
-                        Text(
-                            text = formattedDate,
-                            style = MaterialTheme.typography.labelLarge,
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            softWrap = false
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Button(
-                        onClick = {
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                            dialogState.datePickerInitialTab = 1
-                            dialogState.showDatePicker = true
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        shape = ButtonGroupDefaults.connectedTrailingButtonShapes().shape,
-                        contentPadding = PaddingValues(horizontal = if (formattedTime != null) 12.dp else 0.dp, vertical = 0.dp),
-                        modifier = Modifier
-                            .height(32.dp)
-                            .then(if (formattedTime == null) Modifier.width(38.dp) else Modifier)
-                    ) {
-                        if (formattedTime == null) {
-                            Icon(
-                                painterResource(R.drawable.schedule_24px),
-                                null,
-                                Modifier.size(16.dp)
-                            )
-                        } else {
-                            Text(
-                                text = formattedTime,
-                                style = MaterialTheme.typography.labelLarge,
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                softWrap = false
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Button(
-                        onClick = {
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                            dialogState.showTagsDialog = true
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (state.tags.isNotEmpty()) {
-                                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-                            } else {
-                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                            },
-                            contentColor = if (state.tags.isNotEmpty()) {
-                                MaterialTheme.colorScheme.secondary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                            .onSizeChanged { size ->
+                                toolbarHeight = with(density) { size.height.toDp() }
                             }
-                        ),
-                        shape = RoundedCornerShape(50),
-                        contentPadding = PaddingValues(horizontal = if (state.tags.isNotEmpty()) 12.dp else 0.dp, vertical = 0.dp),
-                        modifier = Modifier
-                            .height(32.dp)
-                            .then(if (state.tags.isEmpty()) Modifier.width(38.dp) else Modifier)
-                    ) {
-                        Icon(
-                            painter = painterResource(
-                                if (state.tags.isNotEmpty()) R.drawable.sell_24px_fill else R.drawable.sell_24px
-                            ),
-                            contentDescription = "Tags",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        if (state.tags.isNotEmpty()) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = state.tags.size.toString(),
-                                style = MaterialTheme.typography.labelLarge,
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                softWrap = false
-                            )
-                        }
-                    }
+                    )
                 }
-
-
-
-                JournalContentEditor(
-                    state = hyphenState,
-                    rawContent = state.content,
-                    onMarkdownChange = {
-                        viewModel.onAction(EditorAction.ChangeContent(it))
-                    },
-                    onFocusChanged = { isEditorFocused = it },
-                    focusRequester = contentFocusRequester,
-                    isMarkdownEnabled = isMarkdownEnabled,
-                    isKeyboardAutocorrectEnabled = isKeyboardAutocorrectEnabled,
-                    isKeyboardCapitalizationEnabled = isKeyboardCapitalizationEnabled,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 84.dp)
-                )
-                Spacer(Modifier.height(24.dp + innerPadding.calculateBottomPadding()))
             }
         }
     }
