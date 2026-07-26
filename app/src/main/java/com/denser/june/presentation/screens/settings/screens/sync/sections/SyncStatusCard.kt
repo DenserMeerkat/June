@@ -32,7 +32,7 @@ fun SyncStatusCard(
     val clipboardManager = LocalClipboardManager.current
 
     AnimatedVisibility(
-        visible = isVisible && (lastSyncTime > 0 || status !is SyncStatus.Idle),
+        visible = isVisible,
         enter = fadeIn() + expandVertically(),
         exit = fadeOut() + shrinkVertically(),
         modifier = modifier
@@ -67,6 +67,18 @@ fun SyncStatusCard(
                         )
                         Text(
                             text = lastSyncTime.toFullDateTime(is24Hour = is24Hour),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    } else if (status is SyncStatus.Idle) {
+                        Text(
+                            text = "Cloud Sync",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Never synced",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -156,13 +168,25 @@ fun SyncStatusCard(
                         }
 
                         is SyncStatus.Error -> {
+                            val userFriendlyMsg = when {
+                                status.message.contains("401", ignoreCase = true) || status.message.contains("403", ignoreCase = true) ->
+                                    "Authentication failed — check server credentials"
+                                status.message.contains("newer version", ignoreCase = true) ->
+                                    "Cloud data was synced by a newer app version"
+                                status.message.contains("disabled", ignoreCase = true) ->
+                                    "Cloud sync is currently disabled"
+                                status.message.contains("Connection", ignoreCase = true) || status.message.contains("Host", ignoreCase = true) ->
+                                    "Unable to connect to cloud server"
+                                else -> status.message
+                            }
+
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        "Error: ${status.message}",
+                                        "Error: $userFriendlyMsg",
                                         color = MaterialTheme.colorScheme.error,
                                         style = MaterialTheme.typography.bodySmall,
                                         maxLines = 2,

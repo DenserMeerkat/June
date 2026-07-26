@@ -40,6 +40,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
+import com.denser.june.presentation.components.JuneConfirmationDialog
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -333,7 +334,7 @@ fun SyncScreen() {
                     rotationAngle = rotationAngle,
                     onToggleAdvanced = { syncVM.toggleAdvancedOptions() },
                     onAnalyze = { syncVM.analyzeSync() },
-                    onRepair = { syncVM.revalidate() },
+                    onRepair = { syncVM.requestRepairSync() },
                     onViewDetails = { syncVM.setShowAnalysisDetails(true) }
                 )
             }
@@ -343,6 +344,31 @@ fun SyncScreen() {
             SyncDetailsDialog(
                 analysis = state.analysis!!,
                 onDismiss = { syncVM.setShowAnalysisDetails(false) }
+            )
+        }
+
+        if (state.showProviderSwitchDialog) {
+            val targetName = if (state.pendingProvider == "GoogleDrive") "Google Drive" else state.pendingProvider ?: "Cloud Target"
+            JuneConfirmationDialog(
+                onDismiss = { syncVM.dismissProviderSwitchDialog() },
+                onConfirm = { syncVM.confirmProviderSwitch() },
+                title = "Switch Provider?",
+                description = "Switching your active cloud target to $targetName will re-check your local library against the new provider state.",
+                confirmButtonText = "Switch Provider",
+                isDestructive = false,
+                icon = R.drawable.cloud_sync_24px
+            )
+        }
+
+        if (state.showRepairConfirmationDialog) {
+            JuneConfirmationDialog(
+                onDismiss = { syncVM.dismissRepairConfirmationDialog() },
+                onConfirm = { syncVM.confirmRepairSync(context) },
+                title = "Repair Sync & Revalidate?",
+                description = "This will audit local database records, repair image paths, clean orphaned media files, and perform a full cloud revalidation pass. This may take longer than a standard sync.",
+                confirmButtonText = "Repair Sync",
+                isDestructive = false,
+                icon = R.drawable.reset_wrench_24px
             )
         }
     }

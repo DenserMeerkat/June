@@ -23,10 +23,15 @@ Any developer or AI agent modifying database schemas, sync manifests, or export/
 ---
 
 ## 3. Sync Manifest & Cloud File Layout Changes
-* **File**: [CloudProvider.kt](core/src/main/java/com/denser/june/core/domain/sync/CloudProvider.kt) -> `SyncManifest` -> `schemaVersion`
-* **Action**: If you modify how journals or media are structured remotely in the cloud (WebDAV/Google Drive):
-  1. Increment `schemaVersion` in `SyncManifest`.
-  2. Ensure the providers retain fallback reading/resolving logic for older `schemaVersion` configurations to avoid breaking existing users' remote states.
+* **File**: [CloudProvider.kt](core/src/main/java/com/denser/june/core/domain/sync/CloudProvider.kt) -> `SyncManifest.CURRENT_SCHEMA_VERSION`
+* **Action**: If you modify how journals, media, or sync metadata are structured remotely in the cloud (WebDAV/Google Drive):
+  1. Increment `SyncManifest.CURRENT_SCHEMA_VERSION` in `SyncManifest.companion object`.
+  2. Update references in `SyncManager.kt` and `ExportImpl.kt` (which consume `SyncManifest.CURRENT_SCHEMA_VERSION`).
+  3. Ensure providers and `SyncManager` retain backward-compatible fallback reading logic for older `schemaVersion` configurations to avoid breaking existing users' remote states.
+* **Manifest Schema Version History**:
+  - `schemaVersion = 1`: Initial release (basic file listing).
+  - `schemaVersion = 2`: Added `deletedIds` array for cloud deletion tracking.
+  - `schemaVersion = 3` (Current): Added `journalMetadata` (`rev` counter + SHA-256 `contentHash`) and `mediaMetadata` (`size` + SHA-256 file `hash`).
 
 ---
 

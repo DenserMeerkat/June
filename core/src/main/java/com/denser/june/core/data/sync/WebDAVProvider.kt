@@ -266,13 +266,13 @@ class WebDAVProvider(
             return@withContext Result.failure<String>(Exception("Missing WebDAV credentials"))
         }
         
-        AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Uploading media ${file.name} for journal $journalId...")
-        val folderUrl = "${authInfo.baseUrl.trimEnd('/')}/June/media/$journalId/"
+        AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Uploading media ${file.name} to flat pool...")
+        val folderUrl = "${authInfo.baseUrl.trimEnd('/')}/June/media/"
         if (!checkRemoteResourceExists(folderUrl, authInfo.auth)) {
             val createRes = createRemoteFolder(folderUrl, authInfo.auth)
             if (createRes.isFailure) {
-                AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Failed to create namespaced subfolder for journal $journalId")
-                return@withContext Result.failure<String>(createRes.exceptionOrNull() ?: Exception("Failed to create namespaced subfolder"))
+                AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Failed to create media pool folder")
+                return@withContext Result.failure<String>(createRes.exceptionOrNull() ?: Exception("Failed to create media pool folder"))
             }
         }
 
@@ -287,17 +287,6 @@ class WebDAVProvider(
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
                     AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Successfully uploaded media ${file.name}. Status: ${response.code}")
-                    val legacyUrl = "${authInfo.baseUrl.trimEnd('/')}/June/media/${file.name}"
-                    val deleteRequest = Request.Builder()
-                        .url(legacyUrl)
-                        .delete()
-                        .webDavHeaders(authInfo.auth, depth = null)
-                        .build()
-                    try {
-                        client.newCall(deleteRequest).execute().close()
-                    } catch (e: Exception) {
-                        // ignore delete failures
-                    }
                     Result.success(file.name)
                 } else {
                     AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Failed to upload media ${file.name}. Status: ${response.code}")
@@ -313,31 +302,29 @@ class WebDAVProvider(
     override suspend fun downloadMedia(journalId: String, cloudId: String, targetFile: File): Result<File> = withContext(Dispatchers.IO) {
         val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
-        AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Downloading media file: $cloudId for journal: $journalId")
-        val namespacedUrl = "${authInfo.baseUrl.trimEnd('/')}/June/media/$journalId/$cloudId"
+        AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Downloading media file: $cloudId...")
+        val flatPoolUrl = "${authInfo.baseUrl.trimEnd('/')}/June/media/$cloudId"
         var request = Request.Builder()
-            .url(namespacedUrl)
+            .url(flatPoolUrl)
             .webDavHeaders(authInfo.auth, depth = null)
             .get()
             .build()
 
         var isSuccess = false
-        var isLegacy = false
 
         try {
             val response = client.newCall(request).execute()
             var activeResponse = response
-            if (!activeResponse.isSuccessful) {
-                AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Namespaced media not found. Checking legacy location for $cloudId...")
+            if (!activeResponse.isSuccessful && journalId.isNotBlank()) {
+                AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Flat pool media not found. Checking namespaced location for $cloudId...")
                 activeResponse.close()
-                val legacyUrl = "${authInfo.baseUrl.trimEnd('/')}/June/media/$cloudId"
+                val namespacedUrl = "${authInfo.baseUrl.trimEnd('/')}/June/media/$journalId/$cloudId"
                 request = Request.Builder()
-                    .url(legacyUrl)
+                    .url(namespacedUrl)
                     .webDavHeaders(authInfo.auth, depth = null)
                     .get()
                     .build()
                 activeResponse = client.newCall(request).execute()
-                isLegacy = true
             }
 
             activeResponse.use { res ->
@@ -346,34 +333,6 @@ class WebDAVProvider(
                         targetFile.parentFile?.mkdirs()
                         targetFile.sink().buffer().use { it.writeAll(source) }
                         isSuccess = true
-                    }
-                }
-            }
-
-            if (isSuccess && isLegacy) {
-                AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Migrating legacy media $cloudId to namespaced path...")
-                val folderUrl = "${authInfo.baseUrl.trimEnd('/')}/June/media/$journalId/"
-                if (!checkRemoteResourceExists(folderUrl, authInfo.auth)) {
-                    createRemoteFolder(folderUrl, authInfo.auth)
-                }
-
-                val putRequest = Request.Builder()
-                    .url(namespacedUrl)
-                    .put(targetFile.asRequestBody("application/octet-stream".toMediaType()))
-                    .webDavHeaders(authInfo.auth, depth = null)
-                    .build()
-                client.newCall(putRequest).execute().use { putRes ->
-                    if (putRes.isSuccessful) {
-                        val deleteRequest = Request.Builder()
-                            .url("${authInfo.baseUrl.trimEnd('/')}/June/media/$cloudId")
-                            .delete()
-                            .webDavHeaders(authInfo.auth, depth = null)
-                            .build()
-                        try {
-                            client.newCall(deleteRequest).execute().close()
-                        } catch (e: Exception) {
-                            // ignore delete failures
-                        }
                     }
                 }
             }
@@ -548,80 +507,26 @@ class WebDAVProvider(
                 if (response.isSuccessful) {
                     val body = response.body?.string() ?: ""
                     val parsed = parseWebDavPropfind(body)
-                    
-                    val subdirs = parsed.mapNotNull { (href, _) ->
+                    val files = parsed.mapNotNull { (href, _) ->
                         val decodedHref = try {
                             java.net.URLDecoder.decode(href, "UTF-8")
                         } catch (e: Exception) {
                             href
                         }
-                        val cleanHref = decodedHref.trimEnd('/')
-                        val parentFolder = File(cleanHref).parentFile?.name ?: ""
-                        if (parentFolder.equals("media", ignoreCase = true)) {
-                            cleanHref + "/"
-                        } else {
-                            null
-                        }
+                        val name = File(decodedHref.trimEnd('/')).name
+                        if (name.isNotBlank() && !name.equals("media", ignoreCase = true) && name.contains(".")) {
+                            name
+                        } else null
                     }.distinct()
-
-                    val allMediaFiles = mutableListOf<String>()
-                    
-                    subdirs.forEach { subdirUrl ->
-                        val resolvedUrl = try {
-                            val baseHttpUrl = authInfo.baseUrl.toHttpUrlOrNull()
-                            baseHttpUrl?.resolve(subdirUrl)?.toString() ?: subdirUrl
-                        } catch (e: Exception) {
-                            subdirUrl
-                        }
-
-
-
-                        val subReq = Request.Builder()
-                            .url(resolvedUrl)
-                            .method("PROPFIND", XML_PROPFIND_BODY.trimIndent().toRequestBody("application/xml; charset=utf-8".toMediaType()))
-                            .webDavHeaders(authInfo.auth, depth = "1")
-                            .header("Accept", "application/xml")
-                            .build()
-                        try {
-                            client.newCall(subReq).execute().use { subRes ->
-                                if (subRes.isSuccessful) {
-                                    val subBody = subRes.body?.string() ?: ""
-                                    val subParsed = parseWebDavPropfind(subBody)
-                                    subParsed.forEach { (subHref, _) ->
-                                        val subDecoded = try {
-                                            java.net.URLDecoder.decode(subHref, "UTF-8")
-                                        } catch (e: Exception) {
-                                            subHref
-                                        }
-                                        val filename = File(subDecoded).name
-                                        if (filename.isNotBlank() && !filename.equals("media", ignoreCase = true) && !filename.equals(File(subdirUrl).name, ignoreCase = true)) {
-                                            allMediaFiles.add(filename)
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (e: Exception) {
-                        }
-                    }
-
-                    parsed.forEach { (href, _) ->
-                        val decodedHref = try {
-                            java.net.URLDecoder.decode(href, "UTF-8")
-                        } catch (e: Exception) {
-                            href
-                        }
-                        val filename = File(decodedHref).name
-                        if (filename.isNotBlank() && filename.contains(".") && !filename.equals("media", ignoreCase = true)) {
-                            allMediaFiles.add(filename)
-                        }
-                    }
-
-                    Result.success(allMediaFiles.distinct())
+                    AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Listed ${files.size} media files from flat pool /June/media/: $files (Raw PROPFIND responses: ${parsed.size})")
+                    Result.success(files)
                 } else {
+                    AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Failed to list media files. HTTP status: ${response.code}")
                     Result.failure(Exception("List media failed: ${response.code}"))
                 }
             }
         } catch (e: Exception) {
+            AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Exception listing media files", e)
             Result.failure(e)
         }
     }

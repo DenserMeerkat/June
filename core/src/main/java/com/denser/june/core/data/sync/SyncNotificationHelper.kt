@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.denser.june.core.R
 import com.denser.june.core.domain.sync.SyncStatus
 
 class SyncNotificationHelper(private val context: Context) {
@@ -49,8 +50,8 @@ class SyncNotificationHelper(private val context: Context) {
         when (status) {
             is SyncStatus.Preparing -> {
                 val notification = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
-                    .setSmallIcon(com.denser.june.core.R.drawable.sync_24px)
-                    .setContentTitle("Syncing journals")
+                    .setSmallIcon(com.denser.june.core.R.drawable.ic_stat_notification)
+                    .setContentTitle("Journal Cloud Sync")
                     .setContentText("Preparing...")
                     .setProgress(100, 0, true)
                     .setOngoing(true)
@@ -63,8 +64,8 @@ class SyncNotificationHelper(private val context: Context) {
             is SyncStatus.Syncing -> {
                 val progressPercent = (status.progress * 100).toInt()
                 val notification = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
-                    .setSmallIcon(com.denser.june.core.R.drawable.sync_24px)
-                    .setContentTitle("Syncing journals")
+                    .setSmallIcon(R.drawable.ic_stat_notification)
+                    .setContentTitle("Cloud Sync")
                     .setContentText(status.currentOperation)
                     .setProgress(100, progressPercent, false)
                     .setOngoing(true)
@@ -87,7 +88,7 @@ class SyncNotificationHelper(private val context: Context) {
     fun showFailureNotification(errorMessage: String) {
         val pendingIntent = getPendingIntent()
         val notification = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
-            .setSmallIcon(com.denser.june.core.R.drawable.sync_problem_24px)
+            .setSmallIcon(R.drawable.ic_stat_notification)
             .setContentTitle("Sync failed")
             .setContentText(errorMessage)
             .setAutoCancel(true)
@@ -96,6 +97,29 @@ class SyncNotificationHelper(private val context: Context) {
             }
             .build()
         notificationManager.notify(SYNC_FAILURE_NOTIFICATION_ID, notification)
+    }
+
+    fun getForegroundInfo(): androidx.work.ForegroundInfo {
+        val pendingIntent = getPendingIntent()
+        val notification = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setContentTitle("Cloud Sync")
+            .setContentText("Updating entries and media...")
+            .setProgress(100, 0, true)
+            .setOngoing(true)
+            .apply {
+                if (pendingIntent != null) setContentIntent(pendingIntent)
+            }
+            .build()
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            androidx.work.ForegroundInfo(
+                SYNC_NOTIFICATION_ID,
+                notification,
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
+        } else {
+            androidx.work.ForegroundInfo(SYNC_NOTIFICATION_ID, notification)
+        }
     }
 
     companion object {

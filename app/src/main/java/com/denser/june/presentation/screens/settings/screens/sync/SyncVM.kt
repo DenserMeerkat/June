@@ -39,7 +39,10 @@ data class SyncSettingsState(
     val timeFormat: TimeFormat = TimeFormat.TWELVE_HOUR,
     val selectedProvider: String = "WebDAV",
     val availableProviders: List<String> = emptyList(),
-    val isGoogleDriveConnected: Boolean = false
+    val isGoogleDriveConnected: Boolean = false,
+    val showProviderSwitchDialog: Boolean = false,
+    val pendingProvider: String? = null,
+    val showRepairConfirmationDialog: Boolean = false
 )
 
 class SyncVM(
@@ -126,12 +129,9 @@ class SyncVM(
                 _state.update { it.copy(status = status) }
                 when (status) {
                     is SyncStatus.Success -> {
-                        if (_state.value.isEnabled) {
+                        if (_state.value.isEnabled && _state.value.showAdvancedOptions) {
                             analyzeSync()
                         }
-                    }
-                    is SyncStatus.Preparing, is SyncStatus.Syncing -> {
-                        _state.update { it.copy(analysis = null) }
                     }
                     else -> {}
                 }
@@ -146,10 +146,19 @@ class SyncVM(
     }
 
     fun selectProvider(provider: String) {
+        if (provider == _state.value.selectedProvider) return
+        _state.update { it.copy(showProviderSwitchDialog = true, pendingProvider = provider) }
+    }
+
+    fun dismissProviderSwitchDialog() {
+        _state.update { it.copy(showProviderSwitchDialog = false, pendingProvider = null) }
+    }
+
+    fun confirmProviderSwitch() {
+        val provider = _state.value.pendingProvider ?: return
         viewModelScope.launch {
+            _state.update { it.copy(showProviderSwitchDialog = false, pendingProvider = null) }
             syncPrefs.setSelectedProvider(provider)
-            journalRepo.resetAllSyncStatuses()
-            syncPrefs.setLastSyncTime(0L)
 
             _state.update {
                 it.copy(
@@ -207,9 +216,18 @@ class SyncVM(
         syncManager.launchSync()
     }
 
-    fun revalidate() {
+    fun requestRepairSync() {
         if (!validateInputs()) return
-        syncManager.launchSync(isFullRevalidation = true)
+        _state.update { it.copy(showRepairConfirmationDialog = true) }
+    }
+
+    fun dismissRepairConfirmationDialog() {
+        _state.update { it.copy(showRepairConfirmationDialog = false) }
+    }
+
+    fun confirmRepairSync(context: android.content.Context) {
+        _state.update { it.copy(showRepairConfirmationDialog = false) }
+        syncManager.repairSync(context)
     }
 
     fun analyzeSync() {

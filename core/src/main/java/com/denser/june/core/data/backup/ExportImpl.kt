@@ -1,11 +1,12 @@
 package com.denser.june.core.data.backup
 
 import android.content.Context
+import com.denser.june.core.data.database.journal.JournalDatabase
 import com.denser.june.core.domain.logging.AppLogger
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.backup.ExportRepo
-import com.denser.june.core.domain.backup.ExportSchema
+import com.denser.june.core.domain.sync.JournalSyncMeta
 import com.denser.june.core.domain.sync.SyncManifest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -41,14 +42,19 @@ class ExportImpl(
                 journal.copy(images = cleanedImages)
             }
 
+            val journalMeta = cleanedJournals.associate { j ->
+                j.id to JournalSyncMeta(rev = 1, contentHash = j.computeContentHash())
+            }
+
             val totalMedia = cleanedJournals.flatMap { it.images }.map { File(it).name }.distinct().size
             val manifest = SyncManifest(
                 lastSyncTime = System.currentTimeMillis(),
                 lastSyncDeviceId = "backup_export",
-                databaseVersion = 4,
-                schemaVersion = 2,
+                databaseVersion = JournalDatabase.VERSION,
+                schemaVersion = SyncManifest.CURRENT_SCHEMA_VERSION,
                 totalJournals = cleanedJournals.size,
-                totalMedia = totalMedia
+                totalMedia = totalMedia,
+                journalMetadata = journalMeta
             )
 
             val manifestJson = Json.Default.encodeToString(SyncManifest.serializer(), manifest)

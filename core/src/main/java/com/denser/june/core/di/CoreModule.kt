@@ -95,6 +95,10 @@ val coreModule = module {
 
     single(named("ApplicationScope")) { CoroutineScope(SupervisorJob() + Dispatchers.Main) }
 
+    single<com.denser.june.core.domain.sync.SyncScheduler> {
+        com.denser.june.core.data.sync.WorkManagerSyncScheduler(get())
+    }
+
     single {
         val context = get<Context>()
         val providers = mutableMapOf<String, CloudProvider>()
@@ -109,7 +113,7 @@ val coreModule = module {
             get(),
             providers,
             File(context.filesDir, "journal_media"),
-            context,
+            get(),
             get(named("ApplicationScope"))
         )
     }

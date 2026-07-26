@@ -200,7 +200,7 @@ interface JournalDao {
     @Query("DELETE FROM journals WHERE deletedAt IS NOT NULL")
     suspend fun emptyBin()
 
-    @Query("SELECT * FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL)")
+    @Query("SELECT * FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL) AND deletedAt IS NULL")
     suspend fun getJournalsToSync(threshold: Long): List<JournalEntity>
 
     @Query("UPDATE journals SET cloudId = :cloudId, syncedAt = :syncedAt WHERE id = :id")

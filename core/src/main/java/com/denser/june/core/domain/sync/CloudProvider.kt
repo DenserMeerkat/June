@@ -26,6 +26,18 @@ data class RemoteFileMeta(
     val lastModified: Long
 )
 
+@Serializable
+data class JournalSyncMeta(
+    val rev: Int = 1,
+    val contentHash: String = ""
+)
+
+@Serializable
+data class MediaSyncMeta(
+    val size: Long = 0L,
+    val hash: String = ""
+)
+
 interface CloudProvider {
     val name: String
 
@@ -101,8 +113,14 @@ data class SyncManifest(
     val lastSyncTime: Long,
     val lastSyncDeviceId: String,
     val databaseVersion: Int,
-    val schemaVersion: Int,
+    val schemaVersion: Int = CURRENT_SCHEMA_VERSION,
     val totalJournals: Int,
     val totalMedia: Int = 0,
-    val deletedIds: List<String> = emptyList()
-)
+    val deletedIds: List<String> = emptyList(),
+    val journalMetadata: Map<String, JournalSyncMeta> = emptyMap(),
+    val mediaMetadata: Map<String, MediaSyncMeta> = emptyMap()
+) {
+    companion object {
+        const val CURRENT_SCHEMA_VERSION = 3
+    }
+}

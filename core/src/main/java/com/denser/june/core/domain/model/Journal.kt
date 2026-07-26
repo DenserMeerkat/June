@@ -41,6 +41,26 @@ data class Journal(
                this.isDraft == other.isDraft &&
                this.deletedAt == other.deletedAt
     }
+
+    fun computeContentHash(): String {
+        val normalized = this.copy(
+            images = images.map { File(it).name }.sorted(),
+            tags = tags.sorted(),
+            createdAt = 0L,
+            updatedAt = null,
+            syncedAt = null,
+            cloudId = null
+        )
+        val jsonString = canonicalJsonFormatter.encodeToString(serializer(), normalized)
+        val bytes = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(jsonString.toByteArray(Charsets.UTF_8))
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
+}
+
+private val canonicalJsonFormatter = kotlinx.serialization.json.Json {
+    encodeDefaults = true
+    explicitNulls = true
 }
 
 @Serializable

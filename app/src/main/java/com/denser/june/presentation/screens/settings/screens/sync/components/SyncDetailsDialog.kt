@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,7 @@ fun SyncDetailsDialog(
 
     JuneFullScreenDialog(
         onDismissRequest = onDismiss,
+        windowBackgroundColor = Color.Transparent
     ) {
         Surface(
             modifier = Modifier
@@ -238,15 +240,16 @@ private fun EmptyState(message: String) {
 }
 
 private fun formatIdentifier(name: String): String {
-    if (name.length <= 48) return name
+    val isFilename = name.endsWith(".json", ignoreCase = true) || name.contains(".")
+    if (!isFilename || name.length <= 40) return name
 
-    val extension = if (name.contains(".")) name.substringAfterLast(".", "") else ""
-    val baseName = if (name.contains(".")) name.substringBeforeLast(".") else name
+    val extension = name.substringAfterLast(".", "")
+    val baseName = name.substringBeforeLast(".")
 
     if (baseName.length <= 22) return name
 
-    val prefix = baseName.take(10)
-    val suffix = baseName.takeLast(10)
+    val prefix = baseName.take(12)
+    val suffix = baseName.takeLast(8)
 
     return if (extension.isNotEmpty()) "$prefix...$suffix.$extension" else "$prefix...$suffix"
 }

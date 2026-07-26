@@ -30,6 +30,13 @@ class SyncWorker(
             try {
                 val isFullRevalidation = inputData.getBoolean("is_full_revalidation", false)
                 AppLogger.d(AppLogger.Category.SYNC, "SyncWorker", "Starting SyncWorker doWork(). Full revalidation: $isFullRevalidation")
+                
+                try {
+                    setForeground(notificationHelper.getForegroundInfo())
+                } catch (e: Exception) {
+                    AppLogger.w(AppLogger.Category.SYNC, "SyncWorker", "Could not set foreground info for worker: ${e.message}")
+                }
+
                 val result = syncManager.sync(isFullRevalidation)
                 statusCollector.cancel()
                 notificationHelper.cancelProgressNotification()
