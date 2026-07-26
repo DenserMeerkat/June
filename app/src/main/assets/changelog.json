@@ -1,5 +1,15 @@
 [
     {
+        "version": "v1.0.0-beta04",
+        "changes": [
+          "Added option to export journals as Markdown files.",
+          "Overhauled sync engine with improved conflict resolution and progress notifications.",
+          "Editor enhancements including list item indentation, smoother text selection, and keyboard padding fixes.",
+          "Added monochrome app icon support, fixed notification icon, and fixed recents menu styling with screen privacy enabled.",
+          "Added Developer Options in Settings with log toggles and live log console viewer."
+        ]
+    },
+    {
         "version": "v1.0.0-beta03",
         "changes": [
           "Added security question and answer recovery option for App Lock.",
