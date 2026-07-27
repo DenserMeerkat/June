@@ -5,7 +5,6 @@ import java.io.FileInputStream
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
@@ -44,6 +43,8 @@ val playStoreFile = System.getenv("PLAY_RELEASE_STORE_FILE") ?: keystoreProperti
 val playStorePassword = System.getenv("PLAY_RELEASE_STORE_PASSWORD") ?: keystoreProperties["playStorePassword"] as String?
 val playKeyAlias = System.getenv("PLAY_RELEASE_KEY_ALIAS") ?: keystoreProperties["playKeyAlias"] as String?
 val playKeyPassword = System.getenv("PLAY_RELEASE_KEY_PASSWORD") ?: keystoreProperties["playKeyPassword"] as String?
+
+val isBuildingBundle = project.gradle.startParameter.taskNames.any { it.contains("Bundle", ignoreCase = true) }
 
 android {
     namespace = appNamespace
@@ -93,23 +94,6 @@ android {
         }
     }
 
-    val isBuildingBundle = project.gradle.startParameter.taskNames.any { it.contains("Bundle", ignoreCase = true) }
-
-    if (!isBuildingBundle) {
-        applicationVariants.all {
-            val variant = this
-            variant.outputs.configureEach {
-                val output = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
-                val abi = output.getFilter(com.android.build.OutputFile.ABI)
-                if (abi != null) {
-                    output.outputFileName = "$apkNamePrefix-${variant.versionName}-${abi}.apk"
-                } else {
-                    output.outputFileName = "$apkNamePrefix-${variant.versionName}-universal.apk"
-                }
-            }
-        }
-    }
-
     splits {
         abi {
             if (project.hasProperty("fdroid") || isBuildingBundle) {
@@ -120,12 +104,6 @@ android {
                 include("armeabi-v7a", "arm64-v8a")
                 isUniversalApk = true
             }
-        }
-    }
-
-    kotlin {
-        compilerOptions {
-            jvmToolchain(17)
         }
     }
 
@@ -156,12 +134,34 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        resValues = true
     }
 
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        if (!isBuildingBundle) {
+            variant.outputs.forEach { output ->
+                val abiFilter = output.filters.find { it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI }?.identifier
+                if (abiFilter != null) {
+                    output.outputFileName.set("$apkNamePrefix-$appVersionName-$abiFilter.apk")
+                } else {
+                    output.outputFileName.set("$apkNamePrefix-$appVersionName-universal.apk")
+                }
+            }
+        }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmToolchain(17)
     }
 }
 

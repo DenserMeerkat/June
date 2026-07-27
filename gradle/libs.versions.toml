@@ -1,6 +1,6 @@
 [versions]
 # Plugins
-agp = "8.13.1"
+agp = "9.3.1"
 kotlin = "2.2.21"
 ksp = "2.2.20-2.0.3"
 

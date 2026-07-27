@@ -618,8 +618,8 @@ class StreamingRequestBody(
 }
 
 class OkHttp3Response(private val response: Response) : LowLevelHttpResponse() {
-    override fun getContent(): InputStream {
-        return response.body.byteStream()
+    override fun getContent(): InputStream? {
+        return response.body?.byteStream()
     }
 
     override fun getContentEncoding(): String? {
@@ -627,7 +627,7 @@ class OkHttp3Response(private val response: Response) : LowLevelHttpResponse() {
     }
 
     override fun getContentLength(): Long {
-        return response.body.contentLength()
+        return response.body?.contentLength() ?: -1L
     }
 
     override fun getContentType(): String? {
