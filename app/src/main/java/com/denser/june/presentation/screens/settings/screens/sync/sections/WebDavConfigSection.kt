@@ -37,7 +37,8 @@ fun WebDavConfigSection(
     onPassChange: (String) -> Unit,
     onToggleLock: () -> Unit,
     onTestConnection: () -> Unit,
-    onManualSync: () -> Unit
+    onManualSync: () -> Unit,
+    onStopSync: (() -> Unit)? = null
 ) {
     var passVisible by remember { mutableStateOf(false) }
     val isSyncing = status is SyncStatus.Syncing || status is SyncStatus.Preparing
@@ -165,19 +166,34 @@ fun WebDavConfigSection(
             }
 
             Button(
-                onClick = onManualSync,
+                onClick = {
+                    if (isSyncing) {
+                        onStopSync?.invoke()
+                    } else {
+                        onManualSync()
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isAnyBusy,
+                enabled = if (isSyncing) true else !isTestingConnection,
                 shape = RoundedCornerShape(14.dp),
-                contentPadding = PaddingValues(vertical = 14.dp)
+                contentPadding = PaddingValues(vertical = 14.dp),
+                colors = if (isSyncing) {
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                } else {
+                    ButtonDefaults.buttonColors()
+                }
             ) {
                 if (isSyncing) {
-                    CircularWavyProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                    Icon(
+                        painterResource(R.drawable.close_24px),
+                        contentDescription = "Stop Sync",
+                        modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Syncing...")
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text("Stop Sync", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 } else {
                     Icon(
                         painterResource(R.drawable.sync_24px),

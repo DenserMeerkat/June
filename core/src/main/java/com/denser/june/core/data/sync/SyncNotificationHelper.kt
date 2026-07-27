@@ -45,16 +45,34 @@ class SyncNotificationHelper(private val context: Context) {
         )
     }
 
+    private fun getStopPendingIntent(): PendingIntent {
+        val intent = Intent("com.denser.june.ACTION_STOP_SYNC").apply {
+            setPackage(context.packageName)
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            1,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
     fun updateProgress(status: SyncStatus) {
         val pendingIntent = getPendingIntent()
+        val stopPendingIntent = getStopPendingIntent()
         when (status) {
             is SyncStatus.Preparing -> {
                 val notification = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
-                    .setSmallIcon(com.denser.june.core.R.drawable.ic_stat_notification)
-                    .setContentTitle("Journal Cloud Sync")
+                    .setSmallIcon(R.drawable.ic_stat_notification)
+                    .setContentTitle("Cloud Sync")
                     .setContentText("Preparing...")
                     .setProgress(100, 0, true)
                     .setOngoing(true)
+                    .addAction(
+                        R.drawable.close_24px,
+                        "Stop",
+                        stopPendingIntent
+                    )
                     .apply {
                         if (pendingIntent != null) setContentIntent(pendingIntent)
                     }
@@ -69,6 +87,11 @@ class SyncNotificationHelper(private val context: Context) {
                     .setContentText(status.currentOperation)
                     .setProgress(100, progressPercent, false)
                     .setOngoing(true)
+                    .addAction(
+                        R.drawable.close_24px,
+                        "Stop",
+                        stopPendingIntent
+                    )
                     .apply {
                         if (pendingIntent != null) setContentIntent(pendingIntent)
                     }
@@ -97,29 +120,6 @@ class SyncNotificationHelper(private val context: Context) {
             }
             .build()
         notificationManager.notify(SYNC_FAILURE_NOTIFICATION_ID, notification)
-    }
-
-    fun getForegroundInfo(): androidx.work.ForegroundInfo {
-        val pendingIntent = getPendingIntent()
-        val notification = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_stat_notification)
-            .setContentTitle("Cloud Sync")
-            .setContentText("Updating entries and media...")
-            .setProgress(100, 0, true)
-            .setOngoing(true)
-            .apply {
-                if (pendingIntent != null) setContentIntent(pendingIntent)
-            }
-            .build()
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            androidx.work.ForegroundInfo(
-                SYNC_NOTIFICATION_ID,
-                notification,
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-            )
-        } else {
-            androidx.work.ForegroundInfo(SYNC_NOTIFICATION_ID, notification)
-        }
     }
 
     companion object {

@@ -216,6 +216,10 @@ class SyncVM(
         syncManager.launchSync()
     }
 
+    fun stopSync() {
+        syncManager.cancelSync()
+    }
+
     fun requestRepairSync() {
         if (!validateInputs()) return
         _state.update { it.copy(showRepairConfirmationDialog = true) }

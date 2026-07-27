@@ -234,10 +234,10 @@ interface JournalDao {
     """)
     suspend fun bumpJournalTimestampsByTag(tagName: String, timestamp: Long)
 
-    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL))")
+    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL) AND deletedAt IS NULL)")
     suspend fun hasUnsyncedJournals(threshold: Long): Boolean
 
-    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL))")
+    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL) AND deletedAt IS NULL)")
     fun observeHasUnsyncedJournals(threshold: Long): Flow<Boolean>
 
     @Query("SELECT EXISTS(SELECT 1 FROM deleted_journal_tombstones)")

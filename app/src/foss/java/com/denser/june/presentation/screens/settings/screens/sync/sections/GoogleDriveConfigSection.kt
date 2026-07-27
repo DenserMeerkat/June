@@ -11,7 +11,8 @@ fun GoogleDriveConfigSection(
     isTestingConnection: Boolean,
     onTestConnection: () -> Unit,
     onManualSync: () -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onStopSync: (() -> Unit)? = null
 ) {
     // Empty Composable for FOSS variant since Google Drive is not supported
 }

@@ -30,13 +30,6 @@ class SyncWorker(
             try {
                 val isFullRevalidation = inputData.getBoolean("is_full_revalidation", false)
                 AppLogger.d(AppLogger.Category.SYNC, "SyncWorker", "Starting SyncWorker doWork(). Full revalidation: $isFullRevalidation")
-                
-                try {
-                    setForeground(notificationHelper.getForegroundInfo())
-                } catch (e: Exception) {
-                    AppLogger.w(AppLogger.Category.SYNC, "SyncWorker", "Could not set foreground info for worker: ${e.message}")
-                }
-
                 val result = syncManager.sync(isFullRevalidation)
                 statusCollector.cancel()
                 notificationHelper.cancelProgressNotification()
@@ -61,7 +54,7 @@ class SyncWorker(
     }
 
     companion object {
-        private const val WORK_NAME = "com.denser.june.sync_worker"
+        internal const val WORK_NAME = "com.denser.june.sync_worker"
         private const val COALESCING_DELAY_SECONDS = 3L
 
         fun enqueue(

@@ -296,7 +296,8 @@ fun SyncScreen() {
                                     isTestingConnection = state.isTestingConnection,
                                     onTestConnection = { syncVM.testConnection() },
                                     onManualSync = { if (isInternetAllowed) syncVM.manualSync() },
-                                    onRefresh = { syncVM.analyzeSync() }
+                                    onRefresh = { syncVM.analyzeSync() },
+                                    onStopSync = { syncVM.stopSync() }
                                 )
                             }
                             else -> {
@@ -316,7 +317,8 @@ fun SyncScreen() {
                                     onPassChange = { syncVM.updatePass(it) },
                                     onToggleLock = { syncVM.toggleConfigLock() },
                                     onTestConnection = { syncVM.testConnection() },
-                                    onManualSync = { if (isInternetAllowed) syncVM.manualSync() }
+                                    onManualSync = { if (isInternetAllowed) syncVM.manualSync() },
+                                    onStopSync = { syncVM.stopSync() }
                                 )
                             }
                         }

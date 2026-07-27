@@ -216,15 +216,18 @@ class SyncManager(
 
             val allLocalJournals = journalRepo.getAllJournalsIncludeDeletedSync()
             val tombstones = journalRepo.getAllTombstones()
+            val tombstoneIds = tombstones.toSet()
 
             val referencedMediaNames = allLocalJournals.flatMap { it.images }
                 .map { File(it).name }
                 .distinct()
             val localMediaFiles = referencedMediaNames.toSet()
 
+            val remoteMediaMeta = remoteManifest?.mediaMetadata ?: emptyMap()
             val mediaToUpload = localMediaFiles.filter { name ->
                 val file = File(mediaDir, name)
-                file.exists() && file.length() > 0L && remoteMedia.none { it.equals(name, ignoreCase = true) }
+                val isPhysicallyOnCloud = remoteMedia.any { it.equals(name, ignoreCase = true) } || remoteMediaMeta.containsKey(name)
+                file.exists() && file.length() > 0L && !isPhysicallyOnCloud
             }
             val mediaToDownload = remoteMedia.filter { name ->
                 localMediaFiles.none { it.equals(name, ignoreCase = true) }
@@ -235,89 +238,41 @@ class SyncManager(
                 id to (meta.name to meta.lastModified)
             }
 
-            val localJournalsMap = allLocalJournals.associateBy { it.id }
+            val plan = buildSyncPlan(
+                allLocalJournals = allLocalJournals,
+                remoteStates = remoteStates,
+                remoteJournalMeta = remoteJournalMeta,
+                tombstoneIds = tombstoneIds,
+                localsToSync = emptyList(),
+                isFullRevalidation = true
+            )
 
-            val realPendingUploads = mutableListOf<String>()
-            val realPendingDownloads = mutableListOf<String>()
-            val localDeletions = mutableListOf<String>()
-            val remoteDeletions = mutableListOf<String>()
-
-            remoteStates.forEach { (id, remoteInfo) ->
-                if (id in tombstones) {
-                    localDeletions.add(localJournalsMap[id]?.title?.ifBlank { "Untitled" } ?: id)
-                    return@forEach
-                }
-
-                val (_, remoteTime) = remoteInfo
-                val local = localJournalsMap[id]
-                if (local == null) {
-                    realPendingDownloads.add(id)
-                } else {
-                    val localHash = local.computeContentHash()
-                    val remoteMetaEntry = remoteJournalMeta[id]
-
-                    if (remoteMetaEntry != null) {
-                        if (localHash == remoteMetaEntry.contentHash || local.deletedAt != null) {
-                            return@forEach
-                        }
-
-                        val localTime = local.updatedAt ?: 0L
-                        val syncAtTime = local.syncedAt ?: 0L
-                        val hasLocalChange = localTime > (syncAtTime + SYNC_THRESHOLD_MS)
-
-                        if (hasLocalChange && localTime > remoteTime + SYNC_THRESHOLD_MS) {
-                            realPendingUploads.add(local.title.ifBlank { "Untitled" })
-                        } else {
-                            realPendingDownloads.add(local.title.ifBlank { "Untitled" })
-                        }
-                    } else {
-                        if (local.deletedAt != null) return@forEach
-                        val syncedAtTime = local.syncedAt ?: 0L
-                        if (remoteTime > syncedAtTime + SYNC_THRESHOLD_MS) {
-                            realPendingDownloads.add(local.title.ifBlank { "Untitled" })
-                        }
-                    }
-                }
-            }
-
-            allLocalJournals.forEach { local ->
-                if (local.deletedAt != null) return@forEach
-
-                val remote = remoteStates[local.id]
-                if (remote == null) {
-                    realPendingUploads.add(local.title.ifBlank { "Untitled" })
-                } else if (remoteJournalMeta.isEmpty()) {
-                    val remoteTime = remote.second
-                    val localTime = local.updatedAt ?: 0L
-                    val syncAtTime = local.syncedAt ?: 0L
-
-                    if (localTime > (syncAtTime + SYNC_THRESHOLD_MS) && localTime > (remoteTime + SYNC_THRESHOLD_MS)) {
-                        realPendingUploads.add(local.title.ifBlank { "Untitled" })
-                    }
-                }
-            }
+            val localDeletions = remoteStates.keys
+                .filter { id -> id in tombstoneIds }
+                .map { id -> allLocalJournals.find { it.id == id }?.title?.ifBlank { "Untitled" } ?: id }
 
             AppLogger.d(
                 AppLogger.Category.SYNC,
                 "SyncManager",
-                "Analysis complete. Local journals: ${allLocalJournals.size}, remote: ${remoteJournals.size}, " +
-                        "pending uploads: ${realPendingUploads.size}, pending downloads: ${realPendingDownloads.size + remoteDeletions.size}, " +
-                        "media uploads: ${mediaToUpload.size}, media downloads: ${mediaToDownload.size}, " +
-                        "local deletions: ${localDeletions.size}, remote deletions: ${remoteDeletions.size}"
+                "Analysis complete. Local active journals: ${allLocalJournals.count { it.deletedAt == null }}, " +
+                    "remote files: ${remoteJournals.size}, pending uploads: ${plan.toUpload.size}, " +
+                    "pending downloads: ${plan.toDownload.size}, " +
+                    "media uploads: ${mediaToUpload.size}, media downloads: ${mediaToDownload.size}, " +
+                    "local deletions: ${localDeletions.size}, tombstones: ${tombstones.size}"
             )
 
             Result.success(
                 SyncAnalysis(
-                    localJournals = allLocalJournals.size,
+                    localJournals = allLocalJournals.count { it.deletedAt == null },
                     remoteJournals = remoteJournals.size,
                     localMedia = localMediaFiles.size,
                     remoteMedia = remoteMedia.size,
-                    pendingUploadsCount = realPendingUploads.size,
-                    pendingDownloadsCount = realPendingDownloads.size + remoteDeletions.size,
-                    pendingUploadsList = realPendingUploads,
-                    pendingDownloadsList = realPendingDownloads,
+                    pendingUploadsCount = plan.toUpload.size,
+                    pendingDownloadsCount = plan.toDownload.size,
+                    pendingUploadsList = plan.toUpload.map { it.title.ifBlank { "Untitled" } },
+                    pendingDownloadsList = plan.toDownload.map { (id, _) -> id },
                     localDeletionsList = localDeletions,
-                    remoteDeletionsList = remoteDeletions,
+                    remoteDeletionsList = emptyList(),
                     pendingMediaUploadsCount = mediaToUpload.size,
                     pendingMediaDownloadsCount = mediaToDownload.size,
                     pendingDeletionsCount = tombstones.size,
@@ -331,11 +286,18 @@ class SyncManager(
         }
     }
 
+
     fun launchSync(isFullRevalidation: Boolean = false) {
         applicationScope.launch {
             val onlyWifi = syncPrefs.getSyncOnlyOnWifi().first()
             syncScheduler.enqueue(onlyWifi, immediate = true, isFullRevalidation = isFullRevalidation)
         }
+    }
+
+    fun cancelSync() {
+        syncScheduler.cancel()
+        _status.value = SyncStatus.Idle
+        AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Sync cancelled by user.")
     }
 
     fun repairSync(context: android.content.Context) {
@@ -435,85 +397,27 @@ class SyncManager(
 
             val allLocalJournals = journalRepo.getAllJournalsIncludeDeletedSync()
             val localJournalsMap = allLocalJournals.associateBy { it.id }
-            val remoteMedia = if (isFullRevalidation) provider.listMedia().getOrThrow().toSet()
-            else emptySet<String>()
+            val remoteMedia = if (isFullRevalidation) {
+                provider.listMedia().getOrThrow().toSet()
+            } else {
+                remoteManifest?.mediaMetadata?.keys ?: emptySet()
+            }
 
             val tombstones = journalRepo.getAllTombstones()
-            val toDownload = mutableListOf<Pair<String, Long>>()
-            val toUpload = mutableListOf<Journal>()
+            val tombstoneIds = tombstones.toSet()
 
-            remoteStates.forEach { (id, remoteInfo) ->
-                if (id in tombstones) return@forEach
+            val plan = buildSyncPlan(
+                allLocalJournals = allLocalJournals,
+                remoteStates = remoteStates,
+                remoteJournalMeta = remoteJournalMeta,
+                tombstoneIds = tombstoneIds,
+                localsToSync = localsToSync,
+                isFullRevalidation = isFullRevalidation,
+                remoteMedia = remoteMedia
+            )
 
-                val (_, remoteTime) = remoteInfo
-                val local = localJournalsMap[id]
-
-                if (local == null) {
-                    toDownload.add(id to remoteTime)
-                } else {
-                    val localHash = local.computeContentHash()
-                    val remoteMetaEntry = remoteJournalMeta[id]
-
-                    if (remoteMetaEntry != null) {
-                        if (localHash == remoteMetaEntry.contentHash || local.deletedAt != null) {
-                            return@forEach
-                        }
-                        
-                        val localTime = local.updatedAt ?: 0L
-                        val syncAtTime = local.syncedAt ?: 0L
-                        val hasLocalChange = localTime > (syncAtTime + SYNC_THRESHOLD_MS)
-
-                        if (hasLocalChange && localTime > remoteTime + SYNC_THRESHOLD_MS) {
-                            toUpload.add(local)
-                        } else {
-                            toDownload.add(id to remoteTime)
-                        }
-                    } else {
-                        if (local.deletedAt != null) return@forEach
-                        // Legacy manifest (schema 1/2) fallback using timestamp & content equivalence
-                        val localTime = local.updatedAt ?: 0L
-                        val syncAtTime = local.syncedAt ?: 0L
-
-                        val hasRemoteChange = remoteTime > (syncAtTime + SYNC_THRESHOLD_MS) && remoteTime > (localTime + SYNC_THRESHOLD_MS)
-                        val hasLocalChange = localTime > (syncAtTime + SYNC_THRESHOLD_MS) && localTime > (remoteTime + SYNC_THRESHOLD_MS)
-
-                        if (hasRemoteChange) {
-                            toDownload.add(id to remoteTime)
-                        } else if (hasLocalChange) {
-                            toUpload.add(local)
-                        }
-                    }
-                }
-            }
-
-            allLocalJournals.forEach { local ->
-                if (local.deletedAt != null) return@forEach
-
-                val remote = remoteStates[local.id]
-                if (remote == null) {
-                    toUpload.add(local)
-                } else {
-                    val remoteTime = remote.second
-                    val localTime = local.updatedAt ?: 0L
-
-                    if (localTime > (remoteTime + SYNC_THRESHOLD_MS)) {
-                        if (!toUpload.any { it.id == local.id }) toUpload.add(local)
-                    } else if (isFullRevalidation) {
-                        val isMediaMissingFromCloud = local.images.any { imagePath ->
-                            val name = File(imagePath).name
-                            remoteMedia.none { it.equals(name, ignoreCase = true) }
-                        }
-                        if (isMediaMissingFromCloud && !toUpload.any { it.id == local.id }) {
-                            toUpload.add(local)
-                        }
-                    }
-                }
-            }
-
-            if (!isFullRevalidation) {
-                val actuallyModified = localsToSync.map { it.id }.toSet()
-                toUpload.retainAll { it.id in actuallyModified || remoteStates.isEmpty() || remoteStates[it.id] == null }
-            }
+            val toDownload = plan.toDownload.toMutableList()
+            val toUpload = plan.toUpload.toMutableList()
 
             AppLogger.d(
                 AppLogger.Category.SYNC,
@@ -877,5 +781,109 @@ class SyncManager(
                 }
             }
         }
+    }
+
+    private data class SyncPlan(
+        val toUpload: List<Journal>,
+        val toDownload: List<Pair<String, Long>>
+    )
+
+    private fun buildSyncPlan(
+        allLocalJournals: List<Journal>,
+        remoteStates: Map<String, Pair<String, Long>>,
+        remoteJournalMeta: Map<String, JournalSyncMeta>,
+        tombstoneIds: Set<String>,
+        localsToSync: List<Journal>,
+        isFullRevalidation: Boolean,
+        remoteMedia: Set<String> = emptySet()
+    ): SyncPlan {
+        val localJournalsMap = allLocalJournals.associateBy { it.id }
+        val toDownload = mutableListOf<Pair<String, Long>>()
+        val toUpload = mutableListOf<Journal>()
+
+        AppLogger.d(
+            AppLogger.Category.SYNC,
+            "SyncManager",
+            "buildSyncPlan: activeLocals=${allLocalJournals.count { it.deletedAt == null }}, " +
+                "remoteFiles=${remoteStates.size}, manifestEntries=${remoteJournalMeta.size}, " +
+                "tombstones=${tombstoneIds.size}, isFullRevalidation=$isFullRevalidation"
+        )
+
+        remoteStates.forEach { (id, remoteInfo) ->
+            if (id in tombstoneIds) return@forEach
+
+            val (_, remoteTime) = remoteInfo
+            val local = localJournalsMap[id]
+
+            if (local == null) {
+                toDownload.add(id to remoteTime)
+            } else {
+                val localHash = local.computeContentHash()
+                val remoteMetaEntry = remoteJournalMeta[id]
+
+                if (remoteMetaEntry != null) {
+                    val hashMatch = localHash == remoteMetaEntry.contentHash
+                    if (hashMatch || local.deletedAt != null) return@forEach
+
+                    val localTime = local.updatedAt ?: 0L
+                    val syncAtTime = local.syncedAt ?: 0L
+                    val hasLocalChange = localTime > (syncAtTime + SYNC_THRESHOLD_MS)
+
+                    if (hasLocalChange && localTime > remoteTime + SYNC_THRESHOLD_MS) {
+                        toUpload.add(local)
+                    } else {
+                        toDownload.add(id to remoteTime)
+                    }
+                } else {
+                    if (local.deletedAt != null) return@forEach
+                    val localTime = local.updatedAt ?: 0L
+                    val syncAtTime = local.syncedAt ?: 0L
+
+                    val hasRemoteChange = remoteTime > (syncAtTime + SYNC_THRESHOLD_MS) && remoteTime > (localTime + SYNC_THRESHOLD_MS)
+                    val hasLocalChange = localTime > (syncAtTime + SYNC_THRESHOLD_MS) && localTime > (remoteTime + SYNC_THRESHOLD_MS)
+
+                    if (hasRemoteChange) {
+                        toDownload.add(id to remoteTime)
+                    } else if (hasLocalChange) {
+                        toUpload.add(local)
+                    }
+                }
+            }
+        }
+
+        allLocalJournals.forEach { local ->
+            if (local.deletedAt != null) return@forEach
+
+            val remote = remoteStates[local.id]
+            if (remote == null) {
+                if (!toUpload.any { it.id == local.id }) toUpload.add(local)
+            } else {
+                val remoteTime = remote.second
+                val localTime = local.updatedAt ?: 0L
+
+                if (localTime > (remoteTime + SYNC_THRESHOLD_MS)) {
+                    if (!toUpload.any { it.id == local.id }) {
+                        toUpload.add(local)
+                    }
+                }
+            }
+        }
+
+        if (!isFullRevalidation) {
+            val actuallyModified = localsToSync.map { it.id }.toSet()
+            val beforeFilterCount = toUpload.size
+            toUpload.retainAll { journal ->
+                journal.id in actuallyModified || remoteStates.isEmpty() || remoteStates[journal.id] == null
+            }
+            if (beforeFilterCount != toUpload.size) {
+                AppLogger.d(
+                    AppLogger.Category.SYNC,
+                    "SyncManager",
+                    "retainAll filter reduced upload queue from $beforeFilterCount to ${toUpload.size}"
+                )
+            }
+        }
+
+        return SyncPlan(toUpload = toUpload, toDownload = toDownload)
     }
 }
