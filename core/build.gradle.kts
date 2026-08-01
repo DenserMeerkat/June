@@ -46,6 +46,7 @@ ksp {
 dependencies {
     // Core
     implementation(libs.androidx.core.ktx)
+    api(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.ui.text.google.fonts)

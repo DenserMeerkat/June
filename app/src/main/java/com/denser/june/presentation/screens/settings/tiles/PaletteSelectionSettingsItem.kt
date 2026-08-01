@@ -2,11 +2,6 @@ package com.denser.june.presentation.screens.settings.tiles
 
 import android.R.color.system_accent1_200
 import android.os.Build
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -17,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -34,7 +28,6 @@ import com.materialkolor.ktx.from
 import com.materialkolor.palettes.TonalPalette
 import com.materialkolor.rememberDynamicColorScheme
 import org.koin.compose.viewmodel.koinViewModel
-
 import com.denser.june.core.R
 
 @Composable
@@ -52,31 +45,23 @@ fun PaletteSelectionSettingsItem() {
         }
     }
 
-    var expanded by remember { mutableStateOf(false) }
-    val rotationAngle by animateFloatAsState(
-        targetValue = if (expanded) 180f else 0f,
-        label = "arrow_rotation"
-    )
+    val scrollState = rememberScrollState()
 
-    Column(
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
     ) {
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp))
-                .clickable { expanded = !expanded }
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(16.dp)
                     .fillMaxWidth()
+                    .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp)
             ) {
-                
                 Box(
                     modifier = Modifier
                         .padding(end = 16.dp)
@@ -90,105 +75,70 @@ fun PaletteSelectionSettingsItem() {
                     )
                 }
 
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.palette_style),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = state.appTheme.style.name.lowercase().replaceFirstChar { it.uppercase() },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Icon(
-                    painter = painterResource(R.drawable.keyboard_arrow_down_24px),
-                    contentDescription = if (expanded) "Collapse" else "Expand",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .rotate(rotationAngle),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                Text(
+                    text = stringResource(R.string.palette_style),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
-        }
 
-        AnimatedVisibility(
-            visible = expanded,
-            enter = expandVertically(),
-            exit = shrinkVertically()
-        ) {
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .padding(vertical = 12.dp)
+                    .horizontalScroll(scrollState),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .padding(top = 12.dp, bottom = 16.dp)
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Spacer(Modifier.width(4.dp))
-                    PaletteStyle.entries.forEach { style ->
-                        val scheme = rememberDynamicColorScheme(
-                            primary = if (state.appTheme.materialTheme && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                colorResource(system_accent1_200)
-                            } else {
-                                Color(state.appTheme.seedColor)
+                Spacer(modifier = Modifier.width(8.dp))
+                PaletteStyle.entries.forEach { style ->
+                    val scheme = rememberDynamicColorScheme(
+                        primary = if (state.appTheme.materialTheme && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            colorResource(system_accent1_200)
+                        } else {
+                            Color(state.appTheme.seedColor)
+                        },
+                        isDark = when (state.appTheme.themeMode) {
+                            ThemeMode.SYSTEM -> isDarkTheme
+                            ThemeMode.LIGHT -> false
+                            ThemeMode.DARK -> true
+                        },
+                        isAmoled = state.appTheme.withAmoled,
+                        style = style
+                    )
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        SelectableMiniPalette(
+                            selected = state.appTheme.style == style,
+                            onClick = {
+                                viewModel.onAction(
+                                    SettingsAction.OnPaletteChange(style = style)
+                                )
                             },
-                            isDark = when (state.appTheme.themeMode) {
-                                ThemeMode.SYSTEM -> isDarkTheme
-                                ThemeMode.LIGHT -> false
-                                ThemeMode.DARK -> true
-                            },
-                            isAmoled = state.appTheme.withAmoled,
-                            style = style
+                            contentDescription = { style.name },
+                            accents = listOf(
+                                TonalPalette.from(scheme.primary),
+                                TonalPalette.from(scheme.tertiary),
+                                TonalPalette.from(scheme.secondary)
+                            )
                         )
 
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            SelectableMiniPalette(
-                                selected = state.appTheme.style == style,
-                                onClick = {
-                                    viewModel.onAction(
-                                        SettingsAction.OnPaletteChange(style = style)
-                                    )
-                                },
-                                contentDescription = { style.name },
-                                accents = listOf(
-                                    TonalPalette.from(scheme.primary),
-                                    TonalPalette.from(scheme.tertiary),
-                                    TonalPalette.from(scheme.secondary)
-                                )
-                            )
-
-                            Text(
-                                text = style.name.lowercase()
-                                    .replaceFirstChar { it.uppercase() },
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (state.appTheme.style == style) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                }
-                            )
-                        }
+                        Text(
+                            text = style.name.lowercase().replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (state.appTheme.style == style) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
                     }
-                    Spacer(Modifier.width(4.dp))
                 }
+                Spacer(modifier = Modifier.width(8.dp))
             }
+            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 }

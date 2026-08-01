@@ -4,6 +4,7 @@ import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.enums.MapStyleProvider
+import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import java.time.DayOfWeek
 import kotlinx.coroutines.flow.Flow
 
@@ -55,4 +56,7 @@ interface JournalPreferences {
 
     fun isKeyboardCapitalizationEnabled(): Flow<Boolean>
     suspend fun setKeyboardCapitalizationEnabled(enabled: Boolean)
+
+    fun editorLayoutDirection(): Flow<EditorLayoutDirection>
+    suspend fun setEditorLayoutDirection(direction: EditorLayoutDirection)
 }

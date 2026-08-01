@@ -1,7 +1,6 @@
 package com.denser.june.presentation.screens.editor.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,9 +31,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import com.denser.hyphen.model.MarkupStyleRange
+import androidx.compose.ui.unit.LayoutDirection
+import com.denser.june.core.domain.model.enums.EditorLayoutDirection
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun JournalContentEditor(
@@ -47,6 +48,7 @@ fun JournalContentEditor(
     isMarkdownEnabled: Boolean = true,
     isKeyboardAutocorrectEnabled: Boolean = true,
     isKeyboardCapitalizationEnabled: Boolean = true,
+    editorLayoutDirection: EditorLayoutDirection = EditorLayoutDirection.AUTO,
 ) {
     val linkConfig = remember {
         HyphenLinkConfig(
@@ -79,7 +81,7 @@ fun JournalContentEditor(
         if (activeLink != null) {
             keyboardController?.hide()
             focusManager.clearFocus()
-            delay(200)
+            delay(200.milliseconds)
             linkSpanToShowDialog = activeLink
         } else {
             linkSpanToShowDialog = null
@@ -150,8 +152,15 @@ fun JournalContentEditor(
         return
     }
 
+    val layoutDirectionOverride = when (editorLayoutDirection) {
+        EditorLayoutDirection.AUTO -> null
+        EditorLayoutDirection.LTR -> LayoutDirection.Ltr
+        EditorLayoutDirection.RTL -> LayoutDirection.Rtl
+    }
+
     HyphenTextField(
         state = state,
+        layoutDirection = layoutDirectionOverride,
         linkConfig = linkConfig,
         showDefaultSuggestionsPopup = false,
         triggerPopup = {},

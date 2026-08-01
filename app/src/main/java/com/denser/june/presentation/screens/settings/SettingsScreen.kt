@@ -150,6 +150,18 @@ fun SettingsScreen() {
                                     onClick = { navigator.navigateTo(Route.GeneralSettings) }
                                 )
                                 CategorySettingsItem(
+                                    title = "Editor",
+                                    subtitle = "Formatting and writing options",
+                                    leadingContent = {
+                                        Icon(
+                                            painter = painterResource(R.drawable.article_24px),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.secondary
+                                        )
+                                    },
+                                    onClick = { navigator.navigateTo(Route.EditorSettings) }
+                                )
+                                CategorySettingsItem(
                                     title = "Appearance",
                                     subtitle = "Theme, font, colors, palette",
                                     leadingContent = {

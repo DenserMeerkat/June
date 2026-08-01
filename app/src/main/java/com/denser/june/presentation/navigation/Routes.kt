@@ -49,6 +49,9 @@ sealed interface Route {
     data object GeneralSettings : Route
 
     @Serializable
+    data object EditorSettings : Route
+
+    @Serializable
     data object AppearanceSettings : Route
 
     @Serializable

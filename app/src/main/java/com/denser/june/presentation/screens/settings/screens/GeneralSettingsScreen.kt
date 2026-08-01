@@ -81,23 +81,9 @@ fun GeneralSettingsScreen() {
                     }
                 }
 
-                val editorGroup = listOfNotNull(
-                    generalTiles["MARKDOWN_EDITOR"],
-                    generalTiles["KEYBOARD_CAPITALIZATION"],
-                    generalTiles["KEYBOARD_AUTOCORRECT"]
-                )
-                if (editorGroup.isNotEmpty()) {
-                    item {
-                        SettingSection {
-                            editorGroup.forEach { it.content() }
-                        }
-                    }
-                }
-
                 val othersGroup = listOfNotNull(
                     generalTiles["REMINDERS"],
-                    generalTiles["MAP_SETTINGS"],
-                    generalTiles["ALWAYS_OPEN_NEW_NOTE"]
+                    generalTiles["MAP_SETTINGS"]
                 )
                 if (othersGroup.isNotEmpty()) {
                     item {
