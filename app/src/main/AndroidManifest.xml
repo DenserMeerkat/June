@@ -24,6 +24,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:localeConfig="@xml/locales_config"
         android:theme="@style/Theme.June"
         android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
@@ -64,6 +65,14 @@
                 <action android:name="com.denser.june.ACTION_STOP_SYNC" />
             </intent-filter>
         </receiver>
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
     </application>
 
 </manifest>

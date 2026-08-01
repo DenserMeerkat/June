@@ -2,40 +2,14 @@ package com.denser.june.presentation.screens.editor
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,6 +36,7 @@ import com.denser.hyphen.model.TriggerConfig
 import com.denser.hyphen.state.rememberHyphenTextState
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.utils.toDateWithDay
@@ -70,10 +45,7 @@ import com.denser.june.core.utils.toLocalTime
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.editor.components.EditorToolbar
-import com.denser.june.presentation.screens.editor.components.JournalContentEditor
-import com.denser.june.presentation.screens.editor.components.JournalItemsPreview
-import com.denser.june.presentation.screens.editor.components.MediaOperations
+import com.denser.june.presentation.screens.editor.components.*
 import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
 import com.denser.june.presentation.utils.UiUtils
 import kotlinx.coroutines.launch
@@ -95,6 +67,8 @@ fun EditorScreen() {
         .collectAsStateWithLifecycle(initialValue = true)
     val isKeyboardCapitalizationEnabled by journalPreferences.isKeyboardCapitalizationEnabled()
         .collectAsStateWithLifecycle(initialValue = true)
+    val editorLayoutDirection by journalPreferences.editorLayoutDirection()
+        .collectAsStateWithLifecycle(initialValue = EditorLayoutDirection.AUTO)
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
@@ -503,6 +477,7 @@ fun EditorScreen() {
                         isMarkdownEnabled = isMarkdownEnabled,
                         isKeyboardAutocorrectEnabled = isKeyboardAutocorrectEnabled,
                         isKeyboardCapitalizationEnabled = isKeyboardCapitalizationEnabled,
+                        editorLayoutDirection = editorLayoutDirection,
                         modifier = Modifier
                             .fillMaxWidth()
                             .defaultMinSize(

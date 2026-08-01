@@ -147,6 +147,7 @@ fun AboutSettingsScreen() {
                         }
 
                         SettingSection {
+                            SettingsTileRegistry.getTile("TRANSLATE")?.content?.invoke()
                             SettingsTileRegistry.getTile("CHANGELOG")?.content?.invoke()
                             SettingsTileRegistry.getTile("CHECK_FOR_UPDATES")?.content?.invoke()
                         }

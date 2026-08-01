@@ -1,5 +1,6 @@
 package com.denser.june.presentation.screens.settings
 
+import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.domain.model.enums.TimeFormat
@@ -36,4 +37,5 @@ sealed interface SettingsAction {
     data class OnAlwaysOpenNewNoteToggle(val enabled: Boolean) : SettingsAction
     data class OnKeyboardAutocorrectToggle(val enabled: Boolean) : SettingsAction
     data class OnKeyboardCapitalizationToggle(val enabled: Boolean) : SettingsAction
+    data class OnEditorLayoutDirectionChange(val direction: EditorLayoutDirection) : SettingsAction
 }

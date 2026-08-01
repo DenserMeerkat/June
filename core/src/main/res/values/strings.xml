@@ -32,4 +32,13 @@
     <string name="keyboard_capitalization_desc">Capitalize the first word of each sentence</string>
     <string name="keyboard_autocorrect">Auto correction</string>
     <string name="keyboard_autocorrect_desc">Correct misspelled words automatically</string>
+
+    <!-- Language & Localization -->
+    <string name="language">Language</string>
+    <string name="editor_direction">Editor Direction</string>
+    <string name="editor_direction_auto">Auto (Follow App Locale)</string>
+    <string name="editor_direction_ltr">Left-to-Right (LTR)</string>
+    <string name="editor_direction_rtl">Right-to-Left (RTL)</string>
+    <string name="translate_app">Translate June</string>
+    <string name="help_translate_desc">Contribute translations on Weblate</string>
 </resources>

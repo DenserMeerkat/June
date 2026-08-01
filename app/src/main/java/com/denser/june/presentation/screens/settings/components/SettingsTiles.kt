@@ -4,14 +4,15 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.res.stringResource
-import com.denser.june.core.R
+import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.LockType
-import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.presentation.screens.settings.SettingsState
 import com.denser.june.presentation.screens.settings.tiles.*
 import java.time.format.TextStyle
 import com.denser.june.core.domain.model.enums.TimeFormat
+import com.denser.june.core.utils.LanguageHelper
+import androidx.compose.ui.res.stringResource
+import com.denser.june.core.R
 
 data class SettingsTriggers(
     val onDeleteAllJournals: () -> Unit = {},
@@ -117,6 +118,14 @@ object SettingsTileRegistry {
                     content = { KeyboardAutocorrectTile() }
                 ),
                 SettingTile(
+                    key = "EDITOR_DIRECTION",
+                    title = "Editor direction",
+                    subtitle = { _, state -> if (state.editorLayoutDirection == EditorLayoutDirection.AUTO) "Auto (Follow App Locale)" else state.editorLayoutDirection.name },
+                    category = "General",
+                    keywords = listOf("editor", "direction", "rtl", "ltr", "writing", "auto", "text"),
+                    content = { EditorDirectionTile() }
+                ),
+                SettingTile(
                     key = "START_OF_WEEK",
                     title = "Start of the week",
                     subtitle = { _, state -> state.startOfWeek.getDisplayName(TextStyle.FULL, java.util.Locale.getDefault()) },
@@ -131,6 +140,14 @@ object SettingsTileRegistry {
                     category = "General",
                     keywords = listOf("delete", "remove", "erase", "all", "journals", "clear"),
                     content = { DeleteAllJournalsTile() }
+                ),
+                SettingTile(
+                    key = "LANGUAGE",
+                    title = "Language",
+                    subtitle = { context, _ -> LanguageHelper.getCurrentLanguageNativeName(context) },
+                    category = "Appearance",
+                    keywords = listOf("language", "locale", "translation", "i18n", "arabic", "spanish", "german", "french", "persian"),
+                    content = { LanguageTile() }
                 ),
                 SettingTile(
                     key = "APP_THEME",
@@ -265,6 +282,14 @@ object SettingsTileRegistry {
                     category = "About",
                     keywords = listOf("changelog", "release", "history", "notes", "version", "updates"),
                     content = { ChangelogTile() }
+                ),
+                SettingTile(
+                    key = "TRANSLATE",
+                    title = "Translate June",
+                    subtitle = { _, _ -> "Contribute translations on Weblate" },
+                    category = "About",
+                    keywords = listOf("translate", "weblate", "translation", "i18n", "languages", "crowd", "community"),
+                    content = { TranslateTile() }
                 ),
                 SettingTile(
                     key = "CHECK_FOR_UPDATES",

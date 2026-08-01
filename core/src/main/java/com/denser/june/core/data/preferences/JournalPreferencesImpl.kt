@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.domain.model.enums.TimeFormat
@@ -37,6 +38,7 @@ class JournalPreferencesImpl(
         val ALWAYS_OPEN_NEW_NOTE = booleanPreferencesKey("always_open_new_note")
         val KEYBOARD_AUTOCORRECT_ENABLED = booleanPreferencesKey("keyboard_autocorrect_enabled")
         val KEYBOARD_CAPITALIZATION_ENABLED = booleanPreferencesKey("keyboard_capitalization_enabled")
+        val EDITOR_LAYOUT_DIRECTION = stringPreferencesKey("editor_layout_direction")
         const val DEFAULT_REMINDER_TIME = "21:14"
     }
 
@@ -222,6 +224,22 @@ class JournalPreferencesImpl(
     override suspend fun setKeyboardCapitalizationEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[KEYBOARD_CAPITALIZATION_ENABLED] = enabled
+        }
+    }
+
+    override fun editorLayoutDirection(): Flow<EditorLayoutDirection> = dataStore.data
+        .map { preferences ->
+            val value = preferences[EDITOR_LAYOUT_DIRECTION] ?: EditorLayoutDirection.AUTO.name
+            try {
+                EditorLayoutDirection.valueOf(value)
+            } catch (e: Exception) {
+                EditorLayoutDirection.AUTO
+            }
+        }
+
+    override suspend fun setEditorLayoutDirection(direction: EditorLayoutDirection) {
+        dataStore.edit { preferences ->
+            preferences[EDITOR_LAYOUT_DIRECTION] = direction.name
         }
     }
 }

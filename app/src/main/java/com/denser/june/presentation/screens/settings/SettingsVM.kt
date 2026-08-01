@@ -12,6 +12,7 @@ import com.denser.june.core.domain.backup.ExportState
 import com.denser.june.core.domain.backup.RestoreRepo
 import com.denser.june.core.domain.backup.RestoreResult
 import com.denser.june.core.domain.backup.RestoreState
+import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.TimeFormat
@@ -63,7 +64,8 @@ class SettingsVM(
             privacyPrefs.getSecurityAnswerHashFlow(),
             journalPrefs.alwaysOpenNewNote(),
             journalPrefs.isKeyboardAutocorrectEnabled(),
-            journalPrefs.isKeyboardCapitalizationEnabled()
+            journalPrefs.isKeyboardCapitalizationEnabled(),
+            journalPrefs.editorLayoutDirection()
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -84,6 +86,7 @@ class SettingsVM(
             alwaysOpenNewNote = array[19] as Boolean,
             isKeyboardAutocorrectEnabled = array[20] as Boolean,
             isKeyboardCapitalizationEnabled = array[21] as Boolean,
+            editorLayoutDirection = array[22] as EditorLayoutDirection,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -176,6 +179,7 @@ class SettingsVM(
                 is SettingsAction.OnAlwaysOpenNewNoteToggle -> journalPrefs.setAlwaysOpenNewNote(action.enabled)
                 is SettingsAction.OnKeyboardAutocorrectToggle -> journalPrefs.setKeyboardAutocorrectEnabled(action.enabled)
                 is SettingsAction.OnKeyboardCapitalizationToggle -> journalPrefs.setKeyboardCapitalizationEnabled(action.enabled)
+                is SettingsAction.OnEditorLayoutDirectionChange -> journalPrefs.setEditorLayoutDirection(action.direction)
             }
         }
     }

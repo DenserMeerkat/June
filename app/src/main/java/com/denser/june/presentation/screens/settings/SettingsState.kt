@@ -9,6 +9,7 @@ import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.enums.FontType
+import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import java.time.DayOfWeek
 
 @Stable
@@ -35,5 +36,6 @@ data class SettingsState(
     val isMarkdownEnabled: Boolean = true,
     val alwaysOpenNewNote: Boolean = false,
     val isKeyboardAutocorrectEnabled: Boolean = true,
-    val isKeyboardCapitalizationEnabled: Boolean = true
+    val isKeyboardCapitalizationEnabled: Boolean = true,
+    val editorLayoutDirection: EditorLayoutDirection = EditorLayoutDirection.AUTO,
 )

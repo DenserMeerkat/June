@@ -19,6 +19,9 @@
     <a href="https://github.com/DenserMeerkat/June/releases">
         <img src="https://img.shields.io/github/license/DenserMeerkat/June?style=for-the-badge&color=blue" alt="License">
     </a>
+    <a href="https://hosted.weblate.org/engage/june/">
+        <img src="https://img.shields.io/weblate/progress/june?logo=weblate&style=for-the-badge&color=2ecba9" alt="Translation status">
+    </a>
 </p>
 
 <p align="center">
