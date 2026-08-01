@@ -49,7 +49,7 @@ fun AboutLibrariesBottomSheet(
                         .padding(top = 16.dp, bottom = 4.dp)
                 )
                 Text(
-                    text = "Open Source Licenses & Dependencies",
+                    text = stringResource(R.string.open_source_licenses_desc),
                     style = MaterialTheme.typography.titleSmall,
                     fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -61,9 +61,9 @@ fun AboutLibrariesBottomSheet(
             }
             items(libraryList, key = { it.uniqueId }) { library ->
                 val firstLicense = library.licenses.firstOrNull()
-                val licenseName = firstLicense?.name ?: "Unknown License"
+                val licenseName = firstLicense?.name ?: stringResource(R.string.unknown_license)
                 val url = library.website ?: library.scm?.url
-                val versionText = library.artifactVersion?.let { "v$it" } ?: "Unknown version"
+                val versionText = library.artifactVersion?.let { "v$it" } ?: stringResource(R.string.unknown_version)
 
                 SettingsItem(
                     title = library.name,
@@ -99,7 +99,7 @@ fun AboutLibrariesBottomSheet(
 
     selectedLibraryForLicense?.let { library ->
         val firstLicense = library.licenses.firstOrNull()
-        val licenseName = firstLicense?.name ?: "Unknown License"
+        val licenseName = firstLicense?.name ?: stringResource(R.string.unknown_license)
         val licenseContent = firstLicense?.licenseContent
 
         LibraryLicenseBottomSheet(
@@ -153,7 +153,7 @@ fun LibraryLicenseBottomSheet(
                 ) {
                     item {
                         Text(
-                            text = licenseContent ?: "No license text available.",
+                            text = licenseContent ?: stringResource(R.string.no_license_text_available),
                             style = MaterialTheme.typography.bodyMedium,
                             fontFamily = FontFamily.Monospace,
                             color = MaterialTheme.colorScheme.onSurfaceVariant

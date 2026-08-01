@@ -29,20 +29,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import kotlinx.coroutines.launch
+import com.denser.june.core.utils.Constants
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TranslateBottomSheet(
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val uriHandler = LocalUriHandler.current
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
+    val uriHandler = LocalUriHandler.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = modifier
     ) {
         Column(
             modifier = Modifier
@@ -50,13 +53,12 @@ fun TranslateBottomSheet(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
             Text(
                 text = stringResource(R.string.translate_app),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -73,7 +75,7 @@ fun TranslateBottomSheet(
             Button(
                 onClick = {
                     scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        uriHandler.openUri("https://hosted.weblate.org/engage/june/")
+                        uriHandler.openUri(Constants.WEBLATE_URL)
                         onDismiss()
                     }
                 },

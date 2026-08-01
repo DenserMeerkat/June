@@ -86,7 +86,7 @@ fun SyncScreen() {
                     ) {
                         Icon(
                             painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -296,7 +296,7 @@ fun SyncScreen() {
                                     status = state.status,
                                     isTestingConnection = state.isTestingConnection,
                                     onTestConnection = { syncVM.testConnection() },
-                                    onManualSync = { if (isInternetAllowed) syncVM.manualSync() },
+                                    onManualSync = { syncVM.manualSync() },
                                     onRefresh = { syncVM.analyzeSync() },
                                     onStopSync = { syncVM.stopSync() }
                                 )
@@ -318,7 +318,7 @@ fun SyncScreen() {
                                     onPassChange = { syncVM.updatePass(it) },
                                     onToggleLock = { syncVM.toggleConfigLock() },
                                     onTestConnection = { syncVM.testConnection() },
-                                    onManualSync = { if (isInternetAllowed) syncVM.manualSync() },
+                                    onManualSync = { syncVM.manualSync() },
                                     onStopSync = { syncVM.stopSync() }
                                 )
                             }

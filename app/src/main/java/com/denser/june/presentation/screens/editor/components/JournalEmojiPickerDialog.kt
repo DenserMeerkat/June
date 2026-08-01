@@ -62,7 +62,7 @@ fun JournalEmojiPickerDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Pick a Mood",
+                    text = stringResource(R.string.pick_a_mood),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -144,7 +144,7 @@ fun EmojiDialogPreview(selectedEmoji: String?) {
                 )
             } else {
                 Text(
-                    text = "Select an emoji",
+                    text = stringResource(R.string.select_an_emoji),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )

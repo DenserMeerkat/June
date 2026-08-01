@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 
@@ -15,8 +16,8 @@ import com.denser.june.core.R
 fun DeleteConfirmationSheet(
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit,
-    message: String = "Move to bin? It will be permanently deleted after 30 days.",
-    confirmText: String = "Move to bin",
+    message: String = stringResource(R.string.move_to_bin_default_desc),
+    confirmText: String = stringResource(R.string.move_all_to_bin),
     sheetState: SheetState = rememberModalBottomSheetState()
 ) {
     ModalBottomSheet(

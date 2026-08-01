@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import java.time.DayOfWeek
 import java.time.YearMonth
 import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 private val YearHeaderWidth = 60.dp
 
@@ -89,7 +90,7 @@ fun DaysOfWeekHeader(
     Row(modifier = modifier.fillMaxWidth()) {
         days.forEach { day ->
             Text(
-                text = day.getDisplayName(java.time.format.TextStyle.NARROW, Locale.getDefault()),
+                text = day.getDisplayName(java.time.format.TextStyle.NARROW, LocalLocale.current.platformLocale),
                 style = textStyle,
                 fontWeight = FontWeight.Bold,
                 color = color,

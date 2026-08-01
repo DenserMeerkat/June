@@ -19,8 +19,8 @@ import org.koin.compose.koinInject
 @Composable
 fun InternetRestrictedIndicator(
     modifier: Modifier = Modifier,
-    title: String = "Internet Access Disabled",
-    description: String = "To use this feature, please enable internet access in the app settings.",
+    title: String = stringResource(R.string.internet_access_disabled),
+    description: String = stringResource(R.string.internet_restricted_desc),
 ) {
     val navigator = koinInject<AppNavigator>()
 
@@ -62,7 +62,7 @@ fun InternetRestrictedIndicator(
 @Composable
 fun InternetRestrictedBanner(
     modifier: Modifier = Modifier,
-    description: String = "Internet access restricted"
+    description: String = stringResource(R.string.internet_access_restricted)
 ) {
     val navigator = koinInject<AppNavigator>()
 
@@ -95,7 +95,7 @@ fun InternetRestrictedBanner(
                 onClick = { navigator.navigateTo(Route.Permissions) }
             ) {
                 Text(
-                    text = "Settings",
+                    text = stringResource(R.string.settings),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )

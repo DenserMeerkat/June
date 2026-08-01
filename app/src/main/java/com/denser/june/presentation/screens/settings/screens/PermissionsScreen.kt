@@ -199,8 +199,7 @@ fun PermissionsScreen() {
                                 context,
                                 context.getString(R.string.permission_already_granted),
                                 Toast.LENGTH_SHORT
-                            )
-                                .show()
+                            ).show()
                         }
                     }
                 )

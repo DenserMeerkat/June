@@ -96,7 +96,7 @@ fun WhatsChangedBottomSheet(
                 onClick = onDismissRequest,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Done")
+                Text(text = stringResource(R.string.done))
             }
 
             Spacer(modifier = Modifier.height(24.dp))

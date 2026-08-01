@@ -57,7 +57,7 @@ fun DeveloperSettingsScreen() {
                     ) {
                         Icon(
                             painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -73,7 +73,7 @@ fun DeveloperSettingsScreen() {
                                     syncPrefs.setDatabaseLoggingEnabled(false)
                                     AppLogger.clearBufferedLogs()
                                     navigator.navigateBack()
-                                    Toast.makeText(context, "Developer options disabled", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.developer_options_disabled), Toast.LENGTH_SHORT).show()
                                 }
                             }
                         },
@@ -113,7 +113,7 @@ fun DeveloperSettingsScreen() {
         ) {
             item {
                 Text(
-                    text = "Configure developer logging options and view system console logs.",
+                    text = stringResource(R.string.developer_options_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)

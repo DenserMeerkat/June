@@ -60,6 +60,7 @@ import com.denser.june.core.utils.SecurityUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,7 +96,7 @@ fun LockMethodScreen() {
                 if (inputHash == state.pinHash) {
                     navigator.navigateTo(Route.RecoverySetup)
                     coroutineScope.launch {
-                        delay(500)
+                        delay(500.milliseconds)
                         isVerifyingPinForSetup = false
                         pinVerificationError = false
                     }
@@ -122,7 +123,7 @@ fun LockMethodScreen() {
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                         )
                     }
                 },
@@ -217,15 +218,15 @@ fun LockMethodScreen() {
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Important",
+                                text = stringResource(R.string.important),
                                 style = MaterialTheme.typography.titleSmall
                             )
                         }
                         Spacer(modifier = Modifier.size(8.dp))
                         val warningText = if (state.securityQuestion != null) {
-                            "If you forget your Custom PIN, you can recover/reset it using your configured security question."
+                            stringResource(R.string.pin_recovery_configured_desc)
                         } else {
-                            "If you forget your Custom PIN, you will lose access to your journal. There is no recovery option. Please configure a recovery question."
+                            stringResource(R.string.pin_no_recovery_warning_desc)
                         }
                         Text(
                             text = warningText,
@@ -238,7 +239,7 @@ fun LockMethodScreen() {
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = if (state.securityQuestion != null) "Change recovery" else "Setup recovery"
+                                text = if (state.securityQuestion != null) stringResource(R.string.change_recovery) else stringResource(R.string.setup_recovery)
                             )
                         }
                     }

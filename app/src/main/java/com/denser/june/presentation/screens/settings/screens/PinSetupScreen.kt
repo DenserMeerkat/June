@@ -13,6 +13,8 @@ import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.core.utils.SecurityUtils
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.settings.SettingsVM
+import androidx.compose.ui.res.stringResource
+import com.denser.june.core.R
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -28,8 +30,8 @@ fun PinSetupScreen() {
     var isError by remember { mutableStateOf(false) }
 
     val title = when (step) {
-        SetupStep.CREATE -> "Create PIN"
-        SetupStep.CONFIRM -> "Confirm PIN"
+        SetupStep.CREATE -> stringResource(R.string.create_pin)
+        SetupStep.CONFIRM -> stringResource(R.string.confirm_pin)
     }
 
     key(step) {

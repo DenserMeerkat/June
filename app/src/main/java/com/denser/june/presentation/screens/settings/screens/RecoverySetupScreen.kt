@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -52,27 +53,7 @@ import com.denser.june.presentation.screens.settings.SettingsVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-private val PREDEFINED_QUESTIONS = listOf(
-    "What is a short motto or phrase you live by?",
-    "What is the name of a book that deeply inspired you?",
-    "Who is your favorite musical artist or band?",
-    "What is your favorite writing place or sanctuary?",
-    "What single word describes your perfect day?",
-    "In which city did you write your first entry?",
-    "Write a custom question..."
-)
-
-private fun getPlaceholderForQuestion(question: String): String {
-    return when (question) {
-        "What is a short motto or phrase you live by?" -> "e.g. carpe diem, keep going"
-        "What is the name of a book that deeply inspired you?" -> "e.g. Alchemist, 1984"
-        "Who is your favorite musical artist or band?" -> "e.g. Coldplay, Taylor Swift"
-        "What is your favorite writing place or sanctuary?" -> "e.g. bedroom, local cafe"
-        "What single word describes your perfect day?" -> "e.g. peace, creative, cozy"
-        "In which city did you write your first entry?" -> "e.g. London, Paris, Tokyo"
-        else -> "e.g. Enter your answer"
-    }
-}
+import com.denser.june.presentation.utils.SecurityQuestionUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,22 +63,41 @@ fun RecoverySetupScreen() {
     val onAction = settingsVM::onAction
     val navigator = koinInject<AppNavigator>()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val context = LocalContext.current
 
-    val isCustomStored = state.securityQuestion != null && state.securityQuestion !in PREDEFINED_QUESTIONS.dropLast(1)
+    val customQuestionTitle = stringResource(R.string.question_custom)
+    val predefinedItems = remember { SecurityQuestionUtils.PREDEFINED_QUESTIONS }
 
-    var selectedQuestion by remember(state.securityQuestion) {
+    val questionItems = predefinedItems.map {
+        stringResource(it.questionResId) to stringResource(it.placeholderResId)
+    } + (customQuestionTitle to stringResource(R.string.placeholder_default_answer))
+
+    val predefinedIndex = remember(state.securityQuestion) {
+        SecurityQuestionUtils.findPredefinedQuestionIndex(context, state.securityQuestion)
+    }
+    val isCustomStored = remember(state.securityQuestion, predefinedIndex) {
+        state.securityQuestion != null && predefinedIndex == null
+    }
+
+    var selectedQuestion by remember(state.securityQuestion, predefinedIndex, customQuestionTitle) {
         mutableStateOf(
-            if (isCustomStored) "Write a custom question..."
-            else state.securityQuestion ?: PREDEFINED_QUESTIONS[0]
+            if (isCustomStored) customQuestionTitle
+            else if (predefinedIndex != null) questionItems[predefinedIndex].first
+            else questionItems.first().first
         )
     }
-    var customQuestionText by remember(state.securityQuestion) {
+    var customQuestionText by remember(state.securityQuestion, isCustomStored) {
         mutableStateOf(if (isCustomStored) state.securityQuestion ?: "" else "")
     }
     var answer by remember { mutableStateOf("") }
     var isDropdownExpanded by remember { mutableStateOf(false) }
     var answerError by remember { mutableStateOf(false) }
     var customQuestionError by remember { mutableStateOf(false) }
+
+    val currentPlaceholder = remember(selectedQuestion, questionItems) {
+        questionItems.find { it.first == selectedQuestion }?.second
+            ?: questionItems.last().second
+    }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -198,8 +198,8 @@ fun RecoverySetupScreen() {
                         shape = RoundedCornerShape(24.dp),
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     ) {
-                        PREDEFINED_QUESTIONS.forEach { question ->
-                            val isCustomOption = question == "Write a custom question..."
+                        questionItems.forEach { (question, _) ->
+                            val isCustomOption = question == customQuestionTitle
 
                             DropdownMenuItem(
                                 modifier = Modifier
@@ -223,7 +223,7 @@ fun RecoverySetupScreen() {
                 }
             }
 
-            if (selectedQuestion == "Write a custom question...") {
+            if (selectedQuestion == customQuestionTitle) {
                 Spacer(modifier = Modifier.height(24.dp))
                 JuneTextField(
                     value = customQuestionText,
@@ -233,7 +233,7 @@ fun RecoverySetupScreen() {
                     },
                     label = stringResource(R.string.custom_question_label),
                     placeholder = stringResource(R.string.custom_question_placeholder),
-                    errorText = if (customQuestionError) "Question cannot be empty" else null
+                    errorText = if (customQuestionError) stringResource(R.string.question_cannot_be_empty) else null
                 )
             }
 
@@ -246,21 +246,21 @@ fun RecoverySetupScreen() {
                     answerError = false
                 },
                 label = stringResource(R.string.your_answer_label),
-                placeholder = getPlaceholderForQuestion(selectedQuestion),
-                errorText = if (answerError) "Answer cannot be empty" else null
+                placeholder = currentPlaceholder,
+                errorText = if (answerError) stringResource(R.string.answer_cannot_be_empty) else null
             )
 
             Spacer(modifier = Modifier.height(40.dp))
 
             Button(
                 onClick = {
-                    val finalQuestion = if (selectedQuestion == "Write a custom question...") {
+                    val finalQuestion = if (selectedQuestion == customQuestionTitle) {
                         customQuestionText.trim()
                     } else {
                         selectedQuestion
                     }
 
-                    if (selectedQuestion == "Write a custom question..." && finalQuestion.isEmpty()) {
+                    if (selectedQuestion == customQuestionTitle && finalQuestion.isEmpty()) {
                         customQuestionError = true
                     } else if (answer.trim().isEmpty()) {
                         answerError = true

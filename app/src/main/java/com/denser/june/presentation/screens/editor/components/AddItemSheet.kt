@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -62,7 +63,7 @@ fun AddItemSheet(
             )
 
             Text(
-                text = "Add Item",
+                text = stringResource(R.string.add_item),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 16.dp)
@@ -79,22 +80,22 @@ fun AddItemSheet(
             ) {
                 AddItem(
                     icon = R.drawable.add_a_photo_24px,
-                    text = "Take photo / video",
+                    text = stringResource(R.string.take_photo_or_video),
                     onClick = { onTakePhotoClick(); onDismiss() }
                 )
                 AddItem(
                     icon = R.drawable.add_photo_alternate_24px,
-                    text = "Add photo / video",
+                    text = stringResource(R.string.add_photo_or_video),
                     onClick = { onAddPhotoClick(); onDismiss() }
                 )
                 AddItem(
                     icon = R.drawable.music_note_add_24px,
-                    text = "Add song link",
+                    text = stringResource(R.string.add_song_link),
                     onClick = { onAddSongClick(); onDismiss() }
                 )
                 AddItem(
                     icon = R.drawable.add_location_24px,
-                    text = "Add location & map",
+                    text = stringResource(R.string.add_location_and_map),
                     onClick = { onAddLocationClick(); onDismiss() }
                 )
             }

@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.utils.SecurityUtils
+import com.denser.june.presentation.utils.SecurityQuestionUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,8 +93,12 @@ fun PinRecoveryScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            val displayedQuestion = remember(question) {
+                SecurityQuestionUtils.resolveLocalizedQuestion(context, question)
+            }
+
             Text(
-                text = question,
+                text = displayedQuestion,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -110,7 +115,7 @@ fun PinRecoveryScreen(
                 },
                 label = stringResource(R.string.answer_label),
                 placeholder = stringResource(R.string.answer_placeholder),
-                errorText = if (isAnswerError) "Incorrect answer. Please try again." else null
+                errorText = if (isAnswerError) stringResource(R.string.incorrect_answer_try_again) else null
             )
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -120,7 +125,7 @@ fun PinRecoveryScreen(
                     val inputHash = SecurityUtils.hashAnswer(answerInput)
                     if (inputHash == storedAnswerHash) {
                         onPinResetSuccess()
-                        Toast.makeText(context, "PIN reset successfully", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, context.getString(R.string.pin_reset_successfully), Toast.LENGTH_LONG).show()
                     } else {
                         isAnswerError = true
                     }

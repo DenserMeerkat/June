@@ -114,19 +114,34 @@
     <string name="whats_changed">What\'s Changed</string>
 
     <!-- Dialogs & Banners -->
+    <string name="save_entry">Save Entry?</string>
     <string name="change_lock_title">Change lock?</string>
     <string name="checking_for_updates">Checking for updates</string>
     <string name="diagnostics">Diagnostics</string>
+    <string name="enter_pin">Enter PIN</string>
+    <string name="incorrect_answer_try_again">Incorrect answer. Please try again.</string>
     <string name="internet_access_disabled">Internet Access Disabled</string>
+    <string name="internet_access_restricted">Internet access restricted</string>
+    <string name="internet_restricted_desc">To use this feature, please enable internet access in the app settings.</string>
     <string name="move_all_to_bin">Move All to Bin</string>
     <string name="move_all_to_bin_desc">This will move all your journal entries to the Bin. You can restore them within 30 days.</string>
     <string name="move_all_to_bin_title">Move all to Bin?</string>
+    <string name="move_to_bin_default_desc">Move to bin? It will be permanently deleted after 30 days.</string>
+    <string name="no_license_text_available">No license text available.</string>
     <string name="no_settings_found">No settings found</string>
     <string name="no_settings_found_desc">We couldn\'t find any settings matching \"%1$s\".</string>
+    <string name="open_source_licenses_desc">Open Source Licenses &amp; Dependencies</string>
+    <string name="pick_a_mood">Pick a Mood</string>
+    <string name="pin_reset_successfully">PIN reset successfully</string>
     <string name="repair_sync">Repair Sync</string>
     <string name="repair_sync_desc">This will audit local database records, repair image paths, clean orphaned media files, and perform a full cloud revalidation pass. This may take longer than a standard sync.</string>
     <string name="repair_sync_title">Repair Sync &amp; Revalidate?</string>
+    <string name="select_an_emoji">Select an emoji</string>
     <string name="select_app_theme">Select App Theme</string>
+    <string name="type_to_confirm">\n\nType \'%1$s\' below to confirm.</string>
+    <string name="unknown_license">Unknown License</string>
+    <string name="unknown_version">Unknown version</string>
+    <string name="wrong_pin_try_again">Wrong PIN. Try again.</string>
     <string name="switch_provider">Switch Provider</string>
     <string name="switch_provider_desc">Switching your active cloud target to %1$s will re-check your local library against the new provider state.</string>
     <string name="switch_provider_title">Switch Provider?</string>
@@ -253,12 +268,37 @@
     <string name="ways_to_lock">Ways to lock</string>
 
     <!-- Security - PIN & Recovery -->
+    <string name="answer_cannot_be_empty">Answer cannot be empty</string>
     <string name="answer_label">Answer</string>
     <string name="answer_placeholder">Enter your recovery answer</string>
+    <string name="change_recovery">Change recovery</string>
+    <string name="confirm_pin">Confirm PIN</string>
+    <string name="create_pin">Create PIN</string>
     <string name="custom_question_label">Custom Question</string>
     <string name="custom_question_placeholder">e.g. What is your secret nickname?</string>
+    <string name="developer_options_desc">Configure developer logging options and view system console logs.</string>
+    <string name="developer_options_disabled">Developer options disabled</string>
     <string name="forgot_pin">Forgot PIN</string>
+    <string name="important">Important</string>
+    <string name="pin_no_recovery_warning_desc">If you forget your Custom PIN, you will lose access to your journal. There is no recovery option. Please configure a recovery question.</string>
+    <string name="pin_recovery_configured_desc">If you forget your Custom PIN, you can recover/reset it using your configured security question.</string>
+    <string name="setup_recovery">Setup recovery</string>
+    <string name="placeholder_artist">e.g. Coldplay, Taylor Swift</string>
+    <string name="placeholder_book">e.g. Alchemist, 1984</string>
+    <string name="placeholder_default_answer">e.g. Enter your answer</string>
+    <string name="placeholder_first_entry_city">e.g. London, Paris, Tokyo</string>
+    <string name="placeholder_motto">e.g. carpe diem, keep going</string>
+    <string name="placeholder_perfect_day">e.g. peace, creative, cozy</string>
+    <string name="placeholder_writing_place">e.g. bedroom, local cafe</string>
     <string name="pin_recovery_desc">To reset your Custom PIN, please answer the recovery question below.</string>
+    <string name="question_artist">Who is your favorite musical artist or band?</string>
+    <string name="question_book">What is the name of a book that deeply inspired you?</string>
+    <string name="question_cannot_be_empty">Question cannot be empty</string>
+    <string name="question_custom">Write a custom question...</string>
+    <string name="question_first_entry_city">In which city did you write your first entry?</string>
+    <string name="question_motto">What is a short motto or phrase you live by?</string>
+    <string name="question_perfect_day">What single word describes your perfect day?</string>
+    <string name="question_writing_place">What is your favorite writing place or sanctuary?</string>
     <string name="recovery_question">Recovery Question</string>
     <string name="recovery_setup_desc">Configure a recovery question. If you forget your PIN, answering this question correctly allows you to reset it.</string>
     <string name="your_answer_label">Your Answer</string>
@@ -278,6 +318,10 @@
     <string name="reminder_screen_desc">Stay consistent with your journaling by setting up reminders</string>
     <string name="reminder_time">Reminder time</string>
     <string name="repeat">Repeat</string>
+    <string name="repeat_daily">Daily</string>
+    <string name="repeat_none">None</string>
+    <string name="repeat_weekdays">Weekdays</string>
+    <string name="repeat_weekends">Weekends</string>
     <string name="schedule">Schedule</string>
 
     <!-- Settings - Sync & Backup -->
@@ -413,24 +457,24 @@
     <string name="about_june_desc">version and github link</string>
     <string name="about_libraries">About Libraries</string>
     <string name="about_libraries_desc">View licenses of third-party libraries</string>
-    <string name="android_os">Android OS</string>
+    <string name="android_os" translatable="false">Android OS</string>
     <string name="app_icon">App Icon</string>
     <string name="changelog">Changelog</string>
     <string name="changelog_desc">View release history</string>
     <string name="check_for_updates">Check for Updates</string>
     <string name="check_for_updates_desc">Check if a newer version is available</string>
     <string name="developer_profile">Developer profile</string>
-    <string name="device">Device</string>
-    <string name="gpl_license_desc">GPL-3.0 License</string>
-    <string name="hyphen_version">Hyphen Version</string>
+    <string name="device" translatable="false">Device</string>
+    <string name="gpl_license_desc" translatable="false">GPL-3.0 License</string>
+    <string name="hyphen_version" translatable="false">Hyphen Version</string>
     <string name="license">License</string>
     <string name="map_credits">Map Credits</string>
     <string name="map_credits_desc">Credits and licenses for map data</string>
-    <string name="pkg_name">Package Name</string>
-    <string name="signing_key_sha256">Signing Key SHA-256</string>
-    <string name="supported_abis">Supported ABIs</string>
-    <string name="version_code">Version Code</string>
-    <string name="version_name">Version Name</string>
+    <string name="pkg_name" translatable="false">Package Name</string>
+    <string name="signing_key_sha256" translatable="false">Signing Key SHA-256</string>
+    <string name="supported_abis" translatable="false">Supported ABIs</string>
+    <string name="version_code" translatable="false">Version Code</string>
+    <string name="version_name" translatable="false">Version Name</string>
 
     <!-- Home & Search -->
     <string name="bookmarked">Bookmarked</string>
@@ -450,6 +494,10 @@
     <!-- Editor & Formatting -->
     <string name="add_attachment">Add Attachment</string>
     <string name="add_emoji">Add Emoji</string>
+    <string name="add_item">Add Item</string>
+    <string name="add_location_and_map">Add location &amp; map</string>
+    <string name="add_photo_or_video">Add photo / video</string>
+    <string name="add_song_link">Add song link</string>
     <string name="add_title">Add title</string>
     <string name="capture_media">Capture Media</string>
     <string name="date_time_picker">Date and Time Picker</string>
@@ -458,5 +506,6 @@
     <string name="fetch_song_require_internet">Enable internet access to fetch song details.</string>
     <string name="link_url_label">Link URL</string>
     <string name="link_url_placeholder" translatable="false">https://example.com</string>
+    <string name="take_photo_or_video">Take photo / video</string>
     <string name="whats_on_your_mind">What\'s on your mind?</string>
 </resources>

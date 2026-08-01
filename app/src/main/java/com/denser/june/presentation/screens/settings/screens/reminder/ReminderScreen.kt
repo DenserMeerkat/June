@@ -37,6 +37,7 @@ import java.time.DayOfWeek
 import java.time.LocalTime
 import java.time.format.TextStyle
 import java.util.*
+import androidx.compose.ui.platform.LocalLocale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -74,7 +75,7 @@ fun ReminderScreen() {
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                         )
                     }
                 }
@@ -191,7 +192,7 @@ fun ReminderScreen() {
                                 )
                             ) {
                                 Text(
-                                    text = day.getDisplayName(TextStyle.NARROW, Locale.getDefault()),
+                                    text = day.getDisplayName(TextStyle.NARROW, LocalLocale.current.platformLocale),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
@@ -221,15 +222,17 @@ fun ReminderScreen() {
     }
 }
 
+@Composable
 private fun getRepeatSummary(days: Set<DayOfWeek>): String {
     return when {
-        days.size == 7 -> "Daily"
-        days.isEmpty() -> "None"
-        days.size == 5 && !days.contains(DayOfWeek.SATURDAY) && !days.contains(DayOfWeek.SUNDAY) -> "Weekdays"
-        days.size == 2 && days.contains(DayOfWeek.SATURDAY) && days.contains(DayOfWeek.SUNDAY) -> "Weekends"
+        days.size == 7 -> stringResource(R.string.repeat_daily)
+        days.isEmpty() -> stringResource(R.string.repeat_none)
+        days.size == 5 && !days.contains(DayOfWeek.SATURDAY) && !days.contains(DayOfWeek.SUNDAY) -> stringResource(R.string.repeat_weekdays)
+        days.size == 2 && days.contains(DayOfWeek.SATURDAY) && days.contains(DayOfWeek.SUNDAY) -> stringResource(R.string.repeat_weekends)
         else -> {
+            val locale = LocalLocale.current.platformLocale
             days.sortedBy { it.value }
-                .joinToString(", ") { it.getDisplayName(TextStyle.SHORT, Locale.getDefault()) }
+                .joinToString(", ") { it.getDisplayName(TextStyle.SHORT, locale) }
         }
     }
 }

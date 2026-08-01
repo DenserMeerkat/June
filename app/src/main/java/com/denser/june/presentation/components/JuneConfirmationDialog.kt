@@ -42,7 +42,7 @@ fun JuneConfirmationDialog(
     title: String,
     description: String,
     confirmText: String? = null,
-    confirmButtonText: String = "Confirm",
+    confirmButtonText: String = stringResource(R.string.confirm),
     isDestructive: Boolean = true,
     icon: Int? = R.drawable.delete_24px
 ) {
@@ -80,16 +80,23 @@ fun JuneConfirmationDialog(
                     text = buildAnnotatedString {
                         append(description)
                         if (confirmText != null) {
-                            append("\n\nType ")
-                            withStyle(
-                                style = SpanStyle(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            ) {
-                                append("'$confirmText'")
+                            val fullPrompt = stringResource(R.string.type_to_confirm, confirmText)
+                            val target = "'$confirmText'"
+                            val startIndex = fullPrompt.indexOf(target)
+                            if (startIndex != -1) {
+                                append(fullPrompt.substring(0, startIndex))
+                                withStyle(
+                                    style = SpanStyle(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                ) {
+                                    append(target)
+                                }
+                                append(fullPrompt.substring(startIndex + target.length))
+                            } else {
+                                append(fullPrompt)
                             }
-                            append(" below to confirm.")
                         }
                     },
                     style = MaterialTheme.typography.bodyMedium,

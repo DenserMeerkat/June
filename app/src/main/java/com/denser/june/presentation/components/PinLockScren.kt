@@ -31,6 +31,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -46,7 +47,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun PinLockScreen(
     modifier: Modifier = Modifier,
-    title: String = "Enter PIN",
+    title: String = stringResource(R.string.enter_pin),
     isError: Boolean = false,
     maxPinLength: Int = 6,
     onForgotPin: (() -> Unit)? = null,
@@ -105,7 +106,7 @@ fun PinLockScreen(
                 Spacer(modifier = Modifier.height(spacerHeight1))
 
                 Text(
-                    text = if (isError) "Wrong PIN. Try again." else title,
+                    text = if (isError) stringResource(R.string.wrong_pin_try_again) else title,
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Medium

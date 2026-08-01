@@ -20,6 +20,7 @@ import com.denser.june.core.domain.model.Journal
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.components.JuneBadge
+import androidx.compose.ui.res.stringResource
 import org.koin.compose.koinInject
 
 import com.denser.june.core.R
@@ -106,7 +107,7 @@ fun TimelineJournalTile(
                     JuneBadge(
                         show = true,
                         icon = if (journal.cloudId != null) R.drawable.cloud_24px else R.drawable.devices_24px,
-                        label = if (journal.cloudId != null) "Cloud" else "Local"
+                        label = if (journal.cloudId != null) stringResource(R.string.cloud) else stringResource(R.string.local)
                     )
                     JuneBadge(
                         show = mediaCount > 0,

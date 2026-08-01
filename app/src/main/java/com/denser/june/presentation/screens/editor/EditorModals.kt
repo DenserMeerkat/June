@@ -102,7 +102,7 @@ fun EditorModals(
     if (dialogState.showExitDialog) {
         JuneDialog(
             onDismissRequest = { dialogState.showExitDialog = false },
-            title = stringResource(R.string.save_and_enable_lock),
+            title = stringResource(R.string.save_entry),
             icon = R.drawable.file_save_24px,
             confirmButton = {
                 Button(onClick = {
