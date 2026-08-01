@@ -38,4 +38,5 @@ sealed interface SettingsAction {
     data class OnKeyboardAutocorrectToggle(val enabled: Boolean) : SettingsAction
     data class OnKeyboardCapitalizationToggle(val enabled: Boolean) : SettingsAction
     data class OnEditorLayoutDirectionChange(val direction: EditorLayoutDirection) : SettingsAction
+    data class OnForceLtrUiToggle(val enabled: Boolean) : SettingsAction
 }

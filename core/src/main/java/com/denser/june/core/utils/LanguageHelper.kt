@@ -111,6 +111,14 @@ object LanguageHelper {
         AppCompatDelegate.setApplicationLocales(localeList)
     }
 
+    fun isCurrentLocaleRtl(): Boolean {
+        val locale = Locale.getDefault()
+        return when (locale.language.lowercase()) {
+            "ar", "fa", "he", "iw", "ur" -> true
+            else -> false
+        }
+    }
+
     fun getCurrentLanguageNativeName(context: Context): String {
         val currentCode = getCurrentLanguageCode()
         val supported = getSupportedLanguages(context)

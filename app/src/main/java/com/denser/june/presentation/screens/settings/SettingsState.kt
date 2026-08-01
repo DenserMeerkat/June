@@ -38,4 +38,5 @@ data class SettingsState(
     val isKeyboardAutocorrectEnabled: Boolean = true,
     val isKeyboardCapitalizationEnabled: Boolean = true,
     val editorLayoutDirection: EditorLayoutDirection = EditorLayoutDirection.AUTO,
+    val isForceLtrUi: Boolean = true,
 )

@@ -227,6 +227,8 @@
     <string name="editor_direction_auto">Auto (Follow App Locale)</string>
     <string name="editor_direction_ltr">Left-to-Right (LTR)</string>
     <string name="editor_direction_rtl">Right-to-Left (RTL)</string>
+    <string name="force_ltr_layout">Force LTR Interface</string>
+    <string name="force_ltr_layout_desc">Keep app navigation left-to-right</string>
     <string name="help_translate_desc">Contribute translations on Weblate</string>
     <string name="language">Language</string>
     <string name="translate_app">Help translate June</string>

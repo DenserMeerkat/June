@@ -112,7 +112,7 @@ fun AppearanceSettingsScreen() {
                     }
                 }
 
-                val fontAndLangGroup = listOfNotNull(appearanceTiles["LANGUAGE"], appearanceTiles["APP_FONT"])
+                val fontAndLangGroup = listOfNotNull(appearanceTiles["LANGUAGE"], appearanceTiles["FORCE_LTR_APP_LAYOUT"], appearanceTiles["APP_FONT"])
                 if (fontAndLangGroup.isNotEmpty()) {
                     item {
                         SettingSection {
