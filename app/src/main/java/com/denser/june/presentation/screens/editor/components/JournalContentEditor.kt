@@ -37,7 +37,11 @@ import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import androidx.compose.ui.unit.LayoutDirection
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
+import com.denser.june.core.utils.LanguageHelper
 import kotlin.time.Duration.Companion.milliseconds
+
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
 
 @Composable
 fun JournalContentEditor(
@@ -52,201 +56,202 @@ fun JournalContentEditor(
     isKeyboardCapitalizationEnabled: Boolean = true,
     editorLayoutDirection: EditorLayoutDirection = EditorLayoutDirection.AUTO,
 ) {
-    val linkConfig = remember {
-        HyphenLinkConfig(
-            dropdownContent = { span, menuOffset, onDismiss, onEditRequest ->
-                JuneLinkMenu(
-                    span = span,
-                    menuOffset = menuOffset,
-                    onDismiss = onDismiss,
-                    onEditRequest = onEditRequest
-                )
-            },
-            dialogContent = { span, onDismiss, onConfirm ->
-                JuneLinkSheet(
-                    span = span,
-                    initialText = state.text.substring(span.start, span.end),
-                    onDismiss = onDismiss,
-                    onConfirm = onConfirm
-                )
-            }
-        )
-    }
-
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
-
-    val activeLink = state.activeLinkForEditing
-    var linkSpanToShowDialog by remember { mutableStateOf<MarkupStyleRange?>(null) }
-
-    LaunchedEffect(activeLink) {
-        if (activeLink != null) {
-            keyboardController?.hide()
-            focusManager.clearFocus()
-            delay(200.milliseconds)
-            linkSpanToShowDialog = activeLink
-        } else {
-            linkSpanToShowDialog = null
-        }
-    }
-
-    val refocusEditor = {
-        focusRequester.requestFocus()
-        keyboardController?.show()
-    }
-
-    val activeLinkToShow = linkSpanToShowDialog
-    if (activeLinkToShow != null) {
-        val currentText = remember(activeLinkToShow, state.text) {
-            state.text.substring(
-                activeLinkToShow.start.coerceAtMost(state.text.length),
-                activeLinkToShow.end.coerceAtMost(state.text.length)
-            )
-        }
-        JuneLinkSheet(
-            span = activeLinkToShow,
-            initialText = currentText,
-            onDismiss = {
-                state.activeLinkForEditing = null
-                linkSpanToShowDialog = null
-                refocusEditor()
-            },
-            onConfirm = { newText, newUrl ->
-                state.updateLink(activeLinkToShow, newText, newUrl)
-                state.activeLinkForEditing = null
-                linkSpanToShowDialog = null
-                refocusEditor()
-            }
-        )
-    }
-
-    val keyboardOptions = KeyboardOptions(
-        capitalization = if (isKeyboardCapitalizationEnabled) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
-        autoCorrectEnabled = isKeyboardAutocorrectEnabled
-    )
-
-    if (!isMarkdownEnabled) {
-        TextField(
-            value = rawContent,
-            onValueChange = { newText ->
-                state.setMarkdown(newText)
-                onMarkdownChange(newText)
-            },
-            modifier = modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester)
-                .onFocusChanged { focusState ->
-                    onFocusChanged(focusState.isFocused)
-                },
-            placeholder = {
-                Text(
-                    stringResource(R.string.whats_on_your_mind),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            },
-            keyboardOptions = keyboardOptions,
-            colors = UiUtils.getTransparentTextFieldColors().copy(
-                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-            ),
-            textStyle = MaterialTheme.typography.bodyLarge,
-        )
-        return
-    }
-
-    val layoutDirectionOverride = when (editorLayoutDirection) {
-        EditorLayoutDirection.AUTO -> null
+    val editorDirection = when (editorLayoutDirection) {
+        EditorLayoutDirection.AUTO -> if (LanguageHelper.isCurrentLocaleRtl()) LayoutDirection.Rtl else LayoutDirection.Ltr
         EditorLayoutDirection.LTR -> LayoutDirection.Ltr
         EditorLayoutDirection.RTL -> LayoutDirection.Rtl
     }
 
-    HyphenTextField(
-        state = state,
-        layoutDirection = layoutDirectionOverride,
-        linkConfig = linkConfig,
-        showDefaultSuggestionsPopup = false,
-        triggerPopup = {},
-        onMarkdownChange = onMarkdownChange,
-        modifier = modifier
-            .fillMaxWidth()
-            .focusRequester(focusRequester)
-            .onFocusChanged { focusState ->
-                onFocusChanged(focusState.isFocused)
-            },
-        placeholder = {
-            Text(
-                stringResource(R.string.whats_on_your_mind),
-                style = MaterialTheme.typography.bodyLarge,
+    CompositionLocalProvider(LocalLayoutDirection provides editorDirection) {
+        val linkConfig = remember {
+            HyphenLinkConfig(
+                dropdownContent = { span, menuOffset, onDismiss, onEditRequest ->
+                    JuneLinkMenu(
+                        span = span,
+                        menuOffset = menuOffset,
+                        onDismiss = onDismiss,
+                        onEditRequest = onEditRequest
+                    )
+                },
+                dialogContent = { span, onDismiss, onConfirm ->
+                    JuneLinkSheet(
+                        span = span,
+                        initialText = state.text.substring(span.start, span.end),
+                        onDismiss = onDismiss,
+                        onConfirm = onConfirm
+                    )
+                }
             )
-        },
-        keyboardOptions = keyboardOptions,
-        colors = UiUtils.getTransparentTextFieldColors().copy(
-            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-            unfocusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-            focusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-        ),
-        styleConfig = HyphenStyleConfig(
-            boldStyle = SpanStyle(
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            ),
-            italicStyle = SpanStyle(
-                fontStyle = FontStyle.Italic,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            ),
-            strikethroughStyle = SpanStyle(
-                textDecoration = TextDecoration.LineThrough,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-            ),
-            highlightStyle = SpanStyle(
-                background = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            ),
-            inlineCodeStyle = SpanStyle(
-                background = MaterialTheme.colorScheme.surfaceVariant,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 14.sp
-            ),
-            blockquoteSpanStyle = SpanStyle(
-                fontStyle = FontStyle.Italic,
-                color = MaterialTheme.colorScheme.onTertiaryContainer,
-            ),
-            blockquoteStyle = BlockquoteStyle(
-                backgroundColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
-                borderColor = MaterialTheme.colorScheme.tertiary,
-            ),
-            h1Style = SpanStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-            h2Style = SpanStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-            h3Style = SpanStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-            h4Style = SpanStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-            h5Style = SpanStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-            h6Style = SpanStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp),
-            bulletListStyle = ListItemStyle(
-                prefixStyle = SpanStyle(
-                    color = MaterialTheme.colorScheme.tertiary
+        }
+
+        val keyboardController = LocalSoftwareKeyboardController.current
+        val focusManager = LocalFocusManager.current
+
+        val activeLink = state.activeLinkForEditing
+        var linkSpanToShowDialog by remember { mutableStateOf<MarkupStyleRange?>(null) }
+
+        LaunchedEffect(activeLink) {
+            if (activeLink != null) {
+                keyboardController?.hide()
+                focusManager.clearFocus()
+                delay(200.milliseconds)
+                linkSpanToShowDialog = activeLink
+            } else {
+                linkSpanToShowDialog = null
+            }
+        }
+
+        val refocusEditor = {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+
+        val activeLinkToShow = linkSpanToShowDialog
+        if (activeLinkToShow != null) {
+            val currentText = remember(activeLinkToShow, state.text) {
+                state.text.substring(
+                    activeLinkToShow.start.coerceAtMost(state.text.length),
+                    activeLinkToShow.end.coerceAtMost(state.text.length)
                 )
-            ),
-            orderedListStyle = ListItemStyle(
-                prefixStyle = SpanStyle(
-                    color = MaterialTheme.colorScheme.tertiary
-                )
-            ),
-            linkStyle = SpanStyle(
-                color = MaterialTheme.colorScheme.primary,
-                textDecoration = TextDecoration.Underline,
-            ),
-            mentionStyles = mapOf(
-                "person" to SpanStyle(
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium,
-                ),
-                "topic" to SpanStyle(
-                    color = MaterialTheme.colorScheme.tertiary,
-                    fontWeight = FontWeight.Medium,
-                )
+            }
+            JuneLinkSheet(
+                span = activeLinkToShow,
+                initialText = currentText,
+                onDismiss = {
+                    state.activeLinkForEditing = null
+                    linkSpanToShowDialog = null
+                    refocusEditor()
+                },
+                onConfirm = { newText, newUrl ->
+                    state.updateLink(activeLinkToShow, newText, newUrl)
+                    state.activeLinkForEditing = null
+                    linkSpanToShowDialog = null
+                    refocusEditor()
+                }
             )
+        }
+
+        val keyboardOptions = KeyboardOptions(
+            capitalization = if (isKeyboardCapitalizationEnabled) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
+            autoCorrectEnabled = isKeyboardAutocorrectEnabled
         )
-    )
+
+        if (!isMarkdownEnabled) {
+            TextField(
+                value = rawContent,
+                onValueChange = { newText ->
+                    state.setMarkdown(newText)
+                    onMarkdownChange(newText)
+                },
+                modifier = modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { focusState ->
+                        onFocusChanged(focusState.isFocused)
+                    },
+                placeholder = {
+                    Text(
+                        stringResource(R.string.whats_on_your_mind),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                },
+                keyboardOptions = keyboardOptions,
+                colors = UiUtils.getTransparentTextFieldColors().copy(
+                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                ),
+                textStyle = MaterialTheme.typography.bodyLarge,
+            )
+        } else {
+            HyphenTextField(
+                state = state,
+                layoutDirection = editorDirection,
+                linkConfig = linkConfig,
+                showDefaultSuggestionsPopup = false,
+                triggerPopup = {},
+                onMarkdownChange = onMarkdownChange,
+                modifier = modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { focusState ->
+                        onFocusChanged(focusState.isFocused)
+                    },
+                placeholder = {
+                    Text(
+                        stringResource(R.string.whats_on_your_mind),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                },
+                keyboardOptions = keyboardOptions,
+                colors = UiUtils.getTransparentTextFieldColors().copy(
+                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                ),
+                styleConfig = HyphenStyleConfig(
+                    boldStyle = SpanStyle(
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    italicStyle = SpanStyle(
+                        fontStyle = FontStyle.Italic,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    strikethroughStyle = SpanStyle(
+                        textDecoration = TextDecoration.LineThrough,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    ),
+                    highlightStyle = SpanStyle(
+                        background = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    ),
+                    inlineCodeStyle = SpanStyle(
+                        background = MaterialTheme.colorScheme.surfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 14.sp
+                    ),
+                    blockquoteSpanStyle = SpanStyle(
+                        fontStyle = FontStyle.Italic,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    ),
+                    blockquoteStyle = BlockquoteStyle(
+                        backgroundColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
+                        borderColor = MaterialTheme.colorScheme.tertiary,
+                    ),
+                    h1Style = SpanStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
+                    h2Style = SpanStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
+                    h3Style = SpanStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
+                    h4Style = SpanStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
+                    h5Style = SpanStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
+                    h6Style = SpanStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp),
+                    bulletListStyle = ListItemStyle(
+                        prefixStyle = SpanStyle(
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    ),
+                    orderedListStyle = ListItemStyle(
+                        prefixStyle = SpanStyle(
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    ),
+                    linkStyle = SpanStyle(
+                        color = MaterialTheme.colorScheme.primary,
+                        textDecoration = TextDecoration.Underline,
+                    ),
+                    mentionStyles = mapOf(
+                        "person" to SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium,
+                        ),
+                        "topic" to SpanStyle(
+                            color = MaterialTheme.colorScheme.tertiary,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    )
+                )
+            )
+        }
+    }
 }

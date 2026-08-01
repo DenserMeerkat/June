@@ -43,7 +43,7 @@ val juneModules = module {
     viewModel { params ->
         MainVM(
             initialAppTheme = params.getOrNull() ?: AppTheme(),
-            get(), get(), get(), get(), get()
+            get(), get(), get(), get(), get(), get()
         )
     }
     single { StartupManager(get(), get()) }

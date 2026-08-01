@@ -39,6 +39,7 @@ class JournalPreferencesImpl(
         val KEYBOARD_AUTOCORRECT_ENABLED = booleanPreferencesKey("keyboard_autocorrect_enabled")
         val KEYBOARD_CAPITALIZATION_ENABLED = booleanPreferencesKey("keyboard_capitalization_enabled")
         val EDITOR_LAYOUT_DIRECTION = stringPreferencesKey("editor_layout_direction")
+        val FORCE_LTR_APP_LAYOUT = booleanPreferencesKey("force_ltr_app_layout")
         const val DEFAULT_REMINDER_TIME = "21:14"
     }
 
@@ -240,6 +241,15 @@ class JournalPreferencesImpl(
     override suspend fun setEditorLayoutDirection(direction: EditorLayoutDirection) {
         dataStore.edit { preferences ->
             preferences[EDITOR_LAYOUT_DIRECTION] = direction.name
+        }
+    }
+
+    override fun isForceLtrUiEnabled(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[FORCE_LTR_APP_LAYOUT] ?: true }
+
+    override suspend fun setForceLtrUiEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[FORCE_LTR_APP_LAYOUT] = enabled
         }
     }
 }

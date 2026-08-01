@@ -161,6 +161,14 @@ object SettingsTileRegistry {
                 content = { LanguageTile() }
             ),
             SettingTile(
+                key = "FORCE_LTR_APP_LAYOUT",
+                title = stringResource(R.string.force_ltr_layout),
+                subtitle = { context, _ -> context.getString(R.string.force_ltr_layout_desc) },
+                category = "Appearance",
+                keywords = listOf("force", "ltr", "rtl", "layout", "direction", "app", "navigation", "arabic", "persian", "hebrew"),
+                content = { ForceLtrAppLayoutTile() }
+            ),
+            SettingTile(
                 key = "APP_THEME",
                 title = stringResource(R.string.app_theme),
                 subtitle = { context, state -> context.getString(state.appTheme.themeMode.stringRes) },

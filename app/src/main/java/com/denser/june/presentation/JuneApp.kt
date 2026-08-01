@@ -25,6 +25,9 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+
 @Composable
 fun JuneApp(
     initialAppTheme: AppTheme,
@@ -72,9 +75,12 @@ fun JuneApp(
         }
     }
 
+    val uiDirection = if (appState.isForceLtrUi) LayoutDirection.Ltr else LocalLayoutDirection.current
+
     CompositionLocalProvider(
         LocalAppTheme provides appState.appTheme,
-        LocalInternetAllowed provides appState.isInternetAllowed
+        LocalInternetAllowed provides appState.isInternetAllowed,
+        LocalLayoutDirection provides uiDirection
     ) {
         JuneTheme(appTheme = appState.appTheme) {
             Surface(modifier = Modifier.fillMaxSize()) {

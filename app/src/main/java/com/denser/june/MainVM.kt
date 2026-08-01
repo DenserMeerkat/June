@@ -14,13 +14,16 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
+import com.denser.june.core.domain.preferences.JournalPreferences
+
 data class AppState(
     val appTheme: AppTheme = AppTheme(),
     val isAppLockEnabled: Boolean = false,
     val isLoading: Boolean = true,
     val syncStatus: SyncStatus = SyncStatus.Idle,
     val isSyncEnabled: Boolean = false,
-    val isInternetAllowed: Boolean = true
+    val isInternetAllowed: Boolean = true,
+    val isForceLtrUi: Boolean = false
 )
 
 class MainVM(
@@ -29,23 +32,28 @@ class MainVM(
     privacyPrefs: PrivacyPreferences,
     fontPrefs: FontPreferences,
     syncManager: SyncManager,
-    syncPrefs: SyncPreferences
+    syncPrefs: SyncPreferences,
+    journalPrefs: JournalPreferences
 ) : ViewModel() {
 
-    val state = combine(
-        themePrefs.getAppThemeFlow(fontPrefs),
-        privacyPrefs.getAppLockFlow(),
-        syncManager.status,
-        syncPrefs.getSyncEnabled(),
-        privacyPrefs.getIsInternetAllowedFlow()
-    ) { appTheme, isAppLockEnabled, syncStatus, isSyncEnabled, isInternetAllowed ->
+    val state = combine<Any?, AppState>(
+        listOf(
+            themePrefs.getAppThemeFlow(fontPrefs),
+            privacyPrefs.getAppLockFlow(),
+            syncManager.status,
+            syncPrefs.getSyncEnabled(),
+            privacyPrefs.getIsInternetAllowedFlow(),
+            journalPrefs.isForceLtrUiEnabled()
+        )
+    ) { array ->
         AppState(
-            appTheme = appTheme,
-            isAppLockEnabled = isAppLockEnabled,
+            appTheme = array[0] as AppTheme,
+            isAppLockEnabled = array[1] as Boolean,
             isLoading = false,
-            syncStatus = syncStatus,
-            isSyncEnabled = isSyncEnabled,
-            isInternetAllowed = isInternetAllowed
+            syncStatus = array[2] as SyncStatus,
+            isSyncEnabled = array[3] as Boolean,
+            isInternetAllowed = array[4] as Boolean,
+            isForceLtrUi = array[5] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,

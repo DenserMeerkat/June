@@ -30,6 +30,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,6 +46,7 @@ import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.utils.toDateWithDay
 import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
+import com.denser.june.core.utils.LanguageHelper
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -300,27 +304,35 @@ fun EditorScreen() {
                             )
                         }
 
-                        TextField(
-                            value = state.title,
-                            onValueChange = { viewModel.onAction(EditorAction.ChangeTitle(it)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            placeholder = {
-                                Text(
-                                    stringResource(R.string.add_title),
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = if (isKeyboardCapitalizationEnabled) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
-                                autoCorrectEnabled = isKeyboardAutocorrectEnabled
-                            ),
-                            textStyle = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            colors = UiUtils.getTransparentTextFieldColors()
-                        )
+                        val editorDirection = when (editorLayoutDirection) {
+                            EditorLayoutDirection.AUTO -> if (LanguageHelper.isCurrentLocaleRtl()) LayoutDirection.Rtl else LayoutDirection.Ltr
+                            EditorLayoutDirection.LTR -> LayoutDirection.Ltr
+                            EditorLayoutDirection.RTL -> LayoutDirection.Rtl
+                        }
+
+                        CompositionLocalProvider(LocalLayoutDirection provides editorDirection) {
+                            TextField(
+                                value = state.title,
+                                onValueChange = { viewModel.onAction(EditorAction.ChangeTitle(it)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = {
+                                    Text(
+                                        stringResource(R.string.add_title),
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                    )
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    capitalization = if (isKeyboardCapitalizationEnabled) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
+                                    autoCorrectEnabled = isKeyboardAutocorrectEnabled
+                                ),
+                                textStyle = MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                colors = UiUtils.getTransparentTextFieldColors()
+                            )
+                        }
 
                         Row(
                             modifier = Modifier

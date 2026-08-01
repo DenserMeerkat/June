@@ -59,4 +59,7 @@ interface JournalPreferences {
 
     fun editorLayoutDirection(): Flow<EditorLayoutDirection>
     suspend fun setEditorLayoutDirection(direction: EditorLayoutDirection)
+
+    fun isForceLtrUiEnabled(): Flow<Boolean>
+    suspend fun setForceLtrUiEnabled(enabled: Boolean)
 }

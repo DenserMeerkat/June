@@ -65,7 +65,8 @@ class SettingsVM(
             journalPrefs.alwaysOpenNewNote(),
             journalPrefs.isKeyboardAutocorrectEnabled(),
             journalPrefs.isKeyboardCapitalizationEnabled(),
-            journalPrefs.editorLayoutDirection()
+            journalPrefs.editorLayoutDirection(),
+            journalPrefs.isForceLtrUiEnabled()
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -87,6 +88,7 @@ class SettingsVM(
             isKeyboardAutocorrectEnabled = array[20] as Boolean,
             isKeyboardCapitalizationEnabled = array[21] as Boolean,
             editorLayoutDirection = array[22] as EditorLayoutDirection,
+            isForceLtrUi = array[23] as Boolean,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -180,6 +182,7 @@ class SettingsVM(
                 is SettingsAction.OnKeyboardAutocorrectToggle -> journalPrefs.setKeyboardAutocorrectEnabled(action.enabled)
                 is SettingsAction.OnKeyboardCapitalizationToggle -> journalPrefs.setKeyboardCapitalizationEnabled(action.enabled)
                 is SettingsAction.OnEditorLayoutDirectionChange -> journalPrefs.setEditorLayoutDirection(action.direction)
+                is SettingsAction.OnForceLtrUiToggle -> journalPrefs.setForceLtrUiEnabled(action.enabled)
             }
         }
     }
