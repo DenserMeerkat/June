@@ -11,7 +11,7 @@
 
 <p align="center">
     <a href="https://github.com/DenserMeerkat/June/releases/latest">
-        <img src="https://img.shields.io/github/v/release/DenserMeerkat/June?include_prereleases&logo=github&style=for-the-badge&color=red&label=Latest%20Release" alt="Release">
+        <img src="https://img.shields.io/github/v/release/DenserMeerkat/June?include_prereleases&logo=github&style=for-the-badge&color=red&label=Latest" alt="Release">
     </a>
     <a href="https://github.com/DenserMeerkat/June/releases">
         <img src="https://img.shields.io/github/downloads/DenserMeerkat/June/total?logo=github&style=for-the-badge" alt="Total Downloads">
@@ -35,7 +35,7 @@
 
 ## Core Features
 
-June is designed to be more than just text—it's a multimedia capsule of your life.
+June is more than just text; it is a multimedia capsule of your life.
 
 ### Capture Every Detail
 
@@ -56,7 +56,7 @@ June is designed to be more than just text—it's a multimedia capsule of your l
 
 - **Privacy Vault:** Secure your entries with Biometric Unlock or a custom PIN. Includes screen capture and recents menu protection.
 - **Expressive Theming:** Enjoy a personalized look with **Dynamic Wallpaper Colors (Material You)** and custom **Font Selection**.
-- **Total Ownership:** 100% offline architecture with full Backup & Restore capabilities—your data never leaves your device unless you choose to sync it.
+- **Total Ownership:** 100% offline architecture with full Backup & Restore capabilities. Your data never leaves your device unless you choose to sync it.
 - **Network Toggle:** Full control over your connectivity. Turn off all external network access if you prefer not to fetch song metadata or use online map services.
 - **Cloud Sync:** Keep your journal in sync across devices using **WebDAV**. Maintain 100% privacy by using your own Nextcloud, ownCloud, or any WebDAV provider.
 
@@ -92,6 +92,25 @@ To build June locally:
 1. Clone the repository: `git clone https://github.com/DenserMeerkat/June.git`
 2. Open the project in **Android Studio** (configured with **JDK 17**).
 3. Select the `debug` build variant and run it on your device or emulator.
+
+## Translations
+
+June is localized by community contributors through [Hosted Weblate](https://hosted.weblate.org/engage/june/).
+
+<p align="center">
+  <a href="https://hosted.weblate.org/engage/june/">
+    <img src="https://hosted.weblate.org/widgets/june/-/app/multi-auto.svg" alt="Translation status graph" />
+  </a>
+</p>
+
+### Help Translate June
+You can help translate June into your language or refine existing translations directly from your browser.
+
+<p align="center">
+  <a href="https://hosted.weblate.org/engage/june/">
+    <img src="https://hosted.weblate.org/widget/june/287x66-white.png" alt="Contribute on Weblate" />
+  </a>
+</p>
 
 
 ## Security & Verifiability
