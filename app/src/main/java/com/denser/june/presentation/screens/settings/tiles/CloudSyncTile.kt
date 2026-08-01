@@ -4,6 +4,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -14,8 +15,8 @@ import org.koin.compose.koinInject
 fun CloudSyncTile() {
     val navigator = koinInject<AppNavigator>()
     SettingsItem(
-        title = "Cloud Sync",
-        subtitle = "Sync across devices via Cloud",
+        title = stringResource(R.string.cloud_sync),
+        subtitle = stringResource(R.string.cloud_sync_desc),
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.cloud_24px),

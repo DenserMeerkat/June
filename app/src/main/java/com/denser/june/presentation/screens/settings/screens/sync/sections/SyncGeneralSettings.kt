@@ -5,6 +5,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.screens.settings.components.SettingsItem
@@ -22,10 +23,10 @@ fun SyncGeneralSettings(
         enter = fadeIn() + expandVertically(),
         exit = fadeOut() + shrinkVertically()
     ) {
-        SettingSection(title = "General Settings") {
+        SettingSection(title = stringResource(R.string.general_settings)) {
             SettingsItem(
-                title = "Automatic Sync",
-                subtitle = "Sync changes as they happen",
+                title = stringResource(R.string.automatic_sync),
+                subtitle = stringResource(R.string.automatic_sync_desc),
                 leadingContent = {
                     Icon(painterResource(R.drawable.cloud_sync_24px), null)
                 },
@@ -39,8 +40,8 @@ fun SyncGeneralSettings(
             )
 
             SettingsItem(
-                title = "Auto-sync on Wi-Fi only",
-                subtitle = "Avoid syncing over mobile data",
+                title = stringResource(R.string.wifi_only_sync),
+                subtitle = stringResource(R.string.wifi_only_sync_desc),
                 leadingContent = {
                     Icon(painterResource(R.drawable.wifi_24px), null)
                 },

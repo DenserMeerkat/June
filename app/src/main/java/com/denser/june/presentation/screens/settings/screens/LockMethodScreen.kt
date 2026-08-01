@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
@@ -87,7 +88,7 @@ fun LockMethodScreen() {
             pinVerificationError = false
         }
         PinLockScreen(
-            title = "Enter PIN to verify",
+            title = stringResource(R.string.enter_pin_to_verify),
             isError = pinVerificationError,
             onPinSubmitted = { pin ->
                 val inputHash = SecurityUtils.hashPin(pin)
@@ -109,7 +110,7 @@ fun LockMethodScreen() {
         topBar = {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
-                title = { Text("Lock your journal") },
+                title = { Text(stringResource(R.string.lock_your_journal)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     FilledIconButton(
@@ -137,13 +138,13 @@ fun LockMethodScreen() {
                 modifier = Modifier.padding(horizontal = 24.dp)
             ) {
                 Text(
-                    text = "Keep your journal private by adding an extra layer of security",
+                    text = stringResource(R.string.lock_journal_desc),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Spacer(modifier = Modifier.size(24.dp))
-            SettingSection(title = "Ways to lock") {
+            SettingSection(title = stringResource(R.string.ways_to_lock)) {
 
                 val isBiometricSelected =
                     state.isAppLockEnabled && state.lockType == LockType.BIOMETRIC
@@ -151,7 +152,7 @@ fun LockMethodScreen() {
                     onAction(SettingsAction.UpdateLockType(LockType.BIOMETRIC))
                     onAction(SettingsAction.OnAppLockToggle(true))
                 }
-                SettingsItem(title = "Same as screen lock", leadingContent = {
+                SettingsItem(title = stringResource(R.string.same_as_screen_lock), leadingContent = {
                     Icon(
                         painter = painterResource(R.drawable.fingerprint_24px),
                         contentDescription = null,
@@ -164,7 +165,7 @@ fun LockMethodScreen() {
                 }, onClick = { safeSwitch(onBiometricClick) })
 
                 val isPinSelected = state.isAppLockEnabled && state.lockType == LockType.PIN
-                SettingsItem(title = "Custom PIN", leadingContent = {
+                SettingsItem(title = stringResource(R.string.custom_pin), leadingContent = {
                     Icon(
                         painter = painterResource(R.drawable.password_24px),
                         contentDescription = null,
@@ -183,7 +184,7 @@ fun LockMethodScreen() {
                 val onNoLockClick = {
                     onAction(SettingsAction.OnAppLockToggle(false))
                 }
-                SettingsItem(title = "No lock", leadingContent = {
+                SettingsItem(title = stringResource(R.string.no_lock), leadingContent = {
                     Icon(
                         painter = painterResource(R.drawable.no_encryption_24px),
                         contentDescription = null,
@@ -250,7 +251,7 @@ fun LockMethodScreen() {
         if (pendingAction != null) {
             JuneDialog(
                 onDismissRequest = { pendingAction = null },
-                title = "Change lock?",
+                title = stringResource(R.string.change_lock_title),
                 icon = R.drawable.warning_24px,
                 confirmButton = {
                     Button(
@@ -258,17 +259,17 @@ fun LockMethodScreen() {
                             pendingAction?.invoke()
                             pendingAction = null
                         }) {
-                        Text("Change")
+                        Text(stringResource(R.string.change))
                     }
                 },
                 dismissButton = {
                     OutlinedButton(
                         onClick = { pendingAction = null }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                 },
                 text = {
-                    Text("You are switching away from Custom PIN. Your current PIN will be removed, and you will need to set it up again if you switch back.")
+                    Text(stringResource(R.string.switch_lock_warning))
                 }
             )
         }

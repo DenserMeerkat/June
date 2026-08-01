@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
@@ -51,7 +52,7 @@ fun PinRecoveryScreen(
         topBar = {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
-                title = { Text("Reset PIN") },
+                title = { Text(stringResource(R.string.reset_pin)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     FilledIconButton(
@@ -84,7 +85,7 @@ fun PinRecoveryScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "To reset your Custom PIN, please answer the recovery question below.",
+                text = stringResource(R.string.pin_recovery_desc),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -107,8 +108,8 @@ fun PinRecoveryScreen(
                     answerInput = it
                     isAnswerError = false
                 },
-                label = "Answer",
-                placeholder = "Enter your recovery answer",
+                label = stringResource(R.string.answer_label),
+                placeholder = stringResource(R.string.answer_placeholder),
                 errorText = if (isAnswerError) "Incorrect answer. Please try again." else null
             )
 
@@ -126,7 +127,7 @@ fun PinRecoveryScreen(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Verify & Reset PIN")
+                Text(stringResource(R.string.verify_and_reset_pin))
             }
         }
     }

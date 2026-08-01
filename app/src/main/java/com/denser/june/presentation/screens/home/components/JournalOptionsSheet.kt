@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -98,7 +100,7 @@ fun JournalOptionsSheet(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = journal.title.ifBlank { "Untitled" },
+                            text = journal.title.ifBlank { stringResource(R.string.untitled) },
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
@@ -115,7 +117,7 @@ fun JournalOptionsSheet(
                         JuneBadge(
                             show = true,
                             icon = if (journal.cloudId != null) R.drawable.cloud_24px else R.drawable.devices_24px,
-                            label = if (journal.cloudId != null) "Cloud" else "Local"
+                            label = if (journal.cloudId != null) stringResource(R.string.cloud) else stringResource(R.string.local)
                         )
                         JuneBadge(show = journal.images.isNotEmpty(), icon = R.drawable.photo_24px, label = "${journal.images.size}")
                         JuneBadge(show = journal.songDetails != null, icon = R.drawable.music_note_24px)
@@ -127,14 +129,14 @@ fun JournalOptionsSheet(
                     if (!journal.isDeleted) {
                         ActionSquircle(
                             iconRes = if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px,
-                            contentDescription = if (journal.isBookmarked) "Remove Bookmark" else "Bookmark",
+                            contentDescription = if (journal.isBookmarked) stringResource(R.string.remove_bookmark) else stringResource(R.string.bookmark),
                             onClick = onToggleBookmark,
                             isActive = journal.isBookmarked,
                         )
                     }
                     ActionSquircle(
                         iconRes = if (journal.isDeleted) R.drawable.restore_from_trash_24px else R.drawable.delete_24px,
-                        contentDescription = if (journal.isDeleted) "Restore" else "Delete",
+                        contentDescription = if (journal.isDeleted) stringResource(R.string.restore) else stringResource(R.string.delete),
                         onClick = onDeleteOrRestore,
                         tint = if (journal.isDeleted) MaterialTheme.colorScheme.primary
                                else MaterialTheme.colorScheme.error
@@ -142,7 +144,7 @@ fun JournalOptionsSheet(
                     if (journal.isDeleted && onPermanentDelete != null) {
                         ActionSquircle(
                             iconRes = R.drawable.delete_24px,
-                            contentDescription = "Permanent Delete",
+                            contentDescription = stringResource(R.string.permanently_delete),
                             onClick = onPermanentDelete,
                             tint = MaterialTheme.colorScheme.error
                         )
@@ -165,7 +167,7 @@ fun JournalOptionsSheet(
             ) {
                 AssistChip(
                     onClick = {},
-                    label = { Text("$wordCount words", style = MaterialTheme.typography.labelMedium) },
+                    label = { Text(pluralStringResource(R.plurals.words_count, wordCount, wordCount), style = MaterialTheme.typography.labelMedium) },
                     leadingIcon = { Icon(painterResource(R.drawable.article_24px), null, modifier = Modifier.size(16.dp)) },
                     shape = RoundedCornerShape(12.dp),
                     colors = AssistChipDefaults.assistChipColors(
@@ -208,17 +210,17 @@ fun JournalOptionsSheet(
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                 JuneMetadataRow(
                     iconRes = R.drawable.cloud_sync_24px,
-                    label = "Synced",
-                    value = journal.syncedAt?.toFullDateTime(is24Hour) ?: "Not synced"
+                    label = stringResource(R.string.synced),
+                    value = journal.syncedAt?.toFullDateTime(is24Hour) ?: stringResource(R.string.not_synced)
                 )
                 JuneMetadataRow(
                     iconRes = R.drawable.today_24px,
-                    label = "Created",
+                    label = stringResource(R.string.created),
                     value = journal.createdAt.toFullDateTime(is24Hour)
                 )
                 JuneMetadataRow(
                     iconRes = R.drawable.history_24px,
-                    label = "Updated",
+                    label = stringResource(R.string.updated),
                     value = journal.updatedAt?.toFullDateTime(is24Hour) ?: "—"
                 )
             }

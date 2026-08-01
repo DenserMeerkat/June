@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.presentation.screens.home.HomeTab
 import kotlinx.coroutines.launch
@@ -48,7 +49,7 @@ fun HomeBottomBar(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.add_2_24px),
-                        contentDescription = "New Journal"
+                        contentDescription = stringResource(R.string.new_journal)
                     )
                 }
             },
@@ -60,7 +61,7 @@ fun HomeBottomBar(
                     selected = isSelected,
                     iconRes = tab.iconRes,
                     filledIconRes = tab.filledIconRes,
-                    label = tab.label,
+                    label = stringResource(tab.labelRes),
                     onClick = {
                         scope.launch {
                             pagerState.animateScrollToPage(index)
@@ -107,7 +108,7 @@ private fun ToolbarTab(
             modifier = Modifier.fillMaxSize()
         ) {
             Icon(
-                painter = painterResource(if (selected)  filledIconRes else iconRes),
+                painter = painterResource(if (selected) filledIconRes else iconRes),
                 contentDescription = label,
                 tint = contentColor,
                 modifier = Modifier.size(24.dp)

@@ -9,6 +9,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.presentation.navigation.AppNavigator
@@ -132,8 +133,8 @@ fun AboutSettingsScreen() {
                         if (isDevMode) {
                             SettingSection {
                                 SettingsItem(
-                                    title = "Developer options",
-                                    subtitle = "Logging settings and console",
+                                    title = stringResource(R.string.developer_options),
+                                    subtitle = stringResource(R.string.logging_settings_desc),
                                     leadingContent = {
                                         Icon(
                                             painter = painterResource(R.drawable.code_24px),
@@ -193,7 +194,7 @@ fun AboutSettingsScreen() {
     if (showCheckingUpdatesDialog) {
         JuneDialog(
             onDismissRequest = { showCheckingUpdatesDialog = false },
-            title = "Checking for updates",
+            title = stringResource(R.string.checking_for_updates),
             confirmButton = {},
             text = {
                 Row(
@@ -210,14 +211,14 @@ fun AboutSettingsScreen() {
         val isPlayStoreUpdate = downloadUrl.startsWith("market:") || downloadUrl.contains("play.google.com")
         JuneDialog(
             onDismissRequest = { updateInfo = null },
-            title = "Update Available" + if (isPlayStoreUpdate) "" else " ($versionName)",
+            title = stringResource(R.string.update_available) + if (isPlayStoreUpdate) "" else " ($versionName)",
             text = {
                 Column {
                     Text(
                         text = if (isPlayStoreUpdate) {
-                            "A new version of June is available on the Google Play Store."
+                            stringResource(R.string.update_available_play_store)
                         } else {
-                            "A new version of June is available. Here is what's new:"
+                            stringResource(R.string.update_available_foss)
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -246,7 +247,7 @@ fun AboutSettingsScreen() {
             },
             dismissButton = {
                 OutlinedButton(onClick = { updateInfo = null }) {
-                    Text("Later")
+                    Text(stringResource(R.string.later))
                 }
             }
         )
@@ -255,11 +256,11 @@ fun AboutSettingsScreen() {
     if (showNoUpdateDialog) {
         JuneDialog(
             onDismissRequest = { showNoUpdateDialog = false },
-            title = "Up to date",
-            text = { Text("You are already using the latest version of June.") },
+            title = stringResource(R.string.up_to_date),
+            text = { Text(stringResource(R.string.already_latest_version)) },
             confirmButton = {
                 Button(onClick = { showNoUpdateDialog = false }) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         )
@@ -268,8 +269,8 @@ fun AboutSettingsScreen() {
     if (showInternetDisabledDialog) {
         JuneDialog(
             onDismissRequest = { showInternetDisabledDialog = false },
-            title = "Internet Access Disabled",
-            text = { Text("Internet access is disabled in June's privacy settings. Please enable it under Permissions to check for updates.") },
+            title = stringResource(R.string.internet_access_disabled),
+            text = { Text(stringResource(R.string.internet_disabled_update_notice)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -277,12 +278,12 @@ fun AboutSettingsScreen() {
                         navigator.navigateTo(Route.Permissions)
                     }
                 ) {
-                    Text("Enable")
+                    Text(stringResource(R.string.enable))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showInternetDisabledDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -291,11 +292,11 @@ fun AboutSettingsScreen() {
     updateErrorMsg?.let { errorMsg ->
         JuneDialog(
             onDismissRequest = { updateErrorMsg = null },
-            title = "Update Check Failed",
+            title = stringResource(R.string.update_check_failed),
             text = { Text(errorMsg) },
             confirmButton = {
                 Button(onClick = { updateErrorMsg = null }) {
-                    Text("Okay")
+                    Text(stringResource(R.string.okay))
                 }
             }
         )
@@ -348,25 +349,25 @@ fun AboutSettingsScreen() {
 
         JuneDialog(
             onDismissRequest = { showDiagnosticsDialog = false },
-            title = "Diagnostics",
+            title = stringResource(R.string.diagnostics),
             text = {
                 SelectionContainer {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        DiagnosticRow(label = "Package Name", value = context.packageName)
-                        DiagnosticRow(label = "Version Name", value = versionName)
-                        DiagnosticRow(label = "Version Code", value = versionCode.toString())
-                        DiagnosticRow(label = "Signing Key SHA-256", value = sha256)
-                        DiagnosticRow(label = "Hyphen Version", value = BuildConfig.HYPHEN_VERSION)
+                        DiagnosticRow(label = stringResource(R.string.pkg_name), value = context.packageName)
+                        DiagnosticRow(label = stringResource(R.string.version_name), value = versionName)
+                        DiagnosticRow(label = stringResource(R.string.version_code), value = versionCode.toString())
+                        DiagnosticRow(label = stringResource(R.string.signing_key_sha256), value = sha256)
+                        DiagnosticRow(label = stringResource(R.string.hyphen_version), value = BuildConfig.HYPHEN_VERSION)
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 4.dp),
                             color = MaterialTheme.colorScheme.outlineVariant
                         )
-                        DiagnosticRow(label = "Device", value = deviceModel)
-                        DiagnosticRow(label = "Android OS", value = androidOS)
-                        DiagnosticRow(label = "Supported ABIs", value = supportedAbis)
+                        DiagnosticRow(label = stringResource(R.string.device), value = deviceModel)
+                        DiagnosticRow(label = stringResource(R.string.android_os), value = androidOS)
+                        DiagnosticRow(label = stringResource(R.string.supported_abis), value = supportedAbis)
                     }
                 }
             },
@@ -385,12 +386,12 @@ fun AboutSettingsScreen() {
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Copy")
+                    Text(stringResource(R.string.copy))
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showDiagnosticsDialog = false }) {
-                    Text("Close")
+                    Text(stringResource(R.string.close))
                 }
             }
         )

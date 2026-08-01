@@ -1,6 +1,7 @@
 package com.denser.june.presentation.screens.home.journals
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,6 +13,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -28,14 +30,14 @@ import com.denser.june.presentation.utils.UiUtils
 import org.koin.compose.viewmodel.koinViewModel
 
 enum class JournalListTab(
-    val title: String,
+    @get:StringRes val labelRes: Int,
     val iconRes: Int,
     val filledIconRes: Int,
     val widthWeight: Float
 ) {
-    Journals("Journals", R.drawable.list_alt_24px, R.drawable.list_alt_24px_fill, 1f),
-    Bookmarks("Bookmarks", R.drawable.bookmark_24px, R.drawable.bookmark_24px_fill, 1.1f),
-    Drafts("Drafts", R.drawable.edit_note_24px, R.drawable.edit_note_24px_fill, 0.9f)
+    Journals(R.string.journals, R.drawable.list_alt_24px, R.drawable.list_alt_24px_fill, 1f),
+    Bookmarks(R.string.bookmarks, R.drawable.bookmark_24px, R.drawable.bookmark_24px_fill, 1.1f),
+    Drafts(R.string.drafts, R.drawable.edit_note_24px, R.drawable.edit_note_24px_fill, 0.9f)
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class,
@@ -146,6 +148,7 @@ fun JournalsPage(
                         tabs.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
                         else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                     }
+                    val tabTitle = stringResource(tab.labelRes)
 
                     ToggleButton(
                         checked = isSelected,
@@ -166,12 +169,12 @@ fun JournalsPage(
                         ) {
                             Icon(
                                 painter = painterResource(id = if (isSelected) tab.filledIconRes else tab.iconRes),
-                                contentDescription = tab.title,
+                                contentDescription = tabTitle,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = tab.title,
+                                text = tabTitle,
                                 style = MaterialTheme.typography.labelMedium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -203,15 +206,15 @@ fun JournalsPage(
                                 JunePlaceholderPage(
                                     modifier = Modifier.fillParentMaxHeight(0.8f),
                                     icon = R.drawable.auto_stories_off_24px,
-                                    title = "No journals yet",
-                                    subtitle = "Start capturing your journey today. Create your first entry to start your collection."
+                                    title = stringResource(R.string.no_journals_yet),
+                                    subtitle = stringResource(R.string.no_journals_yet_desc)
                                 )
                             }
                         } else {
                             if (recentJournal != null) {
                                 item(key = "header_recent") {
                                     SectionHeader(
-                                        title = "Recent",
+                                        title = stringResource(R.string.recent),
                                         modifier = Modifier.animateItem()
                                     )
                                 }
@@ -226,7 +229,7 @@ fun JournalsPage(
                             if (moreJournals.isNotEmpty()) {
                                 item(key = "header_more") {
                                     SectionHeader(
-                                        title = "More entries",
+                                        title = stringResource(R.string.more_entries),
                                         modifier = Modifier
                                             .padding(top = 8.dp)
                                             .animateItem()
@@ -255,8 +258,8 @@ fun JournalsPage(
                                 JunePlaceholderPage(
                                     modifier = Modifier.fillParentMaxHeight(0.8f),
                                     icon = R.drawable.bookmarks_24px,
-                                    title = "No bookmarks",
-                                    subtitle = "Keep favorite moments in reach. Any entry you mark will appear here to revisit."
+                                    title = stringResource(R.string.no_bookmarks),
+                                    subtitle = stringResource(R.string.no_bookmarks_desc)
                                 )
                             }
                         } else {
@@ -282,8 +285,8 @@ fun JournalsPage(
                                 JunePlaceholderPage(
                                     modifier = Modifier.fillParentMaxHeight(0.8f),
                                     icon = R.drawable.edit_note_24px,
-                                    title = "No drafts",
-                                    subtitle = "Your unfinished thoughts stay here. Any entry you start will be saved to finish later."
+                                    title = stringResource(R.string.no_drafts),
+                                    subtitle = stringResource(R.string.no_drafts_desc)
                                 )
                             }
                         } else {

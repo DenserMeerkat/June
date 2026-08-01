@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.presentation.components.JuneFullScreenDialog
@@ -45,12 +46,12 @@ fun SyncDetailsDialog(
                         .padding(top = 24.dp, bottom = 16.dp)
                 ) {
                     Text(
-                        text = "Sync Details",
+                        text = stringResource(R.string.sync_details),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.ExtraBold
                     )
                     Text(
-                        text = "Review changes before syncing",
+                        text = stringResource(R.string.sync_details_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -108,11 +109,11 @@ fun SyncDetailsDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     OutlinedButton(onClick = onDismiss) {
-                        Text("Close")
+                        Text(stringResource(R.string.close))
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Button(onClick = onDismiss) {
-                        Text("Got it")
+                        Text(stringResource(R.string.got_it))
                     }
                 }
             }

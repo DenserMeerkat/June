@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.presentation.screens.settings.SettingsAction
@@ -18,8 +19,8 @@ fun IncludeTimeTile() {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     SettingsItem(
-        title = "Include time",
-        subtitle = "Always enable time when creating journals",
+        title = stringResource(R.string.include_time),
+        subtitle = stringResource(R.string.include_time_desc),
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.more_time_24px),

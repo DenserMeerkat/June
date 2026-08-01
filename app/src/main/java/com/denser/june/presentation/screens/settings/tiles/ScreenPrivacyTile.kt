@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.presentation.screens.settings.SettingsAction
@@ -18,8 +19,8 @@ fun ScreenPrivacyTile() {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     SettingsItem(
-        title = "Screen Privacy",
-        subtitle = "Prevent screenshots and hide app content in recents",
+        title = stringResource(R.string.screen_privacy),
+        subtitle = stringResource(R.string.screen_privacy_desc),
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.preview_off_24px),

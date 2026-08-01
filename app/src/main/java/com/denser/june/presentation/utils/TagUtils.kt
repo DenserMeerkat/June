@@ -1,8 +1,10 @@
 package com.denser.june.presentation.utils
 
+import androidx.annotation.StringRes
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TagCategory
 
@@ -15,8 +17,8 @@ object TagUtils {
         val filledIconRes: Int,
         val color: Color,
         val containerColor: Color,
-        val emptyMessage: String,
-        val description: String
+        @StringRes val emptyMessageRes: Int,
+        @StringRes val descriptionRes: Int
     )
 
     fun getCategoryForTag(tag: String): TagCategory {
@@ -51,8 +53,8 @@ object TagUtils {
                 filledIconRes = R.drawable.view_cozy_24px_fill,
                 color = MaterialTheme.colorScheme.secondary,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                emptyMessage = "Categorize this entry",
-                description = "Broad categories like Work, Travel, or Dream."
+                emptyMessageRes = R.string.spaces_empty_msg,
+                descriptionRes = R.string.spaces_desc
             )
 
             TagCategory.People -> CategoryUiSpec(
@@ -60,8 +62,8 @@ object TagUtils {
                 filledIconRes = R.drawable.groups_24px_fill,
                 color = MaterialTheme.colorScheme.primary,
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
-                emptyMessage = "Who was there? (@name)",
-                description = "Track friends, family, or colleagues across entries."
+                emptyMessageRes = R.string.people_empty_msg,
+                descriptionRes = R.string.people_desc
             )
 
             TagCategory.Topics -> CategoryUiSpec(
@@ -69,8 +71,8 @@ object TagUtils {
                 filledIconRes = R.drawable.cards_stack_24px_fill,
                 color = MaterialTheme.colorScheme.tertiary,
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                emptyMessage = "Capture any specifics (#topic)",
-                description = "Note the moods, settings, or details of your day."
+                emptyMessageRes = R.string.topics_empty_msg,
+                descriptionRes = R.string.topics_desc
             )
         }
     }

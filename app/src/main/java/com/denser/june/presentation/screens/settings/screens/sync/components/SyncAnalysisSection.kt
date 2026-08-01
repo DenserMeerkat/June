@@ -9,6 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.sync.SyncAnalysis
@@ -51,7 +53,7 @@ fun SyncAnalysisSection(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     AnalysisStatColumn(
-                        "Local",
+                        stringResource(R.string.local),
                         analysis?.localJournals,
                         analysis?.localMedia,
                         Modifier.weight(1f)
@@ -61,7 +63,7 @@ fun SyncAnalysisSection(
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
                     AnalysisStatColumn(
-                        "Cloud",
+                        stringResource(R.string.cloud),
                         analysis?.remoteJournals,
                         analysis?.remoteMedia,
                         Modifier.weight(1f)
@@ -121,20 +123,20 @@ fun SyncAnalysisSection(
                         Column {
                             Text(
                                 when {
-                                    totalChanges > 0 -> "Sync required"
-                                    analysis == null -> "Analysis pending"
-                                    else -> "All caught up"
+                                    totalChanges > 0 -> stringResource(R.string.sync_required)
+                                    analysis == null -> stringResource(R.string.analysis_pending)
+                                    else -> stringResource(R.string.all_caught_up)
                                 },
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 when {
-                                    analysis == null -> "Check for differences"
-                                    totalChanges == 0 -> "Local & cloud are matching"
-                                    journalChanges > 0 && mediaChanges > 0 -> "$journalChanges journals & $mediaChanges media"
-                                    journalChanges > 0 -> "$journalChanges journals pending"
-                                    else -> "$mediaChanges media files pending"
+                                    analysis == null -> stringResource(R.string.check_for_differences)
+                                    totalChanges == 0 -> stringResource(R.string.local_and_cloud_matching)
+                                    journalChanges > 0 && mediaChanges > 0 -> stringResource(R.string.journals_and_media_pending, journalChanges, mediaChanges)
+                                    journalChanges > 0 -> pluralStringResource(R.plurals.journals_pending_count, journalChanges, journalChanges)
+                                    else -> pluralStringResource(R.plurals.media_pending_count, mediaChanges, mediaChanges)
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -149,7 +151,7 @@ fun SyncAnalysisSection(
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.height(32.dp)
                         ) {
-                            Text("Review", style = MaterialTheme.typography.labelMedium)
+                            Text(stringResource(R.string.review), style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
@@ -179,12 +181,12 @@ private fun AnalysisStatColumn(title: String, journals: Int?, media: Int?, modif
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
         )
         Text(
-            "${journals ?: "-"} Journals",
+            if (journals != null) pluralStringResource(R.plurals.journals_stat_count, journals, journals) else "- ${stringResource(R.string.journals)}",
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            "${media ?: "-"} Media",
+            if (media != null) pluralStringResource(R.plurals.media_stat_count, media, media) else "- ${stringResource(R.string.media)}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )

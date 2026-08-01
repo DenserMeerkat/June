@@ -34,7 +34,7 @@ fun TimelineJournalTab(
     val navigator = koinInject<AppNavigator>()
 
     if (journals.isEmpty()) {
-        EmptyStateMessage("No journals this month.")
+        EmptyStateMessage(androidx.compose.ui.res.stringResource(R.string.no_journals_this_month))
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),

@@ -106,7 +106,7 @@ fun ColorPickerSheet(
                             onSelect(controller.selectedColor.value)
                             onDismiss()
                         },
-                        label = "Save",
+                        label = stringResource(R.string.save),
                         icon = { Icon(painterResource(R.drawable.check_24px), contentDescription = null) }
                     )
                 }

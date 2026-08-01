@@ -10,6 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,7 +53,7 @@ fun FilterFab(
                 }
             ) { count ->
                 Text(
-                    text = if (count > 0) "$count active" else "Filter",
+                    text = if (count > 0) pluralStringResource(R.plurals.active_filters_count, count, count) else stringResource(R.string.filter),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -108,7 +110,7 @@ fun FilterBottomSheet(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Filter Entries",
+                    text = stringResource(R.string.filter_entries),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -123,7 +125,7 @@ fun FilterBottomSheet(
             ) {
                 if (availableFilters.isEmpty()) {
                     Text(
-                        "No additional tags to filter by.",
+                        stringResource(R.string.no_tags_to_filter),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
@@ -155,7 +157,7 @@ fun FilterBottomSheet(
                 }
                 JuneFloatingAction(
                     onClick = onDismiss,
-                    label = "Done",
+                    label = stringResource(R.string.done),
                     icon = { Icon(painterResource(R.drawable.check_24px), contentDescription = null) }
                 )
             }

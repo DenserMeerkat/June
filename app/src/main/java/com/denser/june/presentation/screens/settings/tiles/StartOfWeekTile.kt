@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,7 +26,7 @@ fun StartOfWeekTile() {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     SettingsItem(
-        title = "Start of the week",
+        title = stringResource(R.string.start_of_week),
         subtitle = state.startOfWeek.getDisplayName(TextStyle.FULL, LocalLocale.current.platformLocale),
         leadingContent = {
             Icon(

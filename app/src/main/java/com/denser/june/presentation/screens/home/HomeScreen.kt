@@ -1,6 +1,7 @@
 package com.denser.june.presentation.screens.home
 
 import androidx.activity.compose.BackHandler
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -10,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,10 +33,10 @@ import com.denser.june.presentation.components.SyncIndicator
 import com.denser.june.MainVM
 import org.koin.compose.viewmodel.koinViewModel
 
-enum class HomeTab(val label: String, val iconRes: Int, val filledIconRes: Int) {
-    Journals("Journals", R.drawable.home_24px, R.drawable.home_24px_fill),
-    Tags("Tags", R.drawable.view_cozy_24px, R.drawable.view_cozy_24px_fill),
-    Timeline("Timeline", R.drawable.event_note_24px, R.drawable.event_note_24px_fill),
+enum class HomeTab(@get:StringRes val labelRes: Int, val iconRes: Int, val filledIconRes: Int) {
+    Journals(R.string.journals, R.drawable.home_24px, R.drawable.home_24px_fill),
+    Tags(R.string.tags, R.drawable.view_cozy_24px, R.drawable.view_cozy_24px_fill),
+    Timeline(R.string.timeline, R.drawable.event_note_24px, R.drawable.event_note_24px_fill),
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -69,7 +71,7 @@ fun HomeScreen() {
                     type = JuneAppBarType.CenterAligned,
                     title = {
                         Text(
-                            text = "June",
+                            text = stringResource(R.string.app_name),
                             fontWeight = FontWeight.Bold,
                         )
                     },
@@ -83,7 +85,7 @@ fun HomeScreen() {
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.search_24px),
-                                contentDescription = "Search"
+                                contentDescription = stringResource(R.string.search)
                             )
                         }
                     },
@@ -104,7 +106,7 @@ fun HomeScreen() {
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.settings_24px),
-                                contentDescription = "Settings"
+                                contentDescription = stringResource(R.string.settings)
                             )
                         }
                     }

@@ -75,7 +75,7 @@ fun TimelineMusicTab(
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (musicJournals.isEmpty()) {
-            EmptyStateMessage("No music tracked this month.")
+            EmptyStateMessage(androidx.compose.ui.res.stringResource(R.string.no_music_this_month))
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),

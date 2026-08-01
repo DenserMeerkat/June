@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -164,7 +165,7 @@ fun TagsPage() {
                                         ) {
                                             DropdownMenuItem(
                                                 modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                                text = { Text("Rename") },
+                                                text = { Text(stringResource(R.string.rename)) },
                                                 onClick = {
                                                     showMenu = false
                                                     showRenameDialog = true
@@ -178,7 +179,7 @@ fun TagsPage() {
                                             )
                                             DropdownMenuItem(
                                                 modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                                text = { Text("Delete") },
+                                                text = { Text(stringResource(R.string.delete)) },
                                                 onClick = {
                                                     showMenu = false
                                                     showDeleteDialog = true
@@ -251,8 +252,8 @@ fun TagsPage() {
                             JunePlaceholderPage(
                                 modifier = Modifier.fillParentMaxHeight(0.8f),
                                 icon = R.drawable.auto_stories_off_24px,
-                                title = "No entries",
-                                subtitle = "No journals match the current filters."
+                                title = stringResource(R.string.no_entries),
+                                subtitle = stringResource(R.string.no_entries_filter_desc)
                             )
                         }
                     } else {
@@ -269,8 +270,8 @@ fun TagsPage() {
                 JunePlaceholderPage(
                     modifier = Modifier.weight(1f),
                     icon = currentCategorySpec.iconRes,
-                    title = "No ${selectedCategory.label.lowercase()} yet",
-                    subtitle = "Tag a journal entry with a ${selectedCategory.singularLabel.lowercase()} to get started."
+                    title = stringResource(R.string.no_tag_category_yet, selectedCategory.label.lowercase()),
+                    subtitle = stringResource(R.string.tag_category_empty_desc, selectedCategory.singularLabel.lowercase())
                 )
             }
         }

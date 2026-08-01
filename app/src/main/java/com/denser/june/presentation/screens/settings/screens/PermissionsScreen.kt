@@ -36,6 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.denser.june.core.R
@@ -113,7 +115,7 @@ fun PermissionsScreen() {
         topBar = {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
-                title = { Text("Permissions") },
+                title = { Text(stringResource(R.string.permissions)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     FilledIconButton(
@@ -142,7 +144,7 @@ fun PermissionsScreen() {
                 modifier = Modifier.padding(horizontal = 24.dp)
             ) {
                 Text(
-                    text = "Manage how June interacts with your device features",
+                    text = stringResource(R.string.permissions_desc_long),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -150,8 +152,8 @@ fun PermissionsScreen() {
             Spacer(modifier = Modifier.height(24.dp))
             SettingSection {
                 SettingsItem(
-                    title = "Internet Access",
-                    subtitle = "Used for maps, cloud sync, song metadata, and online fonts.",
+                    title = stringResource(R.string.internet_access),
+                    subtitle = stringResource(R.string.internet_access_desc),
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.wifi_24px),
@@ -172,11 +174,11 @@ fun PermissionsScreen() {
                     }
                 )
                 SettingsItem(
-                    title = "Location",
+                    title = stringResource(R.string.location),
                     subtitle = if (hasLocationPermission)
-                        "Permission granted. Used to select current location on map."
+                        stringResource(R.string.location_permission_granted)
                     else
-                        "Tap to enable. Used to quickly select your current location on the map.",
+                        stringResource(R.string.location_permission_needed),
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.location_on_24px),
@@ -195,7 +197,7 @@ fun PermissionsScreen() {
                         } else {
                             Toast.makeText(
                                 context,
-                                "Permission already granted",
+                                context.getString(R.string.permission_already_granted),
                                 Toast.LENGTH_SHORT
                             )
                                 .show()
@@ -203,11 +205,11 @@ fun PermissionsScreen() {
                     }
                 )
                 SettingsItem(
-                    title = "Notification",
+                    title = stringResource(R.string.notification),
                     subtitle = if (hasNotificationPermission)
-                        "Permission granted. Used to show journaling reminders."
+                        stringResource(R.string.notification_permission_granted)
                     else
-                        "Tap to enable. Used to show journaling reminders.",
+                        stringResource(R.string.notification_permission_needed),
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.notifications_24px),
@@ -220,10 +222,10 @@ fun PermissionsScreen() {
                             if (!hasNotificationPermission) {
                                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             } else {
-                                Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.permission_already_granted), Toast.LENGTH_SHORT).show()
                             }
                         } else {
-                            Toast.makeText(context, "Permission already granted", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.permission_already_granted), Toast.LENGTH_SHORT).show()
                         }
                     }
                 )
@@ -241,7 +243,7 @@ fun PermissionsScreen() {
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Manage in Settings")
+                    Text(stringResource(R.string.manage_in_settings))
                 }
             }
             Spacer(modifier = Modifier.height(32.dp + padding.calculateBottomPadding()))

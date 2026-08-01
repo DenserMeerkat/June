@@ -59,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -178,7 +179,7 @@ fun MapSettingsScreen() {
         topBar = {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
-                title = { Text("Map Settings") },
+                title = { Text(stringResource(R.string.map_settings)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     FilledIconButton(
@@ -207,7 +208,7 @@ fun MapSettingsScreen() {
         ) {
             if (!isInternetAllowed) {
                 InternetRestrictedBanner(
-                    description = "Maps require internet access.",
+                    description = stringResource(R.string.maps_require_internet),
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
@@ -228,7 +229,7 @@ fun MapSettingsScreen() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Preview",
+                        text = stringResource(R.string.preview),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -388,14 +389,14 @@ fun MapSettingsScreen() {
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "Failed to load map",
+                                        text = stringResource(R.string.failed_to_load_map),
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = previewOnSurfaceColor
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Check your API key or internet connection",
+                                        text = stringResource(R.string.check_api_key_or_internet),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = previewOnSurfaceColor.copy(alpha = 0.7f),
                                         modifier = Modifier.padding(horizontal = 24.dp),
@@ -432,7 +433,7 @@ fun MapSettingsScreen() {
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Configure and test API key below to enable preview",
+                                    text = stringResource(R.string.configure_api_key_for_preview),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = previewOnSurfaceColor.copy(alpha = 0.7f),
                                     modifier = Modifier.padding(horizontal = 24.dp),
@@ -544,14 +545,14 @@ fun MapSettingsScreen() {
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Internet connection required",
+                                text = stringResource(R.string.internet_connection_required),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = previewOnSurfaceColor.copy(alpha = 0.8f)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Connect to the internet to load map preview",
+                                text = stringResource(R.string.connect_internet_for_map),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = previewOnSurfaceColor.copy(alpha = 0.7f),
                                 modifier = Modifier.padding(horizontal = 24.dp),
@@ -648,7 +649,7 @@ fun MapSettingsScreen() {
                 when (selectedTabIndex) {
                     0 -> {
                         Text(
-                            text = "CARTO Voyager (Light) and Dark Matter vector styles are resolved automatically. No API key required.",
+                            text = stringResource(R.string.carto_auto_notice),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)
@@ -673,7 +674,7 @@ fun MapSettingsScreen() {
                             onKeyLockedChange = { isMaptilerKeyLocked = it },
                             isKeyObscured = isMaptilerKeyObscured,
                             onKeyObscuredChange = { isMaptilerKeyObscured = it },
-                            placeholder = "MapTiler API key",
+                            placeholder = stringResource(R.string.maptiler_api_key_placeholder),
                             isTesting = isTestingKey,
                             testStatus = keyTestStatus,
                             onTest = {
@@ -718,7 +719,7 @@ fun MapSettingsScreen() {
                             onKeyLockedChange = { isStadiaKeyLocked = it },
                             isKeyObscured = isStadiaKeyObscured,
                             onKeyObscuredChange = { isStadiaKeyObscured = it },
-                            placeholder = "Stadia API key",
+                            placeholder = stringResource(R.string.stadia_api_key_placeholder),
                             isTesting = isTestingKey,
                             testStatus = keyTestStatus,
                             onTest = {
@@ -763,7 +764,7 @@ fun MapSettingsScreen() {
                             onKeyLockedChange = { isMapboxKeyLocked = it },
                             isKeyObscured = isMapboxKeyObscured,
                             onKeyObscuredChange = { isMapboxKeyObscured = it },
-                            placeholder = "Mapbox access token",
+                            placeholder = stringResource(R.string.mapbox_access_token_placeholder),
                             isTesting = isTestingKey,
                             testStatus = keyTestStatus,
                             onTest = {
@@ -823,7 +824,7 @@ fun InlineKeyTestSection(
                     strokeWidth = 2.dp
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Testing Key...")
+                Text(stringResource(R.string.testing_key))
             } else {
                 Icon(
                     painter = painterResource(R.drawable.sync_24px),
@@ -831,7 +832,7 @@ fun InlineKeyTestSection(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Test API Key")
+                Text(stringResource(R.string.test_api_key))
             }
         }
 
@@ -903,7 +904,7 @@ fun ApiCredentialsSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "API Credentials",
+                text = stringResource(R.string.api_credentials),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -983,7 +984,7 @@ fun ApiCredentialsSection(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Get API key or access token",
+                    text = stringResource(R.string.get_api_key_or_token),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold
                 )

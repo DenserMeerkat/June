@@ -4,6 +4,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.presentation.screens.settings.components.LocalSettingsTriggers
 import com.denser.june.presentation.screens.settings.components.SettingsItem
@@ -12,8 +13,8 @@ import com.denser.june.presentation.screens.settings.components.SettingsItem
 fun MapCreditsTile() {
     val triggers = LocalSettingsTriggers.current
     SettingsItem(
-        title = "Map Credits",
-        subtitle = "Credits for map styles and data",
+        title = stringResource(R.string.map_credits),
+        subtitle = stringResource(R.string.map_credits_desc),
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.map_pin_review_24px),

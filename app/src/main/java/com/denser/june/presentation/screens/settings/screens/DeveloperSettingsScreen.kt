@@ -10,6 +10,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.logging.AppLogger
 import com.denser.june.core.domain.preferences.SyncPreferences
@@ -44,7 +46,7 @@ fun DeveloperSettingsScreen() {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text("Developer options") },
+                title = { Text(stringResource(R.string.developer_options)) },
                 navigationIcon = {
                     FilledIconButton(
                         onClick = { navigator.navigateBack() },
@@ -91,7 +93,7 @@ fun DeveloperSettingsScreen() {
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                text = { Text("Console Logs") },
+                text = { Text(stringResource(R.string.console_logs)) },
                 icon = { Icon(painterResource(R.drawable.code_24px), contentDescription = null) },
                 onClick = {
                     showLogSheet = true
@@ -119,10 +121,10 @@ fun DeveloperSettingsScreen() {
             }
 
             item {
-                SettingSection("Logging") {
+                SettingSection(stringResource(R.string.logging)) {
                     SettingsItem(
-                        title = "Sync Logging",
-                        subtitle = "Enable verbose logs for cloud sync operations",
+                        title = stringResource(R.string.sync_logging),
+                        subtitle = stringResource(R.string.sync_logging_desc),
                         onClick = {
                             scope.launch { syncPrefs.setSyncLoggingEnabled(!isSyncLoggingEnabled) }
                         },
@@ -144,8 +146,8 @@ fun DeveloperSettingsScreen() {
                     )
 
                     SettingsItem(
-                        title = "Backup Logging",
-                        subtitle = "Enable diagnostics during export/restore",
+                        title = stringResource(R.string.backup_logging),
+                        subtitle = stringResource(R.string.backup_logging_desc),
                         onClick = {
                             scope.launch { syncPrefs.setBackupLoggingEnabled(!isBackupLoggingEnabled) }
                         },
@@ -167,8 +169,8 @@ fun DeveloperSettingsScreen() {
                     )
 
                     SettingsItem(
-                        title = "Database Logging",
-                        subtitle = "Log raw Room SQL queries (excluding arguments)",
+                        title = stringResource(R.string.database_logging),
+                        subtitle = stringResource(R.string.database_logging_desc),
                         onClick = {
                             scope.launch { syncPrefs.setDatabaseLoggingEnabled(!isDatabaseLoggingEnabled) }
                         },

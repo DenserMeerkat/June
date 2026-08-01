@@ -6,11 +6,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.presentation.utils.TagUtils
-
 import com.denser.june.presentation.components.JuneDialog
 
 @Composable
@@ -21,7 +21,7 @@ fun DeleteTagDialog(
 ) {
     JuneDialog(
         onDismissRequest = onDismiss,
-        title = "Delete Tag?",
+        title = stringResource(R.string.delete_tag_title),
         icon = R.drawable.delete_24px,
         iconTint = MaterialTheme.colorScheme.error,
         text = {
@@ -30,7 +30,7 @@ fun DeleteTagDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "You are about to delete:",
+                    text = stringResource(R.string.about_to_delete),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -49,7 +49,7 @@ fun DeleteTagDialog(
                     border = null
                 )
                 Text(
-                    text = "This will remove the tag from all entries. The entries themselves won't be deleted."
+                    text = stringResource(R.string.delete_tag_warning)
                 )
             }
         },
@@ -61,11 +61,11 @@ fun DeleteTagDialog(
                     contentColor = MaterialTheme.colorScheme.onError
                 )
             ) {
-                Text("Delete")
+                Text(stringResource(R.string.delete))
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Cancel") }
+            OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     )
 }

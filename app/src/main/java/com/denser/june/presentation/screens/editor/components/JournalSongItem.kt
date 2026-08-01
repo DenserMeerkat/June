@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.model.SongDetails
@@ -98,7 +99,7 @@ fun JournalSongItem(
                         ) {
                             DropdownMenuItem(
                                 modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                text = { Text("Edit Song") },
+                                text = { Text(stringResource(R.string.edit_song)) },
                                 onClick = {
                                     showMenu = false
                                     onEdit()
@@ -109,7 +110,7 @@ fun JournalSongItem(
                             )
                             DropdownMenuItem(
                                 modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                text = { Text("Remove") },
+                                text = { Text(stringResource(R.string.remove)) },
                                 onClick = {
                                     showMenu = false
                                     onRemove()

@@ -121,7 +121,7 @@ android {
         debug {
             signingConfig = signingConfigs.getByName("debug")
             applicationIdSuffix = ".debug"
-            resValue("string", "app_name", "$appName (Debug)")
+            resValue("string", "app_name", appName)
             versionNameSuffix = "-dev"
         }
     }

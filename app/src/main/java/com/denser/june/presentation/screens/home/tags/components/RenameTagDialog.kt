@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
@@ -46,13 +47,13 @@ fun RenameTagDialog(
 
     JuneDialog(
         onDismissRequest = onDismiss,
-        title = "Rename Tag",
+        title = stringResource(R.string.rename_tag_title),
         icon = R.drawable.edit_24px,
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Name",
+                        text = stringResource(R.string.name),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -88,7 +89,7 @@ fun RenameTagDialog(
                         trailingIcon = {
                             if (newName.isNotEmpty()) {
                                 IconButton(onClick = { newName = "" }) {
-                                    Icon(painterResource(R.drawable.close_24px), "Clear")
+                                    Icon(painterResource(R.drawable.close_24px), stringResource(R.string.clear))
                                 }
                             }
                         }
@@ -99,7 +100,7 @@ fun RenameTagDialog(
                     WarningType.Switch -> {
                         WarningCard(
                             iconRes = R.drawable.swap_horiz_24px,
-                            text = "This will move to the ${targetCategory.label} tab.",
+                            text = stringResource(R.string.move_to_tab_warning, targetCategory.label),
                             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -107,7 +108,7 @@ fun RenameTagDialog(
                     WarningType.Merge -> {
                         WarningCard(
                             iconRes = R.drawable.merge_type_24px,
-                            text = "Already exists in ${targetCategory.label}. This will merge all entries.",
+                            text = stringResource(R.string.tag_merge_warning, targetCategory.label),
                             containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -125,11 +126,11 @@ fun RenameTagDialog(
                     contentColor = MaterialTheme.colorScheme.onSecondary
                 ) else ButtonDefaults.buttonColors()
             ) {
-                Text(if (isConflict) "Merge & Save" else "Save")
+                Text(if (isConflict) stringResource(R.string.merge_and_save) else stringResource(R.string.save))
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text("Cancel") }
+            OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     )
 }

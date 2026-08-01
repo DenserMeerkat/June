@@ -1,0 +1,16 @@
+<resources>
+    <!-- Google Drive & Play Sign-In -->
+    <string name="connected">Connected</string>
+    <string name="direct_connection">Direct Connection</string>
+    <string name="direct_connection_desc">June connects directly to Google Drive. Your files never pass through any third-party or developer servers.</string>
+    <string name="google_account">Google Account</string>
+    <string name="link_google_drive">Link Google Drive</string>
+    <string name="link_google_drive_desc">Sync journals privately to a secure app-data folder on your Google Drive.</string>
+    <string name="no_server_tracking">No Server Tracking</string>
+    <string name="no_server_tracking_desc">We don\'t run databases or servers. Your thoughts remain entirely under your control and completely private.</string>
+    <string name="profile_and_email">Profile &amp; Email</string>
+    <string name="profile_and_email_desc">Used solely on your device to display your account status. The developer never sees or collects this info.</string>
+    <string name="sandboxed_storage">Sandboxed Storage</string>
+    <string name="sandboxed_storage_desc">June is restricted to its own app folder. It cannot see, read, or modify any other files in your Google Drive.</string>
+    <string name="sign_in_with_google">Sign In with Google</string>
+</resources>

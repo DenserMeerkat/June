@@ -22,7 +22,7 @@ fun TranslateTile() {
         subtitle = stringResource(R.string.help_translate_desc),
         leadingContent = {
             Icon(
-                painter = painterResource(R.drawable.language_24px),
+                painter = painterResource(R.drawable.weblate),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.secondary
             )

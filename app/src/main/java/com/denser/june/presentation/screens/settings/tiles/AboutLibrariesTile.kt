@@ -14,7 +14,7 @@ fun AboutLibrariesTile() {
     val triggers = LocalSettingsTriggers.current
     SettingsItem(
         title = stringResource(R.string.about_libraries),
-        subtitle = "View licenses of third-party libraries",
+        subtitle = stringResource(R.string.about_libraries_desc),
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.license_24px),

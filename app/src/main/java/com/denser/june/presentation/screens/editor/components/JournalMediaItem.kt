@@ -42,6 +42,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -189,7 +190,7 @@ fun JournalMediaItem(
                 ) {
                     DropdownMenuItem(
                         modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                        text = { Text("Delete") },
+                        text = { Text(stringResource(R.string.delete)) },
                         onClick = {
                             showMenu = false
                             isPlaying = false
@@ -200,7 +201,7 @@ fun JournalMediaItem(
                     if (shouldShowMoveToFront) {
                         DropdownMenuItem(
                             modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                            text = { Text("Move to Front") },
+                            text = { Text(stringResource(R.string.move_to_front)) },
                             onClick = {
                                 operations.onMoveToFront(path)
                                 showMenu = false

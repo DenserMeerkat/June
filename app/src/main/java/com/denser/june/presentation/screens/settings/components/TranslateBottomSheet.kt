@@ -50,20 +50,6 @@ fun TranslateBottomSheet(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.language_24px),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
@@ -76,7 +62,7 @@ fun TranslateBottomSheet(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "June's translations are crowd-sourced and hosted on Hosted Weblate, a web-based open-source translation platform.\n\nYou can easily add translations for your language or suggest improvements directly in your browser without any coding knowledge.",
+                text = stringResource(R.string.translate_dialog_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -93,15 +79,15 @@ fun TranslateBottomSheet(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.language_24px),
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                Text(
+                    text = stringResource(R.string.open_hosted_weblate),
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Open Hosted Weblate",
-                    maxLines = 1
+                Icon(
+                    painter = painterResource(R.drawable.open_in_new_24px),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
                 )
             }
 

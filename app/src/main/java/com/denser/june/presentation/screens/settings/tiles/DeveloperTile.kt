@@ -17,6 +17,7 @@ import com.denser.june.core.utils.Constants
 import org.koin.compose.koinInject
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun DeveloperTile() {
@@ -87,7 +88,7 @@ fun DeveloperTile() {
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("GitHub")
+                    Text(stringResource(R.string.github))
                 }
                 FilledTonalButton(
                     onClick = { uriHandler.openUri(Constants.DEVELOPER_EMAIL) },
@@ -104,7 +105,7 @@ fun DeveloperTile() {
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Email")
+                    Text(stringResource(R.string.email))
                 }
             }
         }

@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.activity.compose.BackHandler
@@ -229,7 +230,7 @@ fun JuneDateTimePicker(
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Today", style = MaterialTheme.typography.labelMedium)
+                            Text(stringResource(R.string.today), style = MaterialTheme.typography.labelMedium)
                         }
                     } else {
                         Button(
@@ -252,7 +253,7 @@ fun JuneDateTimePicker(
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Now", style = MaterialTheme.typography.labelMedium)
+                            Text(stringResource(R.string.now), style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
@@ -343,7 +344,7 @@ fun JuneDateTimePicker(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OutlinedButton(onClick = onDismiss) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.cancel))
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         FilledTonalButton(
@@ -356,7 +357,7 @@ fun JuneDateTimePicker(
                                 onDateTimeSelected(millis)
                             }
                         ) {
-                            Text("OK")
+                            Text(stringResource(R.string.ok))
                         }
                     }
                 }

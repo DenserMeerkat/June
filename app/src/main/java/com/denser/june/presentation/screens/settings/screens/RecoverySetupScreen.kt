@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
@@ -103,7 +104,7 @@ fun RecoverySetupScreen() {
         topBar = {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
-                title = { Text("Security Question") },
+                title = { Text(stringResource(R.string.security_question)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     FilledIconButton(
@@ -128,7 +129,7 @@ fun RecoverySetupScreen() {
                             navigator.navigateBack()
                         }
                     ) {
-                        Text("Skip", color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.skip), color = MaterialTheme.colorScheme.primary)
                     }
                 }
             )
@@ -145,7 +146,7 @@ fun RecoverySetupScreen() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Configure a recovery question. If you forget your PIN, answering this question correctly allows you to reset it.",
+                text = stringResource(R.string.recovery_setup_desc),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -154,7 +155,7 @@ fun RecoverySetupScreen() {
 
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "Recovery Question",
+                    text = stringResource(R.string.recovery_question),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.9f),
                     modifier = Modifier.padding(start = 4.dp)
@@ -230,8 +231,8 @@ fun RecoverySetupScreen() {
                         customQuestionText = it
                         customQuestionError = false
                     },
-                    label = "Custom Question",
-                    placeholder = "e.g. What is your secret nickname?",
+                    label = stringResource(R.string.custom_question_label),
+                    placeholder = stringResource(R.string.custom_question_placeholder),
                     errorText = if (customQuestionError) "Question cannot be empty" else null
                 )
             }
@@ -244,7 +245,7 @@ fun RecoverySetupScreen() {
                     answer = it
                     answerError = false
                 },
-                label = "Your Answer",
+                label = stringResource(R.string.your_answer_label),
                 placeholder = getPlaceholderForQuestion(selectedQuestion),
                 errorText = if (answerError) "Answer cannot be empty" else null
             )
@@ -273,7 +274,7 @@ fun RecoverySetupScreen() {
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Save & Enable Lock")
+                Text(stringResource(R.string.save_and_enable_lock))
             }
         }
     }

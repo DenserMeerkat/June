@@ -4,6 +4,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.presentation.screens.settings.components.LocalSettingsTriggers
 import com.denser.june.presentation.screens.settings.components.SettingsItem
@@ -12,8 +13,8 @@ import com.denser.june.presentation.screens.settings.components.SettingsItem
 fun LicenseTile() {
     val triggers = LocalSettingsTriggers.current
     SettingsItem(
-        title = "License",
-        subtitle = "GPL-3.0 License",
+        title = stringResource(R.string.license),
+        subtitle = stringResource(R.string.gpl_license_desc),
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.gavel_24px),

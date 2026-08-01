@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,6 +22,7 @@ import com.denser.june.presentation.components.JuneFullScreenDialog
 import androidx.emoji2.emojipicker.EmojiPickerView
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.presentation.theme.LocalAppTheme
+import com.denser.june.core.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,7 +106,7 @@ fun JournalEmojiPickerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
@@ -113,7 +115,7 @@ fun JournalEmojiPickerDialog(
                             if (currentSelection == null) onDismiss()
                         }
                     ) {
-                        Text("Done")
+                        Text(stringResource(R.string.done))
                     }
                 }
             }
