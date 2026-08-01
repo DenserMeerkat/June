@@ -19,10 +19,10 @@ class NotificationsHelper(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Reminders",
+                context.getString(R.string.reminders),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Journaling reminders"
+                description = context.getString(R.string.reminders_desc)
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -32,13 +32,13 @@ class NotificationsHelper(private val context: Context) {
         createNotificationChannel()
 
         val notificationOptions = listOf(
-            "Time to write!" to "Don't forget to record your thoughts for today.",
-            "Dear Diary..." to "Your journal is waiting for your story.",
-            "Capture the moment" to "Consistency is key! Write a little bit today.",
-            "How was your day?" to "What was the best part of your day?",
-            "Daily Reflection" to "Take a moment to reflect on what happened today.",
-            "Note to self" to "A few words now, a lifetime of memories later.",
-            "Unwind and write" to "Reflect on today's journey before you rest."
+            context.getString(R.string.reminder_title_1) to context.getString(R.string.reminder_msg_1),
+            context.getString(R.string.reminder_title_2) to context.getString(R.string.reminder_msg_2),
+            context.getString(R.string.reminder_title_3) to context.getString(R.string.reminder_msg_3),
+            context.getString(R.string.reminder_title_4) to context.getString(R.string.reminder_msg_4),
+            context.getString(R.string.reminder_title_5) to context.getString(R.string.reminder_msg_5),
+            context.getString(R.string.reminder_title_6) to context.getString(R.string.reminder_msg_6),
+            context.getString(R.string.reminder_title_7) to context.getString(R.string.reminder_msg_7)
         )
 
         val (title, message) = notificationOptions.random()

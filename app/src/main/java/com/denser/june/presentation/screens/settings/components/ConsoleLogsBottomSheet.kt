@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -79,7 +80,7 @@ fun ConsoleLogsBottomSheet(
             ) {
                 AssistChip(
                     onClick = { refreshLogs() },
-                    label = { Text("Refresh") },
+                    label = { Text(stringResource(R.string.refresh)) },
                     leadingIcon = {
                         Icon(
                             painter = painterResource(R.drawable.replay_24px),
@@ -97,7 +98,7 @@ fun ConsoleLogsBottomSheet(
                         clipboard.setPrimaryClip(clip)
                         Toast.makeText(context, "Logs copied to clipboard", Toast.LENGTH_SHORT).show()
                     },
-                    label = { Text("Copy") },
+                    label = { Text(stringResource(R.string.copy)) },
                     leadingIcon = {
                         Icon(
                             painter = painterResource(R.drawable.content_copy_24px),
@@ -193,7 +194,7 @@ fun ConsoleLogsBottomSheet(
             ) {
                 JuneFloatingAction(
                     onClick = onDismissRequest,
-                    label = "Done",
+                    label = stringResource(R.string.done),
                     icon = { Icon(painterResource(R.drawable.check_24px), contentDescription = "Done") }
                 )
             }

@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.model.SongDetails
@@ -89,7 +90,7 @@ fun AddSongSheet(
                                 }
                             }
                         },
-                        label = "Paste",
+                        label = stringResource(R.string.paste),
                         icon = {
                             Icon(
                                 painterResource(R.drawable.content_paste_go_24px),
@@ -102,7 +103,7 @@ fun AddSongSheet(
                     )
                     JuneFloatingAction(
                         onClick = onDismiss,
-                        label = "Done",
+                        label = stringResource(R.string.done),
                         icon = {
                             Icon(
                                 painterResource(R.drawable.check_24px),
@@ -125,7 +126,7 @@ fun AddSongSheet(
                 if (!isInternetAllowed) {
                     Spacer(modifier = Modifier.height(16.dp))
                     InternetRestrictedBanner(
-                        description = "Enable internet access to fetch song details."
+                        description = stringResource(R.string.fetch_song_require_internet)
                     )
                 }
                 Spacer(modifier = Modifier.height(20.dp))
@@ -193,7 +194,7 @@ fun SongInputCard(
             TextField(
                 value = songLink,
                 onValueChange = onLinkChange,
-                placeholder = { Text("Paste link here...") },
+                placeholder = { Text(stringResource(R.string.paste_link_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isFetching && enabled,
                 trailingIcon = {

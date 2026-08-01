@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -64,7 +65,7 @@ fun WebDavConfigSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "WebDAV Configuration",
+                        text = stringResource(R.string.webdav_configuration),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -96,8 +97,8 @@ fun WebDavConfigSection(
                 JuneTextField(
                     value = webDavUrl,
                     onValueChange = onUrlChange,
-                    label = "Server URL",
-                    placeholder = "https://example.com/dav/user/",
+                    label = stringResource(R.string.server_url_label),
+                    placeholder = stringResource(R.string.server_url_placeholder),
                     leadingIcon = R.drawable.link_24px,
                     keyboardType = KeyboardType.Uri,
                     enabled = !isAnyBusy && !isConfigLocked,
@@ -106,8 +107,8 @@ fun WebDavConfigSection(
                 JuneTextField(
                     value = webDavUser,
                     onValueChange = onUserChange,
-                    label = "Username",
-                    placeholder = "your-username",
+                    label = stringResource(R.string.username_label),
+                    placeholder = stringResource(R.string.username_placeholder),
                     leadingIcon = R.drawable.person_24px,
                     enabled = !isAnyBusy && !isConfigLocked,
                     errorText = userError
@@ -115,7 +116,7 @@ fun WebDavConfigSection(
                 JuneTextField(
                     value = webDavPass,
                     onValueChange = onPassChange,
-                    label = "Password / App Token",
+                    label = stringResource(R.string.password_app_token_label),
                     placeholder = "••••••••••",
                     leadingIcon = R.drawable.lock_24px,
                     keyboardType = KeyboardType.Password,
@@ -152,7 +153,7 @@ fun WebDavConfigSection(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Testing Connection...")
+                        Text(stringResource(R.string.testing_connection))
                     } else {
                         Icon(
                             painterResource(if (status is SyncStatus.Error) R.drawable.sync_problem_24px else R.drawable.backup_24px),
@@ -160,7 +161,7 @@ fun WebDavConfigSection(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("Test Connection")
+                        Text(stringResource(R.string.test_connection))
                     }
                 }
             }
@@ -189,11 +190,11 @@ fun WebDavConfigSection(
                 if (isSyncing) {
                     Icon(
                         painterResource(R.drawable.close_24px),
-                        contentDescription = "Stop Sync",
+                        contentDescription = stringResource(R.string.stop_sync),
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text("Stop Sync", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.stop_sync), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 } else {
                     Icon(
                         painterResource(R.drawable.sync_24px),
@@ -201,7 +202,7 @@ fun WebDavConfigSection(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text("Sync Now", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.sync_now), style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

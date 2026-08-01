@@ -18,6 +18,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -76,22 +77,22 @@ fun JournalTagsDialog(
     if (showExitDialog) {
         JuneDialog(
             onDismissRequest = { showExitDialog = false },
-            title = "Save Changes?",
+            title = stringResource(R.string.save_changes_title),
             icon = R.drawable.file_save_24px,
             confirmButton = {
                 Button(onClick = {
                     showExitDialog = false
                     onSaveTags(localTags)
                     onDismiss()
-                }) { Text("Save") }
+                }) { Text(stringResource(R.string.save)) }
             },
             dismissButton = {
                 OutlinedButton(onClick = {
                     showExitDialog = false
                     onDismiss()
-                }) { Text("Discard") }
+                }) { Text(stringResource(R.string.discard)) }
             },
-            text = { Text("You have unsaved changes to your tags. Do you want to save them before exiting?") }
+            text = { Text(stringResource(R.string.unsaved_tags_message)) }
         )
     }
 
@@ -141,7 +142,7 @@ fun JournalTagsDialog(
                 JuneFloatingActionBar {
                     JuneFloatingAction(
                         onClick = { if (hasChanges) localTags = tags },
-                        label = "Reset",
+                        label = stringResource(R.string.reset),
                         icon = { Icon(painterResource(R.drawable.replay_24px), null) },
                         enabled = hasChanges,
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -154,7 +155,7 @@ fun JournalTagsDialog(
                             }
                             onDismiss()
                         },
-                        label = "Done",
+                        label = stringResource(R.string.done),
                         icon = {
                             Icon(painterResource(R.drawable.check_24px), null)
                         }
@@ -207,7 +208,7 @@ fun JournalTagsDialog(
                         onRemove = { tagToRemove ->
                             localTags = localTags - tagToRemove
                         },
-                        emptyMessage = spec.emptyMessage,
+                        emptyMessage = stringResource(spec.emptyMessageRes),
                         tintColor = spec.color,
                         onAddClick = {
                             val prefix = category.prefix ?: ""

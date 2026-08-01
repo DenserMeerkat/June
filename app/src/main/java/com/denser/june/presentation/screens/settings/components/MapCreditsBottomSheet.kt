@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,7 +43,7 @@ fun MapCreditsBottomSheet(
         ) {
             item {
                 Text(
-                    text = "Map Credits",
+                    text = stringResource(R.string.map_credits),
                     style = MaterialTheme.typography.headlineSmall,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -50,7 +51,7 @@ fun MapCreditsBottomSheet(
                         .fillMaxWidth()
                 )
                 Text(
-                    text = "June uses vector tiles and geocoding services from various open data and mapping providers.",
+                    text = stringResource(R.string.map_credits_body),
                     style = MaterialTheme.typography.titleSmall,
                     fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

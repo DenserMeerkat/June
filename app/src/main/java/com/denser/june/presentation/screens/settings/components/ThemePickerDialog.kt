@@ -59,7 +59,7 @@ fun ThemePickerDialog(
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        text = "Select App Theme",
+                        text = stringResource(R.string.select_app_theme),
                         style = MaterialTheme.typography.titleLarge
                     )
                 }

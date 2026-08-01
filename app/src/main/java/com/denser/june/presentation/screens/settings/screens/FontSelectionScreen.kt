@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
@@ -76,7 +77,7 @@ fun FontSelectionScreen(
         ) {
             if (!isInternetAllowed) {
                 InternetRestrictedBanner(
-                    description = "Online fonts require internet access.",
+                    description = stringResource(R.string.online_fonts_require_internet),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }

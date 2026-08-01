@@ -44,7 +44,7 @@ fun TimelineTabs(
                         onClick = { onTabSelected(tab) },
                         text = {
                             Text(
-                                text = tab.label,
+                                text = androidx.compose.ui.res.stringResource(tab.labelRes),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )

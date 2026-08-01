@@ -36,7 +36,7 @@ fun TimelineMediaTab(
     }
 
     if (allMedia.isEmpty()) {
-        EmptyStateMessage("No media this month.")
+        EmptyStateMessage(androidx.compose.ui.res.stringResource(com.denser.june.core.R.string.no_media_this_month))
     } else {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val screenWidth = maxWidth

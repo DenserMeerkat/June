@@ -22,6 +22,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -219,7 +221,7 @@ fun TimelineMapTab(
     }
 
     if (validPoints.isEmpty()) {
-        EmptyStateMessage("No locations added for this month.")
+        EmptyStateMessage(androidx.compose.ui.res.stringResource(R.string.no_locations_this_month))
         return
     }
 
@@ -302,7 +304,7 @@ fun TimelineMapTab(
                     modifier = Modifier
                         .padding(horizontal = 24.dp)
                         .padding(bottom = bottomPadding),
-                    description = "Maps require internet access to load tiles and display locations."
+                    description = stringResource(R.string.maps_require_internet_locations)
                 )
             }
         }

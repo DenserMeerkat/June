@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,7 +62,7 @@ fun ReminderScreen() {
         topBar = {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
-                title = { Text("Reminders") },
+                title = { Text(stringResource(R.string.reminders)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     FilledIconButton(
@@ -89,7 +91,7 @@ fun ReminderScreen() {
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = "Stay consistent with your journaling by setting up reminders",
+                    text = stringResource(R.string.reminder_screen_desc),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -99,7 +101,7 @@ fun ReminderScreen() {
 
             SettingSection{
                 SettingsItem(
-                    title = "Journaling Reminders",
+                    title = stringResource(R.string.journaling_reminders),
                     leadingContent = {
                         Icon(
                             painter = painterResource(if(state.isEnabled) R.drawable.notifications_24px else R.drawable.notifications_off_24px),
@@ -131,9 +133,9 @@ fun ReminderScreen() {
             }
             Spacer(modifier = Modifier.height(8.dp))
 
-            SettingSection(title = "Schedule") {
+            SettingSection(title = stringResource(R.string.schedule)) {
                 SettingsItem(
-                    title = "Reminder time",
+                    title = stringResource(R.string.reminder_time),
                     subtitle = LocalTime.parse(state.time).toFullTime(is24Hour = is24Hour),
                     enabled = state.isEnabled,
                     leadingContent = {
@@ -147,7 +149,7 @@ fun ReminderScreen() {
                 )
 
                 SettingsItem(
-                    title = "Repeat",
+                    title = stringResource(R.string.repeat),
                     subtitle = getRepeatSummary(state.days),
                     enabled = state.isEnabled,
                     leadingContent = {

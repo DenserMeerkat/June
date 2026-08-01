@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
@@ -22,8 +23,8 @@ fun TimeFormatTile() {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     SettingsItem(
-        title = "Time format",
-        subtitle = if (state.timeFormat == TimeFormat.TWELVE_HOUR) "12-Hour" else "24-Hour",
+        title = stringResource(R.string.time_format),
+        subtitle = if (state.timeFormat == TimeFormat.TWELVE_HOUR) stringResource(R.string.time_format_12h) else stringResource(R.string.time_format_24h),
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.schedule_24px),

@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
@@ -74,7 +75,7 @@ fun SyncScreen() {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text("Cloud Sync") },
+                title = { Text(stringResource(R.string.cloud_sync)) },
                 navigationIcon = {
                     FilledIconButton(
                         onClick = { navigator.navigateBack() },
@@ -128,13 +129,13 @@ fun SyncScreen() {
                 item {
                     InternetRestrictedBanner(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        description = "Enable internet access to use cloud sync."
+                        description = stringResource(R.string.sync_internet_required_desc)
                     )
                 }
             }
             item {
                 Text(
-                    text = "Keep your journals in sync across all your devices using a cloud storage provider.",
+                    text = stringResource(R.string.sync_header_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp)
@@ -149,7 +150,7 @@ fun SyncScreen() {
                 ) {
                     SettingSection {
                         SettingsItem(
-                            title = "Enable Cloud Sync",
+                            title = stringResource(R.string.enable_cloud_sync),
                             leadingContent = {
                                 Icon(
                                     painterResource(R.drawable.cloud_off_24px),
@@ -354,9 +355,9 @@ fun SyncScreen() {
             JuneConfirmationDialog(
                 onDismiss = { syncVM.dismissProviderSwitchDialog() },
                 onConfirm = { syncVM.confirmProviderSwitch() },
-                title = "Switch Provider?",
-                description = "Switching your active cloud target to $targetName will re-check your local library against the new provider state.",
-                confirmButtonText = "Switch Provider",
+                title = stringResource(R.string.switch_provider_title),
+                description = stringResource(R.string.switch_provider_desc, targetName),
+                confirmButtonText = stringResource(R.string.switch_provider),
                 isDestructive = false,
                 icon = R.drawable.cloud_sync_24px
             )
@@ -366,9 +367,9 @@ fun SyncScreen() {
             JuneConfirmationDialog(
                 onDismiss = { syncVM.dismissRepairConfirmationDialog() },
                 onConfirm = { syncVM.confirmRepairSync(context) },
-                title = "Repair Sync & Revalidate?",
-                description = "This will audit local database records, repair image paths, clean orphaned media files, and perform a full cloud revalidation pass. This may take longer than a standard sync.",
-                confirmButtonText = "Repair Sync",
+                title = stringResource(R.string.repair_sync_title),
+                description = stringResource(R.string.repair_sync_desc),
+                confirmButtonText = stringResource(R.string.repair_sync),
                 isDestructive = false,
                 icon = R.drawable.reset_wrench_24px
             )

@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -175,7 +176,7 @@ fun EditorScreen() {
                                     alpha = 0.75f
                                 )
                             )
-                        ) { Icon(painterResource(R.drawable.close_24px), "Close") }
+                        ) { Icon(painterResource(R.drawable.close_24px), stringResource(R.string.close)) }
 
                         FilledIconButton(
                             onClick = { dialogState.showEmojiPicker = true },
@@ -193,7 +194,7 @@ fun EditorScreen() {
                             if (state.emoji != null) Text(state.emoji!!, fontSize = 22.sp)
                             else Icon(
                                 painterResource(if (dialogState.showEmojiPicker) R.drawable.sentiment_very_satisfied_24px_fill else R.drawable.sentiment_very_satisfied_24px),
-                                "Add Emoji"
+                                stringResource(R.string.add_emoji)
                             )
                         }
 
@@ -212,7 +213,7 @@ fun EditorScreen() {
                         ) {
                             Icon(
                                 painterResource(if (dialogState.showAddItemSheet) R.drawable.add_circle_24px_fill else R.drawable.add_circle_24px),
-                                "Add Attachment"
+                                stringResource(R.string.add_attachment)
                             )
                         }
 
@@ -229,7 +230,7 @@ fun EditorScreen() {
                                 if (!state.isLoading) viewModel.onAction(EditorAction.SaveJournal)
                             },
                         ) {
-                            Text("Save")
+                            Text(stringResource(R.string.save))
                         }
                     }
 
@@ -248,7 +249,7 @@ fun EditorScreen() {
                         ) {
                             Icon(
                                 painterResource(R.drawable.more_vert_24px),
-                                "Options"
+                                stringResource(R.string.options)
                             )
                         }
                     }
@@ -305,7 +306,7 @@ fun EditorScreen() {
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = {
                                 Text(
-                                    "Add title",
+                                    stringResource(R.string.add_title),
                                     style = MaterialTheme.typography.headlineMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
@@ -348,7 +349,7 @@ fun EditorScreen() {
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.today_24px),
-                                    contentDescription = "Date and Time Picker",
+                                    contentDescription = stringResource(R.string.date_time_picker),
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -449,7 +450,7 @@ fun EditorScreen() {
                                     painter = painterResource(
                                         if (state.tags.isNotEmpty()) R.drawable.sell_24px_fill else R.drawable.sell_24px
                                     ),
-                                    contentDescription = "Tags",
+                                    contentDescription = stringResource(R.string.tags),
                                     modifier = Modifier.size(16.dp)
                                 )
                                 if (state.tags.isNotEmpty()) {

@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import com.denser.hyphen.ui.LocalHyphenRawClipboard
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.denser.hyphen.model.MarkupStyle
@@ -47,7 +48,7 @@ fun JuneLinkMenu(
     ) {
         DropdownMenuItem(
             modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-            text = { Text("Open Link", style = MaterialTheme.typography.labelLarge) },
+            text = { Text(stringResource(R.string.open_link), style = MaterialTheme.typography.labelLarge) },
             onClick = {
                 onDismiss()
                 if (url.isNotEmpty()) uriHandler.openUri(url)
@@ -63,7 +64,7 @@ fun JuneLinkMenu(
         )
         DropdownMenuItem(
             modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-            text = { Text("Edit Link", style = MaterialTheme.typography.labelLarge) },
+            text = { Text(stringResource(R.string.edit_link), style = MaterialTheme.typography.labelLarge) },
             onClick = {
                 onDismiss()
                 onEditRequest(span)
@@ -79,7 +80,7 @@ fun JuneLinkMenu(
         )
         DropdownMenuItem(
             modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-            text = { Text("Copy URL", style = MaterialTheme.typography.labelLarge) },
+            text = { Text(stringResource(R.string.copy_url), style = MaterialTheme.typography.labelLarge) },
             onClick = {
                 scope.launch {
                     clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("URL", url)))
@@ -145,16 +146,16 @@ fun JuneLinkSheet(
                 JuneTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = "Display Text",
-                    placeholder = "Enter text to display",
+                    label = stringResource(R.string.display_text_label),
+                    placeholder = stringResource(R.string.display_text_placeholder),
                     leadingIcon = R.drawable.edit_note_24px
                 )
 
                 JuneTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = "Link URL",
-                    placeholder = "https://example.com",
+                    label = stringResource(R.string.link_url_label),
+                    placeholder = stringResource(R.string.link_url_placeholder),
                     leadingIcon = R.drawable.link_24px
                 )
             }
@@ -166,7 +167,7 @@ fun JuneLinkSheet(
                 JuneFloatingActionBar {
                      JuneFloatingAction(
                         onClick = onDismiss,
-                        label = "Cancel",
+                        label = stringResource(R.string.cancel),
                         icon = { Icon(painterResource(R.drawable.close_24px), null, Modifier.size(20.dp)) },
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -174,7 +175,7 @@ fun JuneLinkSheet(
 
                     JuneFloatingAction(
                         onClick = { onConfirm(text, url) },
-                        label = "Confirm",
+                        label = stringResource(R.string.confirm),
                         icon = { Icon(painterResource(R.drawable.check_24px), null, Modifier.size(20.dp)) },
                         enabled = url.isNotBlank()
                     )

@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import com.denser.june.core.R
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -30,7 +32,6 @@ import com.denser.june.presentation.components.JuneFullScreenDialog
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import com.denser.june.core.R
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.presentation.components.MapControlColumn
@@ -424,7 +425,7 @@ fun AddLocationDialog(
 
                 if (!isInternetAllowed) {
                     InternetRestrictedBanner(
-                        description = "Maps and search require internet access."
+                        description = stringResource(R.string.maps_search_require_internet)
                     )
                 }
             }

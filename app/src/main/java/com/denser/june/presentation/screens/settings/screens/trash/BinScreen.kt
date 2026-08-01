@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -61,7 +62,7 @@ fun BinScreen() {
         topBar = {
             JuneTopAppBar(
                 type = JuneAppBarType.CenterAligned,
-                title = { Text("Bin", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.bin), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     FilledIconButton(
                         onClick = { navigator.navigateBack() },
@@ -72,7 +73,7 @@ fun BinScreen() {
                     ) {
                         Icon(
                             painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -87,7 +88,7 @@ fun BinScreen() {
                             ) {
                                 Icon(
                                     painterResource(R.drawable.more_vert_24px),
-                                    contentDescription = "Options"
+                                    contentDescription = stringResource(R.string.options)
                                 )
                             }
                             DropdownMenu(
@@ -101,7 +102,7 @@ fun BinScreen() {
                             ) {
                                 DropdownMenuItem(
                                     modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                    text = { Text("Restore All") },
+                                    text = { Text(stringResource(R.string.restore_all)) },
                                     onClick = {
                                         showMenu = false
                                         showRestoreAllDialog = true
@@ -117,7 +118,7 @@ fun BinScreen() {
                                     modifier = Modifier.clip(RoundedCornerShape(16.dp)),
                                     text = {
                                         Text(
-                                            "Empty Bin",
+                                            stringResource(R.string.empty_bin),
                                             color = MaterialTheme.colorScheme.error
                                         )
                                     },
@@ -148,8 +149,8 @@ fun BinScreen() {
             if (deletedJournals.isEmpty()) {
                 JunePlaceholderPage(
                     icon = R.drawable.delete_24px,
-                    title = "Bin is empty",
-                    subtitle = "Journals you delete will appear here for 30 days before being permanently removed.",
+                    title = stringResource(R.string.bin_is_empty),
+                    subtitle = stringResource(R.string.bin_empty_desc),
                     modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                 )
             } else {
@@ -165,7 +166,7 @@ fun BinScreen() {
                 ) {
                     item {
                         Text(
-                            text = "Items in Bin will be permanently deleted after 30 days.",
+                            text = stringResource(R.string.bin_retention_notice),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -198,14 +199,14 @@ fun BinScreen() {
             JuneConfirmationDialog(
                 onDismiss = { showEmptyBinDialog = false },
                 onConfirm = { binVM.emptyBin() },
-                title = "Empty Bin?",
+                title = stringResource(R.string.empty_bin_title),
                 description = if (isSyncEnabled) {
-                    "This will permanently delete all journals in the bin from this device and your cloud storage. This action cannot be undone."
+                    stringResource(R.string.empty_bin_sync_desc)
                 } else {
-                    "This will permanently delete all journals in the bin. This action cannot be undone."
+                    stringResource(R.string.empty_bin_local_desc)
                 },
-                confirmText = "Delete",
-                confirmButtonText = "Permanently Delete All",
+                confirmText = stringResource(R.string.delete),
+                confirmButtonText = stringResource(R.string.permanently_delete_all),
                 isDestructive = true,
                 icon = R.drawable.delete_24px
             )
@@ -215,10 +216,10 @@ fun BinScreen() {
             JuneConfirmationDialog(
                 onDismiss = { showRestoreAllDialog = false },
                 onConfirm = { binVM.restoreAll() },
-                title = "Restore All?",
-                description = "This will restore all deleted entries back to your timeline.",
+                title = stringResource(R.string.restore_all_title),
+                description = stringResource(R.string.restore_all_desc),
                 confirmText = null,
-                confirmButtonText = "Restore All",
+                confirmButtonText = stringResource(R.string.restore_all),
                 isDestructive = false,
                 icon = R.drawable.restore_from_trash_24px
             )
@@ -262,11 +263,11 @@ fun BinScreen() {
                     journalToDeletePermanently = null
                 },
                 message = if (isSyncEnabled) {
-                    "Permanently delete this journal from this device and your cloud storage? This action cannot be undone."
+                    stringResource(R.string.delete_journal_sync_desc)
                 } else {
-                    "Permanently delete this journal? This action cannot be undone."
+                    stringResource(R.string.delete_journal_local_desc)
                 },
-                confirmText = "Permanently Delete"
+                confirmText = stringResource(R.string.permanently_delete)
             )
         }
 

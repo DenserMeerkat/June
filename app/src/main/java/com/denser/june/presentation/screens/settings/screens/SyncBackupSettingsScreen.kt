@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
@@ -42,6 +43,13 @@ fun SyncBackupSettingsScreen() {
     var showExportDialog by remember { mutableStateOf(false) }
     var showRestoreWarning by remember { mutableStateOf<String?>(null) }
 
+    val backupSavedMsg = stringResource(R.string.backup_saved_successfully)
+    val markdownExportSavedMsg = stringResource(R.string.markdown_export_saved_successfully)
+    val failedToSaveMsg = stringResource(R.string.failed_to_save_file)
+    val restoreCompleteMsg = stringResource(R.string.restore_complete)
+    val invalidBackupMsg = stringResource(R.string.invalid_or_corrupted_backup_file)
+    val oldSchemaMsg = stringResource(R.string.backup_format_too_old)
+
     val saveLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/zip")
     ) { uri ->
@@ -52,9 +60,9 @@ fun SyncBackupSettingsScreen() {
                     context.contentResolver.openOutputStream(targetUri)?.use { output ->
                         tempFile.inputStream().use { input -> input.copyTo(output) }
                     }
-                    Toast.makeText(context, "Backup saved successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, backupSavedMsg, Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Failed to save file", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, failedToSaveMsg, Toast.LENGTH_SHORT).show()
                 } finally {
                     onAction(SettingsAction.ResetBackup)
                 }
@@ -72,9 +80,9 @@ fun SyncBackupSettingsScreen() {
                     context.contentResolver.openOutputStream(targetUri)?.use { output ->
                         tempFile.inputStream().use { input -> input.copyTo(output) }
                     }
-                    Toast.makeText(context, "Markdown export saved successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, markdownExportSavedMsg, Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Failed to save file", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, failedToSaveMsg, Toast.LENGTH_SHORT).show()
                 } finally {
                     onAction(SettingsAction.ResetBackup)
                 }
@@ -107,16 +115,16 @@ fun SyncBackupSettingsScreen() {
     LaunchedEffect(state.restoreState) {
         when (state.restoreState) {
             is RestoreState.Restored -> {
-                Toast.makeText(context, "Restore Complete!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, restoreCompleteMsg, Toast.LENGTH_SHORT).show()
                 onAction(SettingsAction.ResetBackup)
             }
 
             is RestoreState.Failure -> {
                 val errorMsg = when (state.restoreState.exception) {
-                    RestoreFailedException.InvalidFile -> "Invalid or Corrupted Backup File"
-                    RestoreFailedException.OldSchema -> "Backup format is too old"
+                    RestoreFailedException.InvalidFile -> invalidBackupMsg
+                    RestoreFailedException.OldSchema -> oldSchemaMsg
                 }
-                Toast.makeText(context, "Restore Failed: $errorMsg", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.restore_failed, errorMsg), Toast.LENGTH_LONG).show()
                 onAction(SettingsAction.ResetBackup)
             }
 
@@ -130,7 +138,7 @@ fun SyncBackupSettingsScreen() {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = "Sync & Backup") },
+                title = { Text(text = stringResource(R.string.sync_and_backup)) },
                 navigationIcon = {
                     FilledIconButton(
                         onClick = { navigator.navigateBack() },
@@ -141,7 +149,7 @@ fun SyncBackupSettingsScreen() {
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                         )
                     }
                 }
@@ -163,8 +171,8 @@ fun SyncBackupSettingsScreen() {
                 SettingSection {
                     val isExporting = state.exportState is ExportState.Exporting || state.exportMarkdownState is ExportState.Exporting
                     SettingsItem(
-                        title = "Export Data",
-                        subtitle = if (isExporting) "Exporting..." else "Save your journals and media to a secure file.",
+                        title = stringResource(R.string.export_data),
+                        subtitle = if (isExporting) stringResource(R.string.exporting) else stringResource(R.string.export_data_desc),
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.upload_24px),
@@ -184,8 +192,8 @@ fun SyncBackupSettingsScreen() {
 
                     val isRestoring = state.restoreState is RestoreState.Restoring
                     SettingsItem(
-                        title = "Restore Data",
-                        subtitle = if (isRestoring) "Restoring..." else "Import data from a previously saved backup file.",
+                        title = stringResource(R.string.restore_data),
+                        subtitle = if (isRestoring) stringResource(R.string.restoring) else stringResource(R.string.restore_data_desc),
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.download_24px),
@@ -232,7 +240,7 @@ fun SyncBackupSettingsScreen() {
     if (showRestoreWarning != null) {
         JuneDialog(
             onDismissRequest = { showRestoreWarning = null },
-            title = "Restore Backup?",
+            title = stringResource(R.string.restore_backup_title),
             icon = R.drawable.cloud_sync_24px,
             confirmButton = {
                 Button(
@@ -241,13 +249,13 @@ fun SyncBackupSettingsScreen() {
                         showRestoreWarning = null
                         onAction(SettingsAction.OnRestoreJournals(uri))
                     }
-                ) { Text("Restore") }
+                ) { Text(stringResource(R.string.restore)) }
             },
             dismissButton = {
-                OutlinedButton(onClick = { showRestoreWarning = null }) { Text("Cancel") }
+                OutlinedButton(onClick = { showRestoreWarning = null }) { Text(stringResource(R.string.cancel)) }
             },
             text = {
-                Text("This will merge the backup with your current data.\n\n• Entries with matching IDs will be OVERWRITTEN.\n• New entries will be ADDED.\n\nThis action cannot be undone.")
+                Text(stringResource(R.string.restore_warning_message))
             }
         )
     }

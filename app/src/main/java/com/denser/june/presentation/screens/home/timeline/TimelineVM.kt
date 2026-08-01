@@ -27,11 +27,11 @@ import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import java.time.YearMonth
 
-enum class TimelineTab(val label: String, val iconRes: Int) {
-    Journals("Journals", R.drawable.list_alt_24px),
-    Media("Media", R.drawable.art_track_24px),
-    Music("Music", R.drawable.music_note_24px),
-    Map("Map", R.drawable.location_on_24px)
+enum class TimelineTab(@androidx.annotation.StringRes val labelRes: Int, val iconRes: Int) {
+    Journals(R.string.journals, R.drawable.list_alt_24px),
+    Media(R.string.media, R.drawable.art_track_24px),
+    Music(R.string.music, R.drawable.music_note_24px),
+    Map(R.string.map, R.drawable.location_on_24px)
 }
 
 class TimelineVM(

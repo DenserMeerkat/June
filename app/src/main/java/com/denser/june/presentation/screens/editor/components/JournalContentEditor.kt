@@ -33,6 +33,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
 import com.denser.hyphen.model.MarkupStyleRange
+import androidx.compose.ui.res.stringResource
+import com.denser.june.core.R
 import androidx.compose.ui.unit.LayoutDirection
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import kotlin.time.Duration.Companion.milliseconds
@@ -138,7 +140,7 @@ fun JournalContentEditor(
                 },
             placeholder = {
                 Text(
-                    "What's on your mind?",
+                    stringResource(R.string.whats_on_your_mind),
                     style = MaterialTheme.typography.bodyLarge,
                 )
             },
@@ -173,7 +175,7 @@ fun JournalContentEditor(
             },
         placeholder = {
             Text(
-                "What's on your mind?",
+                stringResource(R.string.whats_on_your_mind),
                 style = MaterialTheme.typography.bodyLarge,
             )
         },

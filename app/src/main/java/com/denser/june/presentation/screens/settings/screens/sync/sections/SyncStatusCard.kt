@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import com.denser.june.core.domain.sync.SyncStatus
 import com.denser.june.core.utils.toFullDateTime
@@ -61,7 +62,7 @@ fun SyncStatusCard(
                 ) {
                     if (lastSyncTime > 0) {
                         Text(
-                            text = "Last successful sync",
+                            text = stringResource(R.string.last_successful_sync),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -73,12 +74,12 @@ fun SyncStatusCard(
                         )
                     } else if (status is SyncStatus.Idle) {
                         Text(
-                            text = "Cloud Sync",
+                            text = stringResource(R.string.cloud_sync),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Never synced",
+                            text = stringResource(R.string.never_synced),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface

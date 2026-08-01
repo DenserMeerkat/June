@@ -4,6 +4,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -14,8 +15,8 @@ import org.koin.compose.koinInject
 fun MapSettingsTile() {
     val navigator = koinInject<AppNavigator>()
     SettingsItem(
-        title = "Map settings",
-        subtitle = "Select style and manage API keys",
+        title = stringResource(R.string.map_settings),
+        subtitle = stringResource(R.string.map_settings_desc),
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.map_24px),

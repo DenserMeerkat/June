@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.FileUtils
@@ -76,7 +77,7 @@ fun EditorModals(
     if (dialogState.showCameraSelectionDialog) {
         JuneDialog(
             onDismissRequest = { dialogState.showCameraSelectionDialog = false },
-            title = "Capture Media",
+            title = stringResource(R.string.capture_media),
             icon = R.drawable.add_a_photo_24px,
             confirmButton = {
                 TextButton(onClick = {
@@ -84,7 +85,7 @@ fun EditorModals(
                     val uri = FileUtils.createTempVideoUri(context)
                     tempVideoUri = uri
                     videoLauncher.launch(uri)
-                }) { Text("Record Video") }
+                }) { Text(stringResource(R.string.record_video)) }
             },
             dismissButton = {
                 TextButton(onClick = {
@@ -92,31 +93,31 @@ fun EditorModals(
                     val uri = FileUtils.createTempPictureUri(context)
                     tempCameraUri = uri
                     photoLauncher.launch(uri)
-                }) { Text("Take Photo") }
+                }) { Text(stringResource(R.string.take_photo)) }
             },
-            text = { Text("Would you like to take a photo or record a video?") }
+            text = { Text(stringResource(R.string.camera_options_message)) }
         )
     }
 
     if (dialogState.showExitDialog) {
         JuneDialog(
             onDismissRequest = { dialogState.showExitDialog = false },
-            title = "Save Entry?",
+            title = stringResource(R.string.save_and_enable_lock),
             icon = R.drawable.file_save_24px,
             confirmButton = {
                 Button(onClick = {
                     dialogState.showExitDialog = false
                     onAction(EditorAction.SaveJournal)
                     onAction(EditorAction.NavigateBack)
-                }) { Text("Save") }
+                }) { Text(stringResource(R.string.save)) }
             },
             dismissButton = {
                 OutlinedButton(onClick = {
                     dialogState.showExitDialog = false
                     onAction(EditorAction.NavigateBack)
-                }) { Text("Discard") }
+                }) { Text(stringResource(R.string.discard)) }
             },
-            text = { Text("Would you like to save your progress before leaving?") }
+            text = { Text(stringResource(R.string.save_progress_message)) }
         )
     }
 

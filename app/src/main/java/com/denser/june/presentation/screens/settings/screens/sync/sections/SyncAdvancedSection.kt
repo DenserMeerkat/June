@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.sync.SyncAnalysis
@@ -48,8 +49,8 @@ fun SyncAdvancedSection(
     ) {
         SettingSection {
             SettingsItem(
-                title = "Advanced",
-                subtitle = "Analysis & repair tools",
+                title = stringResource(R.string.advanced),
+                subtitle = stringResource(R.string.advanced_sync_desc),
                 leadingContent = {
                     Icon(painterResource(R.drawable.settings_24px), null)
                 },
@@ -75,25 +76,25 @@ fun SyncAdvancedSection(
             if (showAdvancedOptions) {
                 val isBusy = isAnalyzing || status is SyncStatus.Syncing || status is SyncStatus.Preparing
                 SettingsItem(
-                    title = "Analyze Sync",
-                    subtitle = "Analyze cloud sync health",
+                    title = stringResource(R.string.analyze_sync),
+                    subtitle = stringResource(R.string.analyze_sync_desc),
                     trailingContent = {
                         FilledIconButton(onClick = onAnalyze, enabled = !isBusy) {
                             Icon(
                                 painterResource(R.drawable.track_changes_24px),
-                                contentDescription = "Analyze"
+                                contentDescription = stringResource(R.string.analyze_sync)
                             )
                         }
                     }
                 )
                 SettingsItem(
-                    title = "Repair Sync",
-                    subtitle = "Repair and revalidate sync state",
+                    title = stringResource(R.string.repair_sync),
+                    subtitle = stringResource(R.string.repair_sync_short_desc),
                     trailingContent = {
                         FilledIconButton(onClick = onRepair, enabled = !isBusy) {
                             Icon(
                                 painterResource(R.drawable.reset_wrench_24px),
-                                contentDescription = "Repair"
+                                contentDescription = stringResource(R.string.repair_sync)
                             )
                         }
                     }

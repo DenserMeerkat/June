@@ -16,13 +16,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.denser.june.presentation.components.InternetRestrictedIndicator
 import com.denser.june.presentation.theme.LocalInternetAllowed
+import com.denser.june.core.R
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import com.denser.june.core.R
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.presentation.components.MapLocationPin
@@ -170,7 +171,7 @@ fun JournalMapItem(
             if (!isInternetAllowed) {
                 InternetRestrictedIndicator(
                     modifier = Modifier.fillMaxSize().padding(top = 32.dp),
-                    description = "Maps require internet access to load tiles."
+                    description = stringResource(R.string.maps_require_internet_tiles)
                 )
             }
 
@@ -198,7 +199,7 @@ fun JournalMapItem(
                     ) {
                         DropdownMenuItem(
                             modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                            text = { Text("Change Location") },
+                            text = { Text(stringResource(R.string.change_location)) },
                             onClick = {
                                 showMenu = false
                                 onMapClick()
@@ -207,7 +208,7 @@ fun JournalMapItem(
                         )
                         DropdownMenuItem(
                             modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                            text = { Text("Remove") },
+                            text = { Text(stringResource(R.string.remove)) },
                             onClick = {
                                 showMenu = false
                                 onRemove()
