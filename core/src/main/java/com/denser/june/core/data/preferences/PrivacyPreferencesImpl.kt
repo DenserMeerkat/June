@@ -23,6 +23,7 @@ class PrivacyPreferencesImpl(
         private val screenPrivacy = booleanPreferencesKey("screen_privacy")
         private val isInternetAllowed = booleanPreferencesKey("is_internet_allowed")
         private val lastChangelogShown = stringPreferencesKey("last_changelog_shown")
+        private val lastAnnouncementDismissedId = stringPreferencesKey("last_announcement_dismissed_id")
     }
 
     override fun getAppLockFlow(): Flow<Boolean> = dataStore.data
@@ -93,5 +94,12 @@ class PrivacyPreferencesImpl(
 
     override suspend fun updateLastChangelogShown(version: String) {
         dataStore.edit { it[lastChangelogShown] = version }
+    }
+
+    override fun getLastAnnouncementDismissedIdFlow(): Flow<String?> = dataStore.data
+        .map { preferences -> preferences[lastAnnouncementDismissedId] }
+
+    override suspend fun updateLastAnnouncementDismissedId(id: String) {
+        dataStore.edit { it[lastAnnouncementDismissedId] = id }
     }
 }

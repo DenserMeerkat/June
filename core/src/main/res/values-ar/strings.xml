@@ -114,7 +114,7 @@
     <string name="unsaved_tags_message">لديك تغييرات غير محفوظة على علاماتك. هل تريد حفظها قبل الخروج؟</string>
     <string name="untitled">بدون عنوان</string>
     <string name="updated">تم التحديث</string>
-    <string name="whats_changed">ما الذي تغير</string>
+    <string name="whats_new">ما الجديد</string>
     <string name="change_lock_title">تغيير القفل؟</string>
     <string name="repair_sync">إصلاح المزامنة</string>
     <string name="repair_sync_desc">سيؤدي ذلك إلى تدقيق سجلات قاعدة البيانات المحلية ، وإصلاح مسارات الصور ، وتنظيف ملفات الوسائط اليتيمة ، وإجراء تمريرة كاملة لإعادة المصادقة السحابية. قد يستغرق الأمر وقتًا أطول من المزامنة القياسية.</string>

@@ -104,7 +104,7 @@
     <string name="untitled">Ohne Titel</string>
     <string name="updated">Aktualisiert</string>
     <string name="verifying_connection">Verbindung wird geprüft...</string>
-    <string name="whats_changed">Was sich geändert hat</string>
+    <string name="whats_new">Was gibt\'s Neues</string>
     <string name="change_lock_title">Sperre ändern?</string>
     <string name="checking_for_updates">Nach Updates prüfen</string>
     <string name="diagnostics">Diagnostik</string>

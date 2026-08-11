@@ -18,7 +18,6 @@ import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.theme.JuneTheme
 import com.denser.june.presentation.theme.LocalAppTheme
 import com.denser.june.presentation.theme.LocalInternetAllowed
-import com.denser.june.presentation.screens.settings.components.WhatsChangedBottomSheet
 import com.denser.june.presentation.utils.StartupManager
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -26,7 +25,10 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.LayoutDirection
+import com.denser.june.presentation.screens.settings.components.WhatsNewBottomSheet
+import com.denser.june.presentation.utils.handleAnnouncementAction
 
 @Composable
 fun JuneApp(
@@ -42,6 +44,7 @@ fun JuneApp(
     
     val startupManager = koinInject<StartupManager>()
     val pendingWhatsChanged by startupManager.pendingWhatsChanged.collectAsStateWithLifecycle(initialValue = null)
+    val pendingAnnouncement by startupManager.pendingAnnouncement.collectAsStateWithLifecycle(initialValue = null)
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
     LaunchedEffect(openSyncSettings) {
@@ -90,12 +93,29 @@ fun JuneApp(
                 )
             }
 
-            pendingWhatsChanged?.let { latestEntry ->
-                WhatsChangedBottomSheet(
-                    versionEntry = latestEntry,
+            val uriHandler = LocalUriHandler.current
+
+            if (pendingWhatsChanged != null || pendingAnnouncement != null) {
+                WhatsNewBottomSheet(
+                    versionEntry = pendingWhatsChanged,
+                    announcement = pendingAnnouncement,
                     onDismissRequest = {
                         coroutineScope.launch {
-                            startupManager.dismissWhatsChanged(latestEntry.version)
+                            pendingWhatsChanged?.let { startupManager.dismissWhatsChanged(it.version) }
+                            pendingAnnouncement?.let { startupManager.dismissAnnouncement(it.id) }
+                        }
+                    },
+                    onAnnouncementAction = { announcement ->
+                        coroutineScope.launch {
+                            announcement.action?.let { action ->
+                                handleAnnouncementAction(
+                                    action = action,
+                                    navigator = navigator,
+                                    uriHandler = uriHandler
+                                )
+                            }
+                            startupManager.dismissAnnouncement(announcement.id)
+                            pendingWhatsChanged?.let { startupManager.dismissWhatsChanged(it.version) }
                         }
                     }
                 )

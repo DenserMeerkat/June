@@ -111,7 +111,7 @@
     <string name="untitled">Untitled</string>
     <string name="updated">Updated</string>
     <string name="verifying_connection">Verifying connection...</string>
-    <string name="whats_changed">What\'s Changed</string>
+    <string name="whats_new">What\'s New</string>
 
     <!-- Dialogs & Banners -->
     <string name="save_entry">Save Entry?</string>

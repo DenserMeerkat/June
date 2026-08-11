@@ -25,4 +25,7 @@ interface PrivacyPreferences {
 
     fun getLastChangelogShownFlow(): Flow<String?>
     suspend fun updateLastChangelogShown(version: String)
+
+    fun getLastAnnouncementDismissedIdFlow(): Flow<String?>
+    suspend fun updateLastAnnouncementDismissedId(id: String)
 }

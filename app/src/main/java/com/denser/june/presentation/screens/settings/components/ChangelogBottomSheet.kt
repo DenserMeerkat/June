@@ -8,14 +8,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.json.JSONArray
 
 import com.denser.june.BuildConfig
+import com.denser.june.core.R
+import com.denser.june.presentation.components.AnnouncementCard
+import com.denser.june.presentation.utils.AnnouncementEntry
+import com.denser.june.presentation.utils.AnnouncementActionType
+import com.denser.june.presentation.utils.AnnouncementAction
 
 data class VersionEntry(
     val version: String,
@@ -70,6 +79,42 @@ fun ChangelogBottomSheet(
         }
     }
 
+    val announcement = remember {
+        try {
+            val jsonString = context.assets.open("announcements.json").bufferedReader().use { it.readText() }
+            val jsonArray = JSONArray(jsonString)
+            if (jsonArray.length() > 0) {
+                val obj = jsonArray.getJSONObject(0)
+                val actionObj = obj.optJSONObject("action")
+                val action = if (actionObj != null) {
+                    val typeStr = actionObj.getString("type")
+                    val type = try {
+                        AnnouncementActionType.valueOf(typeStr.uppercase())
+                    } catch (e: Exception) {
+                        AnnouncementActionType.WEB_URL
+                    }
+                    AnnouncementAction(
+                        text = actionObj.getString("text"),
+                        type = type,
+                        target = actionObj.getString("target")
+                    )
+                } else null
+
+                AnnouncementEntry(
+                    id = obj.getString("id"),
+                    title = obj.getString("title"),
+                    message = obj.getString("message"),
+                    icon = obj.optString("icon", null),
+                    action = action
+                )
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    val uriHandler = LocalUriHandler.current
+
     ModalBottomSheet(
         onDismissRequest = { setShowSheet(false) },
         modifier = modifier
@@ -78,10 +123,11 @@ fun ChangelogBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LazyColumn(
-                contentPadding = PaddingValues(vertical = 8.dp),
+                contentPadding = PaddingValues(bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -89,14 +135,34 @@ fun ChangelogBottomSheet(
             ) {
                 item {
                     Text(
-                        text = "Changelog",
+                        text = stringResource(R.string.changelog),
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
                             .padding(top = 16.dp, bottom = 16.dp)
                             .fillMaxWidth(),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        textAlign = TextAlign.Center
                     )
+                }
+
+                if (announcement != null) {
+                    item {
+                        AnnouncementCard(
+                            announcement = announcement,
+                            onActionClick = {
+                                announcement.action?.let { action ->
+                                    when (action.type) {
+                                        AnnouncementActionType.WEB_URL -> {
+                                            uriHandler.openUri(action.target)
+                                        }
+                                        else -> {
+                                            uriHandler.openUri(action.target)
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                    }
                 }
 
                 itemsIndexed(changelogs) { _, versionEntry ->

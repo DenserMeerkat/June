@@ -9,12 +9,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 
+import com.denser.june.presentation.utils.AnnouncementEntry
+import com.denser.june.presentation.utils.AnnouncementAction
+import com.denser.june.presentation.utils.AnnouncementActionType
+
 class StartupManager(
     private val context: Context,
     private val privacyPrefs: PrivacyPreferences
 ) {
     private val _pendingWhatsChanged = MutableStateFlow<VersionEntry?>(null)
     val pendingWhatsChanged: Flow<VersionEntry?> = _pendingWhatsChanged
+
+    private val _pendingAnnouncement = MutableStateFlow<AnnouncementEntry?>(null)
+    val pendingAnnouncement: Flow<AnnouncementEntry?> = _pendingAnnouncement
 
     suspend fun checkStartupFlows() {
         val latestEntry = try {
@@ -63,10 +70,60 @@ class StartupManager(
                 _pendingWhatsChanged.value = latestEntry
             }
         }
+
+        checkAnnouncement()
+    }
+
+    private suspend fun checkAnnouncement() {
+        val latestAnnouncement = try {
+            val jsonString = context.assets.open("announcements.json").bufferedReader().use { it.readText() }
+            val jsonArray = JSONArray(jsonString)
+            if (jsonArray.length() > 0) {
+                val obj = jsonArray.getJSONObject(0)
+                val actionObj = obj.optJSONObject("action")
+                val action = if (actionObj != null) {
+                    val typeStr = actionObj.getString("type")
+                    val type = try {
+                        AnnouncementActionType.valueOf(typeStr.uppercase())
+                    } catch (e: Exception) {
+                        AnnouncementActionType.WEB_URL
+                    }
+                    AnnouncementAction(
+                        text = actionObj.getString("text"),
+                        type = type,
+                        target = actionObj.getString("target")
+                    )
+                } else null
+
+                AnnouncementEntry(
+                    id = obj.getString("id"),
+                    title = obj.getString("title"),
+                    message = obj.getString("message"),
+                    icon = obj.optString("icon", null),
+                    minVersion = obj.optString("minVersion", null),
+                    maxVersion = obj.optString("maxVersion", null),
+                    action = action
+                )
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+
+        if (latestAnnouncement != null) {
+            val lastDismissedId = privacyPrefs.getLastAnnouncementDismissedIdFlow().first()
+            if (lastDismissedId != latestAnnouncement.id) {
+                _pendingAnnouncement.value = latestAnnouncement
+            }
+        }
     }
 
     suspend fun dismissWhatsChanged(version: String) {
         privacyPrefs.updateLastChangelogShown(version)
         _pendingWhatsChanged.value = null
+    }
+
+    suspend fun dismissAnnouncement(id: String) {
+        privacyPrefs.updateLastAnnouncementDismissedId(id)
+        _pendingAnnouncement.value = null
     }
 }
