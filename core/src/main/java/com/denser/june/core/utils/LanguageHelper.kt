@@ -14,8 +14,16 @@ import java.util.Locale
 data class AppLanguage(
     val code: String,
     val nativeName: String,
+    val englishName: String = "",
     val isRtl: Boolean = false
-)
+) {
+    val displayName: String
+        get() = if (englishName.isNotBlank() && !englishName.equals(nativeName, ignoreCase = true)) {
+            "$nativeName ($englishName)"
+        } else {
+            nativeName
+        }
+}
 
 object LanguageHelper {
 
@@ -81,16 +89,18 @@ object LanguageHelper {
 
         val languages = localeTags.map { tag ->
             val locale = Locale.forLanguageTag(tag)
-            val display = locale.getDisplayName(locale)
-            val nativeName = display.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+            val nativeDisplay = locale.getDisplayName(locale)
+            val nativeName = nativeDisplay.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+            val englishDisplay = locale.getDisplayName(Locale.ENGLISH)
+            val englishName = englishDisplay.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ENGLISH) else it.toString() }
             val isRtl = when (locale.language.lowercase()) {
                 "ar", "fa", "he", "iw", "ur" -> true
                 else -> false
             }
-            AppLanguage(code = tag, nativeName = nativeName, isRtl = isRtl)
-        }.sortedBy { it.nativeName }
+            AppLanguage(code = tag, nativeName = nativeName, englishName = englishName, isRtl = isRtl)
+        }.sortedBy { it.displayName }
 
-        return listOf(AppLanguage(code = "", nativeName = "System Default")) + languages
+        return listOf(AppLanguage(code = "", nativeName = "System Default", englishName = "")) + languages
     }
 
     fun getCurrentLanguageCode(): String {
