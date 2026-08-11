@@ -19,8 +19,11 @@ val apkNamePrefix = "june"
 val versionMajor = 1
 val versionMinor = 0
 val versionPatch = 0
-val appVersionCode = 15
-val appVersionName = "$versionMajor.$versionMinor.$versionPatch-beta04"
+val versionBuild = 0
+
+// MMMM PP BB
+val appVersionCode = versionMajor * 100000 + versionMinor * 10000 + versionPatch * 100 + versionBuild
+val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
@@ -45,6 +48,7 @@ val playKeyAlias = System.getenv("PLAY_RELEASE_KEY_ALIAS") ?: keystoreProperties
 val playKeyPassword = System.getenv("PLAY_RELEASE_KEY_PASSWORD") ?: keystoreProperties["playKeyPassword"] as String?
 
 val isBuildingBundle = project.gradle.startParameter.taskNames.any { it.contains("Bundle", ignoreCase = true) }
+val enableAbiSplits = project.hasProperty("enableAbiSplits") && project.property("enableAbiSplits").toString().toBoolean()
 
 android {
     namespace = appNamespace
@@ -58,6 +62,12 @@ android {
         versionName = appVersionName
         buildConfigField("String", "HYPHEN_VERSION", "\"${libs.versions.hyphen.get()}\"")
 
+        if (!enableAbiSplits) {
+            ndk {
+                abiFilters += listOf("arm64-v8a")
+            }
+        }
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -66,16 +76,20 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = fossKeyAlias
-            keyPassword = fossKeyPassword
-            storePassword = fossStorePassword
-            storeFile = fossStoreFile?.let { file(it) }
+            if (!fossStoreFile.isNullOrEmpty()) {
+                keyAlias = fossKeyAlias
+                keyPassword = fossKeyPassword
+                storePassword = fossStorePassword
+                storeFile = file(fossStoreFile)
+            }
         }
         create("playRelease") {
-            keyAlias = playKeyAlias
-            keyPassword = playKeyPassword
-            storePassword = playStorePassword
-            storeFile = playStoreFile?.let { file(it) }
+            if (!playStoreFile.isNullOrEmpty()) {
+                keyAlias = playKeyAlias
+                keyPassword = playKeyPassword
+                storePassword = playStorePassword
+                storeFile = file(playStoreFile)
+            }
         }
     }
 
@@ -84,24 +98,26 @@ android {
     productFlavors {
         create("foss") {
             dimension = "distribution"
-            signingConfig = signingConfigs.getByName("release")
+            if (signingConfigs.getByName("release").storeFile?.exists() == true) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         create("play") {
             dimension = "distribution"
             applicationIdSuffix = ".play"
             versionNameSuffix = "-play"
-            signingConfig = signingConfigs.getByName("playRelease")
+            if (signingConfigs.getByName("playRelease").storeFile?.exists() == true) {
+                signingConfig = signingConfigs.getByName("playRelease")
+            }
         }
     }
 
     splits {
         abi {
-            if (project.hasProperty("fdroid") || isBuildingBundle) {
-                isEnable = false
-            } else {
-                isEnable = true
+            isEnable = enableAbiSplits
+            if (enableAbiSplits) {
                 reset()
-                include("armeabi-v7a", "arm64-v8a")
+                include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
                 isUniversalApk = true
             }
         }
@@ -149,10 +165,10 @@ androidComponents {
         if (!isBuildingBundle) {
             variant.outputs.forEach { output ->
                 val abiFilter = output.filters.find { it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI }?.identifier
-                if (abiFilter != null) {
+                if (enableAbiSplits && abiFilter != null) {
                     output.outputFileName.set("$apkNamePrefix-$appVersionName-$abiFilter.apk")
                 } else {
-                    output.outputFileName.set("$apkNamePrefix-$appVersionName-universal.apk")
+                    output.outputFileName.set("$apkNamePrefix-$appVersionName.apk")
                 }
             }
         }

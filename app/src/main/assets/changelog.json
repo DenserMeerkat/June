@@ -1,5 +1,14 @@
 [
     {
+        "version": "v1.0.0",
+        "changes": [
+          "Official v1.0.0 stable release!",
+          "Added full RTL support and language switcher.",
+          "Added German localization support.",
+          "Added Force LTR interface setting toggle."
+        ]
+    },
+    {
         "version": "v1.0.0-beta04",
         "changes": [
           "Added option to export journals as Markdown files.",
