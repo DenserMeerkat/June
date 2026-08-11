@@ -1,5 +1,6 @@
 package com.denser.june.presentation.screens.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,8 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,6 +27,8 @@ import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.settings.components.ColorPickerSheet
 import com.denser.june.presentation.screens.settings.components.*
 import com.denser.june.presentation.screens.settings.components.SettingSection
+import com.denser.june.presentation.utils.InternetDisabledException
+import com.denser.june.presentation.utils.UpdateChecker
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -37,9 +41,23 @@ fun SettingsScreen() {
     val navigator = koinInject<AppNavigator>()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+
     var searchQuery by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showColorPickerSheet by remember { mutableStateOf(false) }
+    var showLicenseSheet by remember { mutableStateOf(false) }
+    var showMapCreditsSheet by remember { mutableStateOf(false) }
+    var showAboutLibrariesSheet by remember { mutableStateOf(false) }
+    var showChangelogSheet by remember { mutableStateOf(false) }
+    var showCheckingUpdatesDialog by remember { mutableStateOf(false) }
+
+    val updateChecker = koinInject<UpdateChecker>()
+    var updateInfo by remember { mutableStateOf<Triple<String, String, String>?>(null) }
+    var showNoUpdateDialog by remember { mutableStateOf(false) }
+    var updateErrorMsg by remember { mutableStateOf<String?>(null) }
+    var showInternetDisabledDialog by remember { mutableStateOf(false) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val searchableSettings = SettingsTileRegistry.getTiles()
@@ -86,9 +104,60 @@ fun SettingsScreen() {
     ) { innerPadding ->
         val triggers = remember(navigator) {
             SettingsTriggers(
-                onDeleteAllJournals = { showDeleteDialog = true },
-                onColorPickerClick = { showColorPickerSheet = true },
-                onLicenseClick = { navigator.navigateTo(Route.AboutSettings) }
+                onDeleteAllJournals = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    showDeleteDialog = true
+                },
+                onColorPickerClick = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    showColorPickerSheet = true
+                },
+                onLicenseClick = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    showLicenseSheet = true
+                },
+                onMapAttributionsClick = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    showMapCreditsSheet = true
+                },
+                onAboutLibrariesClick = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    showAboutLibrariesSheet = true
+                },
+                onChangelogClick = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    showChangelogSheet = true
+                },
+                onCheckForUpdatesClick = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    showCheckingUpdatesDialog = true
+                    updateChecker.checkForUpdates(
+                        context = context,
+                        onUpdateAvailable = { versionName, changelog, downloadUrl ->
+                            showCheckingUpdatesDialog = false
+                            updateInfo = Triple(versionName, changelog, downloadUrl)
+                        },
+                        onNoUpdate = {
+                            showCheckingUpdatesDialog = false
+                            showNoUpdateDialog = true
+                        },
+                        onError = { throwable ->
+                            showCheckingUpdatesDialog = false
+                            if (throwable is InternetDisabledException) {
+                                showInternetDisabledDialog = true
+                            } else {
+                                updateErrorMsg = throwable.message ?: "An unknown error occurred"
+                            }
+                        }
+                    )
+                }
             )
         }
 
@@ -149,7 +218,11 @@ fun SettingsScreen() {
                                             tint = MaterialTheme.colorScheme.secondary
                                         )
                                     },
-                                    onClick = { navigator.navigateTo(Route.GeneralSettings) }
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                        navigator.navigateTo(Route.GeneralSettings)
+                                    }
                                 )
                                 CategorySettingsItem(
                                     title = stringResource(R.string.editor),
@@ -161,7 +234,11 @@ fun SettingsScreen() {
                                             tint = MaterialTheme.colorScheme.secondary
                                         )
                                     },
-                                    onClick = { navigator.navigateTo(Route.EditorSettings) }
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                        navigator.navigateTo(Route.EditorSettings)
+                                    }
                                 )
                                 CategorySettingsItem(
                                     title = stringResource(R.string.appearance),
@@ -173,7 +250,11 @@ fun SettingsScreen() {
                                             tint = MaterialTheme.colorScheme.secondary
                                         )
                                     },
-                                    onClick = { navigator.navigateTo(Route.AppearanceSettings) }
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                        navigator.navigateTo(Route.AppearanceSettings)
+                                    }
                                 )
                                 CategorySettingsItem(
                                     title = stringResource(R.string.privacy_and_security),
@@ -185,7 +266,11 @@ fun SettingsScreen() {
                                             tint = MaterialTheme.colorScheme.secondary
                                         )
                                     },
-                                    onClick = { navigator.navigateTo(Route.PrivacySecuritySettings) }
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                        navigator.navigateTo(Route.PrivacySecuritySettings)
+                                    }
                                 )
                                 CategorySettingsItem(
                                     title = stringResource(R.string.sync_and_backup),
@@ -197,7 +282,11 @@ fun SettingsScreen() {
                                             tint = MaterialTheme.colorScheme.secondary
                                         )
                                     },
-                                    onClick = { navigator.navigateTo(Route.SyncBackupSettings) }
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                        navigator.navigateTo(Route.SyncBackupSettings)
+                                    }
                                 )
                                 CategorySettingsItem(
                                     title = stringResource(R.string.bin),
@@ -209,7 +298,11 @@ fun SettingsScreen() {
                                             tint = MaterialTheme.colorScheme.secondary
                                         )
                                     },
-                                    onClick = { navigator.navigateTo(Route.Bin) }
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                        navigator.navigateTo(Route.Bin)
+                                    }
                                 )
                                 CategorySettingsItem(
                                     title = stringResource(R.string.about),
@@ -221,7 +314,11 @@ fun SettingsScreen() {
                                             tint = MaterialTheme.colorScheme.secondary
                                         )
                                     },
-                                    onClick = { navigator.navigateTo(Route.AboutSettings) }
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                        navigator.navigateTo(Route.AboutSettings)
+                                    }
                                 )
                             }
                         }
@@ -247,7 +344,14 @@ fun SettingsScreen() {
                                 item {
                                     SettingSection(title = category) {
                                         tiles.forEach { tile ->
-                                            tile.content()
+                                            Box(
+                                                modifier = Modifier.clickable {
+                                                    focusManager.clearFocus()
+                                                    keyboardController?.hide()
+                                                }
+                                            ) {
+                                                tile.content()
+                                            }
                                         }
                                     }
                                 }
@@ -284,4 +388,44 @@ fun SettingsScreen() {
             onDismiss = { showColorPickerSheet = false }
         )
     }
+
+    if (showLicenseSheet) {
+        LicenseBottomSheet(
+            setShowSheet = { showLicenseSheet = it }
+        )
+    }
+
+    if (showMapCreditsSheet) {
+        MapCreditsBottomSheet(
+            setShowSheet = { showMapCreditsSheet = it }
+        )
+    }
+
+    if (showAboutLibrariesSheet) {
+        AboutLibrariesBottomSheet(
+            setShowSheet = { showAboutLibrariesSheet = it }
+        )
+    }
+
+    if (showChangelogSheet) {
+        ChangelogBottomSheet(
+            setShowSheet = { showChangelogSheet = it }
+        )
+    }
+
+    UpdateDialogs(
+        state = UpdateDialogState(
+            showChecking = showCheckingUpdatesDialog,
+            updateInfo = updateInfo,
+            showNoUpdate = showNoUpdateDialog,
+            errorMsg = updateErrorMsg,
+            showInternetDisabled = showInternetDisabledDialog
+        ),
+        onDismissChecking = { showCheckingUpdatesDialog = false },
+        onDismissUpdateInfo = { updateInfo = null },
+        onDismissNoUpdate = { showNoUpdateDialog = false },
+        onDismissError = { updateErrorMsg = null },
+        onDismissInternetDisabled = { showInternetDisabledDialog = false },
+        navigator = navigator
+    )
 }

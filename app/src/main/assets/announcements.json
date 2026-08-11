@@ -1,11 +1,11 @@
 [
   {
     "id": "translation_callout_v1",
-    "title": "Help Translate June!",
-    "message": "June's translations are community-driven! Help translate the app into your language on Weblate.",
+    "title": "Help Translate",
+    "message": "June speaks your language with your help! Contribute on Weblate.",
     "icon": "weblate",
     "action": {
-      "text": "Help Translate",
+      "text": "Open Weblate",
       "type": "WEB_URL",
       "target": "https://hosted.weblate.org/projects/june/app/"
     }

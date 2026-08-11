@@ -40,7 +40,6 @@ fun AboutSettingsScreen() {
     val updateChecker = koinInject<UpdateChecker>()
     val syncPrefs = koinInject<SyncPreferences>()
     val context = LocalContext.current
-    val uriHandler = LocalUriHandler.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var showLicenseSheet by remember { mutableStateOf(false) }
     var showMapCreditsSheet by remember { mutableStateOf(false) }
@@ -191,116 +190,21 @@ fun AboutSettingsScreen() {
         )
     }
 
-    if (showCheckingUpdatesDialog) {
-        JuneDialog(
-            onDismissRequest = { showCheckingUpdatesDialog = false },
-            title = stringResource(R.string.checking_for_updates),
-            confirmButton = {},
-            text = {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    CircularWavyProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
-            }
-        )
-    }
-
-    updateInfo?.let { (versionName, changelog, downloadUrl) ->
-        val isPlayStoreUpdate = downloadUrl.startsWith("market:") || downloadUrl.contains("play.google.com")
-        JuneDialog(
-            onDismissRequest = { updateInfo = null },
-            title = stringResource(R.string.update_available) + if (isPlayStoreUpdate) "" else " ($versionName)",
-            text = {
-                Column {
-                    Text(
-                        text = if (isPlayStoreUpdate) {
-                            stringResource(R.string.update_available_play_store)
-                        } else {
-                            stringResource(R.string.update_available_foss)
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    if (!isPlayStoreUpdate && changelog.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = changelog,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        updateInfo = null
-                        if (downloadUrl.isNotBlank()) {
-                            uriHandler.openUri(downloadUrl)
-                        }
-                    }
-                ) {
-                    Text(if (isPlayStoreUpdate) "Update" else "Download")
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { updateInfo = null }) {
-                    Text(stringResource(R.string.later))
-                }
-            }
-        )
-    }
-
-    if (showNoUpdateDialog) {
-        JuneDialog(
-            onDismissRequest = { showNoUpdateDialog = false },
-            title = stringResource(R.string.up_to_date),
-            text = { Text(stringResource(R.string.already_latest_version)) },
-            confirmButton = {
-                Button(onClick = { showNoUpdateDialog = false }) {
-                    Text(stringResource(R.string.ok))
-                }
-            }
-        )
-    }
-
-    if (showInternetDisabledDialog) {
-        JuneDialog(
-            onDismissRequest = { showInternetDisabledDialog = false },
-            title = stringResource(R.string.internet_access_disabled),
-            text = { Text(stringResource(R.string.internet_disabled_update_notice)) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showInternetDisabledDialog = false
-                        navigator.navigateTo(Route.Permissions)
-                    }
-                ) {
-                    Text(stringResource(R.string.enable))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showInternetDisabledDialog = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
-    }
-
-    updateErrorMsg?.let { errorMsg ->
-        JuneDialog(
-            onDismissRequest = { updateErrorMsg = null },
-            title = stringResource(R.string.update_check_failed),
-            text = { Text(errorMsg) },
-            confirmButton = {
-                Button(onClick = { updateErrorMsg = null }) {
-                    Text(stringResource(R.string.okay))
-                }
-            }
-        )
-    }
+    UpdateDialogs(
+        state = UpdateDialogState(
+            showChecking = showCheckingUpdatesDialog,
+            updateInfo = updateInfo,
+            showNoUpdate = showNoUpdateDialog,
+            errorMsg = updateErrorMsg,
+            showInternetDisabled = showInternetDisabledDialog
+        ),
+        onDismissChecking = { showCheckingUpdatesDialog = false },
+        onDismissUpdateInfo = { updateInfo = null },
+        onDismissNoUpdate = { showNoUpdateDialog = false },
+        onDismissError = { updateErrorMsg = null },
+        onDismissInternetDisabled = { showInternetDisabledDialog = false },
+        navigator = navigator
+    )
 
     if (showDiagnosticsDialog) {
         val packageInfo = remember {

@@ -79,14 +79,21 @@ fun AppearanceSettingsScreen() {
                     .padding(top = innerPadding.calculateTopPadding()),
                 contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
             ) {
-                val themeGroup = listOfNotNull(
-                    appearanceTiles["APP_THEME"],
-                    appearanceTiles["AMOLED"]
-                )
-                if (themeGroup.isNotEmpty()) {
-                    item {
-                        SettingSection {
-                            themeGroup.forEach { it.content() }
+                item {
+                    val isDarkTheme = when (state.appTheme.themeMode) {
+                        ThemeMode.DARK -> true
+                        ThemeMode.LIGHT -> false
+                        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                    }
+
+                    SettingSection {
+                        appearanceTiles["APP_THEME"]?.content?.invoke()
+                        AnimatedVisibility(
+                            visible = isDarkTheme,
+                            enter = expandVertically(),
+                            exit = shrinkVertically()
+                        ) {
+                            appearanceTiles["AMOLED"]?.content?.invoke()
                         }
                     }
                 }
