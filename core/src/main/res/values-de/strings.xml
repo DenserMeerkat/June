@@ -3,7 +3,7 @@
     <string name="advanced">Erweitert</string>
     <string name="all">Alle</string>
     <string name="back">Zurück</string>
-    <string name="bookmark">Lesezeichen</string>
+    <string name="bookmark">Das Lesezeichen</string>
     <string name="cancel">Abbrechen</string>
     <string name="change">Ändern</string>
     <string name="change_location">Standort ändern</string>
@@ -112,7 +112,7 @@
     <string name="move_all_to_bin">Alle zum Papierkorb verschieben</string>
     <string name="move_all_to_bin_desc">Dieses wird alle deine Tagebuch Einträge zum Papierkorb verschieben. Du kannst sie innerhalb von 30 Tagen wiederherstellen.</string>
     <string name="move_all_to_bin_title">Alle zum Papierkorb verschieben?</string>
-    <string name="move_to_bin_default_desc">Gegenstände im Papierkorb werden nach 30 Tagen dauerhaft gelöscht.</string>
+    <string name="move_to_bin_default_desc">Zum Papierkorb verschieben? Es wird nach 30 Tagen permanent gelöscht.</string>
     <string name="no_settings_found">Keine Einstellungen gefunden</string>
     <string name="no_settings_found_desc">Wir konnten keine passenden Einstellungen finden \"%1$s\".</string>
     <string name="repair_sync">Synchronisation reparieren</string>
@@ -375,4 +375,76 @@
     <string name="fetch_song_require_internet">Internetverbindung aktivieren, um Lieddetails abzurufen.</string>
     <string name="link_url_label">Internetadresse</string>
     <string name="whats_on_your_mind">Woran denkst du gerade?</string>
+    <string name="no_license_text_available">Kein Lizenztext verfügbar.</string>
+    <string name="open_source_licenses_desc">Quelloffene Lizenzen &amp; Abhängigkeiten</string>
+    <string name="pick_a_mood">Wähle eine Stimmung</string>
+    <string name="pin_reset_successfully">PIN Zurücksetzung erfolgreich</string>
+    <string name="select_an_emoji">Wähle ein Emoji</string>
+    <string name="type_to_confirm">\n\nTippe \'%1$s\' unten zum bestätigen.</string>
+    <string name="unknown_license">Unbekannte Lizenz</string>
+    <string name="unknown_version">Unbekannte Version</string>
+    <string name="wrong_pin_try_again">Falsche PIN. Versuche erneut.</string>
+    <string name="internet_restricted_desc">Um diese Funktion zu nutzen, aktiviere bitte Internetzugriff in den Anwendungseinstellungen.</string>
+    <string name="internet_access_restricted">Internetzugriff eingeschränkt</string>
+    <string name="incorrect_answer_try_again">Inkorrekte Antwort. Bitte versuche erneut.</string>
+    <string name="enter_pin">Gebe PIN ein</string>
+    <string name="save_entry">Eintrag speichern?</string>
+    <plurals name="active_filters_count">
+        <item quantity="one">%1$d aktiv</item>
+        <item quantity="other">%1$d aktive</item>
+    </plurals>
+    <plurals name="journals_pending_count">
+        <item quantity="one">%1$d Tagebuch ausstehend</item>
+        <item quantity="other">%1$d Tagebücher ausstehend</item>
+    </plurals>
+    <plurals name="journals_stat_count">
+        <item quantity="one">%1$d Tagebuch</item>
+        <item quantity="other">%1$d Tagebücher</item>
+    </plurals>
+    <plurals name="media_pending_count">
+        <item quantity="one">%1$d Mediendatei ausstehend</item>
+        <item quantity="other">%1$d Mediendateien ausstehend</item>
+    </plurals>
+    <plurals name="media_stat_count">
+        <item quantity="one">%1$d Medium</item>
+        <item quantity="other">%1$d Medien</item>
+    </plurals>
+    <plurals name="words_count">
+        <item quantity="one">%1$d Wort</item>
+        <item quantity="other">%1$d Wörter</item>
+    </plurals>
+    <string name="answer_cannot_be_empty">Antwort kann nicht leer bleiben</string>
+    <string name="change_recovery">Ändere Wiederherstellung</string>
+    <string name="confirm_pin">Bestätige PIN</string>
+    <string name="create_pin">Erstelle PIN</string>
+    <string name="developer_options_desc">Konfiguriere Entwickleroptionen und schaue Systemkonsonlen-Protokoll an.</string>
+    <string name="developer_options_disabled">Entwickleroptionen deaktiviert</string>
+    <string name="important">Wichtig</string>
+    <string name="pin_no_recovery_warning_desc">Falls du deine benutzerdefinierte PIN vergisst, wirst du den Zugriff auf dein Tagebuch verlieren. Es gibt keine Wiederherstellungsoption. Bitte konfiguriere eine Wiederherstellungsfrage.</string>
+    <string name="pin_recovery_configured_desc">Falls du deine benutzerdefinierte PIN vergisst, kannst du es wiederherstellen/zurücksetzen mit deiner konfigurierten Sicherheitsfrage.</string>
+    <string name="setup_recovery">Wiederherstellung der Konfiguration</string>
+    <string name="question_artist">Wer ist dein(e) Lieblingskünstler(in) oder deine Lieblingsband?</string>
+    <string name="question_book">Wie heißt ein Buch, das dich tief inspiriert hat?</string>
+    <string name="question_cannot_be_empty">Frage kann nicht leer bleiben</string>
+    <string name="question_custom">Schreibe eine benutzerdefinierte Frage...</string>
+    <string name="question_first_entry_city">In welcher Stadt hast du deinen ersten Eintrag geschrieben?</string>
+    <string name="question_motto">Was ist ein kurzes Motto oder eine Phrase, nach der du lebst?</string>
+    <string name="question_perfect_day">Welches einzelne Wort beschreibt deinen perfekten Tag?</string>
+    <string name="question_writing_place">Wo ist dein liebster Schreibort oder Zufluchtsort?</string>
+    <string name="repeat_daily">Täglich</string>
+    <string name="repeat_none">Keine</string>
+    <string name="repeat_weekdays">Wochentage</string>
+    <string name="repeat_weekends">Wochenenden</string>
+    <string name="placeholder_book">z. B. Der Alchemist, 1984</string>
+    <string name="placeholder_default_answer">z. B. Gib deine Antwort ein</string>
+    <string name="placeholder_first_entry_city">z. B. London, Paris, Tokyo</string>
+    <string name="placeholder_motto">z. B. Nutze den Tag, gib niemals auf</string>
+    <string name="placeholder_perfect_day">z. B. friedlich, kreativ, gemütlich</string>
+    <string name="placeholder_writing_place">„z. B. Schlafzimmer, gemütliches Café</string>
+    <string name="placeholder_artist">z. B. Coldplay, Taylor Swift</string>
+    <string name="add_item">Füge Gegenstand hinzu</string>
+    <string name="add_location_and_map">Standort &amp; Karte hinzufügen</string>
+    <string name="add_photo_or_video">Foto / Video hinzufügen</string>
+    <string name="add_song_link">Lied Link hinzufügen</string>
+    <string name="take_photo_or_video">Foto / Video aufnehmen</string>
 </resources>
