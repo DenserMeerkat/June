@@ -25,6 +25,15 @@
 </p>
 
 <p align="center">
+  <a href="https://play.google.com/store/apps/details?id=com.denser.june.play">
+    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="70" alt="Get it on Google Play">
+  </a>
+  <a href="https://github.com/DenserMeerkat/June/releases/latest">
+    <img src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" height="70" alt="Get it on GitHub">
+  </a>
+</p>
+
+<p align="center">
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="32%" style="border-radius:12px; margin: 1px;">
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="32%" style="border-radius:12px; margin: 1px;">
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="32%" style="border-radius:12px; margin: 1px;">
