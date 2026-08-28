@@ -40,7 +40,7 @@
     <string name="paste_link_placeholder">لصق الرابط هنا...</string>
     <string name="no_bookmarks">لا يوجد إشارات مرجعية</string>
     <string name="move_all_to_bin">نقل الكل إلى سلة المهملات</string>
-    <string name="no_journals_this_month">لا يوميات هذا الشهر.</string>
+    <string name="no_journals_this_month">لا توجد يوميات هذا الشهر.</string>
     <string name="search_settings_placeholder">البحث في الإعدادات...</string>
     <string name="no_journals_yet_desc">ابدأ بتوثيق يومياتك اليوم. أنشئ أول تدوينة لك لتبدأ مجموعتك.</string>
     <string name="not_synced">غير متزامن</string>
@@ -59,7 +59,7 @@
     <string name="new_journal">يوميات جديدة</string>
     <string name="journals_and_media_pending">%1$d يوميات و%2$d وسائط</string>
     <string name="no_journals_yet">لا يوجد يوميات بعد</string>
-    <string name="no_locations_this_month">لم تتم إضافة أي مواقع لهذا الشهر.</string>
+    <string name="no_locations_this_month">لم تتم إضافة أي مواقع هذا الشهر.</string>
     <string name="no_media_this_month">لا توجد وسائط هذا الشهر.</string>
     <string name="sync_required">المزامنة مطلوبة</string>
     <string name="no_music_this_month">لم يتم تسجيل أي موسيقى هذا الشهر.</string>
@@ -106,7 +106,7 @@
     <string name="local_and_cloud_matching">المحلي والسحابي متطابقان</string>
     <string name="more_entries">المزيد من المدخلات</string>
     <string name="name">اسم</string>
-    <string name="no_bookmarks_desc">احتفظ باللحظات المفضلة في متناول يدك. سيظهر هنا أي إدخال تضع عليه علامة لتتمكن من العودة إليه لاحقًا.</string>
+    <string name="no_bookmarks_desc">احتفظ باللحظات المفضلة في متناول يدك. سيظهر هنا أي تدوينة تضع عليها علامة لتتمكن من العودة إليه لاحقًا.</string>
     <string name="no_drafts">لا يوجد مسودات</string>
     <string name="no_drafts_desc">أفكارك غير المكتملة تبقى هنا. أي تدوينة تبدأها سيتم حفظها لإكمالها لاحقًا.</string>
     <string name="test_connection">اختبار الاتصال</string>
@@ -162,7 +162,7 @@
     <string name="always_open_new_note">فتح المحرر عند بدء التشغيل</string>
     <string name="always_open_new_note_desc">افتح دائمًا ملاحظة جديدة عند تشغيل التطبيق</string>
     <string name="delete_all_journals">حذف كل اليوميات</string>
-    <string name="delete_all_journals_desc">انقل جميع الإدخالات إلى سلة المهملات</string>
+    <string name="delete_all_journals_desc">نقل جميع اليوميات إلى سلة المهملات</string>
     <string name="include_time">تضمين الوقت</string>
     <string name="include_time_desc">تفعيل الوقت دائمًا عند إنشاء اليوميات</string>
     <string name="keyboard_autocorrect">التصحيح التلقائي</string>
