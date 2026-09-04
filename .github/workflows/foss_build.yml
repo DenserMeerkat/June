@@ -41,24 +41,43 @@ jobs:
         RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
       run: ./gradlew assembleFossRelease
 
-    - name: Prepare Release Artifact
-      run: cp app/build/outputs/apk/foss/release/app-foss-release.apk "june-${{ github.ref_name }}.apk"
-
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: release-apk
-        path: june-*.apk
+        path: app/build/outputs/apk/foss/release/*.apk
 
     - name: Generate Artifact Attestation
       uses: actions/attest-build-provenance@v1
       with:
-        subject-path: june-*.apk
+        subject-path: 'app/build/outputs/apk/foss/release/*.apk'
+
+    - name: Extract Changelog Notes
+      run: |
+        python3 -c '
+        import json, os
+        tag = os.environ.get("GITHUB_REF_NAME", "")
+        data = json.load(open("app/src/main/assets/changelog.json", encoding="utf-8"))
+        entry = next((e for e in data if e.get("version") == tag), None)
+        notes = []
+        for c in (entry.get("changes", []) if entry else []):
+            if isinstance(c, str):
+                notes.append("- " + c)
+            elif not c.get("flavors") or "foss" in c["flavors"]:
+                notes.append("- " + c.get("text", ""))
+        open("release_notes.md", "w", encoding="utf-8").write("\n".join(notes) + "\n" if notes else "")
+        '
+
+        if [ ! -s release_notes.md ]; then
+          echo "::warning::Could not find changelog for ${{ github.ref_name }} in changelog.json"
+        fi
 
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v2
       with:
-        draft: true
+        draft: false
+        make_latest: true
+        body_path: release_notes.md
         generate_release_notes: true
-        files: june-*.apk
+        files: app/build/outputs/apk/foss/release/app-foss-release.apk

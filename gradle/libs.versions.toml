@@ -29,7 +29,7 @@ wavySlider = "2.2.0"
 composeIcons = "1.1.1"
 datetime = "0.8.0"
 core-splashscreen = "1.2.0"
-aboutLibraries = "15.2.0"
+aboutLibraries = "14.2.1"
 
 # June
 mapLibrecompose = "0.13.0"

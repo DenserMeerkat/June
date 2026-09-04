@@ -1,5 +1,13 @@
 [
     {
+        "version": "v1.0.1",
+        "changes": [
+          "Added Chinese (Simplified) localization support.",
+          "Fixed crash when opening libraries screen in release builds.",
+          "Prepared the app for F-Droid release."
+        ]
+    },
+    {
         "version": "v1.0.0",
         "changes": [
           "Official v1.0.0 stable release!",

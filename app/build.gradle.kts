@@ -18,8 +18,8 @@ val appNamespace = "com.denser.june"
 val apkNamePrefix = "june"
 
 // Format: M mm pp b
-val appVersionCode = 100000
-val appVersionName = "1.0.0"
+val appVersionCode = 100010
+val appVersionName = "1.0.1"
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
@@ -160,6 +160,11 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 }
 
