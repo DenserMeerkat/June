@@ -40,3 +40,14 @@
 -keep class com.google.android.gms.internal.auth.** { *; }
 
 -dontwarn org.apache.http.**
+
+# AboutLibraries
+-keep class com.mikepenz.aboutlibraries.** { *; }
+-keepclassmembers class **.R$string {
+    public static final int define_int_*;
+    public static final int define_license_*;
+    public static final int library_*;
+}
+-keepclassmembers class **.R$raw {
+    public static final int aboutlibraries;
+}
