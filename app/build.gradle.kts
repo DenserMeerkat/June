@@ -2,6 +2,7 @@ import com.mikepenz.aboutlibraries.plugin.DuplicateMode
 import com.mikepenz.aboutlibraries.plugin.DuplicateRule
 import java.util.Properties
 import java.io.FileInputStream
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
@@ -16,14 +17,9 @@ val appId = "com.denser.june"
 val appNamespace = "com.denser.june"
 val apkNamePrefix = "june"
 
-val versionMajor = 1
-val versionMinor = 0
-val versionPatch = 0
-val versionBuild = 0
-
-// MMMM PP BB
-val appVersionCode = versionMajor * 100000 + versionMinor * 10000 + versionPatch * 100 + versionBuild
-val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
+// Format: M mm pp b
+val appVersionCode = 100000
+val appVersionName = "1.0.0"
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
@@ -98,16 +94,21 @@ android {
     productFlavors {
         create("foss") {
             dimension = "distribution"
-            if (signingConfigs.getByName("release").storeFile?.exists() == true) {
-                signingConfig = signingConfigs.getByName("release")
+            isDefault = true
+            signingConfigs.findByName("release")?.let {
+                if (it.storeFile?.exists() == true) {
+                    signingConfig = it
+                }
             }
         }
         create("play") {
             dimension = "distribution"
             applicationIdSuffix = ".play"
             versionNameSuffix = "-play"
-            if (signingConfigs.getByName("playRelease").storeFile?.exists() == true) {
-                signingConfig = signingConfigs.getByName("playRelease")
+            signingConfigs.findByName("playRelease")?.let {
+                if (it.storeFile?.exists() == true) {
+                    signingConfig = it
+                }
             }
         }
     }
@@ -135,7 +136,9 @@ android {
         }
 
         debug {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfigs.findByName("debug")?.let {
+                signingConfig = it
+            }
             applicationIdSuffix = ".debug"
             resValue("string", "app_name", appName)
             versionNameSuffix = "-dev"
@@ -160,24 +163,9 @@ android {
     }
 }
 
-androidComponents {
-    onVariants { variant ->
-        if (!isBuildingBundle) {
-            variant.outputs.forEach { output ->
-                val abiFilter = output.filters.find { it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI }?.identifier
-                if (enableAbiSplits && abiFilter != null) {
-                    output.outputFileName.set("$apkNamePrefix-$appVersionName-$abiFilter.apk")
-                } else {
-                    output.outputFileName.set("$apkNamePrefix-$appVersionName.apk")
-                }
-            }
-        }
-    }
-}
-
 kotlin {
     compilerOptions {
-        jvmToolchain(17)
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 

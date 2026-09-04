@@ -41,16 +41,19 @@ jobs:
         RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
       run: ./gradlew assembleFossRelease
 
+    - name: Prepare Release Artifact
+      run: cp app/build/outputs/apk/foss/release/app-foss-release.apk "june-${{ github.ref_name }}.apk"
+
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: release-apk
-        path: app/build/outputs/apk/foss/release/*.apk
+        path: june-*.apk
 
     - name: Generate Artifact Attestation
       uses: actions/attest-build-provenance@v1
       with:
-        subject-path: 'app/build/outputs/apk/foss/release/*.apk'
+        subject-path: june-*.apk
 
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
@@ -58,5 +61,4 @@ jobs:
       with:
         draft: true
         generate_release_notes: true
-        files: |
-          app/build/outputs/apk/foss/release/*.apk
+        files: june-*.apk

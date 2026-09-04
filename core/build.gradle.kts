@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
@@ -35,7 +37,7 @@ android {
 
 kotlin {
     compilerOptions {
-        jvmToolchain(17)
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
