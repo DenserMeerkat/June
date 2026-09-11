@@ -23,6 +23,10 @@ val LocalInternetAllowed = staticCompositionLocalOf<Boolean> {
     true
 }
 
+val LocalSyncEnabled = staticCompositionLocalOf<Boolean> {
+    false
+}
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun JuneTheme(

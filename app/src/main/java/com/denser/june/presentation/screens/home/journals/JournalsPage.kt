@@ -1,12 +1,19 @@
 package com.denser.june.presentation.screens.home.journals
 
-import androidx.activity.compose.BackHandler
-import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
@@ -15,48 +22,47 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.utils.toLocalDate
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
+import com.denser.june.presentation.screens.home.components.DayJournalGroup
 import com.denser.june.presentation.screens.home.components.JournalCard
 import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
-import com.denser.june.presentation.screens.home.components.RecentJournalCard
+import com.denser.june.presentation.components.SearchFilterChip
 import com.denser.june.presentation.utils.UiUtils
+import com.denser.june.presentation.navigation.AppNavigator
+import com.denser.june.presentation.navigation.Route
+import com.denser.june.presentation.screens.home.components.RecentJournalCard
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-
-enum class JournalListTab(
-    @get:StringRes val labelRes: Int,
-    val iconRes: Int,
-    val filledIconRes: Int,
-    val widthWeight: Float
-) {
-    Journals(R.string.journals, R.drawable.list_alt_24px, R.drawable.list_alt_24px_fill, 1f),
-    Bookmarks(R.string.bookmarks, R.drawable.bookmark_24px, R.drawable.bookmark_24px_fill, 1.1f),
-    Drafts(R.string.drafts, R.drawable.edit_note_24px, R.drawable.edit_note_24px_fill, 0.9f)
-}
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class,
     ExperimentalMaterial3Api::class
 )
 @Composable
 fun JournalsPage(
-    isSelected: Boolean = true
+    isSelected: Boolean = true,
+    isSearchActive: Boolean = false,
+    viewModel: JournalsVM = koinViewModel()
 ) {
-    val viewModel: JournalsVM = koinViewModel()
+    val navigator = koinInject<AppNavigator>()
     val timeFormat by viewModel.timeFormat.collectAsStateWithLifecycle()
     val is24Hour = timeFormat == TimeFormat.TWENTY_FOUR_HOUR
-    val nonDrafts by viewModel.nonDraftJournals.collectAsStateWithLifecycle()
-    val bookmarkedJournals by viewModel.bookmarkedJournals.collectAsStateWithLifecycle()
-    val draftJournals by viewModel.draftJournals.collectAsStateWithLifecycle()
 
-    val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
+    val feedState by viewModel.feedUiState.collectAsStateWithLifecycle()
+    val isBookmarked by viewModel.isBookmarked.collectAsStateWithLifecycle()
+    val isDraft by viewModel.isDraft.collectAsStateWithLifecycle()
+    val hasMedia by viewModel.hasMedia.collectAsStateWithLifecycle()
+    val hasSong by viewModel.hasSong.collectAsStateWithLifecycle()
+    val hasLocation by viewModel.hasLocation.collectAsStateWithLifecycle()
+    val hasActiveFilters by viewModel.hasActiveFilters.collectAsStateWithLifecycle()
+
     val listState = rememberLazyListState()
-
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
@@ -64,22 +70,9 @@ fun JournalsPage(
     val deleteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
-    BackHandler(enabled = isSelected && selectedTab != JournalListTab.Journals) {
-        viewModel.onTabSelected(JournalListTab.Journals)
-    }
-
-    fun dismissSheet(action: () -> Unit) {
-        action()
-        scope.launch { sheetState.hide() }.invokeOnCompletion {
-            selectedJournalForOptions = null
-        }
-    }
-
-    val currentJournalForOptions = remember(selectedJournalForOptions, nonDrafts, bookmarkedJournals, draftJournals) {
+    val currentJournalForOptions = remember(selectedJournalForOptions, feedState.journals) {
         val id = selectedJournalForOptions?.id ?: return@remember null
-        (nonDrafts ?: emptyList()).find { it.id == id }
-            ?: (bookmarkedJournals ?: emptyList()).find { it.id == id }
-            ?: (draftJournals ?: emptyList()).find { it.id == id }
+        feedState.journals.find { it.id == id }
     }
 
     if (currentJournalForOptions != null) {
@@ -92,15 +85,14 @@ fun JournalsPage(
                 journal = currentJournalForOptions,
                 is24Hour = is24Hour,
                 onToggleBookmark = {
-                    if (selectedTab == JournalListTab.Bookmarks) {
-                        dismissSheet { viewModel.toggleBookmark(currentJournalForOptions.id) }
-                    } else {
-                        viewModel.toggleBookmark(currentJournalForOptions.id)
-                    }
+                    viewModel.toggleBookmark(currentJournalForOptions.id)
                 },
                 onDeleteOrRestore = {
                     if (currentJournalForOptions.isDeleted) {
-                        dismissSheet { viewModel.restoreJournal(currentJournalForOptions.id) }
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            selectedJournalForOptions = null
+                            viewModel.restoreJournal(currentJournalForOptions.id)
+                        }
                     } else {
                         scope.launch { sheetState.hide() }.invokeOnCompletion {
                             showDeleteConfirmation = true
@@ -129,191 +121,158 @@ fun JournalsPage(
         )
     }
 
-    val recentJournal = remember(nonDrafts) { nonDrafts?.firstOrNull() }
-    val moreJournals = remember(nonDrafts) { nonDrafts?.drop(1) ?: emptyList() }
+    val journals = feedState.journals
+
+    val dayGroups = remember(journals) {
+        journals
+            .groupBy { it.dateTime.toLocalDate() }
+            .map { (date, journalsOnDay) -> DayJournalGroupData(date, journalsOnDay) }
+    }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val tabs = JournalListTab.entries
-                tabs.forEachIndexed { index, tab ->
-                    val isSelected = selectedTab == tab
-                    val shape = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        tabs.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    }
-                    val tabTitle = stringResource(tab.labelRes)
-
-                    ToggleButton(
-                        checked = isSelected,
-                        onCheckedChange = { viewModel.onTabSelected(tab) },
-                        shapes = shape,
-                        modifier = Modifier.weight(tab.widthWeight),
-                        contentPadding = PaddingValues(6.dp, 4.dp),
-                        colors = ToggleButtonDefaults.toggleButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            checkedContainerColor = MaterialTheme.colorScheme.onSecondary,
-                            checkedContentColor = MaterialTheme.colorScheme.secondary,
-                        )
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(id = if (isSelected) tab.filledIconRes else tab.iconRes),
-                                contentDescription = tabTitle,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = tabTitle,
-                                style = MaterialTheme.typography.labelMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
-                            )
-                        }
-                    }
-                }
+                    SearchFilterChip(
+                        selected = isBookmarked,
+                        onClick = viewModel::toggleBookmarkFilter,
+                        icon = R.drawable.bookmark_added_24px_fill,
+                        prefix = "is:",
+                        label = stringResource(R.string.bookmarked)
+                    )
+                    SearchFilterChip(
+                        selected = isDraft,
+                        onClick = viewModel::toggleDraftFilter,
+                        icon = R.drawable.edit_24px_fill,
+                        prefix = "is:",
+                        label = stringResource(R.string.draft)
+                    )
+                    SearchFilterChip(
+                        selected = hasMedia,
+                        onClick = viewModel::toggleMediaFilter,
+                        icon = R.drawable.photo_24px_fill,
+                        prefix = "has:",
+                        label = stringResource(R.string.media)
+                    )
+                    SearchFilterChip(
+                        selected = hasSong,
+                        onClick = viewModel::toggleSongFilter,
+                        icon = R.drawable.music_note_24px,
+                        prefix = "has:",
+                        label = stringResource(R.string.music)
+                    )
+                    SearchFilterChip(
+                        selected = hasLocation,
+                        onClick = viewModel::toggleLocationFilter,
+                        icon = R.drawable.location_on_24px_fill,
+                        prefix = "has:",
+                        label = stringResource(R.string.location)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
             }
+
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(top = 16.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                when (selectedTab) {
-                    JournalListTab.Journals -> {
-                        if (nonDrafts == null) {
-                            item {
-                                JunePlaceholderPage(
-                                    modifier = Modifier.fillParentMaxHeight(0.8f),
-                                    isLoading = true
-                                )
-                            }
-                        } else if (nonDrafts?.isEmpty() == true) {
-                            item {
-                                JunePlaceholderPage(
-                                    modifier = Modifier.fillParentMaxHeight(0.8f),
-                                    icon = R.drawable.auto_stories_off_24px,
-                                    title = stringResource(R.string.no_journals_yet),
-                                    subtitle = stringResource(R.string.no_journals_yet_desc)
+                if (feedState.isLoading) {
+                    item {
+                        JunePlaceholderPage(
+                            modifier = Modifier.fillParentMaxHeight(0.8f),
+                            isLoading = true
+                        )
+                    }
+                } else if (journals.isEmpty()) {
+                    item {
+                        JunePlaceholderPage(
+                            modifier = Modifier.fillParentMaxHeight(0.7f),
+                            icon = if (hasActiveFilters) R.drawable.search_off_24px else R.drawable.auto_stories_off_24px,
+                            title = stringResource(
+                                if (hasActiveFilters) R.string.no_matches_found else R.string.no_journals_yet
+                            ),
+                            subtitle = stringResource(
+                                if (hasActiveFilters) R.string.no_matches_found_desc else R.string.no_journals_yet_desc
+                            )
+                        )
+                    }
+                } else {
+                    val recentJournalId = if (isSearchActive || hasActiveFilters) null else journals.firstOrNull()?.id
+
+                    dayGroups.forEach { dayGroup ->
+                        if (dayGroup.journals.size > 1) {
+                            item(key = "day_group_${dayGroup.date}") {
+                                DayJournalGroup(
+                                    date = dayGroup.date,
+                                    journals = dayGroup.journals,
+                                    is24Hour = is24Hour,
+                                    recentJournalId = recentJournalId,
+                                    onToggleBookmark = { id -> viewModel.toggleBookmark(id) },
+                                    onJournalClick = { journal ->
+                                        navigator.navigateTo(Route.Editor(journal.id), isSingleTop = true)
+                                    },
+                                    onLongClick = { journal -> selectedJournalForOptions = journal },
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .animateItem()
                                 )
                             }
                         } else {
-                            if (recentJournal != null) {
-                                item(key = "header_recent") {
-                                    SectionHeader(
-                                        title = stringResource(R.string.recent),
-                                        modifier = Modifier.animateItem()
-                                    )
-                                }
-                                item(key = "recent_${recentJournal.id}") {
+                            val singleJournal = dayGroup.journals.first()
+                            item(key = "single_journal_${singleJournal.id}") {
+                                if (singleJournal.id == recentJournalId) {
                                     RecentJournalCard(
-                                        journal = recentJournal,
-                                        modifier = Modifier.animateItem(),
-                                        onLongClick = { selectedJournalForOptions = recentJournal }
-                                    )
-                                }
-                            }
-                            if (moreJournals.isNotEmpty()) {
-                                item(key = "header_more") {
-                                    SectionHeader(
-                                        title = stringResource(R.string.more_entries),
+                                        journal = singleJournal,
+                                        is24Hour = is24Hour,
+                                        onToggleBookmark = { viewModel.toggleBookmark(singleJournal.id) },
+                                        onJournalClick = {
+                                            navigator.navigateTo(Route.Editor(singleJournal.id), isSingleTop = true)
+                                        },
+                                        onLongClick = { selectedJournalForOptions = singleJournal },
                                         modifier = Modifier
-                                            .padding(top = 8.dp)
+                                            .padding(horizontal = 16.dp)
+                                            .animateItem()
+                                    )
+                                } else {
+                                    JournalCard(
+                                        journal = singleJournal,
+                                        is24Hour = is24Hour,
+                                        showDate = true,
+                                        onToggleBookmark = { viewModel.toggleBookmark(singleJournal.id) },
+                                        onJournalClick = {
+                                            navigator.navigateTo(Route.Editor(singleJournal.id), isSingleTop = true)
+                                        },
+                                        onLongClick = { selectedJournalForOptions = singleJournal },
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
                                             .animateItem()
                                     )
                                 }
-                                items(moreJournals, key = { "more_${it.id}" }) { journal ->
-                                    JournalCard(
-                                        journal = journal,
-                                        modifier = Modifier.animateItem(),
-                                        onLongClick = { selectedJournalForOptions = journal }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    JournalListTab.Bookmarks -> {
-                        if (bookmarkedJournals == null) {
-                            item {
-                                JunePlaceholderPage(
-                                    modifier = Modifier.fillParentMaxHeight(0.8f),
-                                    isLoading = true
-                                )
-                            }
-                        } else if (bookmarkedJournals?.isEmpty() == true) {
-                            item {
-                                JunePlaceholderPage(
-                                    modifier = Modifier.fillParentMaxHeight(0.8f),
-                                    icon = R.drawable.bookmarks_24px,
-                                    title = stringResource(R.string.no_bookmarks),
-                                    subtitle = stringResource(R.string.no_bookmarks_desc)
-                                )
-                            }
-                        } else {
-                            items(bookmarkedJournals!!, key = { "bm_${it.id}" }) { journal ->
-                                JournalCard(
-                                    journal = journal,
-                                    modifier = Modifier.animateItem(),
-                                    onLongClick = { selectedJournalForOptions = journal }
-                                )
-                            }
-                        }
-                    }
-                    JournalListTab.Drafts -> {
-                        if (draftJournals == null) {
-                            item {
-                                JunePlaceholderPage(
-                                    modifier = Modifier.fillParentMaxHeight(0.8f),
-                                    isLoading = true
-                                )
-                            }
-                        } else if (draftJournals?.isEmpty() == true) {
-                            item {
-                                JunePlaceholderPage(
-                                    modifier = Modifier.fillParentMaxHeight(0.8f),
-                                    icon = R.drawable.edit_note_24px,
-                                    title = stringResource(R.string.no_drafts),
-                                    subtitle = stringResource(R.string.no_drafts_desc)
-                                )
-                            }
-                        } else {
-                            items(draftJournals!!, key = { "draft_${it.id}" }) { journal ->
-                                JournalCard(
-                                    journal = journal,
-                                    modifier = Modifier.animateItem(),
-                                    onLongClick = { selectedJournalForOptions = journal }
-                                )
                             }
                         }
                     }
                 }
-                item { Spacer(modifier = Modifier.height(UiUtils.BOTTOM_BAR_PADDING)) }
+                item {
+                    Spacer(
+                        modifier = Modifier.height(
+                            if (isSearchActive) 16.dp else UiUtils.BOTTOM_BAR_PADDING
+                        )
+                    )
+                }
             }
         }
     }
 }
 
-@Composable
-fun SectionHeader(
-    title: String, modifier: Modifier = Modifier
-) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-        modifier = modifier.padding(vertical = 4.dp, horizontal = 16.dp)
-    )
-}
+private data class DayJournalGroupData(
+    val date: java.time.LocalDate,
+    val journals: List<Journal>
+)
+

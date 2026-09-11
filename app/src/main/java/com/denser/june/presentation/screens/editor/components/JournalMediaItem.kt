@@ -49,9 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
-import coil.ImageLoader
 import coil.compose.AsyncImage
-import coil.decode.VideoFrameDecoder
 import com.denser.june.core.R
 import com.denser.june.core.utils.toHoursMinutesSeconds
 import com.denser.june.presentation.utils.rememberManagedExoPlayer
@@ -80,11 +78,6 @@ fun JournalMediaItem(
 
     val showVideoPlayer = isVideo && enablePlayback
 
-    val imageLoader = remember {
-        ImageLoader.Builder(context)
-            .components { add(VideoFrameDecoder.Factory()) }
-            .build()
-    }
     val shouldShowMoveToFront = path != operations.frontMediaPath
     val shouldCaptureTouch = enablePlayback || operations.onMediaClick != null
 
@@ -126,7 +119,6 @@ fun JournalMediaItem(
         } else {
             AsyncImage(
                 model = File(path),
-                imageLoader = imageLoader,
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()

@@ -18,6 +18,7 @@ import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.theme.JuneTheme
 import com.denser.june.presentation.theme.LocalAppTheme
 import com.denser.june.presentation.theme.LocalInternetAllowed
+import com.denser.june.presentation.theme.LocalSyncEnabled
 import com.denser.june.presentation.utils.StartupManager
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -83,6 +84,7 @@ fun JuneApp(
     CompositionLocalProvider(
         LocalAppTheme provides appState.appTheme,
         LocalInternetAllowed provides appState.isInternetAllowed,
+        LocalSyncEnabled provides appState.isSyncEnabled,
         LocalLayoutDirection provides uiDirection
     ) {
         JuneTheme(appTheme = appState.appTheme) {

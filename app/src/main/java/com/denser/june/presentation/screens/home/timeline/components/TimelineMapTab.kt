@@ -127,7 +127,10 @@ fun TimelineMapTab(
     val styleUrl by produceState(initialValue = "", mapStyleProvider, isDarkMap) {
         value = MapProviderUtils.getStyleUrl(mapStyleProvider, isDarkMap)
     }
-    val mapView = remember { MapView(context).apply { isClickable = true; isFocusable = true } }
+    val mapView = remember(isInternetAllowed) {
+        if (isInternetAllowed) MapView(context).apply { isClickable = true; isFocusable = true }
+        else null
+    }
 
     val dateBubbleCache = remember { mutableMapOf<String, org.maplibre.android.annotations.Icon>() }
 
@@ -138,9 +141,9 @@ fun TimelineMapTab(
         }
     }
 
-    LaunchedEffect(selectedIndex, sortedPoints) {
+    LaunchedEffect(selectedIndex, sortedPoints, mapView) {
         val target = sortedPoints.getOrNull(selectedIndex)?.location ?: return@LaunchedEffect
-        mapView.getMapAsync { map ->
+        mapView?.getMapAsync { map ->
             map.animateCamera(
                 org.maplibre.android.camera.CameraUpdateFactory.newCameraPosition(
                     CameraPosition.Builder()
@@ -226,10 +229,10 @@ fun TimelineMapTab(
     }
 
     Box(modifier = Modifier.fillMaxSize().clipToBounds()) {
-        if (isInternetAllowed) {
+        if (isInternetAllowed && mapView != null) {
             MapViewLifecycleEffect(mapView)
 
-            LaunchedEffect(styleUrl, sortedPoints) {
+            LaunchedEffect(styleUrl, sortedPoints, mapView) {
                 if (styleUrl.isBlank()) return@LaunchedEffect
                 mapView.getMapAsync { mapboxMap ->
                     mapboxMap.uiSettings.isAttributionEnabled = false

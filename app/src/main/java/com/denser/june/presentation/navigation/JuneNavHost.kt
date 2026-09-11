@@ -17,7 +17,6 @@ import com.denser.june.presentation.screens.editor.EditorVM
 import com.denser.june.presentation.screens.editor.EditorScreen
 import com.denser.june.presentation.screens.editor.screens.ItemGalleryScreen
 import com.denser.june.presentation.screens.home.HomeScreen
-import com.denser.june.presentation.screens.search.SearchScreen
 import com.denser.june.presentation.screens.settings.screens.FontSelectionScreen
 import com.denser.june.presentation.screens.settings.SettingsScreen
 
@@ -61,13 +60,6 @@ fun JuneNavHost(
     ) {
         composable<Route.Home> {
             HomeScreen()
-        }
-
-        composable<Route.Search>(
-            enterTransition = { slideInHorizontally(initialOffsetX = { -it }) + fadeIn() },
-            popExitTransition = { slideOutHorizontally(targetOffsetX = { -it }) + fadeOut() }
-        ) {
-            SearchScreen()
         }
 
         composable<Route.Editor> {

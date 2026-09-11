@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -23,7 +24,11 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TagCategory
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.TimeFormat
+import com.denser.june.core.utils.toLocalDate
 import com.denser.june.presentation.components.JunePlaceholderPage
+import com.denser.june.presentation.navigation.AppNavigator
+import com.denser.june.presentation.navigation.Route
+import com.denser.june.presentation.screens.home.components.DayJournalGroup
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import com.denser.june.presentation.screens.home.components.JournalCard
 import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
@@ -34,6 +39,7 @@ import com.denser.june.presentation.screens.home.tags.components.RenameTagDialog
 import com.denser.june.presentation.utils.TagUtils
 import com.denser.june.presentation.utils.UiUtils
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -53,6 +59,13 @@ fun TagsPage() {
     val tagCounts by viewModel.tagCounts.collectAsStateWithLifecycle()
     val availableFilters by viewModel.availableFilters.collectAsStateWithLifecycle()
     val selectedFilters by viewModel.selectedFilters.collectAsStateWithLifecycle()
+
+    val navigator = koinInject<AppNavigator>()
+
+    val dayGroups = remember(journals) {
+        journals?.groupBy { it.dateTime.toLocalDate() }
+            ?.map { (date, journalsOnDay) -> DayJournalGroupData(date, journalsOnDay) }
+    }
 
     var showRenameDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -164,31 +177,43 @@ fun TagsPage() {
                                             tonalElevation = 3.dp
                                         ) {
                                             DropdownMenuItem(
-                                                modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                                text = { Text(stringResource(R.string.rename)) },
+                                                text = {
+                                                    Text(
+                                                        text = stringResource(R.string.rename),
+                                                        style = MaterialTheme.typography.bodyLarge
+                                                    )
+                                                },
+                                                leadingIcon = {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.edit_24px),
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                },
                                                 onClick = {
                                                     showMenu = false
                                                     showRenameDialog = true
-                                                },
-                                                leadingIcon = {
-                                                    Icon(
-                                                        painterResource(R.drawable.edit_24px),
-                                                        null
-                                                    )
                                                 }
                                             )
                                             DropdownMenuItem(
-                                                modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                                text = { Text(stringResource(R.string.delete)) },
-                                                onClick = {
-                                                    showMenu = false
-                                                    showDeleteDialog = true
+                                                text = {
+                                                    Text(
+                                                        text = stringResource(R.string.delete),
+                                                        style = MaterialTheme.typography.bodyLarge,
+                                                        color = MaterialTheme.colorScheme.error
+                                                    )
                                                 },
                                                 leadingIcon = {
                                                     Icon(
-                                                        painterResource(R.drawable.delete_24px),
-                                                        null
+                                                        painter = painterResource(R.drawable.delete_24px),
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(20.dp),
+                                                        tint = MaterialTheme.colorScheme.error
                                                     )
+                                                },
+                                                onClick = {
+                                                    showMenu = false
+                                                    showDeleteDialog = true
                                                 }
                                             )
                                         }
@@ -235,10 +260,9 @@ fun TagsPage() {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .weight(1f)
-                        .padding(horizontal = 16.dp),
+                        .weight(1f),
                     contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (journals == null) {
                         item {
@@ -257,12 +281,41 @@ fun TagsPage() {
                             )
                         }
                     } else {
-                        items(journals!!, key = { it.id }) { journal ->
-                            JournalCard(
-                                journal = journal,
-                                modifier = Modifier.animateItem(),
-                                onLongClick = { selectedJournalForOptions = journal }
-                            )
+                        dayGroups?.forEach { dayGroup ->
+                            if (dayGroup.journals.size > 1) {
+                                item(key = "day_group_${dayGroup.date}") {
+                                    DayJournalGroup(
+                                        date = dayGroup.date,
+                                        journals = dayGroup.journals,
+                                        is24Hour = is24Hour,
+                                        onToggleBookmark = { id -> viewModel.toggleBookmark(id) },
+                                        onJournalClick = { journal ->
+                                            navigator.navigateTo(Route.Editor(journal.id), isSingleTop = true)
+                                        },
+                                        onLongClick = { journal -> selectedJournalForOptions = journal },
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .animateItem()
+                                    )
+                                }
+                            } else {
+                                val singleJournal = dayGroup.journals.first()
+                                item(key = "single_journal_${singleJournal.id}") {
+                                    JournalCard(
+                                        journal = singleJournal,
+                                        is24Hour = is24Hour,
+                                        showDate = true,
+                                        onToggleBookmark = { viewModel.toggleBookmark(singleJournal.id) },
+                                        onJournalClick = {
+                                            navigator.navigateTo(Route.Editor(singleJournal.id), isSingleTop = true)
+                                        },
+                                        onLongClick = { selectedJournalForOptions = singleJournal },
+                                        modifier = Modifier
+                                            .padding(horizontal = 16.dp)
+                                            .animateItem()
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -376,3 +429,8 @@ fun TagsPage() {
         }
     }
 }
+
+private data class DayJournalGroupData(
+    val date: java.time.LocalDate,
+    val journals: List<Journal>
+)

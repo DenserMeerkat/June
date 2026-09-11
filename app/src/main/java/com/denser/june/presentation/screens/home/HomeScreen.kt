@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.activity.compose.LocalActivity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -33,6 +34,17 @@ import com.denser.june.presentation.components.SyncIndicator
 import com.denser.june.MainVM
 import org.koin.compose.viewmodel.koinViewModel
 
+import androidx.compose.animation.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
+import com.denser.june.presentation.screens.home.journals.JournalsVM
+import com.denser.june.presentation.utils.UiUtils
+
 enum class HomeTab(@get:StringRes val labelRes: Int, val iconRes: Int, val filledIconRes: Int) {
     Journals(R.string.journals, R.drawable.home_24px, R.drawable.home_24px_fill),
     Tags(R.string.tags, R.drawable.view_cozy_24px, R.drawable.view_cozy_24px_fill),
@@ -43,9 +55,12 @@ enum class HomeTab(@get:StringRes val labelRes: Int, val iconRes: Int, val fille
 @Composable
 fun HomeScreen() {
     val navigator = koinInject<AppNavigator>()
-    val mainVM: MainVM = koinViewModel(
-        viewModelStoreOwner = LocalContext.current as androidx.activity.ComponentActivity
-    )
+    val activity = LocalActivity.current as? androidx.activity.ComponentActivity
+    val mainVM: MainVM = if (activity != null) {
+        koinViewModel(viewModelStoreOwner = activity)
+    } else {
+        koinViewModel()
+    }
     val appState by mainVM.state.collectAsStateWithLifecycle()
     val journalPrefs = koinInject<JournalPreferences>()
     val isAutoTimeEnabled by journalPrefs.isAutoTimeEnabled().collectAsStateWithLifecycle(initialValue = false)
@@ -56,7 +71,28 @@ fun HomeScreen() {
     val tagsVM: TagsVM = koinViewModel()
     val activeTag by tagsVM.selectedPrimaryTag.collectAsStateWithLifecycle()
 
-    BackHandler(enabled = pagerState.currentPage != 0) {
+    val journalsVM: JournalsVM = koinViewModel()
+    val searchQuery by journalsVM.searchQuery.collectAsStateWithLifecycle()
+    var isSearchActive by remember { mutableStateOf(false) }
+
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(isSearchActive) {
+        if (isSearchActive) {
+            focusRequester.requestFocus()
+        }
+    }
+
+    BackHandler(enabled = isSearchActive) {
+        isSearchActive = false
+        keyboardController?.hide()
+        focusManager.clearFocus(force = true)
+        journalsVM.clearSearch()
+    }
+
+    BackHandler(enabled = !isSearchActive && pagerState.currentPage != 0) {
         scope.launch { pagerState.animateScrollToPage(0) }
     }
 
@@ -68,46 +104,91 @@ fun HomeScreen() {
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 JuneTopAppBar(
-                    type = JuneAppBarType.CenterAligned,
+                    type = if (isSearchActive) JuneAppBarType.Small else JuneAppBarType.CenterAligned,
                     title = {
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            fontWeight = FontWeight.Bold,
-                        )
+                        if (isSearchActive) {
+                            TextField(
+                                value = searchQuery,
+                                onValueChange = journalsVM::onQueryChange,
+                                placeholder = { Text(stringResource(R.string.search_your_journal)) },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequester),
+                                colors = UiUtils.getTransparentTextFieldColors(),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                                trailingIcon = {
+                                    if (searchQuery.isNotEmpty()) {
+                                        IconButton(onClick = { journalsVM.clearSearch() }) {
+                                            Icon(
+                                                painterResource(R.drawable.close_24px),
+                                                contentDescription = stringResource(R.string.clear)
+                                            )
+                                        }
+                                    }
+                                }
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.app_name),
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                     },
                     navigationIcon = {
                         FilledIconButton(
-                            onClick = { navigator.navigateTo(Route.Search) },
+                            onClick = {
+                                if (isSearchActive) {
+                                    isSearchActive = false
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus(force = true)
+                                    journalsVM.clearSearch()
+                                } else {
+                                    scope.launch {
+                                        if (pagerState.currentPage != 0) {
+                                            pagerState.animateScrollToPage(0)
+                                        }
+                                        isSearchActive = true
+                                    }
+                                }
+                            },
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                             ),
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.search_24px),
-                                contentDescription = stringResource(R.string.search)
+                                painter = painterResource(
+                                    if (isSearchActive) R.drawable.arrow_back_24px else R.drawable.search_24px
+                                ),
+                                contentDescription = stringResource(
+                                    if (isSearchActive) R.string.back else R.string.search
+                                )
                             )
                         }
                     },
                     actions = {
-                        if (appState.isSyncEnabled && appState.isInternetAllowed) {
-                            SyncIndicator(
-                                status = appState.syncStatus,
-                                onClick = { navigator.navigateTo(Route.SyncSettings) }
-                            )
-                        }
-                        Spacer(Modifier.width(4.dp))
-                        FilledIconButton(
-                            onClick = { navigator.navigateTo(Route.Settings) },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                            ),
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.settings_24px),
-                                contentDescription = stringResource(R.string.settings)
-                            )
+                        if (!isSearchActive) {
+                            if (appState.isSyncEnabled && appState.isInternetAllowed) {
+                                SyncIndicator(
+                                    status = appState.syncStatus,
+                                    onClick = { navigator.navigateTo(Route.SyncSettings) }
+                                )
+                            }
+                            Spacer(Modifier.width(4.dp))
+                            FilledIconButton(
+                                onClick = { navigator.navigateTo(Route.Settings) },
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                                ),
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.settings_24px),
+                                    contentDescription = stringResource(R.string.settings)
+                                )
+                            }
                         }
                     }
                 )
@@ -121,24 +202,34 @@ fun HomeScreen() {
                     .padding(top = innerPadding.calculateTopPadding())
             ) { page ->
                 when (HomeTab.entries[page]) {
-                    HomeTab.Journals -> JournalsPage(isSelected = pagerState.currentPage == 0)
+                    HomeTab.Journals -> JournalsPage(
+                        isSelected = pagerState.currentPage == 0,
+                        isSearchActive = isSearchActive,
+                        viewModel = journalsVM
+                    )
                     HomeTab.Tags -> TagsPage()
                     HomeTab.Timeline -> TimelinePage()
                 }
             }
         }
-        HomeBottomBar(
-            pagerState = pagerState,
-            onFabClick = {
-                val currentTab = HomeTab.entries[pagerState.currentPage]
-                handleFabClick(
-                    currentTab = currentTab,
-                    activeTag = activeTag,
-                    isAutoTimeEnabled = isAutoTimeEnabled,
-                    navigator = navigator
-                )
-            }
-        )
+        AnimatedVisibility(
+            visible = !isSearchActive,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+        ) {
+            HomeBottomBar(
+                pagerState = pagerState,
+                onFabClick = {
+                    val currentTab = HomeTab.entries[pagerState.currentPage]
+                    handleFabClick(
+                        currentTab = currentTab,
+                        activeTag = activeTag,
+                        isAutoTimeEnabled = isAutoTimeEnabled,
+                        navigator = navigator
+                    )
+                }
+            )
+        }
     }
 }
 

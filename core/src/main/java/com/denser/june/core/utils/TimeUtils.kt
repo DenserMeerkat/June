@@ -40,6 +40,17 @@ fun Long.toFullDate(): String {
     return sdf.format(Date(this))
 }
 
+fun Long.toMonthDay(): String {
+    val sdf = SimpleDateFormat("MMM dd", Locale.getDefault())
+    return sdf.format(Date(this))
+}
+
+fun Long.toMonthDayTime(is24Hour: Boolean = false): String {
+    val pattern = if (is24Hour) "MMM dd '•' HH:mm" else "MMM dd '•' hh:mm a"
+    val sdf = SimpleDateFormat(pattern, Locale.getDefault())
+    return sdf.format(Date(this))
+}
+
 fun Long.toFullDateTime(is24Hour: Boolean = false): String {
     val pattern = if (is24Hour) "MMMM dd, yyyy 'at' HH:mm" else "MMMM dd, yyyy 'at' hh:mm a"
     val sdf = SimpleDateFormat(pattern, Locale.getDefault())

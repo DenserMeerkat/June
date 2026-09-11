@@ -26,6 +26,7 @@ import com.denser.june.core.utils.toShortMonth
 import java.util.Locale
 import com.denser.june.presentation.components.JuneBadge
 import com.denser.june.presentation.components.JuneMetadataRow
+import com.denser.june.presentation.theme.LocalSyncEnabled
 import java.util.Date
 import com.denser.june.presentation.utils.TagUtils
 import com.denser.june.core.domain.model.enums.TagCategory
@@ -115,7 +116,7 @@ fun JournalOptionsSheet(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         JuneBadge(
-                            show = true,
+                            show = LocalSyncEnabled.current,
                             icon = if (journal.cloudId != null) R.drawable.cloud_24px else R.drawable.devices_24px,
                             label = if (journal.cloudId != null) stringResource(R.string.cloud) else stringResource(R.string.local)
                         )

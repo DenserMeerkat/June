@@ -2,6 +2,8 @@ package com.denser.june.di
 
 import android.content.Context
 import coil.ImageLoader
+import coil.decode.VideoFrameDecoder
+import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import okhttp3.OkHttpClient
 import com.denser.june.MainVM
@@ -12,7 +14,6 @@ import com.denser.june.presentation.navigation.JuneNavigator
 import com.denser.june.presentation.screens.home.journals.JournalsVM
 import com.denser.june.presentation.screens.editor.EditorVM
 import com.denser.june.presentation.screens.home.tags.TagsVM
-import com.denser.june.presentation.screens.search.SearchVM
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.screens.home.timeline.TimelineVM
 import com.denser.june.presentation.screens.settings.screens.sync.SyncVM
@@ -32,9 +33,18 @@ val juneModules = module {
         val context = get<Context>()
         ImageLoader.Builder(context)
             .callFactory(get<OkHttpClient>())
+            .components {
+                add(VideoFrameDecoder.Factory())
+            }
             .memoryCache {
                 MemoryCache.Builder(context)
                     .maxSizePercent(0.15)
+                    .build()
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(context.cacheDir.resolve("image_cache"))
+                    .maxSizePercent(0.02)
                     .build()
             }
             .build()
@@ -52,7 +62,6 @@ val juneModules = module {
     viewModelOf(::JournalsVM)
     viewModelOf(::TagsVM)
     viewModelOf(::TimelineVM)
-    viewModelOf(::SearchVM)
     viewModelOf(::BinVM)
     viewModelOf(::SyncVM)
     viewModelOf(::ReminderVM)

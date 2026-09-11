@@ -31,9 +31,6 @@ sealed interface Route {
     ) : Route
 
     @Serializable
-    data object Search : Route
-
-    @Serializable
     data object Bin : Route
 
     @Serializable
