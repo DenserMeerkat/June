@@ -51,7 +51,7 @@ fun JuneTheme(
         }
     }
     DynamicMaterialTheme(
-        seedColor = if (appTheme.materialTheme && Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
+        seedColor = if (appTheme.materialTheme && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             colorResource(android.R.color.system_accent1_200)
         } else {
             Color(appTheme.seedColor)
