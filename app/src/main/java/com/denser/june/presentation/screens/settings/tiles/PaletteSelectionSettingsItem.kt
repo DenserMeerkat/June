@@ -92,7 +92,7 @@ fun PaletteSelectionSettingsItem() {
                 Spacer(modifier = Modifier.width(8.dp))
                 PaletteStyle.entries.forEach { style ->
                     val scheme = rememberDynamicColorScheme(
-                        primary = if (state.appTheme.materialTheme && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        seedColor = if (state.appTheme.materialTheme && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                             colorResource(system_accent1_200)
                         } else {
                             Color(state.appTheme.seedColor)
