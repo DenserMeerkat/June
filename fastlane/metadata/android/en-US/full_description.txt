@@ -1,6 +1,7 @@
 June is an open-source alternative to Pixel Journal, built with Jetpack Compose and Material Design 3. It is designed to be a secure, offline-first multimedia capsule of your life.
 
 Features:
+
 * Multimedia Capsules: Attach photos, videos, and precise locations to entries.
 * Tagging Groups: Categorize entries using Spaces, People, and Topics tag groups.
 * Soundtrack Support: Paste links from major streaming platforms to fetch cover art and details.
