@@ -1,5 +1,6 @@
 package com.denser.june
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.compose.setContent
@@ -29,19 +30,19 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.compose.runtime.SideEffect
 import com.denser.june.core.domain.preferences.PrivacyPreferences
-import com.denser.june.core.domain.preferences.ThemePreferences
-import com.denser.june.core.domain.preferences.FontPreferences
 import com.denser.june.core.domain.preferences.JournalPreferences
-import com.denser.june.core.domain.model.getAppThemeFlow
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.presentation.components.PinLockScreen
 import com.denser.june.presentation.components.PinRecoveryScreen
 import com.denser.june.core.utils.SecurityUtils
 import com.denser.june.presentation.JuneApp
+import com.denser.june.presentation.navigation.Route
+import com.denser.june.presentation.utils.ExternalIntentProcessor
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import java.lang.ref.WeakReference
 import org.koin.android.ext.android.inject
 import com.denser.june.core.R
 import androidx.core.graphics.drawable.toDrawable
@@ -56,29 +57,64 @@ enum class LockState {
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        private var activeActivity: WeakReference<MainActivity>? = null
+    }
+
     private val privacyPreferences: PrivacyPreferences by inject()
-    private val themePrefs: ThemePreferences by inject()
-    private val fontPrefs: FontPreferences by inject()
     private val journalPreferences: JournalPreferences by inject()
+    private val externalIntentProcessor: ExternalIntentProcessor by inject()
     private var lockState by mutableStateOf(LockState.LOADING)
-    private var openNewNote by mutableStateOf(false)
-    private var openSyncSettings by mutableStateOf(false)
+    private var pendingRoute by mutableStateOf<Route?>(null)
+    private var pendingIntentRoute: Route? = null
 
     private var isPinError by mutableStateOf(false)
     private var storedPinHash: String? = null
     private var storedSecurityQuestion: String? = null
     private var storedSecurityAnswerHash: String? = null
 
+    private fun onUnlocked() {
+        lockState = LockState.UNLOCKED
+        pendingIntentRoute?.let { route ->
+            pendingRoute = route
+            pendingIntentRoute = null
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIncomingIntent(intent)
+    }
+
+    private fun handleIncomingIntent(intent: Intent?) {
+        if (intent == null) return
+        lifecycleScope.launch {
+            val route = externalIntentProcessor.processIntent(intent) ?: return@launch
+            if (lockState == LockState.UNLOCKED) {
+                pendingRoute = route
+            } else {
+                pendingIntentRoute = route
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val initialAppTheme = runBlocking {
-            themePrefs.getAppThemeFlow(fontPrefs).first()
+        activeActivity?.get()?.let { previous ->
+            if (previous != this && !previous.isFinishing) {
+                previous.finish()
+            }
         }
+        activeActivity = WeakReference(this)
 
         splashScreen.setKeepOnScreenCondition { lockState == LockState.LOADING }
+        if (savedInstanceState == null) {
+            handleIncomingIntent(intent)
+        }
 
         lifecycleScope.launch {
             val isLockEnabled = privacyPreferences.getAppLockFlow().first()
@@ -87,29 +123,52 @@ class MainActivity : AppCompatActivity() {
             storedSecurityQuestion = privacyPreferences.getSecurityQuestionFlow().first()
             storedSecurityAnswerHash = privacyPreferences.getSecurityAnswerHashFlow().first()
 
-            if (intent.getBooleanExtra("OPEN_NEW_NOTE", false)) {
-                openNewNote = true
-                intent.removeExtra("OPEN_NEW_NOTE")
-            } else if (intent.getBooleanExtra("OPEN_SYNC_SETTINGS", false)) {
-                openSyncSettings = true
-                intent.removeExtra("OPEN_SYNC_SETTINGS")
-            } else if (savedInstanceState == null && journalPreferences.alwaysOpenNewNote().first()) {
-                openNewNote = true
+            val isExternalIntent = intent.action == Intent.ACTION_VIEW ||
+                    intent.action == Intent.ACTION_EDIT ||
+                    intent.action == Intent.ACTION_SEND
+
+            if (!isExternalIntent) {
+                val targetRoute = when {
+                    intent.getBooleanExtra("OPEN_NEW_NOTE", false) -> {
+                        intent.removeExtra("OPEN_NEW_NOTE")
+                        Route.Editor()
+                    }
+
+                    intent.getBooleanExtra("OPEN_SYNC_SETTINGS", false) -> {
+                        intent.removeExtra("OPEN_SYNC_SETTINGS")
+                        Route.SyncSettings
+                    }
+
+                    savedInstanceState == null && journalPreferences.alwaysOpenNewNote()
+                        .first() -> {
+                        Route.Editor()
+                    }
+
+                    else -> null
+                }
+                if (targetRoute != null) {
+                    if (lockState == LockState.UNLOCKED) {
+                        pendingRoute = targetRoute
+                    } else {
+                        pendingIntentRoute = targetRoute
+                    }
+                }
             }
 
             if (!isLockEnabled) {
-                lockState = LockState.UNLOCKED
+                onUnlocked()
             } else {
                 when (lockType) {
                     LockType.BIOMETRIC -> {
                         lockState = LockState.LOCKED_BIOMETRIC
                         checkBiometricAndAuthenticate()
                     }
+
                     LockType.PIN -> {
                         if (storedPinHash != null) {
                             lockState = LockState.LOCKED_PIN
                         } else {
-                            lockState = LockState.UNLOCKED
+                            onUnlocked()
                         }
                     }
                 }
@@ -133,15 +192,16 @@ class MainActivity : AppCompatActivity() {
             val systemDark = isSystemInDarkTheme()
             val systemColorScheme = if (systemDark) darkColorScheme() else lightColorScheme()
             val colorBackground = if (systemDark) AndroidColor.BLACK else AndroidColor.WHITE
-            window.setBackgroundDrawable(colorBackground.toDrawable())
+            SideEffect {
+                window.setBackgroundDrawable(colorBackground.toDrawable())
+            }
 
             MaterialTheme(colorScheme = systemColorScheme) {
                 when (lockState) {
                     LockState.UNLOCKED -> {
                         JuneApp(
-                            initialAppTheme = initialAppTheme,
-                            openNewNote = openNewNote,
-                            openSyncSettings = openSyncSettings
+                            pendingRoute = pendingRoute,
+                            onRouteConsumed = { pendingRoute = null }
                         )
                     }
 
@@ -155,7 +215,7 @@ class MainActivity : AppCompatActivity() {
                             onPinSubmitted = { inputPin ->
                                 val inputHash = SecurityUtils.hashPin(inputPin)
                                 if (inputHash == storedPinHash) {
-                                    lockState = LockState.UNLOCKED
+                                    onUnlocked()
                                     isPinError = false
                                 } else {
                                     isPinError = true
@@ -175,7 +235,7 @@ class MainActivity : AppCompatActivity() {
                                     privacyPreferences.updateSecurityQuestionAndAnswer(null, null)
                                     privacyPreferences.updateAppLock(false)
                                 }
-                                lockState = LockState.UNLOCKED
+                                onUnlocked()
                             }
                         )
                     }
@@ -219,7 +279,7 @@ class MainActivity : AppCompatActivity() {
         if (canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS) {
             authenticateUser()
         } else {
-            lockState = LockState.UNLOCKED
+            onUnlocked()
         }
     }
 
@@ -230,7 +290,7 @@ class MainActivity : AppCompatActivity() {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    lockState = LockState.UNLOCKED
+                    onUnlocked()
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -252,5 +312,12 @@ class MainActivity : AppCompatActivity() {
             .build()
 
         biometricPrompt.authenticate(promptInfo)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (activeActivity?.get() == this) {
+            activeActivity = null
+        }
     }
 }

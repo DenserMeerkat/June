@@ -27,7 +27,7 @@ interface AppNavigator {
 }
 
 class JuneNavigator : AppNavigator {
-    private val _navigationActions = Channel<NavigationIntent>()
+    private val _navigationActions = Channel<NavigationIntent>(Channel.BUFFERED)
     override val navigationActions = _navigationActions.receiveAsFlow()
 
     override fun navigateTo(

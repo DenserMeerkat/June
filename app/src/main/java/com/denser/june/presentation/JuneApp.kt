@@ -6,8 +6,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.denser.june.MainVM
 import com.denser.june.core.domain.model.AppTheme
@@ -33,46 +37,56 @@ import com.denser.june.presentation.utils.handleAnnouncementAction
 
 @Composable
 fun JuneApp(
-    initialAppTheme: AppTheme,
-    openNewNote: Boolean = false,
-    openSyncSettings: Boolean = false
+    pendingRoute: Route? = null,
+    onRouteConsumed: () -> Unit = {}
 ) {
-    val mainVM: MainVM = koinViewModel(parameters = { parametersOf(initialAppTheme) })
+    val mainVM: MainVM = koinViewModel()
     val appState by mainVM.state.collectAsStateWithLifecycle()
 
     val navigator = koinInject<AppNavigator>()
     val navController = rememberNavController()
-    
+
     val startupManager = koinInject<StartupManager>()
     val pendingWhatsChanged by startupManager.pendingWhatsChanged.collectAsStateWithLifecycle(initialValue = null)
     val pendingAnnouncement by startupManager.pendingAnnouncement.collectAsStateWithLifecycle(initialValue = null)
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
-    LaunchedEffect(openSyncSettings) {
-        if (openSyncSettings) {
-            navController.navigate(Route.SyncSettings)
+    LaunchedEffect(pendingRoute) {
+        pendingRoute?.let { route ->
+            navController.navigate(route) {
+                popUpTo(Route.Home) { inclusive = false }
+                launchSingleTop = true
+            }
+            onRouteConsumed()
         }
     }
 
     LaunchedEffect(Unit) {
         startupManager.checkStartupFlows()
-        navigator.navigationActions.collect { intent ->
-            when (intent) {
-                is NavigationIntent.NavigateBack -> {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.navigateUp()
-                    } else {
-                        navController.navigate(Route.Home) {
-                            popUpTo(Route.Editor()) { inclusive = true }
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            navigator.navigationActions.collect { intent ->
+                when (intent) {
+                    is NavigationIntent.NavigateBack -> {
+                        if (navController.previousBackStackEntry != null) {
+                            navController.popBackStack()
+                        } else {
+                            navController.navigate(Route.Home) {
+                                popUpTo(Route.Home) { inclusive = false }
+                                launchSingleTop = true
+                            }
                         }
                     }
-                }
-                is NavigationIntent.NavigateTo -> {
-                    navController.navigate(intent.route) {
-                        intent.popUpToRoute?.let { popUpRoute ->
-                            popUpTo(popUpRoute) { inclusive = intent.inclusive }
+                    is NavigationIntent.NavigateTo -> {
+                        navController.navigate(intent.route) {
+                            intent.popUpToRoute?.let { popUpRoute ->
+                                popUpTo(popUpRoute) { inclusive = intent.inclusive }
+                            }
+                            launchSingleTop = intent.isSingleTop
                         }
-                        launchSingleTop = intent.isSingleTop
                     }
                 }
             }
@@ -91,7 +105,7 @@ fun JuneApp(
             Surface(modifier = Modifier.fillMaxSize()) {
                 JuneNavHost(
                     navController = navController,
-                    startDestination = if (openNewNote) Route.Editor() else Route.Home
+                    startDestination = Route.Home
                 )
             }
 
