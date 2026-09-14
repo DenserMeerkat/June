@@ -228,6 +228,8 @@ fun TimelinePage(
         }
     }
 
+    var targetScrollDate by remember { mutableStateOf<LocalDate?>(null) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -265,7 +267,17 @@ fun TimelinePage(
                         selectedDate = selectedDate,
                         journals = pageJournals,
                         startOfWeek = startOfWeek,
-                        onDateSelected = { clickedDate ->
+                        onDateClick = { clickedDate, dayJournals ->
+                            selectedDate = clickedDate
+                            if (dayJournals.isEmpty()) {
+                                val dateMillis = combineDateAndTime(clickedDate, null)
+                                navigator.navigateTo(Route.Editor(initialDate = dateMillis))
+                            } else {
+                                viewModel.onTabChange(TimelineTab.Journals)
+                                targetScrollDate = clickedDate
+                            }
+                        },
+                        onDateLongClick = { clickedDate ->
                             selectedDate = clickedDate
                             val dateMillis = combineDateAndTime(clickedDate, null)
                             navigator.navigateTo(Route.Editor(initialDate = dateMillis))
@@ -282,6 +294,8 @@ fun TimelinePage(
             modifier = Modifier.weight(1f),
             bottomPadding = UiUtils.BOTTOM_BAR_PADDING,
             is24Hour = is24Hour,
+            targetScrollDate = targetScrollDate,
+            onScrollConsumed = { targetScrollDate = null },
             onToggleBookmark = { id -> viewModel.toggleBookmark(id) },
             onLongClickJournal = { journal -> selectedJournalForOptions = journal }
         )

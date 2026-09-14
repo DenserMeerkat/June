@@ -1,7 +1,9 @@
 package com.denser.june.presentation.screens.home.timeline.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +30,8 @@ fun TimelineCalendarPage(
     selectedDate: LocalDate,
     journals: List<Journal>,
     startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
-    onDateSelected: (LocalDate) -> Unit
+    onDateClick: (LocalDate, List<Journal>) -> Unit,
+    onDateLongClick: (LocalDate) -> Unit
 ) {
     val daysInMonth = remember(yearMonth, startOfWeek) { yearMonth.getDaysInMonthGrid(startOfWeek) }
     val weeks = remember(daysInMonth) { daysInMonth.chunked(7) }
@@ -95,7 +98,8 @@ fun TimelineCalendarPage(
                                     entryCount = count,
                                     emoji = emoji,
                                     shape = dynamicShape,
-                                    onClick = { onDateSelected(date) }
+                                    onClick = { onDateClick(date, dayJournals.orEmpty()) },
+                                    onLongClick = { onDateLongClick(date) }
                                 )
                             }
                         } else {
@@ -108,13 +112,15 @@ fun TimelineCalendarPage(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CalendarDayTile(
     date: LocalDate,
     entryCount: Int,
     emoji: String?,
     shape: androidx.compose.ui.graphics.Shape,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     val isToday = date == LocalDate.now()
     val hasJournals = entryCount > 0
@@ -134,9 +140,21 @@ fun CalendarDayTile(
         modifier = Modifier
             .fillMaxWidth()
             .height(40.dp)
+            .then(
+                if (isToday) {
+                    Modifier.border(
+                        width = 1.5.dp,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        shape = shape
+                    )
+                } else Modifier
+            )
             .clip(shape)
             .background(backgroundColor)
-            .clickable { onClick() },
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
         contentAlignment = Alignment.Center
     ) {
         if (emoji != null) {

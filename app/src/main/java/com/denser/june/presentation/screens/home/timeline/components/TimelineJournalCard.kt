@@ -1,6 +1,9 @@
 package com.denser.june.presentation.screens.home.timeline.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,9 +12,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,6 +40,7 @@ fun TimelineJournalCard(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(24.dp),
     is24Hour: Boolean = false,
+    isHighlighted: Boolean = false,
     actionIcon: Int? = null,
     onActionClick: (() -> Unit)? = null,
     onToggleBookmark: (() -> Unit)? = null,
@@ -45,9 +51,20 @@ fun TimelineJournalCard(
     val navigator = if (onJournalClick == null) koinInject<AppNavigator>() else null
     val displayTitle = rememberJournalDisplayTitle(journal)
 
+    val highlightBorderColor by animateColorAsState(
+        targetValue = if (isHighlighted) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+        } else {
+            Color.Transparent
+        },
+        animationSpec = tween(durationMillis = 600),
+        label = "journal_card_highlight"
+    )
+
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .border(width = 2.dp, color = highlightBorderColor, shape = shape)
             .clip(shape)
             .combinedClickable(
                 onClick = {
@@ -116,12 +133,27 @@ fun TimelineDayGroup(
     date: LocalDate,
     journals: List<Journal>,
     is24Hour: Boolean,
+    isHighlighted: Boolean = false,
     onToggleBookmark: (String) -> Unit,
     onJournalClick: ((Journal) -> Unit)? = null,
     onLongClick: (Journal) -> Unit,
 ) {
+    val highlightBorderColor by animateColorAsState(
+        targetValue = if (isHighlighted) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+        } else {
+            Color.Transparent
+        },
+        animationSpec = tween(durationMillis = 600),
+        label = "day_group_highlight"
+    )
+
+    val groupShape = RoundedCornerShape(24.dp)
+
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .border(width = 2.dp, color = highlightBorderColor, shape = groupShape),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         journals.forEachIndexed { index, journal ->

@@ -32,6 +32,12 @@ import org.koin.compose.viewmodel.koinViewModel
 import com.denser.june.core.R
 import com.denser.june.presentation.theme.LocalInternetAllowed
 
+import androidx.compose.ui.graphics.Shape
+import com.denser.june.core.utils.toLocalDate
+import com.denser.june.presentation.components.DayJournalGroupData
+import com.denser.june.presentation.components.rememberJournalGroupShape
+import java.time.LocalDate
+
 @Composable
 fun TimelineMusicTab(
     journals: List<Journal>,
@@ -41,6 +47,12 @@ fun TimelineMusicTab(
     val isInternetAllowed = LocalInternetAllowed.current
     val musicJournals = remember(journals) {
         journals.filter { it.songDetails != null }
+    }
+
+    val dayGroups = remember(musicJournals) {
+        musicJournals
+            .groupBy { it.dateTime.toLocalDate() }
+            .map { (date, journalsOnDay) -> DayJournalGroupData(date, journalsOnDay) }
     }
 
     val activeSong by viewModel.activeSong.collectAsStateWithLifecycle()
@@ -83,16 +95,33 @@ fun TimelineMusicTab(
                     bottom = bottomPadding + 92.dp,
                     top = 16.dp
                 ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(musicJournals, key = { it.id }) { journal ->
-                    val song = journal.songDetails!!
-                    MusicListTile(
-                        journal = journal,
-                        song = song,
-                        isActive = activeSong?.previewUrl == song.previewUrl,
-                        onClick = { viewModel.onSongSelected(song, journal.id) }
-                    )
+                dayGroups.forEach { dayGroup ->
+                    if (dayGroup.journals.size > 1) {
+                        item(key = "music_day_group_${dayGroup.date}") {
+                            TimelineMusicDayGroup(
+                                journals = dayGroup.journals,
+                                activeSong = activeSong,
+                                onSongClick = { song, journalId ->
+                                    viewModel.onSongSelected(song, journalId)
+                                },
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                    } else {
+                        val singleJournal = dayGroup.journals.first()
+                        val song = singleJournal.songDetails!!
+                        item(key = "single_music_${singleJournal.id}") {
+                            MusicListTile(
+                                journal = singleJournal,
+                                song = song,
+                                isActive = activeSong?.previewUrl == song.previewUrl,
+                                onClick = { viewModel.onSongSelected(song, singleJournal.id) },
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -201,9 +230,41 @@ fun DockedMiniPlayer(
 }
 
 @Composable
+fun TimelineMusicDayGroup(
+    modifier: Modifier = Modifier,
+    journals: List<Journal>,
+    activeSong: SongDetails?,
+    onSongClick: (SongDetails, String) -> Unit
+) {
+    val groupShape = RoundedCornerShape(24.dp)
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(groupShape),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        journals.forEachIndexed { index, journal ->
+            val song = journal.songDetails ?: return@forEachIndexed
+            val shape = rememberJournalGroupShape(index = index, totalCount = journals.size)
+
+            MusicListTile(
+                journal = journal,
+                song = song,
+                shape = shape,
+                isActive = activeSong?.previewUrl == song.previewUrl,
+                onClick = { onSongClick(song, journal.id) }
+            )
+        }
+    }
+}
+
+@Composable
 fun MusicListTile(
     journal: Journal,
     song: SongDetails,
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(24.dp),
     isActive: Boolean = false,
     onClick: () -> Unit
 ) {
@@ -223,16 +284,16 @@ fun MusicListTile(
         ).filter { it.second != null }
     }
 
-    Surface(
-        modifier = Modifier
+    Card(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(shape)
             .clickable(enabled = isInternetAllowed) { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        color = if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-        else MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 2.dp
+        shape = shape,
+        colors = CardDefaults.cardColors(
+            containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.surfaceContainer
+        )
     ) {
         Row(
             modifier = Modifier
