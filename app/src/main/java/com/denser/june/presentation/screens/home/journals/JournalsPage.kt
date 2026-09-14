@@ -28,6 +28,7 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.toLocalDate
+import com.denser.june.presentation.components.ExportJournalBottomSheet
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import com.denser.june.presentation.screens.home.components.DayJournalGroup
@@ -70,6 +71,13 @@ fun JournalsPage(
     val deleteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
+    var journalToExport by remember { mutableStateOf<Journal?>(null) }
+
+    ExportJournalBottomSheet(
+        journal = journalToExport,
+        onDismiss = { journalToExport = null }
+    )
+
     val currentJournalForOptions = remember(selectedJournalForOptions, feedState.journals) {
         val id = selectedJournalForOptions?.id ?: return@remember null
         feedState.journals.find { it.id == id }
@@ -86,6 +94,10 @@ fun JournalsPage(
                 is24Hour = is24Hour,
                 onToggleBookmark = {
                     viewModel.toggleBookmark(currentJournalForOptions.id)
+                },
+                onExportMarkdown = {
+                    journalToExport = currentJournalForOptions
+                    selectedJournalForOptions = null
                 },
                 onDeleteOrRestore = {
                     if (currentJournalForOptions.isDeleted) {

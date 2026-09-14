@@ -38,7 +38,8 @@ fun JournalOptionsSheet(
     is24Hour: Boolean = false,
     onToggleBookmark: () -> Unit,
     onDeleteOrRestore: () -> Unit,
-    onPermanentDelete: (() -> Unit)? = null
+    onPermanentDelete: (() -> Unit)? = null,
+    onExportMarkdown: (() -> Unit)? = null
 ) {
     val wordCount = remember(journal.content) {
         if (journal.content.isBlank()) 0
@@ -65,7 +66,7 @@ fun JournalOptionsSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
+                    .padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 Column(
@@ -92,63 +93,133 @@ fun JournalOptionsSheet(
                 }
 
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 12.dp, top = 2.dp)
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = journal.title.ifBlank { stringResource(R.string.untitled) },
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
-                    }
+                    Text(
+                        text = journal.title.ifBlank { stringResource(R.string.untitled) },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
                     ) {
-                        JuneBadge(
-                            show = LocalSyncEnabled.current,
-                            icon = if (journal.cloudId != null) R.drawable.cloud_24px else R.drawable.devices_24px,
-                            label = if (journal.cloudId != null) stringResource(R.string.cloud) else stringResource(R.string.local)
-                        )
-                        JuneBadge(show = journal.images.isNotEmpty(), icon = R.drawable.photo_24px, label = "${journal.images.size}")
-                        JuneBadge(show = journal.songDetails != null, icon = R.drawable.music_note_24px)
-                        JuneBadge(show = journal.location != null, icon = R.drawable.location_on_24px)
-                    }
-                }
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .padding(end = 8.dp)
+                        ) {
+                            JuneBadge(
+                                show = LocalSyncEnabled.current,
+                                icon = if (journal.cloudId != null) R.drawable.cloud_24px else R.drawable.devices_24px,
+                                label = if (journal.cloudId != null) stringResource(R.string.cloud) else stringResource(R.string.local)
+                            )
+                            JuneBadge(show = journal.images.isNotEmpty(), icon = R.drawable.photo_24px, label = "${journal.images.size}")
+                            JuneBadge(show = journal.songDetails != null, icon = R.drawable.music_note_24px)
+                            JuneBadge(show = journal.location != null, icon = R.drawable.location_on_24px)
+                        }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (!journal.isDeleted) {
-                        ActionSquircle(
-                            iconRes = if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px,
-                            contentDescription = if (journal.isBookmarked) stringResource(R.string.remove_bookmark) else stringResource(R.string.bookmark),
-                            onClick = onToggleBookmark,
-                            isActive = journal.isBookmarked,
-                        )
-                    }
-                    ActionSquircle(
-                        iconRes = if (journal.isDeleted) R.drawable.restore_from_trash_24px else R.drawable.delete_24px,
-                        contentDescription = if (journal.isDeleted) stringResource(R.string.restore) else stringResource(R.string.delete),
-                        onClick = onDeleteOrRestore,
-                        tint = if (journal.isDeleted) MaterialTheme.colorScheme.primary
-                               else MaterialTheme.colorScheme.error
-                    )
-                    if (journal.isDeleted && onPermanentDelete != null) {
-                        ActionSquircle(
-                            iconRes = R.drawable.delete_24px,
-                            contentDescription = stringResource(R.string.permanently_delete),
-                            onClick = onPermanentDelete,
-                            tint = MaterialTheme.colorScheme.error
-                        )
+                        val actions = remember(
+                            journal.isDeleted,
+                            journal.isBookmarked,
+                            onExportMarkdown,
+                            onToggleBookmark,
+                            onDeleteOrRestore,
+                            onPermanentDelete
+                        ) {
+                            buildList {
+                                if (!journal.isDeleted && onExportMarkdown != null) {
+                                    add(
+                                        ActionConfig(
+                                            iconRes = R.drawable.file_save_24px,
+                                            contentDescriptionRes = R.string.export_as_markdown,
+                                            onClick = onExportMarkdown
+                                        )
+                                    )
+                                }
+                                if (!journal.isDeleted) {
+                                    add(
+                                        ActionConfig(
+                                            iconRes = if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px,
+                                            contentDescriptionRes = if (journal.isBookmarked) R.string.remove_bookmark else R.string.bookmark,
+                                            onClick = onToggleBookmark,
+                                            isActive = journal.isBookmarked
+                                        )
+                                    )
+                                }
+                                add(
+                                    ActionConfig(
+                                        iconRes = if (journal.isDeleted) R.drawable.restore_from_trash_24px else R.drawable.delete_24px,
+                                        contentDescriptionRes = if (journal.isDeleted) R.string.restore else R.string.delete,
+                                        onClick = onDeleteOrRestore,
+                                        isDestructive = !journal.isDeleted
+                                    )
+                                )
+                                if (journal.isDeleted && onPermanentDelete != null) {
+                                    add(
+                                        ActionConfig(
+                                            iconRes = R.drawable.delete_24px,
+                                            contentDescriptionRes = R.string.permanently_delete,
+                                            onClick = onPermanentDelete,
+                                            isDestructive = true
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            actions.forEachIndexed { index, action ->
+                                val shape = when {
+                                    actions.size == 1 -> ToggleButtonDefaults.shapes()
+                                    index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                    index == actions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                                }
+                                val contentColor = when {
+                                    action.isDestructive -> MaterialTheme.colorScheme.error
+                                    action.isActive -> MaterialTheme.colorScheme.primary
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+
+                                val buttonModifier = when {
+                                    actions.size == 1 -> Modifier.height(36.dp).width(48.dp)
+                                    index == 0 || index == actions.lastIndex -> Modifier.height(36.dp).width(44.dp)
+                                    else -> Modifier.height(36.dp).width(38.dp)
+                                }
+
+                                ToggleButton(
+                                    checked = action.isActive,
+                                    onCheckedChange = { action.onClick() },
+                                    shapes = shape,
+                                    colors = ToggleButtonDefaults.toggleButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                        contentColor = contentColor,
+                                        checkedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                        checkedContentColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                                    modifier = buttonModifier
+                                ) {
+                                    Icon(
+                                        painter = painterResource(action.iconRes),
+                                        contentDescription = stringResource(action.contentDescriptionRes),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -209,11 +280,13 @@ fun JournalOptionsSheet(
             }
 
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                JuneMetadataRow(
-                    iconRes = R.drawable.cloud_sync_24px,
-                    label = stringResource(R.string.synced),
-                    value = journal.syncedAt?.toFullDateTime(is24Hour) ?: stringResource(R.string.not_synced)
-                )
+                if (LocalSyncEnabled.current) {
+                    JuneMetadataRow(
+                        iconRes = R.drawable.cloud_sync_24px,
+                        label = stringResource(R.string.synced),
+                        value = journal.syncedAt?.toFullDateTime(is24Hour) ?: stringResource(R.string.not_synced)
+                    )
+                }
                 JuneMetadataRow(
                     iconRes = R.drawable.today_24px,
                     label = stringResource(R.string.created),
@@ -229,30 +302,10 @@ fun JournalOptionsSheet(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun ActionSquircle(
-    modifier: Modifier = Modifier,
-    iconRes: Int,
-    contentDescription: String,
-    onClick: () -> Unit,
-    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    isActive: Boolean = false,
-    activeContentColor: Color = MaterialTheme.colorScheme.primary
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.size(40.dp),
-        shape = IconButtonDefaults.smallRoundShape,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        contentColor = if (isActive) activeContentColor else tint
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = painterResource(iconRes),
-                contentDescription = contentDescription,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
+private data class ActionConfig(
+    val iconRes: Int,
+    val contentDescriptionRes: Int,
+    val onClick: () -> Unit,
+    val isActive: Boolean = false,
+    val isDestructive: Boolean = false
+)

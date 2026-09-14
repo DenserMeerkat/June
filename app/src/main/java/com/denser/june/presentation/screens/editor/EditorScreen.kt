@@ -47,6 +47,7 @@ import com.denser.june.core.utils.toDateWithDay
 import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
 import com.denser.june.core.utils.LanguageHelper
+import com.denser.june.presentation.components.ExportJournalBottomSheet
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -104,9 +105,14 @@ fun EditorScreen() {
         }
     }
 
-    LaunchedEffect(isEditorReady) {
-        if (isEditorReady && state.content.isNotEmpty()) {
-            hyphenState.setMarkdown(state.content)
+    var hasLoadedInitialContent by remember(state.journalId) { mutableStateOf(false) }
+
+    LaunchedEffect(isEditorReady, state.content) {
+        if (isEditorReady && !hasLoadedInitialContent) {
+            if (state.content.isNotEmpty()) {
+                hyphenState.setMarkdown(state.content)
+            }
+            hasLoadedInitialContent = true
         }
     }
 
@@ -125,6 +131,8 @@ fun EditorScreen() {
     }
 
     val onBack = {
+        keyboardController?.hide()
+        focusManager.clearFocus(force = true)
         if (!state.isDraft && state.isDirty) {
             dialogState.showExitDialog = true
         } else {
@@ -180,7 +188,12 @@ fun EditorScreen() {
                                     alpha = 0.75f
                                 )
                             )
-                        ) { Icon(painterResource(R.drawable.close_24px), stringResource(R.string.close)) }
+                        ) {
+                            Icon(
+                                painterResource(R.drawable.close_24px),
+                                stringResource(R.string.close)
+                            )
+                        }
 
                         FilledIconButton(
                             onClick = { dialogState.showEmojiPicker = true },
@@ -320,7 +333,9 @@ fun EditorScreen() {
                                         stringResource(R.string.add_title),
                                         style = MaterialTheme.typography.headlineMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                            alpha = 0.5f
+                                        )
                                     )
                                 },
                                 keyboardOptions = KeyboardOptions(
@@ -365,7 +380,7 @@ fun EditorScreen() {
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(2.dp))
                             Button(
                                 onClick = {
                                     keyboardController?.hide()
@@ -391,7 +406,7 @@ fun EditorScreen() {
                                     softWrap = false
                                 )
                             }
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(2.dp))
                             Button(
                                 onClick = {
                                     keyboardController?.hide()
@@ -482,11 +497,14 @@ fun EditorScreen() {
                     JournalContentEditor(
                         state = hyphenState,
                         rawContent = state.content,
-                        onMarkdownChange = {
-                            viewModel.onAction(EditorAction.ChangeContent(it))
+                        onMarkdownChange = { newContent ->
+                            if (newContent.trim() != state.content.trim()) {
+                                viewModel.onAction(EditorAction.ChangeContent(newContent))
+                            }
                         },
                         onFocusChanged = { isEditorFocused = it },
                         focusRequester = contentFocusRequester,
+                        isLoading = state.isLoading,
                         isMarkdownEnabled = isMarkdownEnabled,
                         isKeyboardAutocorrectEnabled = isKeyboardAutocorrectEnabled,
                         isKeyboardCapitalizationEnabled = isKeyboardCapitalizationEnabled,
@@ -497,7 +515,8 @@ fun EditorScreen() {
                                 minHeight = (availableHeight - fixedContentHeight - toolbarHeight).coerceAtLeast(
                                     84.dp
                                 )
-                            ).padding(bottom = 16.dp)
+                            )
+                            .padding(bottom = 16.dp)
                     )
                 }
                 if (isEditorFocused && isMarkdownEnabled) {
@@ -518,10 +537,18 @@ fun EditorScreen() {
             }
         }
     }
+
     EditorModals(
         dialogState = dialogState,
         editorState = state,
         onAction = viewModel::onAction
+    )
+
+    var journalToExport by remember { mutableStateOf<Journal?>(null) }
+
+    ExportJournalBottomSheet(
+        journal = journalToExport,
+        onDismiss = { journalToExport = null }
     )
 
     if (showOptionsSheet) {
@@ -558,6 +585,10 @@ fun EditorScreen() {
                 journal = journalPreview,
                 is24Hour = state.timeFormat == TimeFormat.TWENTY_FOUR_HOUR,
                 onToggleBookmark = { viewModel.onAction(EditorAction.ToggleBookmark) },
+                onExportMarkdown = {
+                    showOptionsSheet = false
+                    journalToExport = journalPreview
+                },
                 onDeleteOrRestore = {
                     if (state.isDeleted) {
                         scope.launch { sheetState.hide() }.invokeOnCompletion {

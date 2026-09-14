@@ -25,6 +25,7 @@ import com.denser.june.core.domain.model.enums.TagCategory
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.toLocalDate
+import com.denser.june.presentation.components.ExportJournalBottomSheet
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -359,6 +360,13 @@ fun TagsPage() {
             (journals ?: emptyList()).find { it.id == id }
         }
 
+        var journalToExport by remember { mutableStateOf<Journal?>(null) }
+
+        ExportJournalBottomSheet(
+            journal = journalToExport,
+            onDismiss = { journalToExport = null }
+        )
+
         if (currentJournalForOptions != null) {
             ModalBottomSheet(
                 onDismissRequest = { selectedJournalForOptions = null },
@@ -370,6 +378,10 @@ fun TagsPage() {
                     is24Hour = is24Hour,
                     onToggleBookmark = {
                         viewModel.toggleBookmark(currentJournalForOptions.id)
+                    },
+                    onExportMarkdown = {
+                        journalToExport = currentJournalForOptions
+                        selectedJournalForOptions = null
                     },
                     onDeleteOrRestore = {
                         if (currentJournalForOptions.isDeleted) {

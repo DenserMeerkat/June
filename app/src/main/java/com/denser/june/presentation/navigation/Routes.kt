@@ -12,7 +12,10 @@ sealed interface Route {
     data class Editor(
         val journalId: String? = null,
         val initialDate: Long? = null,
-        val initialTags: List<String>? = null
+        val initialTags: List<String>? = null,
+        val initialTitle: String? = null,
+        val initialContent: String? = null,
+        val initialEmoji: String? = null
     ) : Route
 
     @Serializable

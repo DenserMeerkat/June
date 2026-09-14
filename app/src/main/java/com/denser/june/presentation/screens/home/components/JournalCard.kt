@@ -124,7 +124,10 @@ fun JournalCard(
 
                 Spacer(modifier = Modifier.height(3.dp))
 
-                val rawTitle = journal.title.ifBlank { journal.content.ifBlank { stringResource(R.string.add_title) } }
+                val rawTitle = journal.title.ifBlank {
+                    journal.content.lineSequence().firstOrNull { it.isNotBlank() }?.take(100)
+                        ?: stringResource(R.string.add_title)
+                }
                 val displayTitle = if (!emoji.isNullOrBlank()) "$emoji $rawTitle" else rawTitle
 
                 Text(
@@ -278,7 +281,10 @@ fun RecentJournalCard(
                         verticalArrangement = Arrangement.Center
                     ) {
                         val emoji = journal.emoji
-                        val rawTitle = journal.title.ifBlank { journal.content.ifBlank { stringResource(R.string.untitled) } }
+                        val rawTitle = journal.title.ifBlank {
+                            journal.content.lineSequence().firstOrNull { it.isNotBlank() }?.take(100)
+                                ?: stringResource(R.string.untitled)
+                        }
                         val displayTitle = if (!emoji.isNullOrBlank()) "$emoji $rawTitle" else rawTitle
 
                         Text(
