@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +46,7 @@ fun SettingSection(
         }
         Column(
             modifier = Modifier.clip(RoundedCornerShape(24.dp)),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             content()
         }
@@ -69,7 +68,7 @@ fun SettingsItem(
         color = containerColor.copy(alpha = if (enabled) 1f else 0.5f),
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(8.dp))
             .clickable(enabled = enabled, onClick = onClick)
     ) {
         Column(
@@ -85,7 +84,7 @@ fun SettingsItem(
                     Box(
                         modifier = Modifier
                             .padding(end = 16.dp)
-                            .size(24.dp),
+                            .defaultMinSize(minWidth = 24.dp, minHeight = 24.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         leadingContent()
@@ -125,61 +124,6 @@ fun SettingsItem(
             if (content != null) {
                 Spacer(Modifier.height(8.dp))
                 content()
-            }
-        }
-    }
-}
-
-@Composable
-fun CategorySettingsItem(
-    title: String,
-    subtitle: String? = null,
-    leadingContent: (@Composable () -> Unit)? = null,
-    onClick: () -> Unit = {}
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp, 18.dp)
-        ) {
-            if (leadingContent != null) {
-                Box(
-                    modifier = Modifier
-                        .padding(end = 20.dp)
-                        .size(26.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    leadingContent()
-                }
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(3.dp)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (subtitle != null) {
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
         }
     }

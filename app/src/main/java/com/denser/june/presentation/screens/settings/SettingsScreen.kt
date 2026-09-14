@@ -208,14 +208,14 @@ fun SettingsScreen() {
                     if (searchQuery.isEmpty()) {
                         item {
                             SettingSection {
-                                CategorySettingsItem(
+                                SettingsItem(
                                     title = stringResource(R.string.general),
-                                    subtitle = stringResource(R.string.general_desc),
                                     leadingContent = {
                                         Icon(
                                             painter = painterResource(R.drawable.category_24px),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                                         )
                                     },
                                     onClick = {
@@ -224,14 +224,14 @@ fun SettingsScreen() {
                                         navigator.navigateTo(Route.GeneralSettings)
                                     }
                                 )
-                                CategorySettingsItem(
+                                SettingsItem(
                                     title = stringResource(R.string.editor),
-                                    subtitle = stringResource(R.string.editor_desc),
                                     leadingContent = {
                                         Icon(
                                             painter = painterResource(R.drawable.article_24px),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                                         )
                                     },
                                     onClick = {
@@ -240,14 +240,14 @@ fun SettingsScreen() {
                                         navigator.navigateTo(Route.EditorSettings)
                                     }
                                 )
-                                CategorySettingsItem(
+                                SettingsItem(
                                     title = stringResource(R.string.appearance),
-                                    subtitle = stringResource(R.string.appearance_desc),
                                     leadingContent = {
                                         Icon(
                                             painter = painterResource(R.drawable.format_paint_24px),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                                         )
                                     },
                                     onClick = {
@@ -256,14 +256,14 @@ fun SettingsScreen() {
                                         navigator.navigateTo(Route.AppearanceSettings)
                                     }
                                 )
-                                CategorySettingsItem(
+                                SettingsItem(
                                     title = stringResource(R.string.privacy_and_security),
-                                    subtitle = stringResource(R.string.privacy_and_security_desc),
                                     leadingContent = {
                                         Icon(
                                             painter = painterResource(R.drawable.lock_24px),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                                         )
                                     },
                                     onClick = {
@@ -272,14 +272,14 @@ fun SettingsScreen() {
                                         navigator.navigateTo(Route.PrivacySecuritySettings)
                                     }
                                 )
-                                CategorySettingsItem(
-                                    title = stringResource(R.string.sync_and_backup),
-                                    subtitle = stringResource(R.string.sync_and_backup_desc),
+                                SettingsItem(
+                                    title = stringResource(R.string.data_and_sync),
                                     leadingContent = {
                                         Icon(
                                             painter = painterResource(R.drawable.home_storage_gear_24px),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                                         )
                                     },
                                     onClick = {
@@ -288,14 +288,14 @@ fun SettingsScreen() {
                                         navigator.navigateTo(Route.SyncBackupSettings)
                                     }
                                 )
-                                CategorySettingsItem(
+                                SettingsItem(
                                     title = stringResource(R.string.bin),
-                                    subtitle = stringResource(R.string.bin_desc),
                                     leadingContent = {
                                         Icon(
                                             painter = painterResource(R.drawable.delete_24px),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                                         )
                                     },
                                     onClick = {
@@ -304,14 +304,14 @@ fun SettingsScreen() {
                                         navigator.navigateTo(Route.Bin)
                                     }
                                 )
-                                CategorySettingsItem(
+                                SettingsItem(
                                     title = stringResource(R.string.about),
-                                    subtitle = stringResource(R.string.about_desc),
                                     leadingContent = {
                                         Icon(
                                             painter = painterResource(R.drawable.info_24px),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                                         )
                                     },
                                     onClick = {
@@ -369,7 +369,7 @@ fun SettingsScreen() {
 
     if (showDeleteDialog) {
         JuneConfirmationDialog(
-            title = stringResource(R.string.move_all_to_bin_title),
+            title = stringResource(R.string.move_all_to_bin),
             description = stringResource(R.string.move_all_to_bin_desc),
             confirmText = stringResource(R.string.delete),
             confirmButtonText = stringResource(R.string.move_all_to_bin),

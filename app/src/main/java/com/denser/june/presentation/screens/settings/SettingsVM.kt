@@ -8,10 +8,10 @@ import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.preferences.ThemePreferences
 import com.denser.june.core.domain.preferences.FontPreferences
 import com.denser.june.core.domain.backup.ExportRepo
-import com.denser.june.core.domain.backup.ExportState
+import com.denser.june.core.domain.backup.MarkdownImportRepo
 import com.denser.june.core.domain.backup.RestoreRepo
-import com.denser.june.core.domain.backup.RestoreResult
-import com.denser.june.core.domain.backup.RestoreState
+import com.denser.june.presentation.utils.AsyncOp
+import com.denser.june.presentation.utils.toAsyncOp
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.domain.model.enums.MapTheme
@@ -36,7 +36,8 @@ class SettingsVM(
     private val journalPrefs: JournalPreferences,
     private val fontPrefs: FontPreferences,
     private val exportRepo: ExportRepo,
-    private val restoreRepo: RestoreRepo
+    private val restoreRepo: RestoreRepo,
+    private val markdownImportRepo: MarkdownImportRepo
 ) : ViewModel() {
 
     private val _localState = MutableStateFlow(SettingsState())
@@ -115,40 +116,41 @@ class SettingsVM(
                 }
 
                 is SettingsAction.OnExportJournals -> {
-                    _localState.update { it.copy(exportState = ExportState.Exporting) }
+                    _localState.update { it.copy(exportState = AsyncOp.Loading) }
                     val result = exportRepo.exportData(includeMedia = action.includeMedia)
-                    _localState.update {
-                        it.copy(exportState = if (result != null) ExportState.ExportReady(result) else ExportState.Error)
-                    }
+                    _localState.update { it.copy(exportState = result.toAsyncOp()) }
                 }
 
                 is SettingsAction.OnExportMarkdown -> {
-                    _localState.update { it.copy(exportMarkdownState = ExportState.Exporting) }
+                    _localState.update { it.copy(exportMarkdownState = AsyncOp.Loading) }
                     val result = exportRepo.exportAsMarkdown(includeMedia = action.includeMedia)
-                    _localState.update {
-                        it.copy(exportMarkdownState = if (result != null) ExportState.ExportReady(result) else ExportState.Error)
-                    }
+                    _localState.update { it.copy(exportMarkdownState = result.toAsyncOp()) }
                 }
 
                 is SettingsAction.OnRestoreJournals -> {
-                    _localState.update { it.copy(restoreState = RestoreState.Restoring) }
-                    when (val res = restoreRepo.restoreData(action.path)) {
-                        is RestoreResult.Failure -> _localState.update {
-                            it.copy(
-                                restoreState = RestoreState.Failure(
-                                    res.exceptionType
-                                )
-                            )
-                        }
-
-                        RestoreResult.Success -> _localState.update { it.copy(restoreState = RestoreState.Restored) }
-                    }
+                    _localState.update { it.copy(restoreState = AsyncOp.Loading) }
+                    val result = restoreRepo.restoreData(action.path)
+                    _localState.update { it.copy(restoreState = result.toAsyncOp()) }
+                }
+                is SettingsAction.OnImportMarkdownFiles -> {
+                    _localState.update { it.copy(importMarkdownState = AsyncOp.Loading) }
+                    val result = markdownImportRepo.importMarkdownFiles(action.uris)
+                    _localState.update { it.copy(importMarkdownState = result.toAsyncOp()) }
+                }
+                is SettingsAction.OnImportMarkdownZip -> {
+                    _localState.update { it.copy(importMarkdownState = AsyncOp.Loading) }
+                    val result = markdownImportRepo.importMarkdownZip(action.uri)
+                    _localState.update { it.copy(importMarkdownState = result.toAsyncOp()) }
+                }
+                SettingsAction.ResetMarkdownImport -> _localState.update {
+                    it.copy(importMarkdownState = AsyncOp.Idle)
                 }
                 SettingsAction.ResetBackup -> _localState.update {
                     it.copy(
-                        restoreState = RestoreState.Idle,
-                        exportState = ExportState.Idle,
-                        exportMarkdownState = ExportState.Idle
+                        restoreState = AsyncOp.Idle,
+                        exportState = AsyncOp.Idle,
+                        exportMarkdownState = AsyncOp.Idle,
+                        importMarkdownState = AsyncOp.Idle
                     )
                 }
                 is SettingsAction.OnSeedColorChange -> themePrefs.updateSeedColor(action.color)

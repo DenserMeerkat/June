@@ -2,14 +2,14 @@ package com.denser.june.presentation.screens.settings
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import com.denser.june.core.domain.backup.ExportState
-import com.denser.june.core.domain.backup.RestoreState
 import com.denser.june.core.domain.model.AppTheme
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.enums.FontType
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
+import com.denser.june.presentation.utils.AsyncOp
+import java.io.File
 import java.time.DayOfWeek
 
 @Stable
@@ -17,9 +17,10 @@ import java.time.DayOfWeek
 data class SettingsState(
     val appTheme: AppTheme = AppTheme(),
     val deleteButtonEnabled: Boolean = true,
-    val exportState: ExportState = ExportState.Idle,
-    val exportMarkdownState: ExportState = ExportState.Idle,
-    val restoreState: RestoreState = RestoreState.Idle,
+    val exportState: AsyncOp<File> = AsyncOp.Idle,
+    val exportMarkdownState: AsyncOp<File> = AsyncOp.Idle,
+    val restoreState: AsyncOp<Unit> = AsyncOp.Idle,
+    val importMarkdownState: AsyncOp<Int> = AsyncOp.Idle,
     val isAppLockEnabled: Boolean = false,
     val lockType: LockType = LockType.BIOMETRIC,
     val pinHash: String? = null,
