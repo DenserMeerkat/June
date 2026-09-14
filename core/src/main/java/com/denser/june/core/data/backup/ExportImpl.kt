@@ -26,7 +26,7 @@ class ExportImpl(
     private val context: Context
 ) : ExportRepo {
 
-    override suspend fun exportData(includeMedia: Boolean): File? = withContext(Dispatchers.IO) {
+    override suspend fun exportData(includeMedia: Boolean): Result<File> = withContext(Dispatchers.IO) {
         return@withContext try {
             AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Starting export process. Include media: $includeMedia")
             val journals = journalRepo.getAllJournals()
@@ -107,14 +107,14 @@ class ExportImpl(
                 "ExportImpl",
                 "Export completed successfully. Created zip: ${backupFile.name} (size: ${backupFile.length()} bytes)"
             )
-            backupFile
+            Result.success(backupFile)
         } catch (e: Exception) {
             AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Export failed with exception", e)
-            null
+            Result.failure(e)
         }
     }
 
-    override suspend fun exportAsMarkdown(includeMedia: Boolean): File? = withContext(Dispatchers.IO) {
+    override suspend fun exportAsMarkdown(includeMedia: Boolean): Result<File> = withContext(Dispatchers.IO) {
         return@withContext try {
             AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Starting markdown export. Include media: $includeMedia")
             val journals = journalRepo.getAllJournals()
@@ -133,102 +133,47 @@ class ExportImpl(
             val backupFile = File(context.cacheDir, "JuneMarkdownExport_${System.currentTimeMillis()}.zip")
             val zipOutputStream = ZipOutputStream(BufferedOutputStream(FileOutputStream(backupFile)))
 
+            val usedFileNames = mutableSetOf<String>()
             zipOutputStream.use { zos ->
-                val yamlDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                    .withZone(ZoneId.systemDefault())
-
                 cleanedJournals.forEach { journal ->
-                    val sb = StringBuilder()
-                    sb.append("---\n")
-                    sb.append("id: ${journal.id}\n")
-                    sb.append("title: \"${journal.title.replace("\"", "\\\"")}\"\n")
-                    journal.emoji?.let { sb.append("emoji: \"${it.replace("\"", "\\\"")}\"\n") }
+                    val mediaPrefix = if (includeMedia) "media/${journal.id}" else null
+                    val markdownText = com.denser.june.core.domain.markdown.MarkdownEngine.toMarkdown(
+                        journal = journal,
+                        relativeMediaPathPrefix = mediaPrefix,
+                        includeMedia = includeMedia
+                    )
 
-                    val readableCreatedAt = yamlDateFormatter.format(Instant.ofEpochMilli(journal.createdAt))
-                    val readableUpdatedAt = journal.updatedAt?.let { yamlDateFormatter.format(Instant.ofEpochMilli(it)) }
-                    val readableDateTime = yamlDateFormatter.format(Instant.ofEpochMilli(journal.dateTime))
-
-                    sb.append("createdAt: \"$readableCreatedAt\"\n")
-                    readableUpdatedAt?.let { sb.append("updatedAt: \"$it\"\n") }
-                    sb.append("dateTime: \"$readableDateTime\"\n")
-                    sb.append("isBookmarked: ${journal.isBookmarked}\n")
-                    sb.append("isArchived: ${journal.isArchived}\n")
-                    if (journal.tags.isNotEmpty()) {
-                        sb.append("tags:\n")
-                        journal.tags.forEach { tag ->
-                            sb.append("  - \"${tag.replace("\"", "\\\"")}\"\n")
-                        }
+                    var fileName = com.denser.june.core.domain.markdown.MarkdownEngine.generateFileName(journal)
+                    var counter = 1
+                    val baseName = fileName.removeSuffix(".md")
+                    while (usedFileNames.contains(fileName)) {
+                        fileName = "${baseName}_$counter.md"
+                        counter++
                     }
-                    journal.location?.let { loc ->
-                        sb.append("location:\n")
-                        sb.append("  latitude: ${loc.latitude}\n")
-                        sb.append("  longitude: ${loc.longitude}\n")
-                        loc.address?.let { sb.append("  address: \"${it.replace("\"", "\\\"")}\"\n") }
-                        loc.name?.let { sb.append("  name: \"${it.replace("\"", "\\\"")}\"\n") }
-                        loc.locality?.let { sb.append("  locality: \"${it.replace("\"", "\\\"")}\"\n") }
-                    }
-                    val song = journal.songDetails
-                    if (song != null) {
-                        sb.append("song:\n")
-                        sb.append("  title: \"${song.title.replace("\"", "\\\"")}\"\n")
-                        sb.append("  artistName: \"${song.artistName.replace("\"", "\\\"")}\"\n")
-                        song.thumbnailUrl?.let { sb.append("  thumbnailUrl: \"$it\"\n") }
-                        song.previewUrl?.let { sb.append("  previewUrl: \"$it\"\n") }
-                        song.previewUrlProvider?.let { sb.append("  previewUrlProvider: \"$it\"\n") }
-                    }
-                    sb.append("---\n\n")
+                    usedFileNames.add(fileName)
 
-                    sb.append("# ${journal.title}\n\n")
-                    sb.append(journal.content)
+                    val mdEntry = ZipEntry(fileName)
+                    zos.putNextEntry(mdEntry)
+                    zos.write(markdownText.toByteArray(Charsets.UTF_8))
+                    zos.closeEntry()
 
-                    if (journal.images.isNotEmpty()) {
-                        sb.append("\n\n## Media\n")
+                    if (includeMedia) {
                         journal.images.forEach { imagePath ->
                             val file = File(imagePath)
-                            sb.append("![Media](../media/${journal.id}/${file.name})\n")
-                        }
-                    }
-
-                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                        .withZone(ZoneId.systemDefault())
-                    val formattedDate = formatter.format(Instant.ofEpochMilli(journal.dateTime))
-
-                    val sanitizedTitle = journal.title.replace("[\\\\/:*?\"<>|\\s]+".toRegex(), "_").trim()
-                    val fileName = if (sanitizedTitle.isNotEmpty()) {
-                        "${formattedDate}_${sanitizedTitle}_${journal.id}.md"
-                    } else {
-                        "${formattedDate}_${journal.id}.md"
-                    }
-                    val journalEntry = ZipEntry("journals/$fileName")
-                    zos.putNextEntry(journalEntry)
-                    zos.write(sb.toString().toByteArray())
-                    zos.closeEntry()
-                }
-
-                if (includeMedia) {
-                    val processedFileNames = mutableSetOf<Pair<String, String>>()
-                    var packedMediaCount = 0
-
-                    cleanedJournals.forEach { journal ->
-                        journal.images.forEach { absolutePath ->
-                            val file = File(absolutePath)
-                            if (file.exists() && processedFileNames.add(journal.id to file.name)) {
+                            if (file.exists()) {
                                 try {
                                     val mediaEntry = ZipEntry("media/${journal.id}/${file.name}")
                                     zos.putNextEntry(mediaEntry)
-
                                     FileInputStream(file).use { fis ->
                                         fis.copyTo(zos)
                                     }
                                     zos.closeEntry()
-                                    packedMediaCount++
                                 } catch (e: Exception) {
-                                    AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack media file: ${file.name}", e)
+                                    AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack media file for markdown export: ${file.name}", e)
                                 }
                             }
                         }
                     }
-                    AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Packed $packedMediaCount media files for markdown export")
                 }
             }
 
@@ -237,10 +182,52 @@ class ExportImpl(
                 "ExportImpl",
                 "Markdown export completed successfully. Created zip: ${backupFile.name} (size: ${backupFile.length()} bytes)"
             )
-            backupFile
+            Result.success(backupFile)
         } catch (e: Exception) {
             AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Markdown export failed with exception", e)
-            null
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun exportSingleJournalZip(journal: Journal): Result<File> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val fileName = com.denser.june.core.domain.markdown.MarkdownEngine.generateFileName(journal, forSingleExport = true)
+            val baseName = fileName.removeSuffix(".md")
+            val zipFile = File(context.cacheDir, "${baseName}_${System.currentTimeMillis()}.zip")
+
+            val markdownText = com.denser.june.core.domain.markdown.MarkdownEngine.toMarkdown(
+                journal = journal,
+                relativeMediaPathPrefix = "media",
+                includeMedia = true
+            )
+
+            ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zos ->
+                val mdEntry = ZipEntry(fileName)
+                zos.putNextEntry(mdEntry)
+                zos.write(markdownText.toByteArray(Charsets.UTF_8))
+                zos.closeEntry()
+
+                val processedFileNames = mutableSetOf<String>()
+                journal.images.forEach { imagePath ->
+                    val file = File(imagePath)
+                    if (file.exists() && processedFileNames.add(file.name)) {
+                        try {
+                            val mediaEntry = ZipEntry("media/${file.name}")
+                            zos.putNextEntry(mediaEntry)
+                            FileInputStream(file).use { fis ->
+                                fis.copyTo(zos)
+                            }
+                            zos.closeEntry()
+                        } catch (e: Exception) {
+                            AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack media file for single export: ${file.name}", e)
+                        }
+                    }
+                }
+            }
+            Result.success(zipFile)
+        } catch (e: Exception) {
+            AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to export single journal zip", e)
+            Result.failure(e)
         }
     }
 }

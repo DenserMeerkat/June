@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kaml)
 
     // Essential
     implementation(libs.koin.core)

@@ -104,7 +104,7 @@
     <string name="untitled">无标题</string>
     <string name="updated">已更新</string>
     <string name="verifying_connection">验证连接中...</string>
-    <string name="whats_changed">更新日志</string>
+    <string name="whats_new">更新日志</string>
     <string name="save_entry">保存条目？</string>
     <string name="change_lock_title">更改密码？</string>
     <string name="checking_for_updates">检查更新</string>

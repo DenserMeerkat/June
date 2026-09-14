@@ -106,6 +106,30 @@ object FileUtils {
         }
         return digest.digest().joinToString("") { "%02x".format(it) }
     }
+
+    fun getDisplayName(context: Context, uri: Uri): String? {
+        if (uri.scheme == "content") {
+            try {
+                context.contentResolver.query(
+                    uri,
+                    arrayOf(android.provider.OpenableColumns.DISPLAY_NAME),
+                    null,
+                    null,
+                    null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val colIdx = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (colIdx != -1) {
+                            return cursor.getString(colIdx)
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                // Fall through to path segment fallback
+            }
+        }
+        return uri.lastPathSegment?.let { File(it).name }
+    }
 }
 
 fun File.computeSHA256(): String = FileUtils.computeSHA256(this)
