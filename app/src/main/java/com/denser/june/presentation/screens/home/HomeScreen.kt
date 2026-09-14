@@ -245,5 +245,5 @@ private fun handleFabClick(
     } else {
         Route.Editor(initialDate = initialDate)
     }
-    navigator.navigateTo(route)
+    navigator.navigateTo(route, isSingleTop = true)
 }

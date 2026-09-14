@@ -14,6 +14,7 @@ import com.denser.june.core.utils.getTodayAtMidnight
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -34,14 +35,24 @@ class EditorVM(
 
     private var existingJournal: Journal? = null
 
+    private var searchTagsJob: Job? = null
+
     private val _state = MutableStateFlow(
         run {
             val routeDate = editorRoute?.initialDate
+            val initialTitle = editorRoute?.initialTitle ?: ""
+            val initialContent = editorRoute?.initialContent ?: ""
+            val initialEmoji = editorRoute?.initialEmoji
             EditorState(
+                journalId = journalId,
+                title = initialTitle,
+                content = initialContent,
+                emoji = initialEmoji,
                 dateTime = routeDate ?: getTodayAtMidnight(),
                 tags = editorRoute?.initialTags ?: emptyList(),
                 isDraft = true,
-                isDirty = true
+                isLoading = journalId != null,
+                isDirty = initialTitle.isNotBlank() || initialContent.isNotBlank() || initialEmoji != null
             )
         }
     )
@@ -59,13 +70,13 @@ class EditorVM(
     init {
         viewModelScope.launch {
             journalPrefs.startOfWeek().collect { startDay ->
-                updateState { it.copy(startOfWeek = startDay) }
+                _state.update { it.copy(startOfWeek = startDay) }
             }
         }
 
         viewModelScope.launch {
             journalPrefs.timeFormat().collect { format ->
-                updateState { it.copy(timeFormat = format) }
+                _state.update { it.copy(timeFormat = format) }
             }
         }
 
@@ -95,6 +106,10 @@ class EditorVM(
         when (action) {
             is EditorAction.ChangeTitle -> updateState { it.copy(title = action.title) }
             is EditorAction.ChangeContent -> updateState { it.copy(content = action.content) }
+            is EditorAction.SnapContentBaseline -> {
+                _state.update { it.copy(content = action.content) }
+                existingJournal = existingJournal?.copy(content = action.content)
+            }
             is EditorAction.ChangeDateTime -> updateState { it.copy(dateTime = action.dateTime) }
             is EditorAction.ChangeEmoji -> updateState { it.copy(emoji = action.emoji) }
 
@@ -114,7 +129,8 @@ class EditorVM(
 
             is EditorAction.UpdateTags -> updateState { it.copy(tags = action.tags) }
             is EditorAction.SearchTags -> {
-                viewModelScope.launch {
+                searchTagsJob?.cancel()
+                searchTagsJob = viewModelScope.launch {
                     journalRepo.getTagSuggestions(action.query).collect { suggestions ->
                         _state.update { it.copy(tagSuggestions = suggestions) }
                     }
@@ -131,7 +147,7 @@ class EditorVM(
             is EditorAction.ToggleArchive -> toggleArchive()
             is EditorAction.SaveJournal -> saveJournal()
             is EditorAction.NavigateBack -> {
-                if (_state.value.isDirty) {
+                if (_state.value.isDraft && _state.value.isDirty) {
                     saveDraft(_state.value)
                 }
                 navigator.navigateBack()
@@ -144,18 +160,25 @@ class EditorVM(
     private fun updateState(update: (EditorState) -> EditorState) {
         _state.update { currentState ->
             val newState = update(currentState)
-            if (isDirtyCheck(newState)) {
+            val dirty = isDirtyCheck(newState)
+            if (dirty && newState.isDraft) {
                 _saveTrigger.tryEmit(newState)
             }
-            newState.copy(isDirty = isDirtyCheck(newState))
+            newState.copy(isDirty = dirty)
         }
     }
 
     private fun isDirtyCheck(currentState: EditorState): Boolean {
-        val original = existingJournal ?: return true
+        val original = existingJournal ?: return currentState.title.isNotBlank() ||
+                currentState.content.isNotBlank() ||
+                currentState.images.isNotEmpty() ||
+                currentState.emoji != null ||
+                currentState.tags.isNotEmpty() ||
+                currentState.songDetails != null ||
+                currentState.location != null
 
-        return original.title != currentState.title ||
-                original.content != currentState.content ||
+        return original.title.trim() != currentState.title.trim() ||
+                original.content.trim() != currentState.content.trim() ||
                 original.tags != currentState.tags ||
                 original.emoji != currentState.emoji ||
                 original.images != currentState.images ||

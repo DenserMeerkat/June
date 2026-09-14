@@ -1,48 +1,59 @@
 package com.denser.june.presentation.screens.editor.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.denser.hyphen.model.MarkupStyleRange
 import com.denser.hyphen.state.HyphenTextState
 import com.denser.hyphen.ui.link.HyphenLinkConfig
 import com.denser.hyphen.ui.material3.HyphenTextField
 import com.denser.hyphen.ui.style.BlockquoteStyle
 import com.denser.hyphen.ui.style.HyphenStyleConfig
 import com.denser.hyphen.ui.style.ListItemStyle
-import com.denser.june.presentation.utils.UiUtils
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import kotlinx.coroutines.delay
-import com.denser.hyphen.model.MarkupStyleRange
-import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
-import androidx.compose.ui.unit.LayoutDirection
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.utils.LanguageHelper
+import com.denser.june.presentation.utils.UiUtils
+import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalLayoutDirection
-
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun JournalContentEditor(
     modifier: Modifier = Modifier,
@@ -51,11 +62,18 @@ fun JournalContentEditor(
     onMarkdownChange: (String) -> Unit,
     onFocusChanged: (Boolean) -> Unit,
     focusRequester: FocusRequester,
+    isLoading: Boolean = false,
     isMarkdownEnabled: Boolean = true,
     isKeyboardAutocorrectEnabled: Boolean = true,
     isKeyboardCapitalizationEnabled: Boolean = true,
     editorLayoutDirection: EditorLayoutDirection = EditorLayoutDirection.AUTO,
 ) {
+    val layoutDirectionOverride = when (editorLayoutDirection) {
+        EditorLayoutDirection.AUTO -> null
+        EditorLayoutDirection.LTR -> LayoutDirection.Ltr
+        EditorLayoutDirection.RTL -> LayoutDirection.Rtl
+    }
+
     val editorDirection = when (editorLayoutDirection) {
         EditorLayoutDirection.AUTO -> if (LanguageHelper.isCurrentLocaleRtl()) LayoutDirection.Rtl else LayoutDirection.Ltr
         EditorLayoutDirection.LTR -> LayoutDirection.Ltr
@@ -136,122 +154,142 @@ fun JournalContentEditor(
             autoCorrectEnabled = isKeyboardAutocorrectEnabled
         )
 
-        if (!isMarkdownEnabled) {
-            TextField(
-                value = rawContent,
-                onValueChange = { newText ->
-                    state.setMarkdown(newText)
-                    onMarkdownChange(newText)
-                },
-                modifier = modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester)
-                    .onFocusChanged { focusState ->
-                        onFocusChanged(focusState.isFocused)
+        Box(modifier = modifier) {
+            if (!isMarkdownEnabled) {
+                TextField(
+                    value = rawContent,
+                    onValueChange = { newText ->
+                        state.setMarkdown(newText)
+                        onMarkdownChange(newText)
                     },
-                placeholder = {
-                    Text(
-                        stringResource(R.string.whats_on_your_mind),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                },
-                keyboardOptions = keyboardOptions,
-                colors = UiUtils.getTransparentTextFieldColors().copy(
-                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                ),
-                textStyle = MaterialTheme.typography.bodyLarge,
-            )
-        } else {
-            HyphenTextField(
-                state = state,
-                layoutDirection = editorDirection,
-                linkConfig = linkConfig,
-                showDefaultSuggestionsPopup = false,
-                triggerPopup = {},
-                onMarkdownChange = onMarkdownChange,
-                modifier = modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester)
-                    .onFocusChanged { focusState ->
-                        onFocusChanged(focusState.isFocused)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { focusState ->
+                            onFocusChanged(focusState.isFocused)
+                        },
+                    placeholder = {
+                        Text(
+                            stringResource(R.string.whats_on_your_mind),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
                     },
-                placeholder = {
-                    Text(
-                        stringResource(R.string.whats_on_your_mind),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                },
-                keyboardOptions = keyboardOptions,
-                colors = UiUtils.getTransparentTextFieldColors().copy(
-                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                ),
-                styleConfig = HyphenStyleConfig(
-                    boldStyle = SpanStyle(
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                    keyboardOptions = keyboardOptions,
+                    colors = UiUtils.getTransparentTextFieldColors().copy(
+                        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     ),
-                    italicStyle = SpanStyle(
-                        fontStyle = FontStyle.Italic,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    strikethroughStyle = SpanStyle(
-                        textDecoration = TextDecoration.LineThrough,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                    ),
-                    highlightStyle = SpanStyle(
-                        background = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    ),
-                    inlineCodeStyle = SpanStyle(
-                        background = MaterialTheme.colorScheme.surfaceVariant,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 14.sp
-                    ),
-                    blockquoteSpanStyle = SpanStyle(
-                        fontStyle = FontStyle.Italic,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    ),
-                    blockquoteStyle = BlockquoteStyle(
-                        backgroundColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
-                        borderColor = MaterialTheme.colorScheme.tertiary,
-                    ),
-                    h1Style = SpanStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-                    h2Style = SpanStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-                    h3Style = SpanStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-                    h4Style = SpanStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-                    h5Style = SpanStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
-                    h6Style = SpanStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp),
-                    bulletListStyle = ListItemStyle(
-                        prefixStyle = SpanStyle(
-                            color = MaterialTheme.colorScheme.tertiary
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                )
+            } else {
+                HyphenTextField(
+                    state = state,
+                    layoutDirection = layoutDirectionOverride,
+                    linkConfig = linkConfig,
+                    showDefaultSuggestionsPopup = false,
+                    triggerPopup = {},
+                    onMarkdownChange = onMarkdownChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { focusState ->
+                            onFocusChanged(focusState.isFocused)
+                        },
+                    placeholder = {
+                        Text(
+                            stringResource(R.string.whats_on_your_mind),
+                            style = MaterialTheme.typography.bodyLarge,
                         )
+                    },
+                    keyboardOptions = keyboardOptions,
+                    colors = UiUtils.getTransparentTextFieldColors().copy(
+                        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                     ),
-                    orderedListStyle = ListItemStyle(
-                        prefixStyle = SpanStyle(
-                            color = MaterialTheme.colorScheme.tertiary
-                        )
-                    ),
-                    linkStyle = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        textDecoration = TextDecoration.Underline,
-                    ),
-                    mentionStyles = mapOf(
-                        "person" to SpanStyle(
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium,
+                    styleConfig = HyphenStyleConfig(
+                        boldStyle = SpanStyle(
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
                         ),
-                        "topic" to SpanStyle(
-                            color = MaterialTheme.colorScheme.tertiary,
-                            fontWeight = FontWeight.Medium,
+                        italicStyle = SpanStyle(
+                            fontStyle = FontStyle.Italic,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        strikethroughStyle = SpanStyle(
+                            textDecoration = TextDecoration.LineThrough,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        ),
+                        highlightStyle = SpanStyle(
+                            background = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        ),
+                        inlineCodeStyle = SpanStyle(
+                            background = MaterialTheme.colorScheme.surfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 14.sp
+                        ),
+                        blockquoteSpanStyle = SpanStyle(
+                            fontStyle = FontStyle.Italic,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        ),
+                        blockquoteStyle = BlockquoteStyle(
+                            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
+                            borderColor = MaterialTheme.colorScheme.tertiary,
+                        ),
+                        h1Style = SpanStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
+                        h2Style = SpanStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
+                        h3Style = SpanStyle(fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
+                        h4Style = SpanStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
+                        h5Style = SpanStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
+                        h6Style = SpanStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp),
+                        bulletListStyle = ListItemStyle(
+                            prefixStyle = SpanStyle(
+                                color = MaterialTheme.colorScheme.tertiary
+                            )
+                        ),
+                        orderedListStyle = ListItemStyle(
+                            prefixStyle = SpanStyle(
+                                color = MaterialTheme.colorScheme.tertiary
+                            )
+                        ),
+                        linkStyle = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            textDecoration = TextDecoration.Underline,
+                        ),
+                        mentionStyles = mapOf(
+                            "person" to SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium,
+                            ),
+                            "topic" to SpanStyle(
+                                color = MaterialTheme.colorScheme.tertiary,
+                                fontWeight = FontWeight.Medium,
+                            )
                         )
                     )
                 )
-            )
+            }
+
+            AnimatedVisibility(
+                visible = isLoading,
+                enter = fadeIn(animationSpec = tween(150)),
+                exit = fadeOut(animationSpec = tween(250)),
+                modifier = Modifier.matchParentSize()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(MaterialTheme.colorScheme.surface),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ContainedLoadingIndicator(
+                        modifier = Modifier.size(100.dp)
+                    )
+                }
+            }
         }
     }
 }

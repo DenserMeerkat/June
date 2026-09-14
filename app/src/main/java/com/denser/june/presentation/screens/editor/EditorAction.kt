@@ -5,6 +5,7 @@ import com.denser.june.core.domain.model.JournalLocation
 sealed interface EditorAction {
     data class ChangeTitle(val title: String) : EditorAction
     data class ChangeContent(val content: String) : EditorAction
+    data class SnapContentBaseline(val content: String) : EditorAction
     data class ChangeEmoji(val emoji: String?) : EditorAction
     data class ChangeDateTime(val dateTime: Long) : EditorAction
 
