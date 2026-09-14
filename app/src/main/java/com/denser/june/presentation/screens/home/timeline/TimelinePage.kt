@@ -281,6 +281,8 @@ fun TimelinePage(
             onTabSelected = { viewModel.onTabChange(it) },
             modifier = Modifier.weight(1f),
             bottomPadding = UiUtils.BOTTOM_BAR_PADDING,
+            is24Hour = is24Hour,
+            onToggleBookmark = { id -> viewModel.toggleBookmark(id) },
             onLongClickJournal = { journal -> selectedJournalForOptions = journal }
         )
     }

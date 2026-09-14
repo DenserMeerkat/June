@@ -25,21 +25,10 @@ fun DayJournalGroup(
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         journals.forEachIndexed { index, journal ->
-            val shape = when (index) {
-                0 -> RoundedCornerShape(
-                    topStart = 24.dp,
-                    topEnd = 24.dp,
-                    bottomStart = 8.dp,
-                    bottomEnd = 8.dp
-                )
-                journals.lastIndex -> RoundedCornerShape(
-                    topStart = 8.dp,
-                    topEnd = 8.dp,
-                    bottomStart = 24.dp,
-                    bottomEnd = 24.dp
-                )
-                else -> RoundedCornerShape(8.dp)
-            }
+            val shape = com.denser.june.presentation.components.rememberJournalGroupShape(
+                index = index,
+                totalCount = journals.size
+            )
 
             if (journal.id == recentJournalId) {
                 RecentJournalCard(

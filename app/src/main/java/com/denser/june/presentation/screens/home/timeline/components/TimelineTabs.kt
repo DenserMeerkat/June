@@ -25,6 +25,8 @@ fun TimelineTabs(
     onTabSelected: (TimelineTab) -> Unit,
     modifier: Modifier = Modifier,
     bottomPadding: Dp = 0.dp,
+    is24Hour: Boolean = false,
+    onToggleBookmark: ((String) -> Unit)? = null,
     onLongClickJournal: ((Journal) -> Unit)? = null
 ) {
     CompositionLocalProvider(
@@ -62,6 +64,8 @@ fun TimelineTabs(
                     TimelineTab.Journals -> TimelineJournalTab(
                         journals = journals,
                         bottomPadding = bottomPadding,
+                        is24Hour = is24Hour,
+                        onToggleBookmark = onToggleBookmark,
                         onLongClick = onLongClickJournal
                     )
 

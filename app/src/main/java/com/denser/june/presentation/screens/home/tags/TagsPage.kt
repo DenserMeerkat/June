@@ -25,6 +25,7 @@ import com.denser.june.core.domain.model.enums.TagCategory
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.toLocalDate
+import com.denser.june.presentation.components.DayJournalGroupData
 import com.denser.june.presentation.components.ExportJournalBottomSheet
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.navigation.AppNavigator
@@ -441,8 +442,3 @@ fun TagsPage() {
         }
     }
 }
-
-private data class DayJournalGroupData(
-    val date: java.time.LocalDate,
-    val journals: List<Journal>
-)

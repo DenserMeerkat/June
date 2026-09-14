@@ -1,14 +1,6 @@
 package com.denser.june.presentation.screens.home.journals
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,15 +11,14 @@ import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.toLocalDate
+import com.denser.june.presentation.components.DayJournalGroupData
 import com.denser.june.presentation.components.ExportJournalBottomSheet
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
@@ -148,51 +139,50 @@ fun JournalsPage(
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                    SearchFilterChip(
-                        selected = isBookmarked,
-                        onClick = viewModel::toggleBookmarkFilter,
-                        icon = R.drawable.bookmark_added_24px_fill,
-                        prefix = "is:",
-                        label = stringResource(R.string.bookmarked)
-                    )
-                    SearchFilterChip(
-                        selected = isDraft,
-                        onClick = viewModel::toggleDraftFilter,
-                        icon = R.drawable.edit_24px_fill,
-                        prefix = "is:",
-                        label = stringResource(R.string.draft)
-                    )
-                    SearchFilterChip(
-                        selected = hasMedia,
-                        onClick = viewModel::toggleMediaFilter,
-                        icon = R.drawable.photo_24px_fill,
-                        prefix = "has:",
-                        label = stringResource(R.string.media)
-                    )
-                    SearchFilterChip(
-                        selected = hasSong,
-                        onClick = viewModel::toggleSongFilter,
-                        icon = R.drawable.music_note_24px,
-                        prefix = "has:",
-                        label = stringResource(R.string.music)
-                    )
-                    SearchFilterChip(
-                        selected = hasLocation,
-                        onClick = viewModel::toggleLocationFilter,
-                        icon = R.drawable.location_on_24px_fill,
-                        prefix = "has:",
-                        label = stringResource(R.string.location)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
+                SearchFilterChip(
+                    selected = isBookmarked,
+                    onClick = viewModel::toggleBookmarkFilter,
+                    prefix = "is:",
+                    label = stringResource(R.string.bookmarked),
+                    shapes = ButtonGroupDefaults.connectedLeadingButtonShapes()
+                )
+                SearchFilterChip(
+                    selected = isDraft,
+                    onClick = viewModel::toggleDraftFilter,
+                    prefix = "is:",
+                    label = stringResource(R.string.draft),
+                    shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
+                )
+                SearchFilterChip(
+                    selected = hasMedia,
+                    onClick = viewModel::toggleMediaFilter,
+                    prefix = "has:",
+                    label = stringResource(R.string.media),
+                    shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
+                )
+                SearchFilterChip(
+                    selected = hasSong,
+                    onClick = viewModel::toggleSongFilter,
+                    prefix = "has:",
+                    label = stringResource(R.string.music),
+                    shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
+                )
+                SearchFilterChip(
+                    selected = hasLocation,
+                    onClick = viewModel::toggleLocationFilter,
+                    prefix = "has:",
+                    label = stringResource(R.string.location),
+                    shapes = ButtonGroupDefaults.connectedTrailingButtonShapes()
+                )
             }
 
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp),
+                contentPadding = PaddingValues(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (feedState.isLoading) {
@@ -216,9 +206,36 @@ fun JournalsPage(
                         )
                     }
                 } else {
-                    val recentJournalId = if (isSearchActive || hasActiveFilters) null else journals.firstOrNull()?.id
+                    val isFilteringOrSearching = isSearchActive || hasActiveFilters
+                    val recentJournalId = if (isFilteringOrSearching) null else journals.firstOrNull()?.id
+
+                    if (!isFilteringOrSearching && recentJournalId != null) {
+                        item(key = "header_recent") {
+                            SectionHeader(
+                                title = stringResource(R.string.recent),
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
+
+                    var hasShownMoreHeader = false
 
                     dayGroups.forEach { dayGroup ->
+                        val containsRecent = recentJournalId != null && dayGroup.journals.any { it.id == recentJournalId }
+                        val hasOtherJournals = if (containsRecent) dayGroup.journals.size > 1 else true
+
+                        if (!isFilteringOrSearching && !hasShownMoreHeader && !containsRecent && recentJournalId != null) {
+                            item(key = "header_more_${dayGroup.date}") {
+                                SectionHeader(
+                                    title = stringResource(R.string.more_entries),
+                                    modifier = Modifier
+                                        .padding(top = 8.dp)
+                                        .animateItem()
+                                )
+                            }
+                            hasShownMoreHeader = true
+                        }
+
                         if (dayGroup.journals.size > 1) {
                             item(key = "day_group_${dayGroup.date}") {
                                 DayJournalGroup(
@@ -283,8 +300,16 @@ fun JournalsPage(
     }
 }
 
-private data class DayJournalGroupData(
-    val date: java.time.LocalDate,
-    val journals: List<Journal>
-)
+@Composable
+fun SectionHeader(
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+        modifier = modifier.padding(vertical = 4.dp, horizontal = 24.dp)
+    )
+}
 
