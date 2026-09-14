@@ -10,15 +10,19 @@ import com.denser.june.di.juneModules
 import com.denser.june.notification.NotificationsHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
+import kotlin.time.Duration.Companion.milliseconds
 
 class JuneApplication : Application(), ImageLoaderFactory {
     private val journalRepo: JournalRepository by inject()
     private val imageLoader: ImageLoader by inject()
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun newImageLoader(): ImageLoader = imageLoader
 
@@ -36,8 +40,9 @@ class JuneApplication : Application(), ImageLoaderFactory {
     }
 
     private fun cleanupStorage() {
-        CoroutineScope(Dispatchers.IO).launch {
+        appScope.launch {
             try {
+                delay(3000L.milliseconds)
                 val allJournals = journalRepo.getAllJournalsIncludeDeletedSync()
                 val activePaths = allJournals.flatMap { it.images }
                 FileUtils.cleanOrphanedFiles(applicationContext, activePaths)
