@@ -1,7 +1,9 @@
 package com.denser.june.core.di
 
 import com.denser.june.core.data.backup.ExportImpl
+import com.denser.june.core.data.backup.MarkdownImportImpl
 import com.denser.june.core.data.backup.RestoreImpl
+import com.denser.june.core.domain.backup.MarkdownImportRepo
 import com.denser.june.core.data.database.DatabaseFactory
 import com.denser.june.core.data.database.journal.JournalDatabase
 import com.denser.june.core.data.datastore.DatastoreFactory
@@ -55,6 +57,7 @@ val coreModule = module {
 
     singleOf(::ExportImpl).bind<ExportRepo>()
     singleOf(::RestoreImpl).bind<RestoreRepo>()
+    singleOf(::MarkdownImportImpl).bind<MarkdownImportRepo>()
 
     singleOf(::JournalRepositoryImpl).bind<JournalRepository>()
     singleOf(::ReminderSchedulerImpl).bind<ReminderScheduler>()

@@ -51,6 +51,7 @@ googleFonts = "1.11.2"
 hyphen = "0.7.0-alpha01"
 playAppUpdate = "2.1.0"
 appcompat = "1.7.0"
+kaml = "0.104.0"
 
 [libraries]
 # Core
@@ -120,6 +121,7 @@ androidx-emoji2-emojipicker = { group = "androidx.emoji2", name = "emoji2-emojip
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 hyphen = { group = "io.github.densermeerkat", name = "hyphen-android", version.ref = "hyphen" }
 play-app-update = { group = "com.google.android.play", name = "app-update-ktx", version.ref = "playAppUpdate" }
+kaml = { group = "com.charleskorn.kaml", name = "kaml", version.ref = "kaml" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
