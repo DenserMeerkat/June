@@ -15,10 +15,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
-import com.denser.june.core.domain.backup.ExportState
-import com.denser.june.core.domain.backup.RestoreState
-import com.denser.june.core.domain.backup.RestoreFailedException
+import com.denser.june.core.domain.backup.RestoreException
 import com.denser.june.presentation.navigation.AppNavigator
+import com.denser.june.presentation.utils.AsyncOp
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.components.JuneDialog
@@ -32,7 +31,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SyncBackupSettingsScreen() {
+fun DataSyncSettingsScreen() {
     val settingsVM: SettingsVM = koinViewModel()
     val state = settingsVM.state.collectAsStateWithLifecycle().value
     val onAction = settingsVM::onAction
@@ -40,7 +39,8 @@ fun SyncBackupSettingsScreen() {
     val navigator = koinInject<AppNavigator>()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    var showExportDialog by remember { mutableStateOf(false) }
+    var showCreateBackupSheet by remember { mutableStateOf(false) }
+    var showExportMarkdownSheet by remember { mutableStateOf(false) }
     var showRestoreWarning by remember { mutableStateOf<String?>(null) }
 
     val backupSavedMsg = stringResource(R.string.backup_saved_successfully)
@@ -54,9 +54,9 @@ fun SyncBackupSettingsScreen() {
         contract = ActivityResultContracts.CreateDocument("application/zip")
     ) { uri ->
         uri?.let { targetUri ->
-            if (state.exportState is ExportState.ExportReady) {
+            if (state.exportState is AsyncOp.Success) {
                 try {
-                    val tempFile = state.exportState.file
+                    val tempFile = state.exportState.data
                     context.contentResolver.openOutputStream(targetUri)?.use { output ->
                         tempFile.inputStream().use { input -> input.copyTo(output) }
                     }
@@ -74,9 +74,9 @@ fun SyncBackupSettingsScreen() {
         contract = ActivityResultContracts.CreateDocument("application/zip")
     ) { uri ->
         uri?.let { targetUri ->
-            if (state.exportMarkdownState is ExportState.ExportReady) {
+            if (state.exportMarkdownState is AsyncOp.Success) {
                 try {
-                    val tempFile = state.exportMarkdownState.file
+                    val tempFile = state.exportMarkdownState.data
                     context.contentResolver.openOutputStream(targetUri)?.use { output ->
                         tempFile.inputStream().use { input -> input.copyTo(output) }
                     }
@@ -98,31 +98,83 @@ fun SyncBackupSettingsScreen() {
         }
     }
 
+    val importMarkdownLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            if (uris.size == 1 && (uris.first().toString().endsWith(".zip", ignoreCase = true) || context.contentResolver.getType(uris.first()) == "application/zip")) {
+                onAction(SettingsAction.OnImportMarkdownZip(uris.first()))
+            } else {
+                onAction(SettingsAction.OnImportMarkdownFiles(uris))
+            }
+        }
+    }
+
     LaunchedEffect(state.exportState) {
-        if (state.exportState is ExportState.ExportReady) {
-            val fileName = "June_Backup_${System.currentTimeMillis()}.zip"
-            saveLauncher.launch(fileName)
+        when (state.exportState) {
+            is AsyncOp.Success -> {
+                val fileName = "June_Backup_${System.currentTimeMillis()}.zip"
+                saveLauncher.launch(fileName)
+            }
+            is AsyncOp.Error -> {
+                Toast.makeText(context, failedToSaveMsg, Toast.LENGTH_LONG).show()
+                onAction(SettingsAction.ResetBackup)
+            }
+            else -> Unit
         }
     }
 
     LaunchedEffect(state.exportMarkdownState) {
-        if (state.exportMarkdownState is ExportState.ExportReady) {
-            val fileName = "June_Markdown_Export_${System.currentTimeMillis()}.zip"
-            saveMarkdownLauncher.launch(fileName)
+        when (state.exportMarkdownState) {
+            is AsyncOp.Success -> {
+                val fileName = "June_Markdown_Export_${System.currentTimeMillis()}.zip"
+                saveMarkdownLauncher.launch(fileName)
+            }
+            is AsyncOp.Error -> {
+                Toast.makeText(context, failedToSaveMsg, Toast.LENGTH_LONG).show()
+                onAction(SettingsAction.ResetBackup)
+            }
+            else -> Unit
+        }
+    }
+
+    LaunchedEffect(state.importMarkdownState) {
+        when (val importState = state.importMarkdownState) {
+            is AsyncOp.Success -> {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.markdown_imported_successfully, importState.data),
+                    Toast.LENGTH_SHORT
+                ).show()
+                onAction(SettingsAction.ResetMarkdownImport)
+            }
+
+            is AsyncOp.Error -> {
+                val err = importState.message ?: context.getString(R.string.invalid_or_corrupted_backup_file)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.markdown_import_failed, err),
+                    Toast.LENGTH_LONG
+                ).show()
+                onAction(SettingsAction.ResetMarkdownImport)
+            }
+
+            else -> Unit
         }
     }
 
     LaunchedEffect(state.restoreState) {
-        when (state.restoreState) {
-            is RestoreState.Restored -> {
+        when (val restoreState = state.restoreState) {
+            is AsyncOp.Success -> {
                 Toast.makeText(context, restoreCompleteMsg, Toast.LENGTH_SHORT).show()
                 onAction(SettingsAction.ResetBackup)
             }
 
-            is RestoreState.Failure -> {
-                val errorMsg = when (state.restoreState.exception) {
-                    RestoreFailedException.InvalidFile -> invalidBackupMsg
-                    RestoreFailedException.OldSchema -> oldSchemaMsg
+            is AsyncOp.Error -> {
+                val errorMsg = when (restoreState.cause) {
+                    RestoreException.InvalidFile -> invalidBackupMsg
+                    RestoreException.OldSchema -> oldSchemaMsg
+                    else -> restoreState.message ?: invalidBackupMsg
                 }
                 Toast.makeText(context, context.getString(R.string.restore_failed, errorMsg), Toast.LENGTH_LONG).show()
                 onAction(SettingsAction.ResetBackup)
@@ -138,7 +190,7 @@ fun SyncBackupSettingsScreen() {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.sync_and_backup)) },
+                title = { Text(text = stringResource(R.string.data_and_sync)) },
                 navigationIcon = {
                     FilledIconButton(
                         onClick = { navigator.navigateBack() },
@@ -168,32 +220,34 @@ fun SyncBackupSettingsScreen() {
                 }
             }
             item {
-                SettingSection {
-                    val isExporting = state.exportState is ExportState.Exporting || state.exportMarkdownState is ExportState.Exporting
+                SettingSection(
+                    title = stringResource(R.string.backup_and_restore)
+                ) {
+                    val isBackingUp = state.exportState.isLoading
                     SettingsItem(
-                        title = stringResource(R.string.export_data),
-                        subtitle = if (isExporting) stringResource(R.string.exporting) else stringResource(R.string.export_data_desc),
+                        title = stringResource(R.string.create_backup),
+                        subtitle = if (isBackingUp) stringResource(R.string.exporting) else stringResource(R.string.create_backup_desc),
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.upload_24px),
                                 null
                             )
                         },
-                        trailingContent = if (isExporting) {
+                        trailingContent = if (isBackingUp) {
                             { CircularWavyProgressIndicator(modifier = Modifier.size(20.dp)) }
                         } else null,
-                        enabled = !isExporting,
+                        enabled = !isBackingUp,
                         onClick = {
-                            if (!isExporting) {
-                                showExportDialog = true
+                            if (!isBackingUp) {
+                                showCreateBackupSheet = true
                             }
                         }
                     )
 
-                    val isRestoring = state.restoreState is RestoreState.Restoring
+                    val isRestoring = state.restoreState.isLoading
                     SettingsItem(
-                        title = stringResource(R.string.restore_data),
-                        subtitle = if (isRestoring) stringResource(R.string.restoring) else stringResource(R.string.restore_data_desc),
+                        title = stringResource(R.string.restore_backup),
+                        subtitle = if (isRestoring) stringResource(R.string.restoring) else stringResource(R.string.restore_backup_desc),
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.download_24px),
@@ -219,20 +273,80 @@ fun SyncBackupSettingsScreen() {
                 }
             }
             item {
+                SettingSection(
+                    title = stringResource(R.string.data_portability)
+                ) {
+                    val isExportingMarkdown = state.exportMarkdownState.isLoading
+                    SettingsItem(
+                        title = stringResource(R.string.export_markdown_archive),
+                        subtitle = if (isExportingMarkdown) stringResource(R.string.exporting) else stringResource(R.string.export_markdown_archive_desc),
+                        leadingContent = {
+                            Icon(
+                                painterResource(R.drawable.file_save_24px),
+                                null
+                            )
+                        },
+                        trailingContent = if (isExportingMarkdown) {
+                            { CircularWavyProgressIndicator(modifier = Modifier.size(20.dp)) }
+                        } else null,
+                        enabled = !isExportingMarkdown,
+                        onClick = {
+                            if (!isExportingMarkdown) {
+                                showExportMarkdownSheet = true
+                            }
+                        }
+                    )
+
+                    val isImportingMarkdown = state.importMarkdownState.isLoading
+                    SettingsItem(
+                        title = stringResource(R.string.import_markdown),
+                        subtitle = if (isImportingMarkdown) stringResource(R.string.restoring) else stringResource(R.string.import_markdown_desc),
+                        leadingContent = {
+                            Icon(
+                                painterResource(R.drawable.folder_open_24px),
+                                null
+                            )
+                        },
+                        trailingContent = if (isImportingMarkdown) {
+                            { CircularWavyProgressIndicator(modifier = Modifier.size(20.dp)) }
+                        } else null,
+                        enabled = !isImportingMarkdown,
+                        onClick = {
+                            if (!isImportingMarkdown) {
+                                importMarkdownLauncher.launch(
+                                    arrayOf(
+                                        "text/markdown",
+                                        "text/x-markdown",
+                                        "text/plain",
+                                        "application/zip",
+                                        "*/*"
+                                    )
+                                )
+                            }
+                        }
+                    )
+                }
+            }
+            item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
 
-    if (showExportDialog) {
-        ExportBottomSheet(
-            onDismiss = { showExportDialog = false },
-            onExport = { format, includeMedia ->
-                if (format == ExportFormat.JSON) {
-                    onAction(SettingsAction.OnExportJournals(includeMedia))
-                } else {
-                    onAction(SettingsAction.OnExportMarkdown(includeMedia))
-                }
+    if (showCreateBackupSheet) {
+        CreateBackupBottomSheet(
+            onDismiss = { showCreateBackupSheet = false },
+            onBackup = { includeMedia ->
+                onAction(SettingsAction.OnExportJournals(includeMedia))
+            }
+        )
+    }
+
+    if (showExportMarkdownSheet) {
+        ExportMarkdownBottomSheet(
+            onDismiss = { showExportMarkdownSheet = false },
+            onExport = { includeMedia ->
+                onAction(SettingsAction.OnExportMarkdown(includeMedia))
             }
         )
     }
@@ -260,3 +374,6 @@ fun SyncBackupSettingsScreen() {
         )
     }
 }
+
+@Composable
+fun SyncBackupSettingsScreen() = DataSyncSettingsScreen()

@@ -28,7 +28,7 @@ import com.denser.june.presentation.screens.settings.screens.GeneralSettingsScre
 import com.denser.june.presentation.screens.settings.screens.MapSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.AppearanceSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.PrivacySecuritySettingsScreen
-import com.denser.june.presentation.screens.settings.screens.SyncBackupSettingsScreen
+import com.denser.june.presentation.screens.settings.screens.DataSyncSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.AboutSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.DeveloperSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.EditorSettingsScreen
@@ -128,7 +128,7 @@ fun JuneNavHost(
         }
 
         composable<Route.SyncBackupSettings> {
-            SyncBackupSettingsScreen()
+            DataSyncSettingsScreen()
         }
 
         composable<Route.AboutSettings> {

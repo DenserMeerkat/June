@@ -1,5 +1,6 @@
 package com.denser.june.presentation.screens.settings
 
+import android.net.Uri
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.ThemeMode
@@ -24,6 +25,9 @@ sealed interface SettingsAction {
     data class OnRestoreJournals(val path: String): SettingsAction
     data class OnExportJournals(val includeMedia: Boolean = true) : SettingsAction
     data class OnExportMarkdown(val includeMedia: Boolean = true) : SettingsAction
+    data class OnImportMarkdownFiles(val uris: List<Uri>) : SettingsAction
+    data class OnImportMarkdownZip(val uri: Uri) : SettingsAction
+    data object ResetMarkdownImport : SettingsAction
     data class OnAppLockToggle(val enabled: Boolean) : SettingsAction
     data class UpdateLockType(val type: LockType) : SettingsAction
     data class UpdatePinHash(val hash: String?) : SettingsAction

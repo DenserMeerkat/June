@@ -2,18 +2,13 @@ package com.denser.june.presentation.screens.settings.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -21,6 +16,8 @@ import androidx.compose.ui.unit.sp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.Fonts
 import com.denser.june.core.domain.model.enums.FontCategory
+import com.denser.june.presentation.components.JuneRadioTile
+import com.denser.june.presentation.components.JuneRadioTilePosition
 import com.denser.june.presentation.theme.googleFontsMetadata
 import com.denser.june.presentation.theme.getAppFontFamily
 
@@ -122,76 +119,21 @@ fun FontSelector(
 
             items(allFontNames, key = { it }) { name ->
                 val isBundled = remember(name) { bundledFonts.any { it.fullName == name } }
-                FontItem(
-                    name = name,
-                    isSelected = name == selectedFontName,
-                    isBundled = isBundled,
-                    onClick = { onFontSelect(name) }
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun FontItem(
-    name: String,
-    isSelected: Boolean,
-    isBundled: Boolean = false,
-    onClick: () -> Unit
-) {
-    val fontFamily = getAppFontFamily(name)
-
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else Color.Transparent,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = name,
-                    style = TextStyle(
+                val fontFamily = getAppFontFamily(name)
+                JuneRadioTile(
+                    selected = name == selectedFontName,
+                    title = name,
+                    badge = if (isBundled) "Bundled" else null,
+                    titleTextStyle = TextStyle(
                         fontFamily = fontFamily,
                         fontSize = 18.sp
                     ),
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    radioPosition = JuneRadioTilePosition.Trailing,
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    onClick = { onFontSelect(name) }
                 )
-
-                if (isBundled) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "Bundled",
-                            style = MaterialTheme.typography.labelSmallEmphasized,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                }
             }
-
-            RadioButton(
-                selected = isSelected,
-                onClick = onClick,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = MaterialTheme.colorScheme.primary,
-                    unselectedColor = MaterialTheme.colorScheme.outlineVariant
-                )
-            )
         }
     }
 }
