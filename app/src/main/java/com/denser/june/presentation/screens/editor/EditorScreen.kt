@@ -110,7 +110,7 @@ fun EditorScreen() {
     LaunchedEffect(isEditorReady, state.content) {
         if (isEditorReady && !hasLoadedInitialContent) {
             if (state.content.isNotEmpty()) {
-                hyphenState.setMarkdown(state.content)
+                hyphenState.setMarkdownAsync(state.content)
             }
             hasLoadedInitialContent = true
         }
