@@ -1,58 +1,71 @@
 [
-    {
-        "version": "v1.0.1",
-        "changes": [
-          "Added Chinese (Simplified) localization support.",
-          "Fixed crash when opening libraries screen in release builds.",
-          "Prepared the app for F-Droid release."
+  {
+    "version": "v1.1.0",
+    "changes": [
+      "Integrated search into home screen.",
+      "Open markdown files into June.",
+      "Markdown export & import for notes.",
+      "Palette selection preview bug resolved."
+    ]
+  },
+  {
+    "version": "v1.0.1",
+    "changes": [
+      "Added Chinese (Simplified) localization support.",
+      "Fixed crash when opening libraries screen in release builds.",
+      "Prepared the app for F-Droid release."
+    ]
+  },
+  {
+    "version": "v1.0.0",
+    "changes": [
+      "Official v1.0.0 stable release!",
+      "Added full RTL support and language switcher.",
+      "Added German localization support.",
+      "Added Force LTR interface setting toggle."
+    ]
+  },
+  {
+    "version": "v1.0.0-beta04",
+    "changes": [
+      "Added option to export journals as Markdown files.",
+      "Overhauled sync engine with improved conflict resolution and progress notifications.",
+      "Editor enhancements including list item indentation, smoother text selection, and keyboard padding fixes.",
+      "Added monochrome app icon support, fixed notification icon, and fixed recents menu styling with screen privacy enabled.",
+      "Added Developer Options in Settings with log toggles and live log console viewer."
+    ]
+  },
+  {
+    "version": "v1.0.0-beta03",
+    "changes": [
+      "Added security question and answer recovery option for App Lock.",
+      "Added option to always open a new note on startup.",
+      "Tapping reminder notifications now opens a new note.",
+      "Added checklist toggle buttons to the editor toolbar.",
+      "Improved blockquote formatting and visual styling in the editor.",
+      "Added settings toggles for keyboard auto-capitalization and auto-correction preferences.",
+      {
+        "text": "Fixed Google account linking to use G-Drive sync.",
+        "flavors": [
+          "play"
         ]
-    },
-    {
-        "version": "v1.0.0",
-        "changes": [
-          "Official v1.0.0 stable release!",
-          "Added full RTL support and language switcher.",
-          "Added German localization support.",
-          "Added Force LTR interface setting toggle."
+      }
+    ]
+  },
+  {
+    "version": "v1.0.0-beta02",
+    "changes": [
+      {
+        "text": "Added Google Drive sync to back up and restore your journals.",
+        "flavors": [
+          "play"
         ]
-    },
-    {
-        "version": "v1.0.0-beta04",
-        "changes": [
-          "Added option to export journals as Markdown files.",
-          "Overhauled sync engine with improved conflict resolution and progress notifications.",
-          "Editor enhancements including list item indentation, smoother text selection, and keyboard padding fixes.",
-          "Added monochrome app icon support, fixed notification icon, and fixed recents menu styling with screen privacy enabled.",
-          "Added Developer Options in Settings with log toggles and live log console viewer."
-        ]
-    },
-    {
-        "version": "v1.0.0-beta03",
-        "changes": [
-          "Added security question and answer recovery option for App Lock.",
-          "Added option to always open a new note on startup.",
-          "Tapping reminder notifications now opens a new note.",
-          "Added checklist toggle buttons to the editor toolbar.",
-          "Improved blockquote formatting and visual styling in the editor.",
-          "Added settings toggles for keyboard auto-capitalization and auto-correction preferences.",
-          {
-            "text": "Fixed Google account linking to use G-Drive sync.",
-            "flavors": ["play"]
-          }
-        ]
-    },
-    {
-        "version": "v1.0.0-beta02",
-        "changes": [
-          {
-            "text": "Added Google Drive sync to back up and restore your journals.",
-            "flavors": ["play"]
-          },
-          "Fallback music preview providers when Spotify is unavailable.",
-          "Show 'What's Changed' sheet after an update.",
-          "General style, layout, and animation improvements."
-        ]
-    },
+      },
+      "Fallback music preview providers when Spotify is unavailable.",
+      "Show 'What's Changed' sheet after an update.",
+      "General style, layout, and animation improvements."
+    ]
+  },
   {
     "version": "v1.0.0-beta01",
     "changes": [
