@@ -11,7 +11,7 @@ import com.denser.june.core.data.preferences.JournalPreferencesImpl
 import com.denser.june.core.data.preferences.PrivacyPreferencesImpl
 import com.denser.june.core.data.preferences.SyncPreferencesImpl
 import com.denser.june.core.data.preferences.ThemePreferencesImpl
-import com.denser.june.core.data.remote.SonglinkApiService
+import com.denser.june.core.data.remote.SongLinkScraper
 import com.denser.june.core.data.remote.SpotifyScraper
 import com.denser.june.core.data.remote.DeezerFetcher
 import com.denser.june.core.data.remote.ItunesFetcher
@@ -32,10 +32,7 @@ import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.repository.SongRepository
 import com.denser.june.core.domain.sync.CloudProvider
 import com.denser.june.core.domain.sync.SyncManager
-import com.denser.june.core.utils.Constants
 import java.io.File
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,8 +43,6 @@ import android.content.Context
 import com.denser.june.core.data.remote.InternetInterceptor
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 val coreModule = module {
     singleOf(::DatabaseFactory)
@@ -73,21 +68,7 @@ val coreModule = module {
             .addInterceptor(InternetInterceptor(get()))
             .build()
     }
-    single {
-        val json = Json {
-            ignoreUnknownKeys = true
-            coerceInputValues = true
-        }
-        val contentType = "application/json".toMediaType()
-
-        Retrofit.Builder()
-            .baseUrl(Constants.ODESIL_URL)
-            .addConverterFactory(json.asConverterFactory(contentType))
-            .client(get<OkHttpClient>())
-            .build()
-    }
-
-    single { get<Retrofit>().create(SonglinkApiService::class.java) }
+    singleOf(::SongLinkScraper)
     singleOf(::SpotifyScraper)
     singleOf(::DeezerFetcher)
     singleOf(::ItunesFetcher)
