@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -21,6 +22,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class JuneApplication : Application(), ImageLoaderFactory {
     private val journalRepo: JournalRepository by inject()
+    private val songRepo: com.denser.june.core.domain.repository.SongRepository by inject()
     private val imageLoader: ImageLoader by inject()
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -44,8 +46,12 @@ class JuneApplication : Application(), ImageLoaderFactory {
             try {
                 delay(3000L.milliseconds)
                 val allJournals = journalRepo.getAllJournalsIncludeDeletedSync()
-                val activePaths = allJournals.flatMap { it.images }
+                val librarySongs = songRepo.getLibrarySongs().first()
+                val activePaths = allJournals.flatMap { it.images } +
+                    allJournals.mapNotNull { it.songDetails?.localThumbnailPath } +
+                    librarySongs.mapNotNull { it.localThumbnailPath }
                 FileUtils.cleanOrphanedFiles(applicationContext, activePaths)
+                songRepo.cleanupUnreferencedSongMedia(allJournals)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

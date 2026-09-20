@@ -452,7 +452,8 @@
     <string name="add_item">إضافة عنصر</string>
     <string name="add_location_and_map">إضافة موقع وخريطة</string>
     <string name="add_photo_or_video">أضف صورة / فيديو</string>
-    <string name="add_song_link">إضافة رابط أغنية</string>
+    <string name="add_song">إضافة أغنية</string>
+    <string name="add_song_link">إضافة أغنية</string>
     <string name="add_title">إضافة عنوان</string>
     <string name="capture_media">تسجيل وسائط</string>
     <string name="date_time_picker">مُحدد التاريخ والوقت</string>

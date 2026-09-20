@@ -431,7 +431,8 @@
     <string name="add_item">添加项目</string>
     <string name="add_location_and_map">添加地点与地图</string>
     <string name="add_photo_or_video">添加图片/视频</string>
-    <string name="add_song_link">添加歌曲链接</string>
+    <string name="add_song">添加歌曲</string>
+    <string name="add_song_link">添加歌曲</string>
     <string name="add_title">标题</string>
     <string name="capture_media">媒体采集</string>
     <string name="date_time_picker">日期和时间选择器</string>

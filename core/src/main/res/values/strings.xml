@@ -537,7 +537,8 @@
     <string name="add_item">Add Item</string>
     <string name="add_location_and_map">Add location &amp; map</string>
     <string name="add_photo_or_video">Add photo / video</string>
-    <string name="add_song_link">Add song link</string>
+    <string name="add_song">Add Song</string>
+    <string name="add_song_link">Add Song</string>
     <string name="add_title">Add title</string>
     <string name="capture_media">Capture Media</string>
     <string name="date_time_picker">Date and Time Picker</string>

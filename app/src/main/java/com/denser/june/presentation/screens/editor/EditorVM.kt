@@ -1,5 +1,6 @@
 package com.denser.june.presentation.screens.editor
 
+import android.net.Uri
 import android.util.Patterns
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -9,8 +10,13 @@ import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.repository.SongRepository
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.SongDetails
+import com.denser.june.core.domain.model.SongFetchEvent
+import com.denser.june.core.domain.model.SongFetchProgress
 import com.denser.june.core.utils.FileUtils
 import com.denser.june.core.utils.getTodayAtMidnight
+import com.denser.hyphen.model.TriggerConfig
+import com.denser.hyphen.state.HyphenTextState
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import kotlinx.coroutines.FlowPreview
@@ -32,6 +38,14 @@ class EditorVM(
     private val journalId = editorRoute?.journalId
         ?: savedStateHandle.tryRoute<Route.JournalMedia>()?.journalId
         ?: savedStateHandle.tryRoute<Route.JournalMediaDetail>()?.journalId
+
+    val hyphenState = HyphenTextState(
+        initialText = editorRoute?.initialContent ?: "",
+        initialTriggerConfigs = listOf(
+            TriggerConfig(trigger = "@", scheme = "person"),
+            TriggerConfig(trigger = "#", scheme = "topic")
+        )
+    )
 
     private var existingJournal: Journal? = null
 
@@ -77,6 +91,25 @@ class EditorVM(
         viewModelScope.launch {
             journalPrefs.timeFormat().collect { format ->
                 _state.update { it.copy(timeFormat = format) }
+            }
+        }
+
+        viewModelScope.launch {
+            combine(
+                songRepo.getLibrarySongs(),
+                journalRepo.getJournals()
+            ) { libSongs, journals ->
+                val libKeys = libSongs.map { "${it.title.trim().lowercase()}_${it.artistName.trim().lowercase()}" }.toSet()
+                val distinctUnimported = journals
+                    .mapNotNull { it.songDetails }
+                    .filter { song ->
+                        val key = "${song.title.trim().lowercase()}_${song.artistName.trim().lowercase()}"
+                        key !in libKeys && (song.title.isNotBlank() || song.artistName.isNotBlank())
+                    }
+                    .distinctBy { "${it.title.trim().lowercase()}_${it.artistName.trim().lowercase()}" }
+                libSongs to distinctUnimported
+            }.collect { (libSongs, unimported) ->
+                _state.update { it.copy(librarySongs = libSongs, unimportedJournalSongs = unimported) }
             }
         }
 
@@ -138,6 +171,76 @@ class EditorVM(
             }
 
             is EditorAction.FetchSong -> fetchSongDetails(action.url)
+            is EditorAction.AttachLocalSong -> attachLocalSong(action.uri)
+            is EditorAction.SelectLibrarySong -> {
+                _state.update { it.copy(clipTrimmerSong = action.song, pendingStagedSong = action.song) }
+            }
+            is EditorAction.RemoveLibrarySong -> {
+                viewModelScope.launch {
+                    songRepo.removeFromLibrary(action.song)
+                }
+            }
+            is EditorAction.AddSongToLibrary -> {
+                viewModelScope.launch {
+                    val songKey = "${action.song.title.trim().lowercase()}_${action.song.artistName.trim().lowercase()}"
+                    _state.update { it.copy(importingSongKeys = it.importingSongKeys + songKey) }
+                    try {
+                        val result = songRepo.addToLibrary(action.song)
+                        if (result.isSuccess) {
+                            val updated = result.getOrThrow()
+                            if (_state.value.songDetails?.title == updated.title && _state.value.songDetails?.artistName == updated.artistName) {
+                                updateState { it.copy(songDetails = updated) }
+                            }
+                            _uiEvent.send("Added \"${updated.title}\" to library")
+                        } else {
+                            _uiEvent.send(result.exceptionOrNull()?.message ?: "Failed to add to library")
+                        }
+                    } finally {
+                        _state.update { it.copy(importingSongKeys = it.importingSongKeys - songKey) }
+                    }
+                }
+            }
+            is EditorAction.AddAllSongsToLibrary -> {
+                viewModelScope.launch {
+                    val allKeys = action.songs.map { "${it.title.trim().lowercase()}_${it.artistName.trim().lowercase()}" }.toSet()
+                    _state.update { it.copy(importingSongKeys = it.importingSongKeys + allKeys) }
+                    try {
+                        var successCount = 0
+                        for (song in action.songs) {
+                            val songKey = "${song.title.trim().lowercase()}_${song.artistName.trim().lowercase()}"
+                            try {
+                                val result = songRepo.addToLibrary(song)
+                                if (result.isSuccess) {
+                                    successCount++
+                                    val updated = result.getOrThrow()
+                                    if (_state.value.songDetails?.title == updated.title && _state.value.songDetails?.artistName == updated.artistName) {
+                                        updateState { it.copy(songDetails = updated) }
+                                    }
+                                }
+                            } finally {
+                                _state.update { it.copy(importingSongKeys = it.importingSongKeys - songKey) }
+                            }
+                        }
+                        if (successCount > 0) {
+                            _uiEvent.send("Added $successCount ${if (successCount == 1) "song" else "songs"} to library")
+                        }
+                    } finally {
+                        _state.update { it.copy(importingSongKeys = it.importingSongKeys - allKeys) }
+                    }
+                }
+            }
+            is EditorAction.EditLibrarySong -> Unit
+            is EditorAction.SaveLibrarySongMeta -> {
+                viewModelScope.launch {
+                    songRepo.updateLibrarySongMeta(action.original, action.updated)
+                    if (_state.value.songDetails?.localPreviewPath == action.original.localPreviewPath) {
+                        updateState { it.copy(songDetails = action.updated) }
+                    }
+                }
+            }
+            is EditorAction.OpenClipTrimmer -> _state.update { it.copy(clipTrimmerSong = action.songDetails, pendingStagedSong = action.songDetails) }
+            is EditorAction.DismissClipTrimmer -> _state.update { it.copy(clipTrimmerSong = null, pendingStagedSong = null) }
+            is EditorAction.SaveClip -> saveClip(action.startMs, action.endMs, action.songDetails)
             is EditorAction.RemoveSong -> updateState { it.copy(songDetails = null) }
 
             is EditorAction.SetLocation -> updateState { it.copy(location = action.location) }
@@ -229,6 +332,9 @@ class EditorVM(
 
             if (journal != null) {
                 existingJournal = journal
+                if (journal.content.isNotBlank()) {
+                    hyphenState.setMarkdownAsync(journal.content)
+                }
                 _state.update {
                     it.copy(
                         journalId = journal.id,
@@ -262,8 +368,10 @@ class EditorVM(
         viewModelScope.launch {
             if (existingJournal != null && !existingJournal!!.isDraft) return@launch
 
+            val currentMarkdown = if (hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
+
             if (currentState.title.isBlank() &&
-                currentState.content.isBlank() &&
+                currentMarkdown.isBlank() &&
                 currentState.emoji == null &&
                 currentState.images.isEmpty() &&
                 currentState.songDetails == null &&
@@ -277,7 +385,7 @@ class EditorVM(
             val journalToSave = Journal(
                 id = existingJournal?.id ?: "",
                 title = currentState.title,
-                content = currentState.content,
+                content = currentMarkdown,
                 emoji = currentState.emoji,
                 images = currentState.images,
                 location = currentState.location,
@@ -295,13 +403,13 @@ class EditorVM(
                 val newId = journalRepo.insertJournal(journalToSave)
                 val savedDraft = journalToSave.copy(id = newId)
                 existingJournal = savedDraft
-                _state.update { it.copy(journalId = newId, isDirty = false, isDraft = true) }
+                _state.update { it.copy(journalId = newId, content = currentMarkdown, isDirty = false, isDraft = true) }
             } else {
                 val imagesToDelete = existingJournal?.images.orEmpty().toSet() - currentState.images.toSet()
                 imagesToDelete.forEach { FileUtils.deleteMedia(it) }
                 journalRepo.updateJournal(journalToSave)
                 existingJournal = journalToSave
-                _state.update { it.copy(isDirty = false) }
+                _state.update { it.copy(content = currentMarkdown, isDirty = false) }
             }
         }
     }
@@ -310,11 +418,12 @@ class EditorVM(
         viewModelScope.launch {
             val currentState = _state.value
             val currentTime = System.currentTimeMillis()
+            val currentMarkdown = if (hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
 
             val journalToSave = Journal(
                 id = existingJournal?.id ?: "",
                 title = currentState.title,
-                content = currentState.content,
+                content = currentMarkdown,
                 emoji = currentState.emoji,
                 images = currentState.images,
                 location = currentState.location,
@@ -370,21 +479,78 @@ class EditorVM(
                 _uiEvent.send("Invalid URL format")
                 return@launch
             }
-            _state.update { it.copy(isFetchingSong = true) }
-            songRepo.fetchSongDetails(trimmedUrl)
-                .onSuccess { details ->
-                    updateState { it.copy(songDetails = details, isFetchingSong = false) }
-                }
-                .onFailure { error ->
-                    _state.update { it.copy(isFetchingSong = false) }
-                    error.printStackTrace()
-                    val msg = if (error.message?.contains("restricted") == true) {
-                        "Internet access is restricted in settings"
-                    } else {
-                        "Failed to fetch song details"
+            _state.update { it.copy(isFetchingSong = true, songFetchProgress = SongFetchProgress(1, 4, "Resolving song link…")) }
+            songRepo.fetchSongDetailsWithProgress(trimmedUrl).collect { event ->
+                when (event) {
+                    is SongFetchEvent.Progress -> {
+                        _state.update { it.copy(songFetchProgress = SongFetchProgress(event.step, event.totalSteps, event.label)) }
                     }
-                    _uiEvent.send(msg)
+                    is SongFetchEvent.Success -> {
+                        _state.update {
+                            it.copy(
+                                isFetchingSong = false,
+                                songFetchProgress = null,
+                                pendingStagedSong = event.details,
+                                clipTrimmerSong = event.details
+                            )
+                        }
+                    }
+                    is SongFetchEvent.Error -> {
+                        val error = event.exception
+                        val msg = if (error.message?.contains("restricted") == true) {
+                            "Internet access is restricted in settings"
+                        } else {
+                            "Failed to fetch song details"
+                        }
+                        _state.update {
+                            it.copy(
+                                isFetchingSong = false,
+                                songFetchProgress = SongFetchProgress(0, 4, msg, isError = true, errorMessage = msg)
+                            )
+                        }
+                        _uiEvent.send(msg)
+                    }
                 }
+            }
         }
+    }
+
+    fun attachLocalSong(uri: Uri) {
+        viewModelScope.launch {
+            _state.update { it.copy(isFetchingSong = true, songFetchProgress = SongFetchProgress(1, 2, "Importing audio file…")) }
+            songRepo.attachLocalAudioWithProgress(uri).collect { event ->
+                when (event) {
+                    is SongFetchEvent.Progress -> {
+                        _state.update { it.copy(songFetchProgress = SongFetchProgress(event.step, event.totalSteps, event.label)) }
+                    }
+                    is SongFetchEvent.Success -> {
+                        _state.update {
+                            it.copy(
+                                isFetchingSong = false,
+                                songFetchProgress = null,
+                                pendingStagedSong = event.details,
+                                clipTrimmerSong = event.details
+                            )
+                        }
+                    }
+                    is SongFetchEvent.Error -> {
+                        val msg = "Failed to attach audio: ${event.exception.message ?: "Unknown error"}"
+                        _state.update {
+                            it.copy(
+                                isFetchingSong = false,
+                                songFetchProgress = SongFetchProgress(0, 2, msg, isError = true, errorMessage = msg)
+                            )
+                        }
+                        _uiEvent.send(msg)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun saveClip(startMs: Long, endMs: Long?, songDetails: SongDetails? = null) {
+        val currentSong = songDetails ?: _state.value.clipTrimmerSong ?: _state.value.pendingStagedSong ?: _state.value.songDetails ?: return
+        val updatedSong = currentSong.copy(clipStartMs = startMs, clipEndMs = endMs)
+        updateState { it.copy(songDetails = updatedSong, clipTrimmerSong = null, pendingStagedSong = null) }
     }
 }

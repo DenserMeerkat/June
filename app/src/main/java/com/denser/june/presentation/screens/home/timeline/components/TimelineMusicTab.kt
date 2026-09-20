@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Shape
 import com.denser.june.core.utils.toLocalDate
 import com.denser.june.presentation.components.DayJournalGroupData
 import com.denser.june.presentation.components.rememberJournalGroupShape
+import java.io.File
 import java.time.LocalDate
 
 @Composable
@@ -126,7 +127,8 @@ fun TimelineMusicTab(
             }
         }
 
-        if (activeSong != null && isInternetAllowed) {
+        val hasLocalAudio = activeSong?.localPreviewPath?.let { File(it).exists() } == true
+        if (activeSong != null && (isInternetAllowed || hasLocalAudio)) {
             DockedMiniPlayer(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -151,7 +153,13 @@ fun DockedMiniPlayer(
     modifier: Modifier = Modifier
 ) {
     val isInternetAllowed = LocalInternetAllowed.current
-    val themeColors = rememberDynamicThemeColors(if (isInternetAllowed) song.thumbnailUrl else null)
+    val localArtFile = remember(song.localThumbnailPath) {
+        song.localThumbnailPath?.let { File(it) }?.takeIf { it.exists() && it.length() > 0L }
+    }
+    val artModel = remember(localArtFile, song.thumbnailUrl, isInternetAllowed) {
+        if (localArtFile != null) localArtFile else if (isInternetAllowed) song.thumbnailUrl else null
+    }
+    val themeColors = rememberDynamicThemeColors(artModel)
 
     Surface(
         modifier = modifier
@@ -179,6 +187,7 @@ fun DockedMiniPlayer(
                 ) {
                     RestrictedAsyncImage(
                         imageUrl = song.thumbnailUrl,
+                        localPath = song.localThumbnailPath,
                         iconSize = 20.dp,
                         iconTint = themeColors.onSurfaceVariant.copy(alpha = 0.5f),
                         modifier = Modifier.fillMaxSize()
@@ -247,12 +256,14 @@ fun TimelineMusicDayGroup(
         journals.forEachIndexed { index, journal ->
             val song = journal.songDetails ?: return@forEachIndexed
             val shape = rememberJournalGroupShape(index = index, totalCount = journals.size)
+            val isSongActive = (activeSong?.localPreviewPath != null && activeSong.localPreviewPath == song.localPreviewPath) ||
+                    (activeSong?.previewUrl != null && activeSong.previewUrl == song.previewUrl)
 
             MusicListTile(
                 journal = journal,
                 song = song,
                 shape = shape,
-                isActive = activeSong?.previewUrl == song.previewUrl,
+                isActive = isSongActive,
                 onClick = { onSongClick(song, journal.id) }
             )
         }
@@ -269,6 +280,7 @@ fun MusicListTile(
     onClick: () -> Unit
 ) {
     val isInternetAllowed = LocalInternetAllowed.current
+    val hasLocalAudio = song.localPreviewPath?.let { File(it).exists() } == true
     var showMenu by remember { mutableStateOf(false) }
 
     val availableLinks = remember(song.links) {
@@ -288,7 +300,7 @@ fun MusicListTile(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .clickable(enabled = isInternetAllowed) { onClick() },
+            .clickable(enabled = isInternetAllowed || hasLocalAudio) { onClick() },
         shape = shape,
         colors = CardDefaults.cardColors(
             containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
@@ -311,6 +323,7 @@ fun MusicListTile(
             ) {
                 RestrictedAsyncImage(
                     imageUrl = song.thumbnailUrl,
+                    localPath = song.localThumbnailPath,
                     iconSize = 20.dp,
                     iconTint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     modifier = Modifier.fillMaxSize()

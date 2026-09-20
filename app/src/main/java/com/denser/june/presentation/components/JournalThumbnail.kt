@@ -34,8 +34,6 @@ fun JournalThumbnail(
     mediaOperations: MediaOperations = remember { MediaOperations(onMediaClick = null) }
 ) {
     val songDetails = journal.songDetails
-    val isInternetAllowed = LocalInternetAllowed.current
-    val hasThumbnail = isInternetAllowed && !songDetails?.thumbnailUrl.isNullOrBlank()
 
     Surface(
         modifier = modifier.size(width = 96.dp, height = 60.dp),
@@ -53,41 +51,29 @@ fun JournalThumbnail(
                 )
             }
             songDetails != null -> {
-                if (hasThumbnail) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        AsyncImage(
-                            model = songDetails.thumbnailUrl,
-                            contentDescription = songDetails.title,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .padding(4.dp)
-                                .size(20.dp)
-                                .background(Color.Black.copy(alpha = 0.45f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.music_note_24px),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(12.dp)
-                            )
-                        }
-                    }
-                } else {
-                    Box(
+                Box(modifier = Modifier.fillMaxSize()) {
+                    RestrictedAsyncImage(
+                        imageUrl = songDetails.thumbnailUrl,
+                        localPath = songDetails.localThumbnailPath,
+                        contentDescription = songDetails.title,
                         modifier = Modifier.fillMaxSize(),
+                        iconSize = 24.dp,
+                        iconTint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(4.dp)
+                            .size(20.dp)
+                            .background(Color.Black.copy(alpha = 0.45f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.music_note_24px),
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            modifier = Modifier.size(24.dp)
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
                         )
                     }
                 }

@@ -445,6 +445,7 @@
     <string name="add_item">Füge Gegenstand hinzu</string>
     <string name="add_location_and_map">Standort &amp; Karte hinzufügen</string>
     <string name="add_photo_or_video">Foto / Video hinzufügen</string>
-    <string name="add_song_link">Lied Link hinzufügen</string>
+    <string name="add_song">Lied hinzufügen</string>
+    <string name="add_song_link">Lied hinzufügen</string>
     <string name="take_photo_or_video">Foto / Video aufnehmen</string>
 </resources>

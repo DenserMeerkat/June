@@ -36,8 +36,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.denser.hyphen.model.TriggerConfig
-import com.denser.hyphen.state.rememberHyphenTextState
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
@@ -81,14 +79,7 @@ fun EditorScreen() {
     val dialogState = rememberEditorDialogState()
     var showOptionsSheet by remember { mutableStateOf(false) }
     val isEditorReady = !state.isLoading
-    val hyphenState = rememberHyphenTextState(
-        triggerConfigs = remember {
-            listOf(
-                TriggerConfig(trigger = "@", scheme = "person"),
-                TriggerConfig(trigger = "#", scheme = "topic")
-            )
-        }
-    )
+    val hyphenState = viewModel.hyphenState
 
     val activeTrigger = hyphenState.activeTrigger
     val activeTagQuery = activeTrigger
@@ -102,17 +93,6 @@ fun EditorScreen() {
         val trimmed = tag.trim()
         if (trimmed.isNotBlank() && state.tags.none { it.equals(trimmed, ignoreCase = true) }) {
             viewModel.onAction(EditorAction.UpdateTags(state.tags + trimmed))
-        }
-    }
-
-    var hasLoadedInitialContent by remember(state.journalId) { mutableStateOf(false) }
-
-    LaunchedEffect(isEditorReady, state.content) {
-        if (isEditorReady && !hasLoadedInitialContent) {
-            if (state.content.isNotEmpty()) {
-                hyphenState.setMarkdownAsync(state.content)
-            }
-            hasLoadedInitialContent = true
         }
     }
 
@@ -164,7 +144,7 @@ fun EditorScreen() {
             },
             frontMediaPath = state.images.lastOrNull(),
             onRemoveSong = { viewModel.onAction(EditorAction.RemoveSong) },
-            onSongSheetToggle = { dialogState.showSongSheet = true },
+            onSongSheetToggle = { navigator.navigateTo(Route.AddSong, isSingleTop = true) },
             onRemoveLocation = { viewModel.onAction(EditorAction.RemoveLocation) },
             onLocationDialogToggle = { dialogState.showLocationDialog = true },
         )

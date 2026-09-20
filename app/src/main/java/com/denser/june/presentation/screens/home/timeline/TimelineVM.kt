@@ -26,6 +26,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import java.time.YearMonth
+import java.io.File
+import androidx.core.net.toUri
 
 enum class TimelineTab(@androidx.annotation.StringRes val labelRes: Int, val iconRes: Int) {
     Journals(R.string.journals, R.drawable.list_alt_24px),
@@ -134,9 +136,21 @@ class TimelineVM(
         viewModelScope.launch {
             while (isActive) {
                 if (_isPlaying.value) {
-                    val duration = exoPlayer.duration.coerceAtLeast(1)
-                    val position = exoPlayer.currentPosition
-                    _sliderProgress.value = position.toFloat() / duration.toFloat()
+                    val active = _activeSong.value
+                    val startMs = (active?.clipStartMs ?: 0L).coerceAtLeast(0L)
+                    val totalDuration = exoPlayer.duration.coerceAtLeast(1L)
+                    val effectiveEndMs = active?.clipEndMs?.coerceAtMost(totalDuration)?.takeIf { it > startMs } ?: totalDuration
+                    val clipSpan = (effectiveEndMs - startMs).coerceAtLeast(1L)
+                    val currentPos = exoPlayer.currentPosition
+
+                    if (active?.clipEndMs != null && currentPos >= effectiveEndMs) {
+                        exoPlayer.seekTo(startMs)
+                        exoPlayer.pause()
+                        _sliderProgress.value = 0f
+                    } else {
+                        val offsetInClip = (currentPos - startMs).coerceIn(0L, clipSpan)
+                        _sliderProgress.value = offsetInClip.toFloat() / clipSpan.toFloat()
+                    }
                 }
                 delay(100)
             }
@@ -162,18 +176,32 @@ class TimelineVM(
     }
 
     fun onSongSelected(song: SongDetails, journalId: String, autoPlay: Boolean = true) {
-        if (!isInternetAllowed.value) return
+        val hasLocalAudio = song.localPreviewPath?.let { File(it).exists() } == true
+        if (!hasLocalAudio && !isInternetAllowed.value) return
         playingJournalId = journalId
-        if (_activeSong.value?.previewUrl == song.previewUrl) {
+        val sameSong = (_activeSong.value?.localPreviewPath != null && _activeSong.value?.localPreviewPath == song.localPreviewPath) ||
+                (_activeSong.value?.previewUrl != null && _activeSong.value?.previewUrl == song.previewUrl)
+        if (sameSong) {
             togglePlayPause()
         } else {
             _activeSong.value = song
-            val url = song.previewUrl
-            if (url != null) {
+            val localFile = song.localPreviewPath?.let { File(it) }?.takeIf { it.exists() && it.length() > 0L }
+            val uri = if (localFile != null) {
+                localFile.toUri()
+            } else if (isInternetAllowed.value && song.previewUrl != null) {
+                song.previewUrl?.toUri()
+            } else {
+                null
+            }
+            if (uri != null) {
                 exoPlayer.stop()
                 exoPlayer.clearMediaItems()
-                exoPlayer.setMediaItem(MediaItem.fromUri(url))
+                exoPlayer.setMediaItem(MediaItem.fromUri(uri))
                 exoPlayer.prepare()
+                val startMs = (song.clipStartMs ?: 0L).coerceAtLeast(0L)
+                if (startMs > 0) {
+                    exoPlayer.seekTo(startMs)
+                }
                 if (autoPlay) {
                     exoPlayer.play()
                 }
@@ -185,6 +213,14 @@ class TimelineVM(
         if (exoPlayer.isPlaying) {
             exoPlayer.pause()
         } else {
+            val active = _activeSong.value
+            val startMs = (active?.clipStartMs ?: 0L).coerceAtLeast(0L)
+            val totalDuration = exoPlayer.duration.coerceAtLeast(1L)
+            val effectiveEndMs = active?.clipEndMs?.coerceAtMost(totalDuration)?.takeIf { it > startMs } ?: totalDuration
+            val currentPos = exoPlayer.currentPosition
+            if (currentPos < startMs || (active?.clipEndMs != null && currentPos >= effectiveEndMs)) {
+                exoPlayer.seekTo(startMs)
+            }
             if (exoPlayer.mediaItemCount > 0) exoPlayer.play()
         }
     }

@@ -22,6 +22,9 @@ sealed interface Route {
     data class JournalMedia(val journalId: String) : Route
 
     @Serializable
+    data object AddSong : Route
+
+    @Serializable
     data class JournalMediaDetail(
         val journalId: String,
         val initialIndex: Int

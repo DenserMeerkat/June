@@ -15,6 +15,7 @@ import androidx.navigation.toRoute
 import com.denser.june.presentation.components.JuneMediaLightbox
 import com.denser.june.presentation.screens.editor.EditorVM
 import com.denser.june.presentation.screens.editor.EditorScreen
+import com.denser.june.presentation.screens.editor.screens.AddSongScreen
 import com.denser.june.presentation.screens.editor.screens.ItemGalleryScreen
 import com.denser.june.presentation.screens.home.HomeScreen
 import com.denser.june.presentation.screens.settings.screens.FontSelectionScreen
@@ -72,6 +73,17 @@ fun JuneNavHost(
             }
             val viewModel: EditorVM = koinViewModel(viewModelStoreOwner = parentEntry)
             ItemGalleryScreen(viewModel = viewModel)
+        }
+
+        composable<Route.AddSong> { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry<Route.Editor>()
+            }
+            val viewModel: EditorVM = koinViewModel(viewModelStoreOwner = parentEntry)
+            AddSongScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable<Route.MediaViewerRoute>(

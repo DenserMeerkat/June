@@ -14,12 +14,14 @@ import com.denser.june.core.utils.FileUtils
 import com.denser.june.presentation.components.JuneDialog
 import com.denser.june.presentation.components.JuneDateTimePicker
 import com.denser.june.presentation.components.JuneDateTimePickerMode
+import com.denser.june.presentation.navigation.AppNavigator
+import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.editor.components.AddItemSheet
 import com.denser.june.presentation.screens.editor.components.AddLocationDialog
-import com.denser.june.presentation.screens.editor.components.AddSongSheet
 import com.denser.june.presentation.screens.editor.components.JournalEmojiPickerDialog
 import com.denser.june.presentation.screens.editor.components.JournalTagsDialog
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
+import org.koin.compose.koinInject
 
 class EditorDialogState {
     var showExitDialog by mutableStateOf(false)
@@ -29,7 +31,6 @@ class EditorDialogState {
     var showAddItemSheet by mutableStateOf(false)
     var showEmojiPicker by mutableStateOf(false)
     var showCameraSelectionDialog by mutableStateOf(false)
-    var showSongSheet by mutableStateOf(false)
     var showLocationDialog by mutableStateOf(false)
     var showTagsDialog by mutableStateOf(false)
 }
@@ -45,6 +46,7 @@ fun EditorModals(
     onAction: (EditorAction) -> Unit
 ) {
     val context = LocalContext.current
+    val navigator = koinInject<AppNavigator>()
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var tempVideoUri by remember { mutableStateOf<Uri?>(null) }
@@ -146,16 +148,6 @@ fun EditorModals(
         )
     }
 
-    if (dialogState.showSongSheet) {
-        AddSongSheet(
-            songDetails = editorState.songDetails,
-            isFetching = editorState.isFetchingSong,
-            onFetchDetails = { link -> onAction(EditorAction.FetchSong(link)) },
-            onRemoveSong = { onAction(EditorAction.RemoveSong) },
-            onDismiss = { dialogState.showSongSheet = false }
-        )
-    }
-
     if (dialogState.showLocationDialog) {
         AddLocationDialog(
             existingLocation = editorState.location,
@@ -174,7 +166,7 @@ fun EditorModals(
             },
             onAddSongClick = {
                 dialogState.showAddItemSheet = false
-                dialogState.showSongSheet = true
+                navigator.navigateTo(Route.AddSong, isSingleTop = true)
             },
             onAddLocationClick = {
                 dialogState.showAddItemSheet = false

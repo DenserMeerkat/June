@@ -90,7 +90,7 @@ fun AddItemSheet(
                 )
                 AddItem(
                     icon = R.drawable.music_note_add_24px,
-                    text = stringResource(R.string.add_song_link),
+                    text = stringResource(R.string.add_song),
                     onClick = { onAddSongClick(); onDismiss() }
                 )
                 AddItem(

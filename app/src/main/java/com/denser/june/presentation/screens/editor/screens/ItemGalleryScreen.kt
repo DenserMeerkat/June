@@ -31,17 +31,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
+import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.screens.editor.EditorAction
 import com.denser.june.presentation.screens.editor.components.AddLocationDialog
-import com.denser.june.presentation.screens.editor.components.AddSongSheet
 import com.denser.june.presentation.screens.editor.components.JournalMapItem
 import com.denser.june.presentation.screens.editor.components.JournalMediaItem
 import com.denser.june.presentation.screens.editor.components.JournalSongItem
 import com.denser.june.presentation.screens.editor.components.MediaOperations
 import com.denser.june.presentation.screens.editor.EditorVM
+import android.widget.Toast
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,8 +54,14 @@ fun ItemGalleryScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val navigator = koinInject<AppNavigator>()
+    val context = LocalContext.current
 
-    var showSongSheet by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     var showLocationDialog by remember { mutableStateOf(false) }
 
     val mediaOperations = remember(state.images) {
@@ -70,7 +79,7 @@ fun ItemGalleryScreen(
             },
             frontMediaPath = state.images.lastOrNull(),
             onRemoveSong = { viewModel.onAction(EditorAction.RemoveSong) },
-            onSongSheetToggle = { showSongSheet = true },
+            onSongSheetToggle = { navigator.navigateTo(Route.AddSong, isSingleTop = true) },
             onRemoveLocation = { viewModel.onAction(EditorAction.RemoveLocation) },
             onLocationDialogToggle = { showLocationDialog = true },
         )
@@ -113,11 +122,21 @@ fun ItemGalleryScreen(
         ) {
             if (state.songDetails != null) {
                 item(key = "song_card", span = { GridItemSpan(2) }) {
+                    val currentSong = state.songDetails!!
+                    val isInLibrary = remember(currentSong, state.librarySongs) {
+                        state.librarySongs.any {
+                            it.title.equals(currentSong.title, ignoreCase = true) &&
+                            it.artistName.equals(currentSong.artistName, ignoreCase = true)
+                        }
+                    }
                     JournalSongItem(
-                        details = state.songDetails!!,
+                        details = currentSong,
                         isFetching = state.isFetchingSong,
                         onRemove = mediaOperations.onRemoveSong,
-                        onEdit = { mediaOperations.onSongSheetToggle(true) }
+                        onEdit = { mediaOperations.onSongSheetToggle(true) },
+                        onTrim = { viewModel.onAction(EditorAction.OpenClipTrimmer(currentSong)) },
+                        isInLibrary = isInLibrary,
+                        onAddToLibrary = { viewModel.onAction(EditorAction.AddSongToLibrary(currentSong)) }
                     )
                 }
             }
@@ -144,19 +163,7 @@ fun ItemGalleryScreen(
         }
     }
 
-    if (showSongSheet) {
-        AddSongSheet(
-            songDetails = state.songDetails,
-            isFetching = state.isFetchingSong,
-            onFetchDetails = { link ->
-                viewModel.onAction(EditorAction.FetchSong(link))
-            },
-            onRemoveSong = {
-                viewModel.onAction(EditorAction.RemoveSong)
-            },
-            onDismiss = { showSongSheet = false }
-        )
-    }
+
     if (showLocationDialog) {
         AddLocationDialog(
             existingLocation = state.location,

@@ -22,21 +22,29 @@ import com.denser.june.presentation.components.JuneSongPlayerCard
 import com.denser.june.presentation.utils.rememberSongPlayerState
 import com.denser.june.core.R
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun JournalSongItem(
     details: SongDetails?,
     isFetching: Boolean,
     onRemove: () -> Unit,
     onEdit: () -> Unit,
+    onTrim: (() -> Unit)? = null,
+    onAddToLibrary: (() -> Unit)? = null,
+    isInLibrary: Boolean = true,
     modifier: Modifier = Modifier.fillMaxWidth().aspectRatio(1.7f)
 ) {
     val playerState = rememberSongPlayerState(
-        previewUrl = details?.previewUrl
+        previewUrl = details?.previewUrl,
+        localPreviewPath = details?.localPreviewPath,
+        clipStartMs = details?.clipStartMs,
+        clipEndMs = details?.clipEndMs
     )
 
     var showMenu by remember { mutableStateOf(false) }
-    var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
-    val interactionSource = remember { MutableInteractionSource() }
 
     when {
         isFetching -> {
@@ -47,23 +55,9 @@ fun JournalSongItem(
             Box(
                 modifier = modifier
                     .clip(RoundedCornerShape(32.dp))
-                    .indication(interactionSource, LocalIndication.current)
-                    .then(
-                        Modifier.pointerInput(Unit) {
-                            detectTapGestures(
-                                onTap = { onEdit() },
-                                onLongPress = { offset ->
-                                    showMenu = true
-                                    pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
-                                },
-                                onPress = { offset ->
-                                    val press = PressInteraction.Press(offset)
-                                    interactionSource.emit(press)
-                                    tryAwaitRelease()
-                                    interactionSource.emit(PressInteraction.Release(press))
-                                },
-                            )
-                        }
+                    .combinedClickable(
+                        onClick = { onEdit() },
+                        onLongClick = { showMenu = true }
                     )
             ) {
                 JuneSongPlayerCard(
@@ -80,46 +74,64 @@ fun JournalSongItem(
                 )
 
                 if (showMenu) {
-                    Box(
+                    DropdownMenu(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .wrapContentSize(align = Alignment.TopStart)
-                            .offset(x = pressOffset.x, y = pressOffset.y)
-                            .size(1.dp)
+                            .defaultMinSize(minWidth = 200.dp)
+                            .padding(horizontal = 8.dp),
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        shape = RoundedCornerShape(24.dp),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        tonalElevation = 3.dp,
                     ) {
-                        DropdownMenu(
-                            modifier = Modifier
-                                .defaultMinSize(minWidth = 200.dp)
-                                .padding(horizontal = 8.dp),
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false },
-                            shape = RoundedCornerShape(24.dp),
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                            tonalElevation = 3.dp,
-                        ) {
+                        DropdownMenuItem(
+                            modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                            text = { Text(stringResource(R.string.edit_song)) },
+                            onClick = {
+                                showMenu = false
+                                onEdit()
+                            },
+                            leadingIcon = {
+                                Icon(painterResource(R.drawable.edit_24px), null)
+                            }
+                        )
+                        if (onTrim != null && details.localPreviewPath?.let { java.io.File(it).exists() } == true) {
                             DropdownMenuItem(
                                 modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                text = { Text(stringResource(R.string.edit_song)) },
+                                text = { Text("Trim Clip") },
                                 onClick = {
                                     showMenu = false
-                                    onEdit()
+                                    onTrim()
                                 },
                                 leadingIcon = {
-                                    Icon(painterResource(R.drawable.edit_24px), null)
-                                }
-                            )
-                            DropdownMenuItem(
-                                modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                                text = { Text(stringResource(R.string.remove)) },
-                                onClick = {
-                                    showMenu = false
-                                    onRemove()
-                                },
-                                leadingIcon = {
-                                    Icon(painterResource(R.drawable.delete_24px), null)
+                                    Icon(painterResource(R.drawable.more_time_24px), null)
                                 }
                             )
                         }
+                        if (onAddToLibrary != null && !isInLibrary) {
+                            DropdownMenuItem(
+                                modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                                text = { Text("Add to Library") },
+                                onClick = {
+                                    showMenu = false
+                                    onAddToLibrary()
+                                },
+                                leadingIcon = {
+                                    Icon(painterResource(R.drawable.music_note_add_24px), null)
+                                }
+                            )
+                        }
+                        DropdownMenuItem(
+                            modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                            text = { Text(stringResource(R.string.remove)) },
+                            onClick = {
+                                showMenu = false
+                                onRemove()
+                            },
+                            leadingIcon = {
+                                Icon(painterResource(R.drawable.delete_24px), null)
+                            }
+                        )
                     }
                 }
             }

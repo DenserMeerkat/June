@@ -2,6 +2,7 @@ package com.denser.june.presentation.screens.editor
 
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.SongDetails
+import com.denser.june.core.domain.model.SongFetchProgress
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.getTodayAtMidnight
 import java.time.DayOfWeek
@@ -25,11 +26,17 @@ data class EditorState(
     val isDirty: Boolean = false,
     val isDraft: Boolean = true,
     val isFetchingSong: Boolean = false,
+    val songFetchProgress: SongFetchProgress? = null,
     val deletedAt: Long? = null,
     val syncedAt: Long? = null,
     val cloudId: String? = null,
     val startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
-    val timeFormat: TimeFormat = TimeFormat.TWELVE_HOUR
+    val timeFormat: TimeFormat = TimeFormat.TWELVE_HOUR,
+    val librarySongs: List<SongDetails> = emptyList(),
+    val unimportedJournalSongs: List<SongDetails> = emptyList(),
+    val importingSongKeys: Set<String> = emptySet(),
+    val clipTrimmerSong: SongDetails? = null,
+    val pendingStagedSong: SongDetails? = null
 ) {
     val isDeleted: Boolean get() = deletedAt != null
     val hasContent: Boolean
