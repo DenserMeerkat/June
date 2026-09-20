@@ -36,6 +36,25 @@ object FileUtils {
         }
     }
 
+    fun persistSongArt(context: Context, uri: Uri): String? {
+        return try {
+            val contentResolver = context.contentResolver
+            val inputStream = contentResolver.openInputStream(uri) ?: return null
+
+            val songArtDir = File(context.filesDir, "song_media/art").apply { if (!exists()) mkdirs() }
+            val fileName = "art_${System.currentTimeMillis()}_${(0..999).random()}.jpg"
+            val file = File(songArtDir, fileName)
+
+            file.outputStream().use { output ->
+                inputStream.copyTo(output)
+            }
+            file.absolutePath
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     fun deleteMedia(path: String?): Boolean {
         if (path == null) return false
         return try {

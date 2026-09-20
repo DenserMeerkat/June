@@ -49,6 +49,7 @@ val coreModule = module {
     singleOf(::DatastoreFactory)
     single { get<DatabaseFactory>().createJournalDatabase().build() }
     single { get<JournalDatabase>().journalDao() }
+    single { get<JournalDatabase>().songLibraryDao() }
 
     singleOf(::ExportImpl).bind<ExportRepo>()
     singleOf(::RestoreImpl).bind<RestoreRepo>()

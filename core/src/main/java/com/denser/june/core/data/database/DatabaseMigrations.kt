@@ -154,4 +154,35 @@ object DatabaseMigrations {
             )
         }
     }
+
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            AppLogger.d(
+                AppLogger.Category.DATABASE,
+                "DatabaseMigrations",
+                "Running database migration from version 4 to 5..."
+            )
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `song_library` (
+                    `contentHash` TEXT NOT NULL,
+                    `localPath` TEXT NOT NULL,
+                    `localArtPath` TEXT,
+                    `sourceUrl` TEXT,
+                    `sourceType` TEXT NOT NULL DEFAULT 'LINK',
+                    `title` TEXT NOT NULL,
+                    `artistName` TEXT NOT NULL,
+                    `albumName` TEXT,
+                    `genre` TEXT,
+                    `thumbnailUrl` TEXT,
+                    `addedAt` INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY(`contentHash`)
+                )
+            """.trimIndent())
+            AppLogger.d(
+                AppLogger.Category.DATABASE,
+                "DatabaseMigrations",
+                "Successfully completed database migration from version 4 to 5."
+            )
+        }
+    }
 }

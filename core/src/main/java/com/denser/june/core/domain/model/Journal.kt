@@ -29,12 +29,20 @@ data class Journal(
     val isDeleted: Boolean get() = deletedAt != null
 
     fun isContentEqualTo(other: Journal): Boolean {
+        val thisSongNormalized = this.songDetails?.copy(
+            localPreviewPath = this.songDetails.localPreviewPath?.let { File(it).name },
+            localThumbnailPath = this.songDetails.localThumbnailPath?.let { File(it).name }
+        )
+        val otherSongNormalized = other.songDetails?.copy(
+            localPreviewPath = other.songDetails.localPreviewPath?.let { File(it).name },
+            localThumbnailPath = other.songDetails.localThumbnailPath?.let { File(it).name }
+        )
         return this.title == other.title &&
                this.content == other.content &&
                this.emoji == other.emoji &&
                this.images.map { File(it).name } == other.images.map { File(it).name } &&
                this.location == other.location &&
-               this.songDetails == other.songDetails &&
+               thisSongNormalized == otherSongNormalized &&
                this.tags == other.tags &&
                this.isBookmarked == other.isBookmarked &&
                this.isArchived == other.isArchived &&
@@ -49,7 +57,11 @@ data class Journal(
             createdAt = 0L,
             updatedAt = null,
             syncedAt = null,
-            cloudId = null
+            cloudId = null,
+            songDetails = songDetails?.copy(
+                localPreviewPath = songDetails.localPreviewPath?.let { File(it).name },
+                localThumbnailPath = songDetails.localThumbnailPath?.let { File(it).name }
+            )
         )
         val jsonString = canonicalJsonFormatter.encodeToString(serializer(), normalized)
         val bytes = java.security.MessageDigest.getInstance("SHA-256")
