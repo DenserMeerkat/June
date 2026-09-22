@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongSourceType
+import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.utils.toSongTimestamp
 import com.denser.june.presentation.components.RestrictedAsyncImage
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -147,28 +149,10 @@ fun LibrarySongRow(
                     )
 
                     val durationMs = remember(song) {
-                        val localPath = song.localPreviewPath
-                        if (localPath != null && java.io.File(localPath).exists()) {
-                            try {
-                                val retriever = android.media.MediaMetadataRetriever()
-                                retriever.setDataSource(localPath)
-                                val dur = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
-                                retriever.release()
-                                dur
-                            } catch (_: Exception) {
-                                null
-                            }
-                        } else {
-                            null
-                        }
+                        FileUtils.getAudioDurationMs(song.localPreviewPath)
                     }
 
                     if (durationMs != null && durationMs > 0L) {
-                        val totalSeconds = kotlin.math.round(durationMs / 1000.0).toLong()
-                        val minutes = totalSeconds / 60
-                        val seconds = totalSeconds % 60
-                        val formattedDuration = "%d:%02d".format(minutes, seconds)
-
                         Text(
                             text = "•",
                             style = MaterialTheme.typography.bodySmall,
@@ -176,7 +160,7 @@ fun LibrarySongRow(
                         )
 
                         Text(
-                            text = formattedDuration,
+                            text = durationMs.toSongTimestamp(),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -206,14 +190,14 @@ fun LibrarySongRow(
                 ) {
                     DropdownMenuItem(
                         modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                        text = { Text("Trim & Attach") },
+                        text = { Text("Trim Clip") },
                         onClick = {
                             showMenu = false
                             onClick()
                         },
                         leadingIcon = {
                             Icon(
-                                painter = painterResource(R.drawable.music_note_24px),
+                                painter = painterResource(R.drawable.more_time_24px),
                                 contentDescription = null,
                             )
                         }
@@ -257,45 +241,5 @@ fun LibrarySongRow(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun EmptyLibraryView(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 48.dp, horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Surface(
-            modifier = Modifier.size(64.dp),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(R.drawable.music_note_24px),
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        Text(
-            text = "Your Library is Empty",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        Text(
-            text = "Add songs by pasting a link or choosing an audio file from your device using the buttons above.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
     }
 }

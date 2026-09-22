@@ -8,8 +8,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -19,33 +23,44 @@ fun JunePlaceholderPage(
     isLoading: Boolean = false,
     icon: Int? = null,
     title: String = "",
-    subtitle: String = ""
+    subtitle: String = "",
+    iconSize: Dp = 64.dp,
+    iconContainerSize: Dp = 100.dp,
+    iconShape: Shape = RoundedCornerShape(32.dp),
+    iconTint: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+    iconContainerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    fillMaxSize: Boolean = true,
+    action: (@Composable () -> Unit)? = null
 ) {
+    val layoutModifier = if (fillMaxSize) {
+        modifier.fillMaxSize()
+    } else {
+        modifier.fillMaxWidth()
+    }
+
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier = layoutModifier.padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         if (isLoading) {
             ContainedLoadingIndicator(
-                modifier = Modifier.size(100.dp)
+                modifier = Modifier.size(iconContainerSize)
             )
         } else {
             if (icon != null) {
                 Box(
                     modifier = Modifier
-                        .size(100.dp)
-                        .clip(RoundedCornerShape(32.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainer),
+                        .size(iconContainerSize)
+                        .clip(iconShape)
+                        .background(iconContainerColor),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(icon),
                         contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        modifier = Modifier.size(iconSize),
+                        tint = iconTint
                     )
                 }
                 Spacer(modifier = Modifier.height(24.dp))
@@ -55,7 +70,9 @@ fun JunePlaceholderPage(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -68,6 +85,11 @@ fun JunePlaceholderPage(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 12.dp)
                 )
+            }
+
+            if (action != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                action()
             }
         }
     }

@@ -6,31 +6,26 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
@@ -41,22 +36,26 @@ import com.denser.june.core.domain.repository.SongRepository
 import com.denser.june.presentation.components.InternetRestrictedBanner
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
+import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.components.JuneTopAppBar
-import com.denser.june.presentation.components.RestrictedAsyncImage
 import com.denser.june.presentation.screens.editor.EditorAction
 import com.denser.june.presentation.screens.editor.EditorVM
+import com.denser.june.presentation.screens.editor.components.ActiveJournalSongBar
+import com.denser.june.presentation.screens.editor.components.EditSongScope
 import com.denser.june.presentation.screens.editor.components.EditSongView
-import com.denser.june.presentation.screens.editor.components.EmptyLibraryView
 import com.denser.june.presentation.screens.editor.components.LibrarySongRow
 import com.denser.june.presentation.screens.editor.components.SongInputCard
 import com.denser.june.presentation.screens.editor.components.TrimmerStepView
+import com.denser.june.presentation.screens.editor.components.UnimportedSongRow
+import com.denser.june.presentation.screens.editor.components.UnimportedSongsHeader
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 enum class AddSongStep {
     Library,
     Trimmer,
-    Edit
+    Edit,
+    EditJournal
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -126,7 +125,7 @@ fun AddSongScreen(
     BackHandler {
         when (currentStep) {
             AddSongStep.Trimmer -> trimmerDismiss()
-            AddSongStep.Edit -> {
+            AddSongStep.Edit, AddSongStep.EditJournal -> {
                 if (!isRefetching) {
                     activeEditingSong = null
                     currentStep = AddSongStep.Library
@@ -143,6 +142,14 @@ fun AddSongScreen(
     var editArtPath by remember(activeEditingSong) { mutableStateOf(activeEditingSong?.localThumbnailPath) }
     var isArtRemoved by remember(activeEditingSong) { mutableStateOf(false) }
 
+    LaunchedEffect(state.journalEditSongPending) {
+        if (state.journalEditSongPending && state.songDetails != null) {
+            activeEditingSong = state.songDetails
+            currentStep = AddSongStep.EditJournal
+            viewModel.onAction(EditorAction.DismissJournalSongEdit)
+        }
+    }
+
     var pendingTrimmerSave by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     Scaffold(
@@ -156,6 +163,7 @@ fun AddSongScreen(
                             AddSongStep.Library -> "Add Song"
                             AddSongStep.Trimmer -> "Trim Song"
                             AddSongStep.Edit -> "Edit Song"
+                            AddSongStep.EditJournal -> "Edit Song"
                         }
                     )
                 },
@@ -164,7 +172,7 @@ fun AddSongScreen(
                         onClick = {
                             when (currentStep) {
                                 AddSongStep.Trimmer -> trimmerDismiss()
-                                AddSongStep.Edit -> {
+                                AddSongStep.Edit, AddSongStep.EditJournal -> {
                                     if (!isRefetching) {
                                         activeEditingSong = null
                                         currentStep = AddSongStep.Library
@@ -219,6 +227,7 @@ fun AddSongScreen(
                                 }
                             }
                         }
+
                         AddSongStep.Edit -> {
                             val songToEdit = activeEditingSong
                             Row(
@@ -284,6 +293,8 @@ fun AddSongScreen(
                                 }
                             }
                         }
+
+                        AddSongStep.EditJournal -> Unit
                         AddSongStep.Trimmer -> Unit
                     }
                 }
@@ -320,6 +331,7 @@ fun AddSongScreen(
                         )
                     }
                 }
+
                 AddSongStep.Edit -> {
                     JuneFloatingActionBar {
                         JuneFloatingAction(
@@ -343,13 +355,14 @@ fun AddSongScreen(
                         JuneFloatingAction(
                             onClick = {
                                 val orig = activeEditingSong ?: return@JuneFloatingAction
-                                val updated = orig.copy(
-                                    title = editTitle.trim().ifEmpty { "Unknown Title" },
-                                    artistName = editArtist.trim().ifEmpty { "Unknown Artist" },
-                                    albumName = editAlbum.trim().ifEmpty { null },
-                                    genre = editGenre.trim().ifEmpty { null },
-                                    localThumbnailPath = if (isArtRemoved) null else editArtPath,
-                                    thumbnailUrl = if (isArtRemoved) null else orig.thumbnailUrl
+                                val updated = buildUpdatedSong(
+                                    orig = orig,
+                                    title = editTitle,
+                                    artist = editArtist,
+                                    album = editAlbum,
+                                    genre = editGenre,
+                                    artPath = editArtPath,
+                                    isArtRemoved = isArtRemoved
                                 )
                                 viewModel.onAction(EditorAction.SaveLibrarySongMeta(orig, updated))
                                 activeEditingSong = null
@@ -366,7 +379,76 @@ fun AddSongScreen(
                         )
                     }
                 }
+
+                AddSongStep.EditJournal -> {
+                    JuneFloatingActionBar {
+                        JuneFloatingAction(
+                            onClick = {
+                                activeEditingSong = null
+                                currentStep = AddSongStep.Library
+                            },
+                            label = "Cancel",
+                            icon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.close_24px),
+                                    contentDescription = null
+                                )
+                            },
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        JuneFloatingAction(
+                            onClick = {
+                                val orig = activeEditingSong ?: return@JuneFloatingAction
+                                val updated = buildUpdatedSong(
+                                    orig = orig,
+                                    title = editTitle,
+                                    artist = editArtist,
+                                    album = editAlbum,
+                                    genre = editGenre,
+                                    artPath = editArtPath,
+                                    isArtRemoved = isArtRemoved
+                                )
+                                viewModel.onAction(EditorAction.SaveJournalSongMeta(updated))
+                                activeEditingSong = null
+                                currentStep = AddSongStep.Library
+                            },
+                            label = "Save",
+                            icon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.check_24px),
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                    }
+                }
+
                 AddSongStep.Library -> Unit
+            }
+        },
+        bottomBar = {
+            val attachedSong = state.songDetails
+            if (currentStep == AddSongStep.Library && attachedSong != null) {
+                ActiveJournalSongBar(
+                    song = attachedSong,
+                    onEdit = {
+                        activeEditingSong = attachedSong
+                        editTitle = attachedSong.title
+                        editArtist = attachedSong.artistName
+                        editAlbum = attachedSong.albumName ?: ""
+                        editGenre = attachedSong.genre ?: ""
+                        editArtPath = attachedSong.localThumbnailPath
+                        isArtRemoved = false
+                        currentStep = AddSongStep.EditJournal
+                    },
+                    onTrim = {
+                        activeTrimmerSong = attachedSong
+                        viewModel.onAction(EditorAction.OpenClipTrimmer(attachedSong))
+                        currentStep = AddSongStep.Trimmer
+                    },
+                    onRemove = { viewModel.onAction(EditorAction.RemoveSong) }
+                )
             }
         }
     ) { paddingValues ->
@@ -379,7 +461,9 @@ fun AddSongScreen(
                     Button(
                         onClick = {
                             showDeleteConfirm = false
-                            activeEditingSong?.let { viewModel.onAction(EditorAction.RemoveLibrarySong(it)) }
+                            activeEditingSong?.let {
+                                viewModel.onAction(EditorAction.RemoveLibrarySong(it))
+                            }
                             activeEditingSong = null
                             currentStep = AddSongStep.Library
                         }
@@ -432,212 +516,115 @@ fun AddSongScreen(
                             }
                         }
 
-                    if (state.librarySongs.isEmpty() && state.unimportedJournalSongs.isEmpty()) {
-                        item {
-                            EmptyLibraryView()
-                        }
-                    } else {
-                        if (state.librarySongs.isNotEmpty()) {
-                            items(
-                                items = state.librarySongs,
-                                key = { "${it.title}_${it.artistName}_${it.localPreviewPath ?: it.previewUrl ?: ""}" }
-                            ) { song ->
-                                val isCurrentlyAttached = state.songDetails?.title == song.title && state.songDetails?.artistName == song.artistName
-                                LibrarySongRow(
-                                    song = song,
-                                    isCurrentlyAttached = isCurrentlyAttached,
-                                    onClick = {
-                                        activeTrimmerSong = song
-                                        viewModel.onAction(EditorAction.OpenClipTrimmer(song))
-                                        currentStep = AddSongStep.Trimmer
-                                    },
-                                    onEdit = {
-                                        activeEditingSong = song
-                                        editTitle = song.title
-                                        editArtist = song.artistName
-                                        editAlbum = song.albumName ?: ""
-                                        editGenre = song.genre ?: ""
-                                        editArtPath = song.localThumbnailPath
-                                        isArtRemoved = false
-                                        currentStep = AddSongStep.Edit
-                                    },
-                                    onRemove = {
-                                        viewModel.onAction(EditorAction.RemoveLibrarySong(song))
-                                    }
+                        if (state.librarySongs.isEmpty() && state.unimportedJournalSongs.isEmpty()) {
+                            item {
+                                JunePlaceholderPage(
+                                    icon = R.drawable.music_note_24px,
+                                    title = stringResource(R.string.empty_library),
+                                    subtitle = stringResource(R.string.empty_library_desc),
+                                    fillMaxSize = false,
+                                    modifier = Modifier.padding(vertical = 24.dp)
                                 )
                             }
-                        }
-
-                        if (state.unimportedJournalSongs.isNotEmpty()) {
-                            item {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 12.dp, bottom = 4.dp, start = 4.dp, end = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = "From Your Journals",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-
-                                    val isAnyImporting = state.importingSongKeys.isNotEmpty()
-                                    FilledTonalButton(
+                        } else {
+                            if (state.librarySongs.isNotEmpty()) {
+                                items(
+                                    items = state.librarySongs,
+                                    key = { "${it.title}_${it.artistName}_${it.localPreviewPath ?: it.previewUrl ?: ""}" }
+                                ) { song ->
+                                    val isCurrentlyAttached =
+                                        state.songDetails?.title == song.title && state.songDetails?.artistName == song.artistName
+                                    LibrarySongRow(
+                                        song = song,
+                                        isCurrentlyAttached = isCurrentlyAttached,
                                         onClick = {
-                                            viewModel.onAction(EditorAction.AddAllSongsToLibrary(state.unimportedJournalSongs))
+                                            activeTrimmerSong = song
+                                            viewModel.onAction(EditorAction.OpenClipTrimmer(song))
+                                            currentStep = AddSongStep.Trimmer
                                         },
-                                        enabled = !isAnyImporting,
-                                        modifier = Modifier.height(32.dp),
-                                        shape = CircleShape,
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                                    ) {
-                                        if (isAnyImporting) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(14.dp),
-                                                strokeWidth = 2.dp,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                        } else {
-                                            Icon(
-                                                painter = painterResource(R.drawable.music_note_add_24px),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
+                                        onEdit = {
+                                            activeEditingSong = song
+                                            editTitle = song.title
+                                            editArtist = song.artistName
+                                            editAlbum = song.albumName ?: ""
+                                            editGenre = song.genre ?: ""
+                                            editArtPath = song.localThumbnailPath
+                                            isArtRemoved = false
+                                            currentStep = AddSongStep.Edit
+                                        },
+                                        onRemove = {
+                                            viewModel.onAction(EditorAction.RemoveLibrarySong(song))
                                         }
-                                        Text(
-                                            text = "Add all",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
+                                    )
                                 }
                             }
 
-                            items(
-                                items = state.unimportedJournalSongs,
-                                key = { "unimported_${it.title}_${it.artistName}" }
-                            ) { unimportedSong ->
-                                Surface(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(20.dp)),
-                                    color = MaterialTheme.colorScheme.surfaceContainerLow,
-                                    shape = RoundedCornerShape(20.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(44.dp)
-                                                .clip(RoundedCornerShape(12.dp))
-                                                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            RestrictedAsyncImage(
-                                                imageUrl = unimportedSong.thumbnailUrl,
-                                                localPath = unimportedSong.localThumbnailPath,
-                                                contentDescription = null,
-                                                modifier = Modifier.fillMaxSize(),
-                                                iconSize = 22.dp,
-                                                iconTint = MaterialTheme.colorScheme.primary
-                                            )
+                            if (state.unimportedJournalSongs.isNotEmpty()) {
+                                item {
+                                    UnimportedSongsHeader(
+                                        isAnyImporting = state.importingSongKeys.isNotEmpty(),
+                                        onAddAll = {
+                                            viewModel.onAction(EditorAction.AddAllSongsToLibrary(state.unimportedJournalSongs))
                                         }
+                                    )
+                                }
 
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = unimportedSong.title,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.SemiBold,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                            Text(
-                                                text = unimportedSong.artistName,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
+                                items(
+                                    items = state.unimportedJournalSongs,
+                                    key = { "unimported_${it.title}_${it.artistName}" }
+                                ) { unimportedSong ->
+                                    val songKey = "${unimportedSong.title.trim().lowercase()}_${unimportedSong.artistName.trim().lowercase()}"
+                                    val isImporting = songKey in state.importingSongKeys
+
+                                    UnimportedSongRow(
+                                        song = unimportedSong,
+                                        isImporting = isImporting,
+                                        onAdd = {
+                                            viewModel.onAction(EditorAction.AddSongToLibrary(unimportedSong))
                                         }
-
-                                        val songKey = "${unimportedSong.title.trim().lowercase()}_${unimportedSong.artistName.trim().lowercase()}"
-                                        val isImporting = songKey in state.importingSongKeys
-
-                                        FilledTonalIconButton(
-                                            onClick = { viewModel.onAction(EditorAction.AddSongToLibrary(unimportedSong)) },
-                                            modifier = Modifier.size(36.dp),
-                                            enabled = !isImporting,
-                                            shape = CircleShape
-                                        ) {
-                                            if (isImporting) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(16.dp),
-                                                    strokeWidth = 2.dp,
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
-                                            } else {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.music_note_add_24px),
-                                                    contentDescription = "Add to Library",
-                                                    modifier = Modifier.size(18.dp)
-                                                )
-                                            }
-                                        }
-                                    }
+                                    )
                                 }
                             }
                         }
+
+                        item {
+                            Spacer(modifier = Modifier.height(80.dp))
+                        }
                     }
 
-                    item {
-                        Spacer(modifier = Modifier.height(80.dp))
-                    }
-                }
-
-                AnimatedVisibility(
-                    visible = showLinkInput,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically(),
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .onSizeChanged { overlayHeightPx = it.height }
-                ) {
-                    SongInputCard(
-                        songLink = songLink,
-                        onLinkChange = { songLink = it },
-                        isFetching = state.isFetchingSong,
-                        fetchProgress = state.songFetchProgress,
-                        enabled = isInternetAllowed,
-                        onPaste = {
-                            scope.launch {
-                                val clipText = clipboard.getText()?.text
-                                if (!clipText.isNullOrBlank()) {
-                                    songLink = clipText.trim()
-                                    viewModel.onAction(EditorAction.FetchSong(clipText.trim()))
+                    AnimatedVisibility(
+                        visible = showLinkInput,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .onSizeChanged { overlayHeightPx = it.height }
+                    ) {
+                        SongInputCard(
+                            songLink = songLink,
+                            onLinkChange = { songLink = it },
+                            isFetching = state.isFetchingSong,
+                            fetchProgress = state.songFetchProgress,
+                            enabled = isInternetAllowed,
+                            onPaste = {
+                                scope.launch {
+                                    val clipText = clipboard.getText()?.text
+                                    if (!clipText.isNullOrBlank()) {
+                                        songLink = clipText.trim()
+                                        viewModel.onAction(EditorAction.FetchSong(clipText.trim()))
+                                    }
+                                }
+                            },
+                            onFetch = {
+                                if (songLink.isNotBlank()) {
+                                    viewModel.onAction(EditorAction.FetchSong(songLink.trim()))
                                 }
                             }
-                        },
-                        onFetch = {
-                            if (songLink.isNotBlank()) {
-                                viewModel.onAction(EditorAction.FetchSong(songLink.trim()))
-                            }
-                        }
-                    )
+                        )
+                    }
                 }
             }
-        }
 
             AddSongStep.Trimmer -> {
                 activeTrimmerSong?.let { song ->
@@ -659,6 +646,7 @@ fun AddSongScreen(
                             .fillMaxSize()
                             .padding(paddingValues),
                         song = songToEdit,
+                        editScope = EditSongScope.Library,
                         title = editTitle,
                         onTitleChange = { editTitle = it },
                         artist = editArtist,
@@ -681,6 +669,56 @@ fun AddSongScreen(
                     )
                 }
             }
+
+            AddSongStep.EditJournal -> {
+                activeEditingSong?.let { songToEdit ->
+                    EditSongView(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        song = songToEdit,
+                        editScope = EditSongScope.JournalOnly,
+                        title = editTitle,
+                        onTitleChange = { editTitle = it },
+                        artist = editArtist,
+                        onArtistChange = { editArtist = it },
+                        album = editAlbum,
+                        onAlbumChange = { editAlbum = it },
+                        genre = editGenre,
+                        onGenreChange = { editGenre = it },
+                        artPath = editArtPath,
+                        isArtRemoved = isArtRemoved,
+                        onArtPathChange = {
+                            editArtPath = it
+                            isArtRemoved = false
+                        },
+                        onRemoveArt = {
+                            editArtPath = null
+                            isArtRemoved = true
+                        },
+                        enabled = true
+                    )
+                }
+            }
         }
     }
+}
+
+private fun buildUpdatedSong(
+    orig: SongDetails,
+    title: String,
+    artist: String,
+    album: String,
+    genre: String,
+    artPath: String?,
+    isArtRemoved: Boolean
+): SongDetails {
+    return orig.copy(
+        title = title.trim().ifEmpty { "Unknown Title" },
+        artistName = artist.trim().ifEmpty { "Unknown Artist" },
+        albumName = album.trim().ifEmpty { null },
+        genre = genre.trim().ifEmpty { null },
+        localThumbnailPath = if (isArtRemoved) null else artPath,
+        thumbnailUrl = if (isArtRemoved) null else orig.thumbnailUrl
+    )
 }

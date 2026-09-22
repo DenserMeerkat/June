@@ -53,6 +53,8 @@ data class MediaOperations(
     val frontMediaPath: String? = null,
     val onRemoveSong: () -> Unit = {},
     val onSongSheetToggle: (Boolean) -> Unit = {},
+    val onTrimSong: () -> Unit = {},
+    val onEditJournalSong: () -> Unit = {},
     val onRemoveLocation: () -> Unit = {},
     val onLocationDialogToggle: (Boolean) -> Unit = {},
 )
@@ -153,7 +155,9 @@ fun JournalItemsPreview(
                                     details = slide.details,
                                     isFetching = false,
                                     onRemove = mediaOperations.onRemoveSong,
-                                    onEdit = { mediaOperations.onSongSheetToggle(true) },
+                                    onEditJournal = mediaOperations.onEditJournalSong,
+                                    onOpenLibrary = { mediaOperations.onSongSheetToggle(true) },
+                                    onTrim = mediaOperations.onTrimSong,
                                     modifier = Modifier.fillMaxSize()
                                 )
                             }

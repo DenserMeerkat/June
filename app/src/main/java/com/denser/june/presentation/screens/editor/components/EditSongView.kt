@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
@@ -25,10 +26,12 @@ import com.denser.june.core.utils.FileUtils
 import com.denser.june.presentation.components.JuneTextField
 import com.denser.june.presentation.components.RestrictedAsyncImage
 
+import kotlinx.coroutines.launch
 @Composable
 fun EditSongView(
     modifier: Modifier = Modifier,
     song: SongDetails,
+    editScope: EditSongScope = EditSongScope.Library,
     title: String,
     onTitleChange: (String) -> Unit,
     artist: String,
@@ -65,6 +68,9 @@ fun EditSongView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        EditScopeChip(scope = editScope)
+
+
         Box(
             modifier = Modifier
                 .padding(end = 12.dp, bottom = 12.dp)

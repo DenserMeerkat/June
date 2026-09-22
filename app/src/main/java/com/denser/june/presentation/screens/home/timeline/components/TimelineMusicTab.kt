@@ -21,10 +21,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.platform.LocalContext
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.SongDetails
+import com.denser.june.core.utils.FileUtils
 import com.denser.june.presentation.components.ListenDropdownMenu
 import com.denser.june.presentation.components.RestrictedAsyncImage
+import com.denser.june.presentation.components.SmallPlayPauseButton
+import com.denser.june.presentation.components.toAvailableLinks
 import com.denser.june.presentation.utils.rememberDynamicThemeColors
 import com.denser.june.presentation.screens.home.timeline.TimelineVM
 import org.koin.compose.viewmodel.koinViewModel
@@ -36,7 +40,6 @@ import androidx.compose.ui.graphics.Shape
 import com.denser.june.core.utils.toLocalDate
 import com.denser.june.presentation.components.DayJournalGroupData
 import com.denser.june.presentation.components.rememberJournalGroupShape
-import java.io.File
 import java.time.LocalDate
 
 @Composable
@@ -45,6 +48,7 @@ fun TimelineMusicTab(
     bottomPadding: Dp,
     viewModel: TimelineVM = koinViewModel()
 ) {
+    val context = LocalContext.current
     val isInternetAllowed = LocalInternetAllowed.current
     val musicJournals = remember(journals) {
         journals.filter { it.songDetails != null }
@@ -127,7 +131,9 @@ fun TimelineMusicTab(
             }
         }
 
-        val hasLocalAudio = activeSong?.localPreviewPath?.let { File(it).exists() } == true
+        val hasLocalAudio = remember(activeSong?.localPreviewPath) {
+            FileUtils.resolveSongMedia(context, activeSong?.localPreviewPath, "library") != null
+        }
         if (activeSong != null && (isInternetAllowed || hasLocalAudio)) {
             DockedMiniPlayer(
                 modifier = Modifier
@@ -152,9 +158,10 @@ fun DockedMiniPlayer(
     onPlayPause: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val isInternetAllowed = LocalInternetAllowed.current
     val localArtFile = remember(song.localThumbnailPath) {
-        song.localThumbnailPath?.let { File(it) }?.takeIf { it.exists() && it.length() > 0L }
+        FileUtils.resolveSongMedia(context, song.localThumbnailPath, "art")
     }
     val artModel = remember(localArtFile, song.thumbnailUrl, isInternetAllowed) {
         if (localArtFile != null) localArtFile else if (isInternetAllowed) song.thumbnailUrl else null
@@ -279,21 +286,15 @@ fun MusicListTile(
     isActive: Boolean = false,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
     val isInternetAllowed = LocalInternetAllowed.current
-    val hasLocalAudio = song.localPreviewPath?.let { File(it).exists() } == true
+    val hasLocalAudio = remember(song.localPreviewPath) {
+        FileUtils.resolveSongMedia(context, song.localPreviewPath, "library") != null
+    }
     var showMenu by remember { mutableStateOf(false) }
 
     val availableLinks = remember(song.links) {
-        listOf(
-            "Spotify" to song.links.spotify,
-            "Apple Music" to song.links.appleMusic,
-            "YouTube Music" to song.links.youtubeMusic,
-            "YouTube" to song.links.youtube,
-            "Deezer" to song.links.deezer,
-            "SoundCloud" to song.links.soundcloud,
-            "Tidal" to song.links.tidal,
-            "Amazon Music" to song.links.amazonMusic
-        ).filter { it.second != null }
+        song.links.toAvailableLinks()
     }
 
     Card(
@@ -364,49 +365,6 @@ fun MusicListTile(
                         )
                     }
                 }
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun SmallPlayPauseButton(
-    isPlaying: Boolean,
-    isLoading: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    containerColor: Color,
-    contentColor: Color,
-    modifier: Modifier = Modifier
-) {
-    FilledIconToggleButton(
-        checked = isPlaying,
-        onCheckedChange = { if (!isLoading) onClick() },
-        enabled = enabled,
-        modifier = modifier.size(width = 52.dp, height = 40.dp),
-        shapes = IconButtonDefaults.toggleableShapes(),
-        colors = IconButtonDefaults.filledIconToggleButtonColors(
-            containerColor = containerColor,
-            contentColor = contentColor,
-            checkedContainerColor = containerColor,
-            checkedContentColor = contentColor,
-            disabledContainerColor = containerColor.copy(alpha = 0.5f),
-            disabledContentColor = contentColor.copy(alpha = 0.5f)
-        )
-    ) {
-        if (isLoading) {
-            CircularWavyProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                color = contentColor,
-            )
-        } else {
-            Icon(
-                painter = painterResource(
-                    if (isPlaying) R.drawable.pause_24px else R.drawable.play_arrow_24px
-                ),
-                contentDescription = if (isPlaying) "Pause" else "Play",
-                modifier = Modifier.size(24.dp)
             )
         }
     }

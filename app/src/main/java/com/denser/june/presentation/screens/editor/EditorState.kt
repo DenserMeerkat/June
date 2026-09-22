@@ -36,7 +36,8 @@ data class EditorState(
     val unimportedJournalSongs: List<SongDetails> = emptyList(),
     val importingSongKeys: Set<String> = emptySet(),
     val clipTrimmerSong: SongDetails? = null,
-    val pendingStagedSong: SongDetails? = null
+    val pendingStagedSong: SongDetails? = null,
+    val journalEditSongPending: Boolean = false
 ) {
     val isDeleted: Boolean get() = deletedAt != null
     val hasContent: Boolean

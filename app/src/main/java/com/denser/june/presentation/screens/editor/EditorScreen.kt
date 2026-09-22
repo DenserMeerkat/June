@@ -145,6 +145,15 @@ fun EditorScreen() {
             frontMediaPath = state.images.lastOrNull(),
             onRemoveSong = { viewModel.onAction(EditorAction.RemoveSong) },
             onSongSheetToggle = { navigator.navigateTo(Route.AddSong, isSingleTop = true) },
+            onTrimSong = {
+                val song = state.songDetails ?: return@MediaOperations
+                viewModel.onAction(EditorAction.OpenClipTrimmer(song))
+                navigator.navigateTo(Route.AddSong, isSingleTop = true)
+            },
+            onEditJournalSong = {
+                viewModel.onAction(EditorAction.OpenJournalSongEdit)
+                navigator.navigateTo(Route.AddSong, isSingleTop = true)
+            },
             onRemoveLocation = { viewModel.onAction(EditorAction.RemoveLocation) },
             onLocationDialogToggle = { dialogState.showLocationDialog = true },
         )

@@ -1,12 +1,21 @@
 package com.denser.june.presentation.utils
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import kotlinx.coroutines.delay
-import androidx.core.net.toUri
+import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.utils.toAudioTimestamp
 import com.denser.june.presentation.theme.LocalInternetAllowed
-import java.io.File
+import kotlinx.coroutines.delay
 
 data class SongPlayerState(
     val exoPlayer: ExoPlayer?,
@@ -29,18 +38,10 @@ fun rememberSongPlayerState(
     clipEndMs: Long? = null,
     autoRepeat: Boolean = false
 ): SongPlayerState {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val isInternetAllowed = LocalInternetAllowed.current
     val localFile = remember(localPreviewPath) {
-        localPreviewPath?.let { path ->
-            val f = File(path)
-            if (f.exists() && f.length() > 0L) {
-                f
-            } else {
-                val candidate = File(File(context.filesDir, "song_media/library"), f.name)
-                candidate.takeIf { it.exists() && it.length() > 0L }
-            }
-        }
+        FileUtils.resolveSongMedia(context, localPreviewPath, "library")
     }
     val uri = remember(localFile, previewUrl, isInternetAllowed) {
         if (localFile != null) {
@@ -185,12 +186,4 @@ fun rememberSongPlayerState(
     }
 }
 
-fun formatAudioTimestamp(ms: Long): String {
-    val totalMs = ms.coerceAtLeast(0L)
-    val totalSeconds = totalMs / 1000
-    val tenths = (totalMs % 1000) / 100
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-    return "%d:%02d.%d".format(minutes, seconds, tenths)
-}
-
+fun formatAudioTimestamp(ms: Long): String = ms.toAudioTimestamp()

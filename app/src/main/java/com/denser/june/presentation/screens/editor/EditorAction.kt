@@ -29,6 +29,9 @@ sealed interface EditorAction {
     data class EditLibrarySong(val song: SongDetails) : EditorAction
     data class SaveLibrarySongMeta(val original: SongDetails, val updated: SongDetails) : EditorAction
     data class OpenClipTrimmer(val songDetails: SongDetails) : EditorAction
+    data object OpenJournalSongEdit : EditorAction
+    data object DismissJournalSongEdit : EditorAction
+    data class SaveJournalSongMeta(val updated: SongDetails) : EditorAction
     data object DismissClipTrimmer : EditorAction
     data class SaveClip(val startMs: Long, val endMs: Long?, val songDetails: SongDetails? = null) : EditorAction
     data object RemoveSong : EditorAction

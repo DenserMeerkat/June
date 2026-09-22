@@ -133,8 +133,9 @@ fun ItemGalleryScreen(
                         details = currentSong,
                         isFetching = state.isFetchingSong,
                         onRemove = mediaOperations.onRemoveSong,
-                        onEdit = { mediaOperations.onSongSheetToggle(true) },
-                        onTrim = { viewModel.onAction(EditorAction.OpenClipTrimmer(currentSong)) },
+                        onEditJournal = mediaOperations.onEditJournalSong,
+                        onOpenLibrary = { mediaOperations.onSongSheetToggle(true) },
+                        onTrim = mediaOperations.onTrimSong,
                         isInLibrary = isInLibrary,
                         onAddToLibrary = { viewModel.onAction(EditorAction.AddSongToLibrary(currentSong)) }
                     )

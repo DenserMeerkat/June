@@ -15,15 +15,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.presentation.screens.editor.components.JournalMosaicCard
 import com.denser.june.presentation.screens.editor.components.MediaOperations
-import com.denser.june.presentation.theme.LocalInternetAllowed
 
 @Composable
 fun JournalThumbnail(

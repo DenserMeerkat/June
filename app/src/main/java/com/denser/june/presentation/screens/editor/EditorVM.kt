@@ -233,13 +233,29 @@ class EditorVM(
             is EditorAction.SaveLibrarySongMeta -> {
                 viewModelScope.launch {
                     songRepo.updateLibrarySongMeta(action.original, action.updated)
-                    if (_state.value.songDetails?.localPreviewPath == action.original.localPreviewPath) {
-                        updateState { it.copy(songDetails = action.updated) }
+                    val currentSong = _state.value.songDetails
+                    if (currentSong?.localPreviewPath != null && currentSong.localPreviewPath == action.original.localPreviewPath) {
+                        updateState { state ->
+                            val existing = state.songDetails ?: return@updateState state
+                            state.copy(
+                                songDetails = existing.copy(
+                                    title = if (existing.title == action.original.title) action.updated.title else existing.title,
+                                    artistName = if (existing.artistName == action.original.artistName) action.updated.artistName else existing.artistName,
+                                    albumName = if (existing.albumName == action.original.albumName) action.updated.albumName else existing.albumName,
+                                    genre = if (existing.genre == action.original.genre) action.updated.genre else existing.genre,
+                                    localThumbnailPath = if (existing.localThumbnailPath == action.original.localThumbnailPath) action.updated.localThumbnailPath else existing.localThumbnailPath,
+                                    thumbnailUrl = if (existing.thumbnailUrl == action.original.thumbnailUrl) action.updated.thumbnailUrl else existing.thumbnailUrl
+                                )
+                            )
+                        }
                     }
                 }
             }
             is EditorAction.OpenClipTrimmer -> _state.update { it.copy(clipTrimmerSong = action.songDetails, pendingStagedSong = action.songDetails) }
             is EditorAction.DismissClipTrimmer -> _state.update { it.copy(clipTrimmerSong = null, pendingStagedSong = null) }
+            is EditorAction.OpenJournalSongEdit -> _state.update { it.copy(journalEditSongPending = true) }
+            is EditorAction.DismissJournalSongEdit -> _state.update { it.copy(journalEditSongPending = false) }
+            is EditorAction.SaveJournalSongMeta -> updateState { it.copy(songDetails = action.updated) }
             is EditorAction.SaveClip -> saveClip(action.startMs, action.endMs, action.songDetails)
             is EditorAction.RemoveSong -> updateState { it.copy(songDetails = null) }
 

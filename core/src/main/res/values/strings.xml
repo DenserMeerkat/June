@@ -95,6 +95,10 @@
     <string name="no_locations_this_month">No locations added for this month.</string>
     <string name="no_media_this_month">No media this month.</string>
     <string name="no_music_this_month">No music tracked this month.</string>
+    <string name="empty_library">Your library is empty</string>
+    <string name="empty_library_desc">Add songs by pasting a link or choosing an audio file from your device using the buttons above.</string>
+    <string name="scope_affects_library">Changes affect library and future journals</string>
+    <string name="scope_affects_journal_only">Changes only affect current journal</string>
     <string name="not_synced">Not synced</string>
     <string name="now">Now</string>
     <string name="recent">Recent</string>
