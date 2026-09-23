@@ -26,6 +26,7 @@ class SyncPreferencesImpl(
         private val gdSyncFolderId = stringPreferencesKey("gd_sync_folder_id")
         private val gdJournalsFolderId = stringPreferencesKey("gd_journals_folder_id")
         private val gdMediaFolderId = stringPreferencesKey("gd_media_folder_id")
+        private val gdSongMediaFolderId = stringPreferencesKey("gd_song_media_folder_id")
         private val completedDataRepairVersion = intPreferencesKey("completed_data_repair_version")
         private val syncLoggingEnabled = booleanPreferencesKey("sync_logging_enabled")
         private val backupLoggingEnabled = booleanPreferencesKey("backup_logging_enabled")
@@ -117,6 +118,11 @@ class SyncPreferencesImpl(
     override fun getGoogleDriveMediaFolderId(): Flow<String?> = dataStore.data.map { it[gdMediaFolderId] }
     override suspend fun setGoogleDriveMediaFolderId(id: String?) {
         dataStore.edit { it.updateOrRemove(gdMediaFolderId, id) }
+    }
+
+    override fun getGoogleDriveSongMediaFolderId(): Flow<String?> = dataStore.data.map { it[gdSongMediaFolderId] }
+    override suspend fun setGoogleDriveSongMediaFolderId(id: String?) {
+        dataStore.edit { it.updateOrRemove(gdSongMediaFolderId, id) }
     }
 
     override fun getSyncLoggingEnabled(): Flow<Boolean> = dataStore.data

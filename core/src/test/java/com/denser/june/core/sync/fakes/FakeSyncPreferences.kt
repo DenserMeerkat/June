@@ -30,6 +30,7 @@ class FakeSyncPreferences(
     var googleDriveSyncFolderId: String? = null
     var googleDriveJournalsFolderId: String? = null
     var googleDriveMediaFolderId: String? = null
+    var googleDriveSongMediaFolderId: String? = null
 
     private val _syncEnabled = MutableStateFlow(syncEnabled)
     private val _autoSync = MutableStateFlow(false)
@@ -47,6 +48,7 @@ class FakeSyncPreferences(
     private val _gdriveSyncFolder = MutableStateFlow<String?>(null)
     private val _gdriveJournalsFolder = MutableStateFlow<String?>(null)
     private val _gdriveMediaFolder = MutableStateFlow<String?>(null)
+    private val _gdriveSongMediaFolder = MutableStateFlow<String?>(null)
 
     override fun getLastSyncTime(): Flow<Long> = _lastSyncTime
     override suspend fun setLastSyncTime(time: Long) { lastSyncTime = time; _lastSyncTime.value = time }
@@ -71,6 +73,8 @@ class FakeSyncPreferences(
     override suspend fun setGoogleDriveJournalsFolderId(id: String?) { googleDriveJournalsFolderId = id; _gdriveJournalsFolder.value = id }
     override fun getGoogleDriveMediaFolderId(): Flow<String?> = _gdriveMediaFolder
     override suspend fun setGoogleDriveMediaFolderId(id: String?) { googleDriveMediaFolderId = id; _gdriveMediaFolder.value = id }
+    override fun getGoogleDriveSongMediaFolderId(): Flow<String?> = _gdriveSongMediaFolder
+    override suspend fun setGoogleDriveSongMediaFolderId(id: String?) { googleDriveSongMediaFolderId = id; _gdriveSongMediaFolder.value = id }
     override fun getSyncLoggingEnabled(): Flow<Boolean> = _syncLogging
     override suspend fun setSyncLoggingEnabled(enabled: Boolean) { syncLoggingEnabled = enabled; _syncLogging.value = enabled }
     override fun getBackupLoggingEnabled(): Flow<Boolean> = _backupLogging

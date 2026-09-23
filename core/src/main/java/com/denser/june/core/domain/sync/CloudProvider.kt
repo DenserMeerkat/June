@@ -106,6 +106,11 @@ interface CloudProvider {
      * Delete a journal file from the cloud.
      */
     suspend fun deleteJournal(cloudId: String): Result<Unit>
+
+    suspend fun uploadSongMedia(file: File): Result<String>
+    suspend fun downloadSongMedia(filename: String, targetFile: File): Result<File>
+    suspend fun listSongMedia(): Result<List<String>>
+    suspend fun deleteSongMedia(filename: String): Result<Unit>
 }
 
 @Serializable
@@ -116,11 +121,13 @@ data class SyncManifest(
     val schemaVersion: Int = CURRENT_SCHEMA_VERSION,
     val totalJournals: Int,
     val totalMedia: Int = 0,
+    val totalSongMedia: Int = 0,
     val deletedIds: List<String> = emptyList(),
     val journalMetadata: Map<String, JournalSyncMeta> = emptyMap(),
-    val mediaMetadata: Map<String, MediaSyncMeta> = emptyMap()
+    val mediaMetadata: Map<String, MediaSyncMeta> = emptyMap(),
+    val songMediaMetadata: Map<String, MediaSyncMeta> = emptyMap()
 ) {
     companion object {
-        const val CURRENT_SCHEMA_VERSION = 3
+        const val CURRENT_SCHEMA_VERSION = 4
     }
 }
