@@ -91,7 +91,7 @@ fun CreateBackupBottomSheet(
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = if (includeMedia) stringResource(R.string.export_include_media_desc) else stringResource(R.string.export_exclude_media_desc),
+                text = if (includeMedia) stringResource(R.string.backup_include_media_desc) else stringResource(R.string.export_exclude_media_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )

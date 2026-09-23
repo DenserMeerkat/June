@@ -16,8 +16,12 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.zip.ZipInputStream
 
+import com.denser.june.core.data.database.song.SongLibraryDao
+import com.denser.june.core.data.database.song.SongLibraryEntity
+
 class RestoreImpl(
     private val journalRepo: JournalRepository,
+    private val songLibraryDao: SongLibraryDao,
     private val context: Context
 ) : RestoreRepo {
 
@@ -30,6 +34,8 @@ class RestoreImpl(
         withContext(Dispatchers.IO) {
             return@withContext try {
                 val mediaDir = File(context.filesDir, MEDIA_FOLDER).apply { if (!exists()) mkdirs() }
+                val songLibraryDir = File(context.filesDir, "song_media/library").apply { if (!exists()) mkdirs() }
+                val songArtDir = File(context.filesDir, "song_media/art").apply { if (!exists()) mkdirs() }
                 val journalsList = mutableListOf<Journal>()
                 var isLegacy = false
                 var isMarkdown = false
@@ -113,6 +119,16 @@ class RestoreImpl(
                                         }
                                         extractedMediaMap[entryName] = targetFile.absolutePath
                                         extractedMediaMap[fileName] = targetFile.absolutePath
+                                    } else if (entryName.startsWith("song_media/") && !entry.isDirectory) {
+                                        val fileName = File(entryName).name
+                                        val targetFile = if (entryName.startsWith("song_media/art/")) {
+                                            File(songArtDir, fileName)
+                                        } else {
+                                            File(songLibraryDir, fileName)
+                                        }
+                                        FileOutputStream(targetFile).use { fos ->
+                                            zis.copyTo(fos)
+                                        }
                                     }
                                 }
                             }
@@ -130,7 +146,7 @@ class RestoreImpl(
                 AppLogger.d(AppLogger.Category.BACKUP, TAG, "Found ${journalsList.size} journals to import. Inserting into DB...")
 
                 journalsList.forEach { journal ->
-                    val updatedJournal = remapMediaPaths(journal, extractedMediaMap, mediaDir)
+                    val updatedJournal = remapMediaPaths(journal, extractedMediaMap, mediaDir, songLibraryDir, songArtDir)
                     val existing = journalRepo.getJournalById(updatedJournal.id)
                     val journalToSave = if (existing != null) {
                         updatedJournal.copy(
@@ -142,6 +158,30 @@ class RestoreImpl(
                         updatedJournal
                     }
                     val id = journalRepo.insertJournal(journalToSave)
+
+                    journalToSave.songDetails?.let { song ->
+                        song.localPreviewPath?.let { path ->
+                            val audioFile = File(path)
+                            if (audioFile.exists()) {
+                                val contentHash = audioFile.nameWithoutExtension
+                                songLibraryDao.upsert(
+                                    SongLibraryEntity(
+                                        contentHash = contentHash,
+                                        localPath = audioFile.absolutePath,
+                                        localArtPath = song.localThumbnailPath,
+                                        sourceUrl = song.previewUrl,
+                                        sourceType = song.sourceType.name,
+                                        title = song.title,
+                                        artistName = song.artistName,
+                                        albumName = song.albumName,
+                                        genre = song.genre,
+                                        thumbnailUrl = song.thumbnailUrl
+                                    )
+                                )
+                            }
+                        }
+                    }
+
                     AppLogger.d(AppLogger.Category.BACKUP, TAG, "Successfully imported journal with ID: $id")
                 }
                 
@@ -159,24 +199,46 @@ class RestoreImpl(
             }
         }
 
-    private fun remapMediaPaths(journal: Journal, extractedMediaMap: Map<String, String>, mediaDir: File): Journal {
-        if (journal.images.isEmpty()) return journal
-        val newPaths = journal.images.map { oldPath ->
-            val clean = oldPath.trim()
-            val fileName = File(clean).name
-            val mapped = extractedMediaMap[clean]
-                ?: extractedMediaMap[clean.removePrefix("../")]
-                ?: extractedMediaMap[clean.removePrefix("media/")]
-                ?: extractedMediaMap["${journal.id}/$fileName"]
-                ?: extractedMediaMap[fileName]
+    private fun remapMediaPaths(
+        journal: Journal,
+        extractedMediaMap: Map<String, String>,
+        mediaDir: File,
+        songLibraryDir: File,
+        songArtDir: File
+    ): Journal {
+        val newPaths = if (journal.images.isNotEmpty()) {
+            journal.images.map { oldPath ->
+                val clean = oldPath.trim()
+                val fileName = File(clean).name
+                val mapped = extractedMediaMap[clean]
+                    ?: extractedMediaMap[clean.removePrefix("../")]
+                    ?: extractedMediaMap[clean.removePrefix("media/")]
+                    ?: extractedMediaMap["${journal.id}/$fileName"]
+                    ?: extractedMediaMap[fileName]
 
-            if (mapped != null && File(mapped).exists()) {
-                mapped
-            } else {
-                val direct = File(mediaDir, fileName)
-                if (direct.exists()) direct.absolutePath else oldPath
+                if (mapped != null && File(mapped).exists()) {
+                    mapped
+                } else {
+                    val direct = File(mediaDir, fileName)
+                    if (direct.exists()) direct.absolutePath else oldPath
+                }
             }
+        } else {
+            journal.images
         }
-        return journal.copy(images = newPaths)
+
+        val localizedSong = journal.songDetails?.let { song ->
+            val localAudio = song.localPreviewPath?.let {
+                val file = File(songLibraryDir, File(it).name)
+                if (file.exists()) file.absolutePath else null
+            }
+            val localArt = song.localThumbnailPath?.let {
+                val file = File(songArtDir, File(it).name)
+                if (file.exists()) file.absolutePath else null
+            }
+            song.copy(localPreviewPath = localAudio, localThumbnailPath = localArt)
+        }
+
+        return journal.copy(images = newPaths, songDetails = localizedSong)
     }
 }

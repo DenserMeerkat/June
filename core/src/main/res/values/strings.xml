@@ -342,7 +342,8 @@
     <string name="create_backup">Backup</string>
     <string name="create_backup_desc">Save all journals and media to a backup file</string>
     <string name="create_backup_dialog_title">Backup Data</string>
-    <string name="create_backup_dialog_desc">Creates a complete backup of all journals and media to restore later.</string>
+    <string name="create_backup_dialog_desc">Creates a complete backup of all journals, media, and songs to restore later.</string>
+    <string name="backup_include_media_desc">Photos, videos, and songs attached to entries</string>
     <string name="backup_action">Backup</string>
     <string name="restore_backup">Restore</string>
     <string name="restore_backup_desc">Restore journals from a backup file</string>
