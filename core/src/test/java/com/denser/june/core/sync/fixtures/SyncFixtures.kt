@@ -1,6 +1,7 @@
 package com.denser.june.core.sync.fixtures
 
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.sync.SyncManifest
 
 /**
@@ -48,7 +49,8 @@ object SyncFixtures {
         id: String = "journal-synced",
         title: String = "Synced Journal",
         syncedAt: Long = T1,
-        updatedAt: Long = T1
+        updatedAt: Long = T1,
+        images: List<String> = emptyList()
     ) = Journal(
         id = id,
         title = title,
@@ -57,7 +59,8 @@ object SyncFixtures {
         updatedAt = updatedAt,
         dateTime = T0,
         syncedAt = syncedAt,
-        cloudId = "$id.json"
+        cloudId = "$id.json",
+        images = images
     )
 
     /** A journal modified on Device A after the last sync. */
@@ -80,35 +83,29 @@ object SyncFixtures {
         updatedAt = T3   // after syncedAt=T1 but < T2
     )
 
-    /** A soft-deleted journal (in bin). */
-    fun deletedJournal(
-        id: String = "journal-deleted",
-        deletedAt: Long = T2
-    ) = newJournal(id = id).copy(
-        deletedAt = deletedAt,
-        updatedAt = deletedAt,
-        syncedAt = T1,
-        cloudId = "$id.json"
-    )
-
     // --- Manifest builders ---
 
     fun manifest(
         totalJournals: Int = 0,
+        totalMedia: Int = 0,
+        totalSongMedia: Int = 0,
         deletedIds: List<String> = emptyList(),
-        schemaVersion: Int = 3,
+        schemaVersion: Int = SyncManifest.CURRENT_SCHEMA_VERSION,
         deviceId: String = "test-device-A",
         journalMetadata: Map<String, com.denser.june.core.domain.sync.JournalSyncMeta> = emptyMap(),
-        mediaMetadata: Map<String, com.denser.june.core.domain.sync.MediaSyncMeta> = emptyMap()
+        mediaMetadata: Map<String, com.denser.june.core.domain.sync.MediaSyncMeta> = emptyMap(),
+        songMediaMetadata: Map<String, com.denser.june.core.domain.sync.MediaSyncMeta> = emptyMap()
     ) = SyncManifest(
         lastSyncTime = T1,
         lastSyncDeviceId = deviceId,
         databaseVersion = 4,
         schemaVersion = schemaVersion,
         totalJournals = totalJournals,
-        totalMedia = 0,
+        totalMedia = totalMedia,
+        totalSongMedia = totalSongMedia,
         deletedIds = deletedIds,
         journalMetadata = journalMetadata,
-        mediaMetadata = mediaMetadata
+        mediaMetadata = mediaMetadata,
+        songMediaMetadata = songMediaMetadata
     )
 }

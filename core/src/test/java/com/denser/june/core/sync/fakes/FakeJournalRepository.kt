@@ -57,21 +57,22 @@ class FakeJournalRepository : JournalRepository {
     }
 
     override suspend fun restoreJournal(id: String) {
-        db[id]?.let { db[id] = it.copy(deletedAt = null) }
+        db[id]?.let { db[id] = it.copy(deletedAt = null, updatedAt = System.currentTimeMillis()) }
         _journalFlow.value = db.values.filter { it.deletedAt == null }.toList()
     }
 
     override suspend fun hardDeleteJournal(id: String) {
         db.remove(id)
-        tombstones.remove(id)
+        tombstones.add(id)
         _journalFlow.value = db.values.filter { it.deletedAt == null }.toList()
     }
 
     override suspend fun deleteAllJournals() { db.clear(); _journalFlow.value = emptyList() }
 
     override suspend fun emptyBin() {
-        val deletedIds = journalDaoGetDeletedJournalsSync()
+        val deletedIds = journalDaoGetDeletedJournalsSync().map { it.id }
         if (deletedIds.isNotEmpty()) {
+            tombstones.addAll(deletedIds)
             db.entries.removeIf { it.value.deletedAt != null }
         }
     }
@@ -88,7 +89,7 @@ class FakeJournalRepository : JournalRepository {
 
     override suspend fun getJournalsToSync(threshold: Long): List<Journal> =
         db.values.filter { j ->
-            j.deletedAt == null && ((j.updatedAt ?: 0L) > ((j.syncedAt ?: 0L) + threshold) || j.syncedAt == null)
+            (j.updatedAt ?: 0L) > ((j.syncedAt ?: 0L) + threshold) || j.syncedAt == null
         }
 
     override suspend fun getAllJournalsIncludeDeletedSync(): List<Journal> = db.values.toList()
@@ -117,7 +118,7 @@ class FakeJournalRepository : JournalRepository {
     override fun observeHasUnsyncedJournals(threshold: Long): Flow<Boolean> =
         _journalFlow.map { _ -> hasTombstones() || hasUnsyncedJournals(threshold) }
     override suspend fun hasUnsyncedJournals(threshold: Long): Boolean =
-        db.values.any { j -> j.deletedAt == null && ((j.updatedAt ?: 0L) > ((j.syncedAt ?: 0L) + threshold) || j.syncedAt == null) }
+        db.values.any { j -> (j.updatedAt ?: 0L) > ((j.syncedAt ?: 0L) + threshold) || j.syncedAt == null }
     override fun observeHasTombstones(): Flow<Boolean> = flowOf(tombstones.isNotEmpty())
     override suspend fun hasTombstones(): Boolean = tombstones.isNotEmpty()
 }

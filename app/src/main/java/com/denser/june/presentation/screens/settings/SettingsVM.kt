@@ -117,7 +117,7 @@ class SettingsVM(
 
                 is SettingsAction.OnExportJournals -> {
                     _localState.update { it.copy(exportState = AsyncOp.Loading) }
-                    val result = exportRepo.exportData(includeMedia = action.includeMedia)
+                    val result = exportRepo.exportData(includeMedia = action.includeMedia, includeSongFiles = action.includeMedia)
                     _localState.update { it.copy(exportState = result.toAsyncOp()) }
                 }
 

@@ -200,7 +200,7 @@ interface JournalDao {
     @Query("DELETE FROM journals WHERE deletedAt IS NOT NULL")
     suspend fun emptyBin()
 
-    @Query("SELECT * FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL) AND deletedAt IS NULL")
+    @Query("SELECT * FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL)")
     suspend fun getJournalsToSync(threshold: Long): List<JournalEntity>
 
     @Query("UPDATE journals SET cloudId = :cloudId, syncedAt = :syncedAt WHERE id = :id")
@@ -234,10 +234,10 @@ interface JournalDao {
     """)
     suspend fun bumpJournalTimestampsByTag(tagName: String, timestamp: Long)
 
-    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL) AND deletedAt IS NULL)")
+    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL))")
     suspend fun hasUnsyncedJournals(threshold: Long): Boolean
 
-    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL) AND deletedAt IS NULL)")
+    @Query("SELECT EXISTS(SELECT 1 FROM journals WHERE (updatedAt > (syncedAt + :threshold) OR syncedAt IS NULL))")
     fun observeHasUnsyncedJournals(threshold: Long): Flow<Boolean>
 
     @Query("SELECT EXISTS(SELECT 1 FROM deleted_journal_tombstones)")

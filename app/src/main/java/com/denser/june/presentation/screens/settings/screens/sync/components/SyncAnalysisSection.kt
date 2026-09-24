@@ -32,7 +32,10 @@ fun SyncAnalysisSection(
     val mediaChanges = (analysis?.pendingMediaUploadsCount ?: 0) +
             (analysis?.pendingMediaDownloadsCount ?: 0)
 
-    val totalChanges = journalChanges + mediaChanges
+    val songChanges = (analysis?.pendingSongUploadsCount ?: 0) +
+            (analysis?.pendingSongDownloadsCount ?: 0)
+
+    val totalChanges = journalChanges + mediaChanges + songChanges
 
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -56,16 +59,18 @@ fun SyncAnalysisSection(
                         stringResource(R.string.local),
                         analysis?.localJournals,
                         analysis?.localMedia,
+                        analysis?.localSongFiles,
                         Modifier.weight(1f)
                     )
                     VerticalDivider(
-                        modifier = Modifier.height(56.dp),
+                        modifier = Modifier.height(72.dp),
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
                     AnalysisStatColumn(
                         stringResource(R.string.cloud),
                         analysis?.remoteJournals,
                         analysis?.remoteMedia,
+                        analysis?.remoteSongFiles,
                         Modifier.weight(1f)
                     )
                 }
@@ -134,9 +139,13 @@ fun SyncAnalysisSection(
                                 when {
                                     analysis == null -> stringResource(R.string.check_for_differences)
                                     totalChanges == 0 -> stringResource(R.string.local_and_cloud_matching)
+                                    journalChanges > 0 && mediaChanges > 0 && songChanges > 0 -> "$journalChanges journals, $mediaChanges media, and $songChanges songs pending"
                                     journalChanges > 0 && mediaChanges > 0 -> stringResource(R.string.journals_and_media_pending, journalChanges, mediaChanges)
+                                    journalChanges > 0 && songChanges > 0 -> "$journalChanges journals and $songChanges songs pending"
+                                    mediaChanges > 0 && songChanges > 0 -> "$mediaChanges media and $songChanges songs pending"
                                     journalChanges > 0 -> pluralStringResource(R.plurals.journals_pending_count, journalChanges, journalChanges)
-                                    else -> pluralStringResource(R.plurals.media_pending_count, mediaChanges, mediaChanges)
+                                    mediaChanges > 0 -> pluralStringResource(R.plurals.media_pending_count, mediaChanges, mediaChanges)
+                                    else -> "$songChanges songs pending"
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -173,7 +182,7 @@ fun SyncAnalysisSection(
 }
 
 @Composable
-private fun AnalysisStatColumn(title: String, journals: Int?, media: Int?, modifier: Modifier) {
+private fun AnalysisStatColumn(title: String, journals: Int?, media: Int?, songs: Int?, modifier: Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
             title,
@@ -187,6 +196,11 @@ private fun AnalysisStatColumn(title: String, journals: Int?, media: Int?, modif
         )
         Text(
             if (media != null) pluralStringResource(R.plurals.media_stat_count, media, media) else "- ${stringResource(R.string.media)}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+        )
+        Text(
+            if (songs != null) "$songs ${if (songs == 1) "song" else "songs"}" else "- songs",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )

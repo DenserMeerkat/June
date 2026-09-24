@@ -99,7 +99,9 @@ val coreModule = module {
             providers,
             File(context.filesDir, "journal_media"),
             get(),
-            get(named("ApplicationScope"))
+            get(named("ApplicationScope")),
+            get(),
+            File(context.filesDir, "song_media")
         )
     }
 }

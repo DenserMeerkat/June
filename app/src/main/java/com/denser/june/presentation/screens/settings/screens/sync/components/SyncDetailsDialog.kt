@@ -24,7 +24,7 @@ fun SyncDetailsDialog(
     onDismiss: () -> Unit
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Journals", "Media")
+    val tabs = listOf("Journals", "Media", "Songs")
 
     JuneFullScreenDialog(
         onDismissRequest = onDismiss,
@@ -57,7 +57,7 @@ fun SyncDetailsDialog(
                     )
                 }
 
-                PrimaryTabRow(
+                PrimaryScrollableTabRow(
                     selectedTabIndex = selectedTabIndex,
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     divider = {},
@@ -68,10 +68,10 @@ fun SyncDetailsDialog(
                             onClick = { selectedTabIndex = index },
                             text = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    val count = if (index == 0) {
-                                        (analysis.pendingUploadsCount + analysis.pendingDownloadsCount + analysis.pendingDeletionsCount)
-                                    } else {
-                                        (analysis.pendingMediaUploadsCount + analysis.pendingMediaDownloadsCount)
+                                    val count = when (index) {
+                                        0 -> analysis.pendingUploadsCount + analysis.pendingDownloadsCount + analysis.pendingDeletionsCount
+                                        1 -> analysis.pendingMediaUploadsCount + analysis.pendingMediaDownloadsCount
+                                        else -> analysis.pendingSongUploadsCount + analysis.pendingSongDownloadsCount
                                     }
 
                                     Text(title, fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal)
@@ -93,10 +93,10 @@ fun SyncDetailsDialog(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 Box(modifier = Modifier.weight(1f)) {
-                    if (selectedTabIndex == 0) {
-                        JournalList(analysis)
-                    } else {
-                        MediaList(analysis)
+                    when (selectedTabIndex) {
+                        0 -> JournalList(analysis)
+                        1 -> MediaList(analysis)
+                        else -> SongList(analysis)
                     }
                 }
 
@@ -176,6 +176,29 @@ private fun MediaList(analysis: SyncAnalysis) {
 
         if (analysis.pendingMediaUploadsList.isEmpty() && analysis.pendingMediaDownloadsList.isEmpty()) {
             item { EmptyState("No media changes") }
+        }
+    }
+}
+
+@Composable
+private fun SongList(analysis: SyncAnalysis) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        if (analysis.pendingSongUploadsList.isNotEmpty()) {
+            item { SectionHeader("To Upload", R.drawable.music_note_2_24px) }
+            items(analysis.pendingSongUploadsList) { DetailItem(it) }
+        }
+
+        if (analysis.pendingSongDownloadsList.isNotEmpty()) {
+            item { SectionHeader("To Download", R.drawable.music_note_2_24px) }
+            items(analysis.pendingSongDownloadsList) { DetailItem(it) }
+        }
+
+        if (analysis.pendingSongUploadsList.isEmpty() && analysis.pendingSongDownloadsList.isEmpty()) {
+            item { EmptyState("No song file changes") }
         }
     }
 }
