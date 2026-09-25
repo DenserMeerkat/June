@@ -417,9 +417,9 @@ class SongRepositoryImpl(
 
     override suspend fun addToLibrary(song: SongDetails): Result<SongDetails> = withContext(Dispatchers.IO) {
         try {
-            val localPreview = song.localPreviewPath
-            if (localPreview != null && File(localPreview).exists() && File(localPreview).length() > 0L) {
-                val hash = File(localPreview).nameWithoutExtension
+            val resolvedLocal = FileUtils.resolveSongMedia(context, song.localPreviewPath, "library")
+            if (resolvedLocal != null && resolvedLocal.exists() && resolvedLocal.length() > 0L) {
+                val hash = resolvedLocal.nameWithoutExtension
                 var artPath = song.localThumbnailPath
                 if ((artPath == null || !File(artPath).exists()) && song.thumbnailUrl != null) {
                     val artResult = cacheAlbumArt(song.thumbnailUrl, hash)
@@ -429,7 +429,7 @@ class SongRepositoryImpl(
                 songLibraryDao.upsert(
                     SongLibraryEntity(
                         contentHash = hash,
-                        localPath = localPreview,
+                        localPath = resolvedLocal.absolutePath,
                         localArtPath = finalArtPath,
                         sourceUrl = song.previewUrl ?: song.links.spotify ?: song.links.deezer,
                         sourceType = song.sourceType.name,
@@ -441,11 +441,26 @@ class SongRepositoryImpl(
                         addedAt = System.currentTimeMillis()
                     )
                 )
-                if (finalArtPath != song.localThumbnailPath) {
-                    updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath)
-                }
-                val updated = song.copy(localThumbnailPath = finalArtPath)
+                updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, resolvedLocal.absolutePath)
+                val updated = song.copy(
+                    localPreviewPath = resolvedLocal.absolutePath,
+                    localThumbnailPath = finalArtPath
+                )
                 return@withContext Result.success(updated)
+            }
+
+            val existingInLibrary = songLibraryDao.getByTitleAndArtist(song.title, song.artistName)
+            if (existingInLibrary != null) {
+                val resolvedLib = FileUtils.resolveSongMedia(context, existingInLibrary.localPath, "library")
+                if (resolvedLib != null && resolvedLib.exists() && resolvedLib.length() > 0L) {
+                    val finalArt = existingInLibrary.localArtPath ?: song.localThumbnailPath
+                    updateMatchingJournalsArtwork(song.title, song.artistName, finalArt, resolvedLib.absolutePath)
+                    val updated = song.copy(
+                        localPreviewPath = resolvedLib.absolutePath,
+                        localThumbnailPath = finalArt
+                    )
+                    return@withContext Result.success(updated)
+                }
             }
 
             if (song.previewUrl != null) {
@@ -459,17 +474,22 @@ class SongRepositoryImpl(
                         artPath = artResult.getOrNull()
                     }
                     val finalArtPath = artPath ?: song.localThumbnailPath
-                    songLibraryDao.updateMetadata(
-                        hash = hash,
-                        title = song.title,
-                        artist = song.artistName,
-                        album = song.albumName,
-                        genre = song.genre,
-                        localArtPath = finalArtPath
+                    songLibraryDao.upsert(
+                        SongLibraryEntity(
+                            contentHash = hash,
+                            localPath = downloadedPath,
+                            localArtPath = finalArtPath,
+                            sourceUrl = song.previewUrl,
+                            sourceType = song.sourceType.name,
+                            title = song.title,
+                            artistName = song.artistName,
+                            albumName = song.albumName,
+                            genre = song.genre,
+                            thumbnailUrl = song.thumbnailUrl,
+                            addedAt = System.currentTimeMillis()
+                        )
                     )
-                    if (finalArtPath != null) {
-                        updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, downloadedPath)
-                    }
+                    updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, downloadedPath)
                     val updated = song.copy(
                         localPreviewPath = downloadedPath,
                         localThumbnailPath = finalArtPath
@@ -491,22 +511,39 @@ class SongRepositoryImpl(
                     val fresh = freshResult.getOrThrow()
                     val finalArtPath = fresh.localThumbnailPath ?: song.localThumbnailPath
                     val finalAudioPath = fresh.localPreviewPath ?: song.localPreviewPath
-                    if (finalArtPath != null || finalAudioPath != null) {
-                        updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, finalAudioPath)
+                    val resolvedAudio = FileUtils.resolveSongMedia(context, finalAudioPath, "library")
+                    if (resolvedAudio != null && resolvedAudio.exists() && resolvedAudio.length() > 0L) {
+                        val hash = resolvedAudio.nameWithoutExtension
+                        songLibraryDao.upsert(
+                            SongLibraryEntity(
+                                contentHash = hash,
+                                localPath = resolvedAudio.absolutePath,
+                                localArtPath = finalArtPath,
+                                sourceUrl = linkUrl,
+                                sourceType = song.sourceType.name,
+                                title = fresh.title.ifBlank { song.title },
+                                artistName = fresh.artistName.ifBlank { song.artistName },
+                                albumName = fresh.albumName ?: song.albumName,
+                                genre = fresh.genre ?: song.genre,
+                                thumbnailUrl = fresh.thumbnailUrl ?: song.thumbnailUrl,
+                                addedAt = System.currentTimeMillis()
+                            )
+                        )
+                        updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, resolvedAudio.absolutePath)
+                        val merged = song.copy(
+                            title = fresh.title.ifBlank { song.title },
+                            artistName = fresh.artistName.ifBlank { song.artistName },
+                            albumName = fresh.albumName ?: song.albumName,
+                            genre = fresh.genre ?: song.genre,
+                            thumbnailUrl = fresh.thumbnailUrl ?: song.thumbnailUrl,
+                            localThumbnailPath = finalArtPath,
+                            previewUrl = fresh.previewUrl ?: song.previewUrl,
+                            previewUrlProvider = fresh.previewUrlProvider ?: song.previewUrlProvider,
+                            localPreviewPath = resolvedAudio.absolutePath,
+                            links = fresh.links
+                        )
+                        return@withContext Result.success(merged)
                     }
-                    val merged = song.copy(
-                        title = fresh.title.ifBlank { song.title },
-                        artistName = fresh.artistName.ifBlank { song.artistName },
-                        albumName = fresh.albumName ?: song.albumName,
-                        genre = fresh.genre ?: song.genre,
-                        thumbnailUrl = fresh.thumbnailUrl ?: song.thumbnailUrl,
-                        localThumbnailPath = finalArtPath,
-                        previewUrl = fresh.previewUrl ?: song.previewUrl,
-                        previewUrlProvider = fresh.previewUrlProvider ?: song.previewUrlProvider,
-                        localPreviewPath = finalAudioPath,
-                        links = fresh.links
-                    )
-                    return@withContext Result.success(merged)
                 }
             }
 
@@ -525,13 +562,20 @@ class SongRepositoryImpl(
                             artPath = artResult.getOrNull()
                         }
                         val finalArtPath = artPath ?: song.localThumbnailPath
-                        songLibraryDao.updateMetadata(
-                            hash = hash,
-                            title = song.title,
-                            artist = song.artistName,
-                            album = song.albumName ?: itunesSearch.albumName,
-                            genre = song.genre ?: itunesSearch.genre,
-                            localArtPath = finalArtPath
+                        songLibraryDao.upsert(
+                            SongLibraryEntity(
+                                contentHash = hash,
+                                localPath = downloadedPath,
+                                localArtPath = finalArtPath,
+                                sourceUrl = itunesSearch.previewUrl,
+                                sourceType = "LINK",
+                                title = song.title,
+                                artistName = song.artistName,
+                                albumName = song.albumName ?: itunesSearch.albumName,
+                                genre = song.genre ?: itunesSearch.genre,
+                                thumbnailUrl = song.thumbnailUrl ?: itunesSearch.artworkUrl,
+                                addedAt = System.currentTimeMillis()
+                            )
                         )
                         updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, downloadedPath)
                         val updated = song.copy(
@@ -561,13 +605,20 @@ class SongRepositoryImpl(
                             artPath = artResult.getOrNull()
                         }
                         val finalArtPath = artPath ?: song.localThumbnailPath
-                        songLibraryDao.updateMetadata(
-                            hash = hash,
-                            title = song.title,
-                            artist = song.artistName,
-                            album = song.albumName ?: deezerSearch.albumName,
-                            genre = song.genre,
-                            localArtPath = finalArtPath
+                        songLibraryDao.upsert(
+                            SongLibraryEntity(
+                                contentHash = hash,
+                                localPath = downloadedPath,
+                                localArtPath = finalArtPath,
+                                sourceUrl = deezerSearch.previewUrl,
+                                sourceType = "LINK",
+                                title = song.title,
+                                artistName = song.artistName,
+                                albumName = song.albumName ?: deezerSearch.albumName,
+                                genre = song.genre,
+                                thumbnailUrl = song.thumbnailUrl ?: deezerSearch.coverUrl,
+                                addedAt = System.currentTimeMillis()
+                            )
                         )
                         updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, downloadedPath)
                         val updated = song.copy(

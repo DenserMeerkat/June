@@ -17,6 +17,9 @@ interface SongLibraryDao {
     @Query("SELECT * FROM song_library WHERE sourceUrl = :url LIMIT 1")
     suspend fun getBySourceUrl(url: String): SongLibraryEntity?
 
+    @Query("SELECT * FROM song_library WHERE LOWER(TRIM(title)) = LOWER(TRIM(:title)) AND LOWER(TRIM(artistName)) = LOWER(TRIM(:artist)) LIMIT 1")
+    suspend fun getByTitleAndArtist(title: String, artist: String): SongLibraryEntity?
+
     @Query("SELECT * FROM song_library ORDER BY addedAt DESC")
     fun observeAll(): Flow<List<SongLibraryEntity>>
 

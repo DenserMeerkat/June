@@ -25,6 +25,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.File
 
 @OptIn(FlowPreview::class)
 class EditorVM(
@@ -109,7 +110,24 @@ class EditorVM(
                     .distinctBy { "${it.title.trim().lowercase()}_${it.artistName.trim().lowercase()}" }
                 libSongs to distinctUnimported
             }.collect { (libSongs, unimported) ->
-                _state.update { it.copy(librarySongs = libSongs, unimportedJournalSongs = unimported) }
+                _state.update { current ->
+                    var activeDetails = current.songDetails
+                    val currentPath = activeDetails?.localPreviewPath
+                    if (activeDetails != null && (currentPath == null || !File(currentPath).exists())) {
+                        val match = libSongs.firstOrNull { libSong ->
+                            libSong.title.trim().equals(activeDetails.title.trim(), ignoreCase = true) &&
+                            libSong.artistName.trim().equals(activeDetails.artistName.trim(), ignoreCase = true) &&
+                            libSong.localPreviewPath?.let { File(it).exists() } == true
+                        }
+                        if (match != null) {
+                            activeDetails = activeDetails.copy(
+                                localPreviewPath = match.localPreviewPath,
+                                localThumbnailPath = activeDetails.localThumbnailPath ?: match.localThumbnailPath
+                            )
+                        }
+                    }
+                    current.copy(librarySongs = libSongs, unimportedJournalSongs = unimported, songDetails = activeDetails)
+                }
             }
         }
 
@@ -206,6 +224,7 @@ class EditorVM(
                     _state.update { it.copy(importingSongKeys = it.importingSongKeys + allKeys) }
                     try {
                         var successCount = 0
+                        var failureCount = 0
                         for (song in action.songs) {
                             val songKey = "${song.title.trim().lowercase()}_${song.artistName.trim().lowercase()}"
                             try {
@@ -216,13 +235,19 @@ class EditorVM(
                                     if (_state.value.songDetails?.title == updated.title && _state.value.songDetails?.artistName == updated.artistName) {
                                         updateState { it.copy(songDetails = updated) }
                                     }
+                                } else {
+                                    failureCount++
                                 }
                             } finally {
                                 _state.update { it.copy(importingSongKeys = it.importingSongKeys - songKey) }
                             }
                         }
-                        if (successCount > 0) {
+                        if (successCount > 0 && failureCount == 0) {
                             _uiEvent.send("Added $successCount ${if (successCount == 1) "song" else "songs"} to library")
+                        } else if (successCount > 0 && failureCount > 0) {
+                            _uiEvent.send("Added $successCount ${if (successCount == 1) "song" else "songs"}, $failureCount failed")
+                        } else if (failureCount > 0) {
+                            _uiEvent.send("Failed to add songs: no working preview found")
                         }
                     } finally {
                         _state.update { it.copy(importingSongKeys = it.importingSongKeys - allKeys) }
@@ -347,7 +372,25 @@ class EditorVM(
             val journal = journalRepo.getJournalById(id)
 
             if (journal != null) {
-                existingJournal = journal
+                var details = journal.songDetails
+                val detailPath = details?.localPreviewPath
+                if (details != null && (detailPath == null || !File(detailPath).exists())) {
+                    val match = _state.value.librarySongs.firstOrNull { libSong ->
+                        libSong.title.trim().equals(details.title.trim(), ignoreCase = true) &&
+                        libSong.artistName.trim().equals(details.artistName.trim(), ignoreCase = true) &&
+                        libSong.localPreviewPath?.let { File(it).exists() } == true
+                    }
+                    if (match != null) {
+                        val healed = details.copy(
+                            localPreviewPath = match.localPreviewPath,
+                            localThumbnailPath = details.localThumbnailPath ?: match.localThumbnailPath
+                        )
+                        details = healed
+                        val updatedJournal = journal.copy(songDetails = healed, updatedAt = System.currentTimeMillis())
+                        journalRepo.updateJournal(updatedJournal)
+                    }
+                }
+                existingJournal = journal.copy(songDetails = details)
                 if (journal.content.isNotBlank()) {
                     hyphenState.setMarkdownAsync(journal.content)
                 }
@@ -359,7 +402,7 @@ class EditorVM(
                         emoji = journal.emoji,
                         images = journal.images,
                         location = journal.location,
-                        songDetails = journal.songDetails,
+                        songDetails = details,
                         tags = journal.tags,
                         createdAt = journal.createdAt,
                         updatedAt = journal.updatedAt,
