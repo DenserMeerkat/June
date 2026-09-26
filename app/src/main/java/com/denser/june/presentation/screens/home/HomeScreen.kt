@@ -69,6 +69,7 @@ fun HomeScreen() {
 
     val tagsVM: TagsVM = koinViewModel()
     val activeTag by tagsVM.selectedPrimaryTag.collectAsStateWithLifecycle()
+    val selectedCategory by tagsVM.selectedCategory.collectAsStateWithLifecycle()
 
     val journalsVM: JournalsVM = koinViewModel()
     val searchQuery by journalsVM.searchQuery.collectAsStateWithLifecycle()
@@ -88,7 +89,7 @@ fun HomeScreen() {
         isSearchActive = false
         keyboardController?.hide()
         focusManager.clearFocus(force = true)
-        journalsVM.clearSearch()
+        journalsVM.resetAllFilters()
     }
 
     BackHandler(enabled = !isSearchActive && pagerState.currentPage != 0) {
@@ -142,7 +143,7 @@ fun HomeScreen() {
                                     isSearchActive = false
                                     keyboardController?.hide()
                                     focusManager.clearFocus(force = true)
-                                    journalsVM.clearSearch()
+                                    journalsVM.resetAllFilters()
                                 } else {
                                     scope.launch {
                                         if (pagerState.currentPage != 0) {
@@ -218,10 +219,11 @@ fun HomeScreen() {
         ) {
             HomeBottomBar(
                 pagerState = pagerState,
+                selectedCategory = selectedCategory,
+                activeTag = activeTag,
                 onFabClick = {
-                    val currentTab = HomeTab.entries[pagerState.currentPage]
                     handleFabClick(
-                        currentTab = currentTab,
+                        currentTab = HomeTab.entries[pagerState.currentPage],
                         activeTag = activeTag,
                         isAutoTimeEnabled = isAutoTimeEnabled,
                         navigator = navigator

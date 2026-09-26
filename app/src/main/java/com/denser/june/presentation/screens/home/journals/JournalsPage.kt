@@ -1,5 +1,10 @@
 package com.denser.june.presentation.screens.home.journals
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -54,7 +59,23 @@ fun JournalsPage(
     val hasLocation by viewModel.hasLocation.collectAsStateWithLifecycle()
     val hasActiveFilters by viewModel.hasActiveFilters.collectAsStateWithLifecycle()
 
-    val listState = rememberLazyListState()
+    val feedListState = rememberLazyListState()
+    val searchListState = rememberLazyListState()
+    val listState = if (isSearchActive) searchListState else feedListState
+
+    LaunchedEffect(isSearchActive) {
+        if (isSearchActive) {
+            searchListState.scrollToItem(0)
+        } else {
+            feedListState.scrollToItem(0)
+        }
+    }
+
+    LaunchedEffect(isBookmarked, isDraft, hasMedia, hasSong, hasLocation) {
+        if (isSearchActive) {
+            searchListState.scrollToItem(0)
+        }
+    }
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
@@ -134,49 +155,55 @@ fun JournalsPage(
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                verticalAlignment = Alignment.CenterVertically
+            AnimatedVisibility(
+                visible = isSearchActive,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
             ) {
-                SearchFilterChip(
-                    selected = isBookmarked,
-                    onClick = viewModel::toggleBookmarkFilter,
-                    prefix = "is:",
-                    label = stringResource(R.string.bookmarked),
-                    shapes = ButtonGroupDefaults.connectedLeadingButtonShapes()
-                )
-                SearchFilterChip(
-                    selected = isDraft,
-                    onClick = viewModel::toggleDraftFilter,
-                    prefix = "is:",
-                    label = stringResource(R.string.draft),
-                    shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
-                )
-                SearchFilterChip(
-                    selected = hasMedia,
-                    onClick = viewModel::toggleMediaFilter,
-                    prefix = "has:",
-                    label = stringResource(R.string.media),
-                    shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
-                )
-                SearchFilterChip(
-                    selected = hasSong,
-                    onClick = viewModel::toggleSongFilter,
-                    prefix = "has:",
-                    label = stringResource(R.string.music),
-                    shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
-                )
-                SearchFilterChip(
-                    selected = hasLocation,
-                    onClick = viewModel::toggleLocationFilter,
-                    prefix = "has:",
-                    label = stringResource(R.string.location),
-                    shapes = ButtonGroupDefaults.connectedTrailingButtonShapes()
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SearchFilterChip(
+                        selected = isBookmarked,
+                        onClick = viewModel::toggleBookmarkFilter,
+                        prefix = "is:",
+                        label = stringResource(R.string.bookmarked),
+                        shapes = ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    )
+                    SearchFilterChip(
+                        selected = isDraft,
+                        onClick = viewModel::toggleDraftFilter,
+                        prefix = "is:",
+                        label = stringResource(R.string.draft),
+                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    )
+                    SearchFilterChip(
+                        selected = hasMedia,
+                        onClick = viewModel::toggleMediaFilter,
+                        prefix = "has:",
+                        label = stringResource(R.string.media),
+                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    )
+                    SearchFilterChip(
+                        selected = hasSong,
+                        onClick = viewModel::toggleSongFilter,
+                        prefix = "has:",
+                        label = stringResource(R.string.music),
+                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
+                    )
+                    SearchFilterChip(
+                        selected = hasLocation,
+                        onClick = viewModel::toggleLocationFilter,
+                        prefix = "has:",
+                        label = stringResource(R.string.location),
+                        shapes = ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    )
+                }
             }
 
             LazyColumn(
