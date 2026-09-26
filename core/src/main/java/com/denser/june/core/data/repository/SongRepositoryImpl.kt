@@ -6,6 +6,7 @@ import android.net.Uri
 import com.denser.june.core.data.database.journal.JournalDao
 import com.denser.june.core.data.database.song.SongLibraryDao
 import com.denser.june.core.data.database.song.SongLibraryEntity
+import com.denser.june.core.data.dto.SongLinkPageData
 import com.denser.june.core.data.mappers.mapSongLinkPageDataToSongDetails
 import com.denser.june.core.data.remote.DeezerFetcher
 import com.denser.june.core.data.remote.ItunesFetcher
@@ -18,6 +19,8 @@ import com.denser.june.core.domain.model.SongSourceType
 import com.denser.june.core.domain.repository.SongRepository
 import com.denser.june.core.utils.FileUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -27,6 +30,7 @@ import kotlinx.coroutines.flow.map
 import java.io.File
 import java.security.MessageDigest
 import com.denser.june.core.domain.model.SongFetchEvent
+import androidx.core.net.toUri
 
 class SongRepositoryImpl(
     private val songLinkScraper: SongLinkScraper,
@@ -47,105 +51,143 @@ class SongRepositoryImpl(
         try {
             emit(SongFetchEvent.Progress(1, 4, "Resolving song link…"))
             val pageData = songLinkScraper.fetchPageData(url)
-            if (pageData == null) {
-                emit(SongFetchEvent.Error(Exception("Could not resolve song details")))
-                return@flow
-            }
+                ?: return@flow emit(SongFetchEvent.Error(Exception("Could not resolve song details")))
 
             var details = mapSongLinkPageDataToSongDetails(pageData)
 
             emit(SongFetchEvent.Progress(2, 4, "Fetching preview…"))
-            var previewUrl: String? = null
-            var previewProvider: String? = null
-            var albumName: String? = details.albumName
-            var genre: String? = details.genre
-
-            val spotifyId = pageData.spotifyUniqueId?.split("::")?.lastOrNull()
-                ?: pageData.spotifyUniqueId?.split("|")?.lastOrNull()
-
-            if (spotifyId != null) {
-                previewUrl = spotifyScraper.fetchPreviewUrl(spotifyId)
-                if (previewUrl != null) previewProvider = "Spotify"
-            }
-
-            if (pageData.appleMusicUrl != null) {
-                val appleMusicId = pageData.appleMusicUrl
-                    .substringAfterLast("/")
-                    .substringBefore("?")
-                if (appleMusicId.isNotBlank()) {
-                    val itunesData = itunesFetcher.fetchTrackData(appleMusicId)
-                    if (itunesData != null) {
-                        if (previewUrl == null && itunesData.previewUrl != null) {
-                            previewUrl = itunesData.previewUrl
-                            previewProvider = "Apple Music"
-                        }
-                        if (albumName.isNullOrBlank() && !itunesData.albumName.isNullOrBlank()) {
-                            albumName = itunesData.albumName
-                        }
-                        if (genre.isNullOrBlank() && !itunesData.genre.isNullOrBlank()) {
-                            genre = itunesData.genre
-                        }
-                    }
-                }
-            }
-
-            val deezerId = pageData.deezerUniqueId?.split("|")?.lastOrNull()
-            if (deezerId != null) {
-                val deezerData = deezerFetcher.fetchTrackData(deezerId)
-                if (deezerData != null) {
-                    if (previewUrl == null && deezerData.previewUrl != null) {
-                        previewUrl = deezerData.previewUrl
-                        previewProvider = "Deezer"
-                    }
-                    if (albumName.isNullOrBlank() && !deezerData.albumName.isNullOrBlank()) {
-                        albumName = deezerData.albumName
-                    }
-                }
-            }
-
+            val candidates = resolvePreviewCandidates(pageData)
             details = details.copy(
-                previewUrl = previewUrl ?: details.previewUrl,
-                previewUrlProvider = previewProvider ?: details.previewUrlProvider,
-                albumName = albumName,
-                genre = genre
+                albumName = candidates.firstNotNullOfOrNull { it.albumName } ?: details.albumName,
+                genre = candidates.firstNotNullOfOrNull { it.genre } ?: details.genre
             )
 
             emit(SongFetchEvent.Progress(3, 4, "Downloading artwork…"))
-            val artResult = details.thumbnailUrl?.let { cacheAlbumArt(it) }
-            val localArt = artResult?.getOrNull()
+            val resolvedThumbnailUrl = details.thumbnailUrl ?: candidates.firstNotNullOfOrNull { it.artworkUrl }
+            val localArt = resolvedThumbnailUrl?.let { cacheAlbumArt(it).getOrNull() }
             if (localArt != null) {
-                details = details.copy(localThumbnailPath = localArt)
+                details = details.copy(thumbnailUrl = resolvedThumbnailUrl, localThumbnailPath = localArt)
             }
 
             emit(SongFetchEvent.Progress(4, 4, "Downloading audio…"))
-            if (details.previewUrl != null) {
-                val previewResult = downloadAndCachePreview(details.previewUrl!!, details)
-                val localPreview = previewResult.getOrNull()
-                if (localPreview != null) {
-                    details = details.copy(localPreviewPath = localPreview)
-                    val hash = File(localPreview).nameWithoutExtension
-                    songLibraryDao.upsert(
-                        SongLibraryEntity(
-                            contentHash = hash,
-                            localPath = localPreview,
-                            localArtPath = details.localThumbnailPath,
-                            sourceUrl = url,
-                            sourceType = details.sourceType.name,
-                            title = details.title,
-                            artistName = details.artistName,
-                            albumName = details.albumName,
-                            genre = details.genre,
-                            thumbnailUrl = details.thumbnailUrl,
-                            addedAt = System.currentTimeMillis()
-                        )
-                    )
-                }
+            val working = downloadFirstWorkingPreview(candidates)
+            if (working != null) {
+                val (candidate, audioPath) = working
+                details = details.copy(
+                    previewUrl = candidate.url,
+                    previewUrlProvider = candidate.provider,
+                    localPreviewPath = audioPath,
+                    albumName = candidate.albumName ?: details.albumName,
+                    genre = candidate.genre ?: details.genre
+                )
+                upsertToLibrary(details, audioPath, sourceUrl = url)
+            } else {
+                details = details.copy(
+                    previewUrl = null,
+                    previewUrlProvider = null,
+                    localPreviewPath = null
+                )
             }
 
             emit(SongFetchEvent.Success(details))
         } catch (e: Exception) {
             emit(SongFetchEvent.Error(e))
         }
+    }
+
+    private data class PreviewCandidate(
+        val url: String,
+        val provider: String,
+        val albumName: String? = null,
+        val genre: String? = null,
+        val artworkUrl: String? = null
+    )
+
+    private suspend fun resolvePreviewCandidates(pageData: SongLinkPageData): List<PreviewCandidate> {
+        val appleMusicId = pageData.appleMusicUrl?.toUri()?.let { uri ->
+            uri.getQueryParameter("i")?.takeIf { it.isNotBlank() }
+                ?: uri.lastPathSegment?.takeIf { it.all(Char::isDigit) }
+        }
+        val deezerId = pageData.deezerUniqueId?.split("::", "|", "/")?.lastOrNull { it.all(Char::isDigit) }
+            ?: pageData.deezerUrl?.split("?")?.firstOrNull()?.split("/")?.lastOrNull { it.all(Char::isDigit) }
+        val spotifyId = pageData.spotifyUniqueId?.split("::", "|")?.lastOrNull()
+
+        val (itunesDirect, deezerDirect, spotifyUrl) = coroutineScope {
+            val itunes = async { appleMusicId?.let { itunesFetcher.fetchTrackData(it) } }
+            val deezer = async { deezerId?.let { deezerFetcher.fetchTrackData(it) } }
+            val spotify = async { spotifyId?.let { spotifyScraper.fetchPreviewUrl(it) } }
+            Triple(itunes.await(), deezer.await(), spotify.await())
+        }
+
+        val (itunesSearch, deezerSearch) = if (itunesDirect?.previewUrl == null && deezerDirect?.previewUrl == null) {
+            val query = "${pageData.title} ${pageData.artistName}".trim()
+            if (query.isNotBlank()) {
+                coroutineScope {
+                    val itunes = async { itunesFetcher.searchTrack(query) }
+                    val deezer = async { deezerFetcher.searchTrack(query) }
+                    Pair(itunes.await(), deezer.await())
+                }
+            } else Pair(null, null)
+        } else Pair(null, null)
+
+        return listOfNotNull(
+            itunesDirect?.previewUrl?.let { PreviewCandidate(it, "Apple Music", itunesDirect.albumName, itunesDirect.genre) },
+            deezerDirect?.previewUrl?.let { PreviewCandidate(it, "Deezer", deezerDirect.albumName) },
+            itunesSearch?.previewUrl?.let { PreviewCandidate(it, "Apple Music", itunesSearch.albumName, itunesSearch.genre, itunesSearch.artworkUrl) },
+            deezerSearch?.previewUrl?.let { PreviewCandidate(it, "Deezer", deezerSearch.albumName, null, deezerSearch.coverUrl) },
+            spotifyUrl?.takeIf { it.isNotBlank() }?.let { PreviewCandidate(it, "Spotify") }
+        )
+    }
+
+    private suspend fun downloadFirstWorkingPreview(candidates: List<PreviewCandidate>): Pair<PreviewCandidate, String>? {
+        for (candidate in candidates) {
+            val result = downloadAndCachePreview(candidate.url, skipUpsert = true)
+            val path = result.getOrNull()
+            if (path != null && File(path).length() > 1024L) {
+                return candidate to path
+            }
+        }
+        return null
+    }
+
+    private suspend fun upsertToLibrary(
+        song: SongDetails,
+        localAudioPath: String,
+        hash: String = File(localAudioPath).nameWithoutExtension,
+        sourceUrl: String? = song.previewUrl
+    ) {
+        songLibraryDao.upsert(
+            SongLibraryEntity(
+                contentHash = hash,
+                localPath = localAudioPath,
+                localArtPath = song.localThumbnailPath,
+                sourceUrl = sourceUrl,
+                sourceType = song.sourceType.name,
+                title = song.title,
+                artistName = song.artistName,
+                albumName = song.albumName,
+                genre = song.genre,
+                thumbnailUrl = song.thumbnailUrl,
+                addedAt = System.currentTimeMillis()
+            )
+        )
+    }
+
+    private suspend fun persistAndSyncSong(
+        song: SongDetails,
+        audioPath: String,
+        artPath: String? = song.localThumbnailPath,
+        sourceUrl: String? = song.previewUrl
+    ): SongDetails {
+        val hash = File(audioPath).nameWithoutExtension
+        val resolvedArt = if ((artPath == null || !File(artPath).exists()) && song.thumbnailUrl != null) {
+            cacheAlbumArt(song.thumbnailUrl, hash).getOrNull() ?: artPath
+        } else artPath
+
+        val updated = song.copy(localPreviewPath = audioPath, localThumbnailPath = resolvedArt)
+        upsertToLibrary(updated, audioPath, hash, sourceUrl)
+        updateMatchingJournalsArtwork(updated.title, updated.artistName, resolvedArt, audioPath)
+        return updated
     }
 
     override suspend fun fetchSongDetails(url: String): Result<SongDetails> {
@@ -163,6 +205,12 @@ class SongRepositoryImpl(
     override suspend fun downloadAndCachePreview(
         previewUrl: String,
         songDetails: SongDetails?
+    ): Result<String> = downloadAndCachePreview(previewUrl, songDetails, skipUpsert = false)
+
+    private suspend fun downloadAndCachePreview(
+        previewUrl: String,
+        songDetails: SongDetails? = null,
+        skipUpsert: Boolean = false
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
             val cachedByUrl = songLibraryDao.getBySourceUrl(previewUrl)
@@ -176,34 +224,40 @@ class SongRepositoryImpl(
                 return@withContext Result.failure(Exception("Failed to download audio preview: ${response.code}"))
             }
 
-            val bytes = response.body?.bytes()
-                ?: return@withContext Result.failure(Exception("Empty preview response body"))
-
             val digest = MessageDigest.getInstance("SHA-256")
-            val contentHash = digest.digest(bytes).joinToString("") { "%02x".format(it) }
+            val tempFile = File(libraryDir, "preview_${System.currentTimeMillis()}.tmp")
+            response.body?.byteStream()?.use { input ->
+                tempFile.outputStream().use { output ->
+                    val buf = ByteArray(8192)
+                    var read: Int
+                    while (input.read(buf).also { read = it } != -1) {
+                        digest.update(buf, 0, read)
+                        output.write(buf, 0, read)
+                    }
+                }
+            } ?: return@withContext Result.failure(Exception("Empty preview response body"))
 
+            val contentHash = digest.digest().joinToString("") { "%02x".format(it) }
             val targetFile = File(libraryDir, "$contentHash.mp3")
             val cachedByHash = songLibraryDao.getByHash(contentHash)
             if (cachedByHash != null && targetFile.exists() && targetFile.length() > 0L) {
+                tempFile.delete()
                 return@withContext Result.success(targetFile.absolutePath)
             }
 
-            targetFile.writeBytes(bytes)
+            if (!tempFile.renameTo(targetFile)) {
+                tempFile.copyTo(targetFile, overwrite = true)
+                tempFile.delete()
+            }
 
-            val entry = SongLibraryEntity(
-                contentHash = contentHash,
-                localPath = targetFile.absolutePath,
-                localArtPath = songDetails?.localThumbnailPath,
-                sourceUrl = previewUrl,
-                sourceType = songDetails?.sourceType?.name ?: "LINK",
-                title = songDetails?.title ?: "Unknown Title",
-                artistName = songDetails?.artistName ?: "Unknown Artist",
-                albumName = songDetails?.albumName,
-                genre = songDetails?.genre,
-                thumbnailUrl = songDetails?.thumbnailUrl,
-                addedAt = System.currentTimeMillis()
-            )
-            songLibraryDao.upsert(entry)
+            if (!skipUpsert) {
+                upsertToLibrary(
+                    song = songDetails ?: SongDetails(title = "Unknown Title", artistName = "Unknown Artist"),
+                    localAudioPath = targetFile.absolutePath,
+                    hash = contentHash,
+                    sourceUrl = previewUrl
+                )
+            }
 
             Result.success(targetFile.absolutePath)
         } catch (e: Exception) {
@@ -217,6 +271,13 @@ class SongRepositoryImpl(
         songHash: String?
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
+            if (songHash != null) {
+                val existing = File(artDir, "$songHash.jpg")
+                if (existing.exists() && existing.length() > 0L) {
+                    return@withContext Result.success(existing.absolutePath)
+                }
+            }
+
             val request = Request.Builder().url(thumbnailUrl).build()
             val response = okHttpClient.newCall(request).execute()
             if (!response.isSuccessful) {
@@ -353,21 +414,7 @@ class SongRepositoryImpl(
                 sourceType = SongSourceType.LOCAL_FILE
             )
 
-            songLibraryDao.upsert(
-                SongLibraryEntity(
-                    contentHash = contentHash,
-                    localPath = audioFile.absolutePath,
-                    localArtPath = localArtPath,
-                    sourceUrl = null,
-                    sourceType = "LOCAL_FILE",
-                    title = resolvedTitle,
-                    artistName = resolvedArtist,
-                    albumName = album,
-                    genre = genre,
-                    thumbnailUrl = null,
-                    addedAt = System.currentTimeMillis()
-                )
-            )
+            upsertToLibrary(songDetails, audioFile.absolutePath, contentHash)
 
             emit(SongFetchEvent.Success(songDetails))
         } catch (e: Exception) {
@@ -418,83 +465,22 @@ class SongRepositoryImpl(
     override suspend fun addToLibrary(song: SongDetails): Result<SongDetails> = withContext(Dispatchers.IO) {
         try {
             val resolvedLocal = FileUtils.resolveSongMedia(context, song.localPreviewPath, "library")
-            if (resolvedLocal != null && resolvedLocal.exists() && resolvedLocal.length() > 0L) {
-                val hash = resolvedLocal.nameWithoutExtension
-                var artPath = song.localThumbnailPath
-                if ((artPath == null || !File(artPath).exists()) && song.thumbnailUrl != null) {
-                    val artResult = cacheAlbumArt(song.thumbnailUrl, hash)
-                    artPath = artResult.getOrNull()
-                }
-                val finalArtPath = artPath ?: song.localThumbnailPath
-                songLibraryDao.upsert(
-                    SongLibraryEntity(
-                        contentHash = hash,
-                        localPath = resolvedLocal.absolutePath,
-                        localArtPath = finalArtPath,
-                        sourceUrl = song.previewUrl ?: song.links.spotify ?: song.links.deezer,
-                        sourceType = song.sourceType.name,
-                        title = song.title,
-                        artistName = song.artistName,
-                        albumName = song.albumName,
-                        genre = song.genre,
-                        thumbnailUrl = song.thumbnailUrl,
-                        addedAt = System.currentTimeMillis()
-                    )
-                )
-                updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, resolvedLocal.absolutePath)
-                val updated = song.copy(
-                    localPreviewPath = resolvedLocal.absolutePath,
-                    localThumbnailPath = finalArtPath
-                )
-                return@withContext Result.success(updated)
+            if (resolvedLocal?.exists() == true && resolvedLocal.length() > 0L) {
+                return@withContext Result.success(persistAndSyncSong(song, resolvedLocal.absolutePath))
             }
 
             val existingInLibrary = songLibraryDao.getByTitleAndArtist(song.title, song.artistName)
             if (existingInLibrary != null) {
                 val resolvedLib = FileUtils.resolveSongMedia(context, existingInLibrary.localPath, "library")
-                if (resolvedLib != null && resolvedLib.exists() && resolvedLib.length() > 0L) {
-                    val finalArt = existingInLibrary.localArtPath ?: song.localThumbnailPath
-                    updateMatchingJournalsArtwork(song.title, song.artistName, finalArt, resolvedLib.absolutePath)
-                    val updated = song.copy(
-                        localPreviewPath = resolvedLib.absolutePath,
-                        localThumbnailPath = finalArt
-                    )
-                    return@withContext Result.success(updated)
+                if (resolvedLib?.exists() == true && resolvedLib.length() > 0L) {
+                    return@withContext Result.success(persistAndSyncSong(song, resolvedLib.absolutePath, existingInLibrary.localArtPath))
                 }
             }
 
             if (song.previewUrl != null) {
-                val previewResult = downloadAndCachePreview(song.previewUrl, song)
-                if (previewResult.isSuccess) {
-                    val downloadedPath = previewResult.getOrThrow()
-                    val hash = File(downloadedPath).nameWithoutExtension
-                    var artPath = song.localThumbnailPath
-                    if ((artPath == null || !File(artPath).exists()) && song.thumbnailUrl != null) {
-                        val artResult = cacheAlbumArt(song.thumbnailUrl, hash)
-                        artPath = artResult.getOrNull()
-                    }
-                    val finalArtPath = artPath ?: song.localThumbnailPath
-                    songLibraryDao.upsert(
-                        SongLibraryEntity(
-                            contentHash = hash,
-                            localPath = downloadedPath,
-                            localArtPath = finalArtPath,
-                            sourceUrl = song.previewUrl,
-                            sourceType = song.sourceType.name,
-                            title = song.title,
-                            artistName = song.artistName,
-                            albumName = song.albumName,
-                            genre = song.genre,
-                            thumbnailUrl = song.thumbnailUrl,
-                            addedAt = System.currentTimeMillis()
-                        )
-                    )
-                    updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, downloadedPath)
-                    val updated = song.copy(
-                        localPreviewPath = downloadedPath,
-                        localThumbnailPath = finalArtPath
-                    )
-                    return@withContext Result.success(updated)
+                val downloaded = downloadAndCachePreview(song.previewUrl, song).getOrNull()
+                if (downloaded != null) {
+                    return@withContext Result.success(persistAndSyncSong(song, downloaded))
                 }
             }
 
@@ -506,131 +492,59 @@ class SongRepositoryImpl(
                 ?: song.previewUrl
 
             if (linkUrl != null) {
-                val freshResult = fetchSongDetails(linkUrl)
-                if (freshResult.isSuccess) {
-                    val fresh = freshResult.getOrThrow()
-                    val finalArtPath = fresh.localThumbnailPath ?: song.localThumbnailPath
-                    val finalAudioPath = fresh.localPreviewPath ?: song.localPreviewPath
-                    val resolvedAudio = FileUtils.resolveSongMedia(context, finalAudioPath, "library")
-                    if (resolvedAudio != null && resolvedAudio.exists() && resolvedAudio.length() > 0L) {
-                        val hash = resolvedAudio.nameWithoutExtension
-                        songLibraryDao.upsert(
-                            SongLibraryEntity(
-                                contentHash = hash,
-                                localPath = resolvedAudio.absolutePath,
-                                localArtPath = finalArtPath,
-                                sourceUrl = linkUrl,
-                                sourceType = song.sourceType.name,
-                                title = fresh.title.ifBlank { song.title },
-                                artistName = fresh.artistName.ifBlank { song.artistName },
-                                albumName = fresh.albumName ?: song.albumName,
-                                genre = fresh.genre ?: song.genre,
-                                thumbnailUrl = fresh.thumbnailUrl ?: song.thumbnailUrl,
-                                addedAt = System.currentTimeMillis()
-                            )
-                        )
-                        updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, resolvedAudio.absolutePath)
+                val fresh = fetchSongDetails(linkUrl).getOrNull()
+                if (fresh != null) {
+                    val resolvedAudio = FileUtils.resolveSongMedia(context, fresh.localPreviewPath, "library")
+                    if (resolvedAudio?.exists() == true && resolvedAudio.length() > 0L) {
                         val merged = song.copy(
                             title = fresh.title.ifBlank { song.title },
                             artistName = fresh.artistName.ifBlank { song.artistName },
                             albumName = fresh.albumName ?: song.albumName,
                             genre = fresh.genre ?: song.genre,
                             thumbnailUrl = fresh.thumbnailUrl ?: song.thumbnailUrl,
-                            localThumbnailPath = finalArtPath,
                             previewUrl = fresh.previewUrl ?: song.previewUrl,
                             previewUrlProvider = fresh.previewUrlProvider ?: song.previewUrlProvider,
-                            localPreviewPath = resolvedAudio.absolutePath,
                             links = fresh.links
                         )
-                        return@withContext Result.success(merged)
+                        return@withContext Result.success(persistAndSyncSong(merged, resolvedAudio.absolutePath, fresh.localThumbnailPath, linkUrl))
                     }
                 }
             }
 
             val query = "${song.title} ${song.artistName}".trim()
             if (query.isNotBlank()) {
-                val itunesSearch = itunesFetcher.searchTrack(query)
-                if (itunesSearch != null && itunesSearch.previewUrl != null) {
-                    val previewResult = downloadAndCachePreview(itunesSearch.previewUrl, song)
-                    if (previewResult.isSuccess) {
-                        val downloadedPath = previewResult.getOrThrow()
-                        val hash = File(downloadedPath).nameWithoutExtension
-                        var artPath = song.localThumbnailPath
-                        val artUrl = itunesSearch.artworkUrl ?: song.thumbnailUrl
-                        if ((artPath == null || !File(artPath).exists()) && artUrl != null) {
-                            val artResult = cacheAlbumArt(artUrl, hash)
-                            artPath = artResult.getOrNull()
-                        }
-                        val finalArtPath = artPath ?: song.localThumbnailPath
-                        songLibraryDao.upsert(
-                            SongLibraryEntity(
-                                contentHash = hash,
-                                localPath = downloadedPath,
-                                localArtPath = finalArtPath,
-                                sourceUrl = itunesSearch.previewUrl,
-                                sourceType = "LINK",
-                                title = song.title,
-                                artistName = song.artistName,
-                                albumName = song.albumName ?: itunesSearch.albumName,
-                                genre = song.genre ?: itunesSearch.genre,
-                                thumbnailUrl = song.thumbnailUrl ?: itunesSearch.artworkUrl,
-                                addedAt = System.currentTimeMillis()
-                            )
-                        )
-                        updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, downloadedPath)
+                val (itunesSearch, deezerSearch) = coroutineScope {
+                    val itunes = async { itunesFetcher.searchTrack(query) }
+                    val deezer = async { deezerFetcher.searchTrack(query) }
+                    Pair(itunes.await(), deezer.await())
+                }
+
+                if (itunesSearch?.previewUrl != null) {
+                    val downloaded = downloadAndCachePreview(itunesSearch.previewUrl, song).getOrNull()
+                    if (downloaded != null) {
                         val updated = song.copy(
                             albumName = song.albumName ?: itunesSearch.albumName,
                             genre = song.genre ?: itunesSearch.genre,
                             thumbnailUrl = song.thumbnailUrl ?: itunesSearch.artworkUrl,
-                            localThumbnailPath = finalArtPath,
                             previewUrl = itunesSearch.previewUrl,
                             previewUrlProvider = "Apple Music",
-                            localPreviewPath = downloadedPath,
                             links = song.links.copy(appleMusic = itunesSearch.trackViewUrl ?: song.links.appleMusic)
                         )
-                        return@withContext Result.success(updated)
+                        return@withContext Result.success(persistAndSyncSong(updated, downloaded, sourceUrl = itunesSearch.previewUrl))
                     }
                 }
 
-                val deezerSearch = deezerFetcher.searchTrack(query)
-                if (deezerSearch != null && deezerSearch.previewUrl != null) {
-                    val previewResult = downloadAndCachePreview(deezerSearch.previewUrl, song)
-                    if (previewResult.isSuccess) {
-                        val downloadedPath = previewResult.getOrThrow()
-                        val hash = File(downloadedPath).nameWithoutExtension
-                        var artPath = song.localThumbnailPath
-                        val artUrl = deezerSearch.coverUrl ?: song.thumbnailUrl
-                        if ((artPath == null || !File(artPath).exists()) && artUrl != null) {
-                            val artResult = cacheAlbumArt(artUrl, hash)
-                            artPath = artResult.getOrNull()
-                        }
-                        val finalArtPath = artPath ?: song.localThumbnailPath
-                        songLibraryDao.upsert(
-                            SongLibraryEntity(
-                                contentHash = hash,
-                                localPath = downloadedPath,
-                                localArtPath = finalArtPath,
-                                sourceUrl = deezerSearch.previewUrl,
-                                sourceType = "LINK",
-                                title = song.title,
-                                artistName = song.artistName,
-                                albumName = song.albumName ?: deezerSearch.albumName,
-                                genre = song.genre,
-                                thumbnailUrl = song.thumbnailUrl ?: deezerSearch.coverUrl,
-                                addedAt = System.currentTimeMillis()
-                            )
-                        )
-                        updateMatchingJournalsArtwork(song.title, song.artistName, finalArtPath, downloadedPath)
+                if (deezerSearch?.previewUrl != null) {
+                    val downloaded = downloadAndCachePreview(deezerSearch.previewUrl, song).getOrNull()
+                    if (downloaded != null) {
                         val updated = song.copy(
                             albumName = song.albumName ?: deezerSearch.albumName,
                             thumbnailUrl = song.thumbnailUrl ?: deezerSearch.coverUrl,
-                            localThumbnailPath = finalArtPath,
                             previewUrl = deezerSearch.previewUrl,
                             previewUrlProvider = "Deezer",
-                            localPreviewPath = downloadedPath,
                             links = song.links.copy(deezer = deezerSearch.trackUrl ?: song.links.deezer)
                         )
-                        return@withContext Result.success(updated)
+                        return@withContext Result.success(persistAndSyncSong(updated, downloaded, sourceUrl = deezerSearch.previewUrl))
                     }
                 }
             }
@@ -657,54 +571,6 @@ class SongRepositoryImpl(
                 )
             }
             Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun refetchSongDetails(song: SongDetails): Result<SongDetails> = withContext(Dispatchers.IO) {
-        try {
-            val path = song.localPreviewPath
-            val hash = path?.let { File(it).nameWithoutExtension }
-            val entity = hash?.let { songLibraryDao.getByHash(it) }
-            val url = song.links.spotify
-                ?: song.links.appleMusic
-                ?: song.links.deezer
-                ?: song.links.youtubeMusic
-                ?: song.links.youtube
-                ?: entity?.sourceUrl
-                ?: song.previewUrl
-
-            if (url == null) {
-                return@withContext Result.failure(Exception("No URL available to re-fetch details"))
-            }
-
-            val freshResult = fetchSongDetails(url)
-            if (freshResult.isSuccess) {
-                val fresh = freshResult.getOrThrow()
-                val updated = song.copy(
-                    title = fresh.title.takeIf { it.isNotBlank() } ?: song.title,
-                    artistName = fresh.artistName.takeIf { it.isNotBlank() } ?: song.artistName,
-                    albumName = fresh.albumName ?: song.albumName,
-                    genre = fresh.genre ?: song.genre,
-                    thumbnailUrl = fresh.thumbnailUrl ?: song.thumbnailUrl,
-                    localThumbnailPath = fresh.localThumbnailPath ?: song.localThumbnailPath,
-                    links = fresh.links
-                )
-                if (hash != null) {
-                    songLibraryDao.updateMetadata(
-                        hash = hash,
-                        title = updated.title,
-                        artist = updated.artistName,
-                        album = updated.albumName,
-                        genre = updated.genre,
-                        localArtPath = updated.localThumbnailPath
-                    )
-                }
-                Result.success(updated)
-            } else {
-                Result.failure(freshResult.exceptionOrNull() ?: Exception("Re-fetch failed"))
-            }
         } catch (e: Exception) {
             Result.failure(e)
         }

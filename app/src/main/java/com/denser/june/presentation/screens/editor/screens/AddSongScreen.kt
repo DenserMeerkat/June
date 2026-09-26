@@ -30,9 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.SongDetails
-import com.denser.june.core.domain.model.SongSourceType
 import com.denser.june.core.domain.preferences.PrivacyPreferences
-import com.denser.june.core.domain.repository.SongRepository
 import com.denser.june.presentation.components.InternetRestrictedBanner
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
@@ -66,7 +64,6 @@ fun AddSongScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val privacyPreferences = koinInject<PrivacyPreferences>()
-    val songRepository = koinInject<SongRepository>()
     val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
         .collectAsStateWithLifecycle(initialValue = true)
 
@@ -80,7 +77,6 @@ fun AddSongScreen(
 
     var showLinkInput by remember { mutableStateOf(false) }
     var songLink by remember { mutableStateOf("") }
-    var isRefetching by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val audioFilePicker = rememberLauncherForActivityResult(
@@ -126,10 +122,8 @@ fun AddSongScreen(
         when (currentStep) {
             AddSongStep.Trimmer -> trimmerDismiss()
             AddSongStep.Edit, AddSongStep.EditJournal -> {
-                if (!isRefetching) {
-                    activeEditingSong = null
-                    currentStep = AddSongStep.Library
-                }
+                activeEditingSong = null
+                currentStep = AddSongStep.Library
             }
             AddSongStep.Library -> onNavigateBack()
         }
@@ -173,15 +167,12 @@ fun AddSongScreen(
                             when (currentStep) {
                                 AddSongStep.Trimmer -> trimmerDismiss()
                                 AddSongStep.Edit, AddSongStep.EditJournal -> {
-                                    if (!isRefetching) {
-                                        activeEditingSong = null
-                                        currentStep = AddSongStep.Library
-                                    }
+                                    activeEditingSong = null
+                                    currentStep = AddSongStep.Library
                                 }
                                 AddSongStep.Library -> onNavigateBack()
                             }
                         },
-                        enabled = !isRefetching,
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
@@ -229,68 +220,18 @@ fun AddSongScreen(
                         }
 
                         AddSongStep.Edit -> {
-                            val songToEdit = activeEditingSong
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            FilledTonalIconButton(
+                                onClick = { showDeleteConfirm = true },
+                                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                )
                             ) {
-                                if (songToEdit?.sourceType == SongSourceType.LINK) {
-                                    FilledTonalIconButton(
-                                        onClick = {
-                                            scope.launch {
-                                                isRefetching = true
-                                                val res = songRepository.refetchSongDetails(songToEdit)
-                                                isRefetching = false
-                                                res.onSuccess { fresh ->
-                                                    editTitle = fresh.title
-                                                    editArtist = fresh.artistName
-                                                    editAlbum = fresh.albumName ?: ""
-                                                    editGenre = fresh.genre ?: ""
-                                                    if (fresh.localThumbnailPath != null) {
-                                                        editArtPath = fresh.localThumbnailPath
-                                                        isArtRemoved = false
-                                                    }
-                                                    Toast.makeText(context, "Song details updated", Toast.LENGTH_SHORT).show()
-                                                }.onFailure {
-                                                    Toast.makeText(context, "Failed to re-fetch details", Toast.LENGTH_SHORT).show()
-                                                }
-                                            }
-                                        },
-                                        enabled = !isRefetching,
-                                        colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                            contentColor = MaterialTheme.colorScheme.onSurface
-                                        )
-                                    ) {
-                                        if (isRefetching) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(18.dp),
-                                                strokeWidth = 2.dp,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        } else {
-                                            Icon(
-                                                painter = painterResource(R.drawable.sync_24px),
-                                                contentDescription = "Re-fetch Details"
-                                            )
-                                        }
-                                    }
-                                }
-
-                                FilledTonalIconButton(
-                                    onClick = { showDeleteConfirm = true },
-                                    enabled = !isRefetching,
-                                    colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                        contentColor = MaterialTheme.colorScheme.onSurface
-                                    )
-                                ) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.delete_24px),
-                                        contentDescription = "Remove from Library",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                }
+                                Icon(
+                                    painter = painterResource(R.drawable.delete_24px),
+                                    contentDescription = "Remove from Library",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
                             }
                         }
 
@@ -336,13 +277,10 @@ fun AddSongScreen(
                     JuneFloatingActionBar {
                         JuneFloatingAction(
                             onClick = {
-                                if (!isRefetching) {
-                                    activeEditingSong = null
-                                    currentStep = AddSongStep.Library
-                                }
+                                activeEditingSong = null
+                                currentStep = AddSongStep.Library
                             },
                             label = "Cancel",
-                            enabled = !isRefetching,
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.close_24px),
@@ -369,7 +307,6 @@ fun AddSongScreen(
                                 currentStep = AddSongStep.Library
                             },
                             label = "Save",
-                            enabled = !isRefetching,
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.check_24px),
@@ -664,8 +601,7 @@ fun AddSongScreen(
                         onRemoveArt = {
                             editArtPath = null
                             isArtRemoved = true
-                        },
-                        enabled = !isRefetching
+                        }
                     )
                 }
             }

@@ -18,7 +18,6 @@ interface SongRepository {
     suspend fun removeFromLibrary(song: SongDetails): Result<Unit>
     suspend fun addToLibrary(song: SongDetails): Result<SongDetails>
     suspend fun updateLibrarySongMeta(original: SongDetails, updated: SongDetails): Result<Unit>
-    suspend fun refetchSongDetails(song: SongDetails): Result<SongDetails>
     suspend fun cleanupUnreferencedSongMedia(allJournals: List<Journal>)
     fun getLibrarySongs(): Flow<List<SongDetails>>
 }
