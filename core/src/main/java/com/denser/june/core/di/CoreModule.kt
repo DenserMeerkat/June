@@ -22,11 +22,13 @@ import com.denser.june.core.domain.reminder.ReminderScheduler
 import com.denser.june.core.data.reminder.ReminderSchedulerImpl
 import com.denser.june.core.domain.backup.ExportRepo
 import com.denser.june.core.domain.backup.RestoreRepo
+import com.denser.june.core.domain.preferences.EmojiPreferences
 import com.denser.june.core.domain.preferences.FontPreferences
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.preferences.SyncPreferences
 import com.denser.june.core.domain.preferences.ThemePreferences
+import com.denser.june.core.data.preferences.EmojiPreferencesImpl
 import com.denser.june.core.data.preferences.FontPreferencesImpl
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.repository.SongRepository
@@ -63,6 +65,7 @@ val coreModule = module {
     single { PrivacyPreferencesImpl(get(named("PreferencesDataStore"))) }.bind<PrivacyPreferences>()
     single { FontPreferencesImpl(get(named("PreferencesDataStore"))) }.bind<FontPreferences>()
     single { JournalPreferencesImpl(get(named("PreferencesDataStore"))) }.bind<JournalPreferences>()
+    single { EmojiPreferencesImpl(get()) }.bind<EmojiPreferences>()
 
     single {
         OkHttpClient.Builder()

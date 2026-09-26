@@ -216,6 +216,7 @@ dependencies {
     implementation(libs.androidx.core.splashscreen) 
     implementation(libs.aboutLibraries)          
     implementation(libs.aboutLibraries.compose.m3)
+    implementation(libs.kotlinx.serialization.json)
 
 
     // June
@@ -227,7 +228,6 @@ dependencies {
     implementation(libs.media3.ui)
     implementation(libs.media3.common)
     implementation(libs.androidx.palette)
-    implementation(libs.androidx.emoji2.emojipicker)
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.hyphen)

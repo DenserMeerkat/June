@@ -18,7 +18,8 @@ import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.editor.components.AddItemSheet
 import com.denser.june.presentation.screens.editor.components.AddLocationDialog
-import com.denser.june.presentation.screens.editor.components.JournalEmojiPickerDialog
+import com.denser.june.presentation.screens.editor.components.emoji.JournalEmojiPickerSheet
+import com.denser.june.presentation.screens.editor.components.emoji.loadEmojiAssets
 import com.denser.june.presentation.screens.editor.components.JournalTagsDialog
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import org.koin.compose.koinInject
@@ -47,6 +48,10 @@ fun EditorModals(
 ) {
     val context = LocalContext.current
     val navigator = koinInject<AppNavigator>()
+
+    LaunchedEffect(Unit) {
+        loadEmojiAssets(context.resources)
+    }
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var tempVideoUri by remember { mutableStateOf<Uri?>(null) }
@@ -176,7 +181,7 @@ fun EditorModals(
     }
 
     if (dialogState.showEmojiPicker) {
-        JournalEmojiPickerDialog(
+        JournalEmojiPickerSheet(
             initialEmoji = editorState.emoji,
             onEmojiSelected = { emoji ->
                 onAction(EditorAction.ChangeEmoji(emoji))
