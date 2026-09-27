@@ -66,7 +66,7 @@
     <string name="check_for_differences">檢查差異</string>
     <string name="cloud">雲端</string>
     <string name="console_logs">控制台紀錄</string>
-    <string name="created">已建立</string>
+    <string name="created">建立於</string>
     <string name="developer_options">開發者選項</string>
     <string name="disabled">已停用</string>
     <string name="drafts">草稿</string>
@@ -102,7 +102,7 @@
     <string name="today">今天</string>
     <string name="unsaved_tags_message">你有未儲存變更的標籤。你想在離開前儲存它們嗎？</string>
     <string name="untitled">未命名</string>
-    <string name="updated">已更新</string>
+    <string name="updated">更新於</string>
     <string name="verifying_connection">驗證連線中…</string>
     <string name="whats_new">最新消息</string>
     <string name="save_entry">儲存條目？</string>
