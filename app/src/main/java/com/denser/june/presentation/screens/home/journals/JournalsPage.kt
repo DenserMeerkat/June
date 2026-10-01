@@ -66,8 +66,6 @@ fun JournalsPage(
     LaunchedEffect(isSearchActive) {
         if (isSearchActive) {
             searchListState.scrollToItem(0)
-        } else {
-            feedListState.scrollToItem(0)
         }
     }
 
