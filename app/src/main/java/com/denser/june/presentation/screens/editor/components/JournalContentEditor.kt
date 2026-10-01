@@ -170,10 +170,7 @@ fun JournalContentEditor(
             if (!isMarkdownEnabled) {
                 TextField(
                     value = rawContent,
-                    onValueChange = { newText ->
-                        state.setMarkdown(newText)
-                        onMarkdownChange(newText)
-                    },
+                    onValueChange = onMarkdownChange,
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester)

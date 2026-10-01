@@ -487,7 +487,7 @@ fun EditorScreen() {
                         state = hyphenState,
                         rawContent = state.content,
                         onMarkdownChange = { newContent ->
-                            if (newContent.trim() != state.content.trim()) {
+                            if (newContent != state.content) {
                                 viewModel.onAction(EditorAction.ChangeContent(newContent))
                             }
                         },

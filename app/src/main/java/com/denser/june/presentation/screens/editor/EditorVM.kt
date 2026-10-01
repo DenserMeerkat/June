@@ -391,14 +391,19 @@ class EditorVM(
                     }
                 }
                 existingJournal = journal.copy(songDetails = details)
-                if (journal.content.isNotBlank()) {
+                val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
+                val parsedContent = if (isMarkdownEnabled && journal.content.isNotBlank()) {
                     hyphenState.setMarkdownAsync(journal.content)
+                    hyphenState.toMarkdown()
+                } else {
+                    journal.content
                 }
+                existingJournal = existingJournal!!.copy(content = parsedContent)
                 _state.update {
                     it.copy(
                         journalId = journal.id,
                         title = journal.title,
-                        content = journal.content,
+                        content = parsedContent,
                         emoji = journal.emoji,
                         images = journal.images,
                         location = journal.location,
@@ -427,7 +432,8 @@ class EditorVM(
         viewModelScope.launch {
             if (existingJournal != null && !existingJournal!!.isDraft) return@launch
 
-            val currentMarkdown = if (hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
+            val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
+            val currentMarkdown = if (isMarkdownEnabled && hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
 
             if (currentState.title.isBlank() &&
                 currentMarkdown.isBlank() &&
@@ -477,7 +483,8 @@ class EditorVM(
         viewModelScope.launch {
             val currentState = _state.value
             val currentTime = System.currentTimeMillis()
-            val currentMarkdown = if (hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
+            val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
+            val currentMarkdown = if (isMarkdownEnabled && hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
 
             val journalToSave = Journal(
                 id = existingJournal?.id ?: "",
