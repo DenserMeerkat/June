@@ -17,7 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import com.denser.june.core.domain.model.SongDetails
-import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.media.storage.SongMediaStorage
 import com.denser.june.core.utils.toAudioTimestamp
 import com.denser.june.presentation.components.RestrictedAsyncImage
 import com.denser.june.presentation.utils.rememberSongPlayerState
@@ -37,7 +37,7 @@ fun TrimmerStepView(
     LaunchedEffect(localPath) {
         if (localPath != null) {
             withContext(Dispatchers.IO) {
-                val dur = FileUtils.getAudioDurationMs(localPath)
+                val dur = SongMediaStorage.getAudioDurationMs(localPath)
                 if (dur != null && dur > 0L) {
                     totalDurationMs = dur
                 }

@@ -9,26 +9,12 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.*
 import com.denser.june.presentation.components.JuneDropdownMenu
 import com.denser.june.presentation.components.JuneDropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,12 +38,15 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.denser.june.core.R
+import com.denser.june.core.media.storage.MediaStorageManager
 import com.denser.june.core.utils.toHoursMinutesSeconds
 import com.denser.june.presentation.utils.rememberManagedExoPlayer
 import kotlinx.coroutines.delay
 import java.io.File
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun JournalMediaItem(
     path: String,
@@ -66,6 +55,7 @@ fun JournalMediaItem(
     isLargeItem: Boolean,
     enablePlayback: Boolean = true,
     enableContextMenu: Boolean = true,
+    isProcessing: Boolean = false,
 ) {
     val context = LocalContext.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -73,15 +63,38 @@ fun JournalMediaItem(
     var showMenu by remember { mutableStateOf(false) }
     var pressOffset by remember { mutableStateOf(DpOffset.Zero) }
 
-    val isVideo = remember(path) { path.endsWith("mp4", ignoreCase = true) }
+    val isVideo = remember(path) {
+        if (path.startsWith("content://")) {
+            context.contentResolver.getType(Uri.parse(path))?.startsWith("video") == true
+        } else {
+            path.endsWith("mp4", ignoreCase = true)
+        }
+    }
     var isPlaying by remember { mutableStateOf(false) }
     var isMuted by remember { mutableStateOf(true) }
     var currentTimestamp by remember { mutableLongStateOf(0L) }
 
-    val showVideoPlayer = isVideo && enablePlayback
+    val showVideoPlayer = isVideo && enablePlayback && !isProcessing
 
     val shouldShowMoveToFront = path != operations.frontMediaPath
-    val shouldCaptureTouch = enablePlayback || operations.onMediaClick != null
+    val shouldCaptureTouch = !isProcessing && (enablePlayback || operations.onMediaClick != null)
+
+    val resolvedFile = remember(path) {
+        if (path.startsWith("content://") || path.startsWith("file://")) null
+        else MediaStorageManager.resolveMediaFile(context, path)
+    }
+    val imageModel = remember(path, resolvedFile?.lastModified(), resolvedFile?.length()) {
+        if (resolvedFile != null) {
+            ImageRequest.Builder(context)
+                .data(resolvedFile)
+                .memoryCacheKey("${resolvedFile.absolutePath}_${resolvedFile.lastModified()}_${resolvedFile.length()}")
+                .diskCacheKey("${resolvedFile.absolutePath}_${resolvedFile.lastModified()}_${resolvedFile.length()}")
+                .crossfade(true)
+                .build()
+        } else {
+            Uri.parse(path)
+        }
+    }
 
     Box(
         modifier = modifier
@@ -111,7 +124,7 @@ fun JournalMediaItem(
     ) {
         if (showVideoPlayer) {
             VideoPlayer(
-                uri = Uri.fromFile(File(path)),
+                uri = if (path.startsWith("content://")) Uri.parse(path) else Uri.fromFile(File(path)),
                 isMuted = isMuted,
                 isPlaying = isPlaying,
                 onPlayingChanged = { isPlaying = it },
@@ -120,7 +133,7 @@ fun JournalMediaItem(
             )
         } else {
             AsyncImage(
-                model = File(path),
+                model = imageModel,
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
@@ -128,7 +141,7 @@ fun JournalMediaItem(
                 contentScale = ContentScale.Crop
             )
 
-            if (isVideo) {
+            if (isVideo && !isProcessing) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -143,6 +156,19 @@ fun JournalMediaItem(
                             .padding(4.dp)
                     )
                 }
+            }
+        }
+
+        if (isProcessing) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.45f)),
+                contentAlignment = Alignment.Center
+            ) {
+                ContainedLoadingIndicator(
+                    modifier = Modifier.size(if (isLargeItem) 56.dp else 44.dp)
+                )
             }
         }
 

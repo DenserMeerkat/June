@@ -93,7 +93,11 @@ class RestoreImpl(
                                         journalsList.add(journal)
                                     } else if (entryName.startsWith("media/") && !entry.isDirectory) {
                                         val originalFileName = File(entryName).name
-                                        val safeFileName = "media_${System.currentTimeMillis()}_${(0..9999).random()}_$originalFileName"
+                                        val safeFileName = if (originalFileName.startsWith("media_")) {
+                                            originalFileName
+                                        } else {
+                                            "media_${System.currentTimeMillis()}_${(0..9999).random()}_$originalFileName"
+                                        }
                                         val targetFile = File(mediaDir, safeFileName)
                                         FileOutputStream(targetFile).use { fos ->
                                             zis.copyTo(fos)

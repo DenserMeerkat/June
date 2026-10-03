@@ -227,6 +227,7 @@ dependencies {
     implementation(libs.osmdroid)
     implementation(libs.coil.compose)
     implementation(libs.coil.video)
+    implementation(libs.telephoto.zoomable.coil)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.media3.common)

@@ -72,7 +72,8 @@ fun ItemGalleryScreen(
                 navigator.navigateTo(
                     Route.JournalMediaDetail(
                         journalId = state.journalId ?: "",
-                        initialIndex = state.images.reversed().indexOf(path)
+                        initialIndex = state.images.reversed().indexOf(path),
+                        dateTime = state.dateTime
                     ),
                     isSingleTop = true,
                 )
@@ -159,6 +160,7 @@ fun ItemGalleryScreen(
                     operations = mediaOperations,
                     isLargeItem = false,
                     enablePlayback = false,
+                    isProcessing = state.processingMediaPaths.contains(path),
                 )
             }
         }

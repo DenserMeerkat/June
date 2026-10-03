@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongSourceType
-import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.media.storage.SongMediaStorage
 import com.denser.june.core.utils.toSongTimestamp
 import com.denser.june.presentation.components.JuneDropdownMenu
 import com.denser.june.presentation.components.JuneDropdownMenuItem
@@ -151,7 +151,7 @@ fun LibrarySongRow(
                     )
 
                     val durationMs = remember(song) {
-                        FileUtils.getAudioDurationMs(song.localPreviewPath)
+                        SongMediaStorage.getAudioDurationMs(song.localPreviewPath)
                     }
 
                     if (durationMs != null && durationMs > 0L) {

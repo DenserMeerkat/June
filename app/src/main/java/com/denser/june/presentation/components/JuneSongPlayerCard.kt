@@ -30,7 +30,7 @@ import androidx.core.net.toUri
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongSourceType
-import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.media.storage.SongMediaStorage
 import com.denser.june.presentation.theme.LocalInternetAllowed
 import com.denser.june.presentation.utils.rememberDynamicThemeColors
 import ir.mahozad.multiplatform.wavyslider.material3.WavySlider
@@ -53,14 +53,14 @@ fun JuneSongPlayerCard(
     val context = LocalContext.current
     val isInternetAllowed = LocalInternetAllowed.current
     val localArtFile = remember(details.localThumbnailPath) {
-        FileUtils.resolveSongMedia(context, details.localThumbnailPath, "art")
+        SongMediaStorage.resolveSongMedia(context, details.localThumbnailPath, "art")
     }
     val artModel = remember(localArtFile, details.thumbnailUrl, isInternetAllowed) {
         localArtFile ?: if (isInternetAllowed) details.thumbnailUrl else null
     }
     val themeColors = rememberDynamicThemeColors(artModel)
     val hasAudio = remember(details.previewUrl, details.localPreviewPath, isInternetAllowed) {
-        val hasLocal = FileUtils.resolveSongMedia(context, details.localPreviewPath, "library") != null
+        val hasLocal = SongMediaStorage.resolveSongMedia(context, details.localPreviewPath, "library") != null
         hasLocal || (isInternetAllowed && details.previewUrl != null)
     }
 

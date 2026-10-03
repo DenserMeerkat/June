@@ -45,6 +45,23 @@ fun Long.toMonthDay(): String {
     return sdf.format(Date(this))
 }
 
+fun Long.toMediumDate(): String {
+    val sdf = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+    return sdf.format(Date(this))
+}
+
+fun Long.toExifDateTimeDisplay(): String {
+    val timeSdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val timeStr = timeSdf.format(Date(this))
+    return if (timeStr == "00:00") {
+        val dateSdf = SimpleDateFormat("EEE, MMM d, yyyy", Locale.getDefault())
+        dateSdf.format(Date(this))
+    } else {
+        val sdf = SimpleDateFormat("EEE, MMM d, yyyy   •   HH:mm", Locale.getDefault())
+        sdf.format(Date(this))
+    }
+}
+
 fun Long.toMonthDayTime(is24Hour: Boolean = false): String {
     val pattern = if (is24Hour) "MMM dd '•' HH:mm" else "MMM dd '•' hh:mm a"
     val sdf = SimpleDateFormat(pattern, Locale.getDefault())

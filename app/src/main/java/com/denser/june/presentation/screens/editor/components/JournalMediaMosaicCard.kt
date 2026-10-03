@@ -13,7 +13,8 @@ fun JournalMosaicCard(
     mediaList: List<String>,
     enablePlayback: Boolean = false, // TODO: Resolve concurrent playback crash
     operations: MediaOperations,
-    roundedCornerShape: RoundedCornerShape = RoundedCornerShape(24.dp)
+    roundedCornerShape: RoundedCornerShape = RoundedCornerShape(24.dp),
+    processingMediaPaths: Set<String> = emptySet(),
 ) {
     Box(
         modifier = modifier
@@ -29,6 +30,7 @@ fun JournalMosaicCard(
                         isLargeItem = true,
                         enablePlayback = enablePlayback,
                         operations = operations,
+                        isProcessing = processingMediaPaths.contains(mediaList[0]),
                     )
                 }
                 2 -> {
@@ -38,6 +40,7 @@ fun JournalMosaicCard(
                         isLargeItem = false,
                         enablePlayback = enablePlayback,
                         operations = operations,
+                        isProcessing = processingMediaPaths.contains(mediaList[0]),
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     JournalMediaItem(
@@ -46,6 +49,7 @@ fun JournalMosaicCard(
                         isLargeItem = false,
                         enablePlayback = enablePlayback,
                         operations = operations,
+                        isProcessing = processingMediaPaths.contains(mediaList[1]),
                     )
                 }
                 3 -> {
@@ -55,6 +59,7 @@ fun JournalMosaicCard(
                         isLargeItem = true,
                         enablePlayback = enablePlayback,
                         operations = operations,
+                        isProcessing = processingMediaPaths.contains(mediaList[0]),
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Column(modifier = Modifier.weight(0.34f).fillMaxHeight()) {
@@ -64,6 +69,7 @@ fun JournalMosaicCard(
                             isLargeItem = false,
                             enablePlayback = enablePlayback,
                             operations = operations,
+                            isProcessing = processingMediaPaths.contains(mediaList[1]),
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         JournalMediaItem(
@@ -72,6 +78,7 @@ fun JournalMosaicCard(
                             isLargeItem = false,
                             enablePlayback = enablePlayback,
                             operations = operations,
+                            isProcessing = processingMediaPaths.contains(mediaList[2]),
                         )
                     }
                 }

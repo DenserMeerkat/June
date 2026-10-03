@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.media.storage.SongMediaStorage
 import com.denser.june.core.utils.toAudioTimestamp
 import com.denser.june.presentation.theme.LocalInternetAllowed
 import kotlinx.coroutines.delay
@@ -41,7 +41,7 @@ fun rememberSongPlayerState(
     val context = LocalContext.current
     val isInternetAllowed = LocalInternetAllowed.current
     val localFile = remember(localPreviewPath) {
-        FileUtils.resolveSongMedia(context, localPreviewPath, "library")
+        SongMediaStorage.resolveSongMedia(context, localPreviewPath, "library")
     }
     val uri = remember(localFile, previewUrl, isInternetAllowed) {
         if (localFile != null) {

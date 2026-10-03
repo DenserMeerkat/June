@@ -12,6 +12,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 
 @Composable
@@ -22,7 +23,10 @@ fun rememberManagedExoPlayer(
     onIsPlayingChanged: ((Boolean) -> Unit)? = null
 ): ExoPlayer {
     val exoPlayer = remember(uri) {
-        ExoPlayer.Builder(context).build().apply {
+        val renderersFactory = DefaultRenderersFactory(context)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            .setEnableDecoderFallback(true)
+        ExoPlayer.Builder(context, renderersFactory).build().apply {
             setMediaItem(MediaItem.fromUri(uri))
             prepare()
             this.repeatMode = repeatMode
@@ -56,7 +60,7 @@ fun rememberManagedExoPlayer(
         }
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(exoPlayer) {
         onDispose {
             exoPlayer.release()
         }

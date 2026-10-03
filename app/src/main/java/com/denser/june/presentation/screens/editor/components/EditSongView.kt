@@ -22,13 +22,16 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.SongDetails
-import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.media.storage.SongMediaStorage
 import com.denser.june.presentation.components.JuneDropdownMenu
 import com.denser.june.presentation.components.JuneDropdownMenuItem
 import com.denser.june.presentation.components.JuneTextField
 import com.denser.june.presentation.components.RestrictedAsyncImage
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
 @Composable
 fun EditSongView(
     modifier: Modifier = Modifier,
@@ -49,14 +52,19 @@ fun EditSongView(
     enabled: Boolean = true
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
-            val persistedPath = FileUtils.persistSongArt(context, uri)
-            if (persistedPath != null) {
-                onArtPathChange(persistedPath)
+            coroutineScope.launch(Dispatchers.IO) {
+                val persistedPath = SongMediaStorage.persistSongArt(context, uri)
+                if (persistedPath != null) {
+                    withContext(Dispatchers.Main) {
+                        onArtPathChange(persistedPath)
+                    }
+                }
             }
         }
     }
