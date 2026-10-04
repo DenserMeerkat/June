@@ -228,6 +228,11 @@
     <string name="keyboard_capitalization_desc">Capitalize first word of sentences</string>
     <string name="map_settings">Map settings</string>
     <string name="map_settings_desc">Select style and manage API keys</string>
+    <string name="compression">Compression</string>
+    <string name="compress_photos">Compress photos</string>
+    <string name="photo_quality">Photo quality</string>
+    <string name="compress_videos">Compress videos</string>
+    <string name="video_quality">Video quality</string>
     <string name="markdown_editor">Markdown editor</string>
     <string name="markdown_editor_desc">Rich text formatting enabled</string>
     <string name="plain_text_mode">Plain text mode</string>
