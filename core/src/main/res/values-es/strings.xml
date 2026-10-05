@@ -132,4 +132,17 @@
     <string name="your_answer_label">Tu Respuesta</string>
     <string name="internet_access">Acceso a Internet</string>
     <string name="notification">Notificación</string>
+    <string name="about_june">Acerca de June</string>
+    <string name="about">Acerca de</string>
+    <string name="about_libraries_desc">Consulta las licencias de las bibliotecas de terceros</string>
+    <string name="about_to_delete">Estás a punto de eliminar:</string>
+    <string name="dark">Oscuro</string>
+    <string name="font">Fuente</string>
+    <string name="light">Claro</string>
+    <string name="last_successful_sync">Última sincronización exitosa</string>
+    <string name="license">Licencia</string>
+    <string name="keyboard_autocorrect_desc">Corregir automáticamente palabras mal escritas</string>
+    <string name="keyboard_capitalization">Mayúscula automática</string>
+    <string name="keyboard_capitalization_desc">Escribir con mayúscula la primera letra de las oraciones</string>
+    <string name="map_settings">Ajustes del mapa</string>
 </resources>
