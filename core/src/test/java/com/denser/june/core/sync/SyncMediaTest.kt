@@ -74,6 +74,26 @@ class SyncMediaTest : BaseSyncTest() {
     }
 
     @Test
+    fun `analysis pendingMediaUploads detects compressed or modified media`() = runTest {
+        val compressedFile = harness.givenMediaFileOnDisk("photo.jpg", byteArrayOf(1, 2))
+        val journal = SyncFixtures.syncedJournal("j1", updatedAt = T1, images = listOf(compressedFile.absolutePath))
+        harness.repo.seed(journal)
+        harness.cloud.putJournal(journal, modifiedAt = T1)
+        harness.cloud.putMedia("j1", "photo.jpg", byteArrayOf(1, 2, 3, 4, 5))
+        harness.cloud.manifest = SyncFixtures.manifest(
+            totalJournals = 1,
+            mediaMetadata = mapOf("photo.jpg" to MediaSyncMeta(size = 5L, hash = "old_uncompressed_hash"))
+        )
+
+        val analysis = harness.performAnalysis().getOrThrow()
+        assertEquals("Analysis should report 1 modified media file to upload", 1, analysis.pendingMediaUploadsCount)
+
+        val result = harness.sync()
+        assertTrue(result.isSuccess)
+        assertEquals("Sync must re-upload the modified media", 1, harness.cloud.uploadMediaCallCount)
+    }
+
+    @Test
     fun `analysis pendingMediaUploads matches actual sync uploads`() = runTest {
         val f1 = harness.givenMediaFileOnDisk("new1.jpg", byteArrayOf(1))
         val f2 = harness.givenMediaFileOnDisk("new2.jpg", byteArrayOf(2))
