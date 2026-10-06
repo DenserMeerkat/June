@@ -62,4 +62,16 @@ interface JournalPreferences {
 
     fun isForceLtrUiEnabled(): Flow<Boolean>
     suspend fun setForceLtrUiEnabled(enabled: Boolean)
+
+    fun isCompressPhotosEnabled(): Flow<Boolean>
+    suspend fun setCompressPhotosEnabled(enabled: Boolean)
+
+    fun getPhotoCompressionQuality(): Flow<Int>
+    suspend fun setPhotoCompressionQuality(quality: Int)
+
+    fun isCompressVideosEnabled(): Flow<Boolean>
+    suspend fun setCompressVideosEnabled(enabled: Boolean)
+
+    fun getVideoCompressionQuality(): Flow<Int>
+    suspend fun setVideoCompressionQuality(quality: Int)
 }
