@@ -40,4 +40,8 @@ data class SettingsState(
     val isKeyboardCapitalizationEnabled: Boolean = true,
     val editorLayoutDirection: EditorLayoutDirection = EditorLayoutDirection.AUTO,
     val isForceLtrUi: Boolean = true,
+    val isCompressPhotosEnabled: Boolean = false,
+    val photoCompressionQuality: Int = 80,
+    val isCompressVideosEnabled: Boolean = false,
+    val videoCompressionQuality: Int = 1080,
 )

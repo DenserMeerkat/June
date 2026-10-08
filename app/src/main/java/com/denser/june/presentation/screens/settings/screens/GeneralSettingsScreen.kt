@@ -94,6 +94,18 @@ fun GeneralSettingsScreen() {
                     }
                 }
 
+                val compressionGroup = listOfNotNull(
+                    generalTiles["COMPRESS_PHOTOS"],
+                    generalTiles["COMPRESS_VIDEOS"]
+                )
+                if (compressionGroup.isNotEmpty()) {
+                    item {
+                        SettingSection {
+                            compressionGroup.forEach { it.content() }
+                        }
+                    }
+                }
+
                 val deleteTile = generalTiles["DELETE_ALL_JOURNALS"]
                 if (deleteTile != null) {
                     item {

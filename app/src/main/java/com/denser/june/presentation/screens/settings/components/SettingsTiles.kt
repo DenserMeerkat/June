@@ -137,6 +137,38 @@ object SettingsTileRegistry {
                 content = { EditorDirectionTile() }
             ),
             SettingTile(
+                key = "COMPRESS_PHOTOS",
+                title = stringResource(R.string.compress_photos),
+                subtitle = { _, state ->
+                    if (state.isCompressPhotosEnabled) {
+                        when {
+                            state.photoCompressionQuality <= 70 -> "Low"
+                            state.photoCompressionQuality <= 80 -> "Medium"
+                            else -> "High"
+                        }
+                    } else null
+                },
+                category = "General",
+                keywords = listOf("compress", "photo", "image", "quality", "size"),
+                content = { CompressPhotosTile() }
+            ),
+            SettingTile(
+                key = "COMPRESS_VIDEOS",
+                title = stringResource(R.string.compress_videos),
+                subtitle = { _, state ->
+                    if (state.isCompressVideosEnabled) {
+                        when (state.videoCompressionQuality) {
+                            480 -> "480p"
+                            720 -> "720p"
+                            else -> "1080p"
+                        }
+                    } else null
+                },
+                category = "General",
+                keywords = listOf("compress", "video", "quality", "size", "480p", "720p", "1080p"),
+                content = { CompressVideosTile() }
+            ),
+            SettingTile(
                 key = "START_OF_WEEK",
                 title = stringResource(R.string.start_of_week),
                 subtitle = { _, state -> state.startOfWeek.getDisplayName(TextStyle.FULL, java.util.Locale.getDefault()) },

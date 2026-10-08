@@ -67,7 +67,11 @@ class SettingsVM(
             journalPrefs.isKeyboardAutocorrectEnabled(),
             journalPrefs.isKeyboardCapitalizationEnabled(),
             journalPrefs.editorLayoutDirection(),
-            journalPrefs.isForceLtrUiEnabled()
+            journalPrefs.isForceLtrUiEnabled(),
+            journalPrefs.isCompressPhotosEnabled(),
+            journalPrefs.getPhotoCompressionQuality(),
+            journalPrefs.isCompressVideosEnabled(),
+            journalPrefs.getVideoCompressionQuality()
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -90,6 +94,10 @@ class SettingsVM(
             isKeyboardCapitalizationEnabled = array[21] as Boolean,
             editorLayoutDirection = array[22] as EditorLayoutDirection,
             isForceLtrUi = array[23] as Boolean,
+            isCompressPhotosEnabled = array[24] as Boolean,
+            photoCompressionQuality = array[25] as Int,
+            isCompressVideosEnabled = array[26] as Boolean,
+            videoCompressionQuality = array[27] as Int,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -185,6 +193,10 @@ class SettingsVM(
                 is SettingsAction.OnKeyboardCapitalizationToggle -> journalPrefs.setKeyboardCapitalizationEnabled(action.enabled)
                 is SettingsAction.OnEditorLayoutDirectionChange -> journalPrefs.setEditorLayoutDirection(action.direction)
                 is SettingsAction.OnForceLtrUiToggle -> journalPrefs.setForceLtrUiEnabled(action.enabled)
+                is SettingsAction.OnCompressPhotosToggle -> journalPrefs.setCompressPhotosEnabled(action.enabled)
+                is SettingsAction.OnPhotoQualityChange -> journalPrefs.setPhotoCompressionQuality(action.quality)
+                is SettingsAction.OnCompressVideosToggle -> journalPrefs.setCompressVideosEnabled(action.enabled)
+                is SettingsAction.OnVideoQualityChange -> journalPrefs.setVideoCompressionQuality(action.quality)
             }
         }
     }
