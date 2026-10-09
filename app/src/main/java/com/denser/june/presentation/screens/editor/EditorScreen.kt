@@ -35,9 +35,12 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.media.compress.CompressUtils
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.preferences.JournalPreferences
@@ -126,18 +129,26 @@ fun EditorScreen() {
         }
     }
 
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.onAction(EditorAction.Refresh)
+    }
+
     BackHandler { onBack() }
 
     val mediaOperations = remember(state.images) {
         MediaOperations(
             onItemSheetToggle = { dialogState.showAddItemSheet = it },
-            onRemoveMedia = { viewModel.onAction(EditorAction.RemoveImage(it)) },
+            onRemoveMedia = {
+                CompressUtils.cleanUncompressedOriginalFile(context, it)
+                viewModel.onAction(EditorAction.RemoveImage(it))
+            },
             onMoveToFront = { viewModel.onAction(EditorAction.MoveImageToFront(it)) },
             onMediaClick = { path ->
                 navigator.navigateTo(
                     Route.JournalMediaDetail(
                         journalId = state.journalId ?: "",
-                        initialIndex = state.images.reversed().indexOf(path)
+                        initialIndex = state.images.reversed().indexOf(path),
+                        dateTime = state.dateTime
                     ),
                     isSingleTop = true
                 )
@@ -233,7 +244,10 @@ fun EditorScreen() {
                             onClick = {
                                 keyboardController?.hide()
                                 focusManager.clearFocus(force = true)
-                                if (!state.isLoading) viewModel.onAction(EditorAction.SaveJournal)
+                                if (!state.isLoading) {
+                                    state.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                                    viewModel.onAction(EditorAction.SaveJournal)
+                                }
                             },
                         ) {
                             Text(stringResource(R.string.save))
@@ -297,6 +311,7 @@ fun EditorScreen() {
                                 mediaOperations = mediaOperations,
                                 songDetails = state.songDetails,
                                 location = state.location,
+                                processingMediaPaths = state.processingMediaPaths,
                                 onShowAllClick = {
                                     navigator.navigateTo(
                                         Route.JournalMedia(journalId = state.journalId ?: ""),

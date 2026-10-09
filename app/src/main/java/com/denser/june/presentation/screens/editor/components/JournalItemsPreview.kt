@@ -66,6 +66,7 @@ fun JournalItemsPreview(
     songDetails: SongDetails?,
     location: JournalLocation?,
     mediaOperations: MediaOperations,
+    processingMediaPaths: Set<String> = emptySet(),
     onShowAllClick: () -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
@@ -202,6 +203,7 @@ fun JournalItemsPreview(
                                             modifier = Modifier.fillMaxSize(),
                                             mediaList = chunk,
                                             operations = mediaOperations,
+                                            processingMediaPaths = processingMediaPaths,
                                         )
                                     }
                                 }

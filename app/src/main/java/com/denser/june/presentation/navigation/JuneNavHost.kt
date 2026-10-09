@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.denser.june.presentation.components.JuneMediaLightbox
+import com.denser.june.presentation.screens.editor.EditorAction
 import com.denser.june.presentation.screens.editor.EditorVM
 import com.denser.june.presentation.screens.editor.EditorScreen
 import com.denser.june.presentation.screens.editor.screens.AddSongScreen
@@ -94,6 +95,8 @@ fun JuneNavHost(
             JuneMediaLightbox(
                 mediaPaths = args.mediaPaths,
                 initialIndex = args.initialIndex,
+                dateTime = args.dateTime,
+                allowCompression = false
             )
         }
 
@@ -112,6 +115,12 @@ fun JuneNavHost(
             JuneMediaLightbox(
                 mediaPaths = editorImages,
                 initialIndex = args.initialIndex,
+                dateTime = args.dateTime ?: state.dateTime,
+                journalId = args.journalId,
+                allowCompression = true,
+                onDeleteMedia = { path ->
+                    viewModel.onAction(EditorAction.RemoveImage(path))
+                }
             )
         }
 

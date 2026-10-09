@@ -13,10 +13,12 @@ import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongFetchEvent
 import com.denser.june.core.domain.model.SongFetchProgress
-import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.media.storage.MediaStorageManager
 import com.denser.june.core.utils.getTodayAtMidnight
 import com.denser.hyphen.model.TriggerConfig
 import com.denser.hyphen.state.HyphenTextState
+import android.content.Context
+import com.denser.june.core.media.compress.CompressUtils
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import kotlinx.coroutines.FlowPreview
@@ -30,6 +32,7 @@ import java.io.File
 @OptIn(FlowPreview::class)
 class EditorVM(
     savedStateHandle: SavedStateHandle,
+    private val context: Context,
     private val journalRepo: JournalRepository,
     private val journalPrefs: JournalPreferences,
     private val songRepo: SongRepository,
@@ -166,9 +169,30 @@ class EditorVM(
 
             is EditorAction.AddImage -> updateState { it.copy(images = it.images + action.uri) }
             is EditorAction.AddImages -> updateState { it.copy(images = it.images + action.uris) }
+            is EditorAction.ReplaceImage -> {
+                updateState { current ->
+                    val newImages = current.images.map { if (it == action.oldUri) action.newPath else it }
+                    val newProcessing = current.processingMediaPaths.toMutableSet().apply {
+                        if (remove(action.oldUri)) {
+                            add(action.newPath)
+                        }
+                    }
+                    current.copy(images = newImages, processingMediaPaths = newProcessing)
+                }
+            }
+            is EditorAction.SetMediaProcessing -> {
+                _state.update { current ->
+                    val updated = if (action.isProcessing) {
+                        current.processingMediaPaths + action.path
+                    } else {
+                        current.processingMediaPaths - action.path
+                    }
+                    current.copy(processingMediaPaths = updated)
+                }
+            }
 
             is EditorAction.RemoveImage -> {
-                updateState { it.copy(images = it.images - action.uri) }
+                updateState { it.copy(images = it.images - action.uri, processingMediaPaths = it.processingMediaPaths - action.uri) }
             }
             is EditorAction.MoveImageToFront -> {
                 val currentImages = _state.value.images.toMutableList()
@@ -177,6 +201,7 @@ class EditorVM(
                     updateState { it.copy(images = currentImages) }
                 }
             }
+            is EditorAction.Refresh -> updateState { it }
 
             is EditorAction.UpdateTags -> updateState { it.copy(tags = action.tags) }
             is EditorAction.SearchTags -> {
@@ -313,6 +338,11 @@ class EditorVM(
     }
 
     private fun isDirtyCheck(currentState: EditorState): Boolean {
+        val hasMediaModified = currentState.images.any {
+            CompressUtils.getUncompressedOriginalFile(context, it) != null
+        }
+        if (hasMediaModified) return true
+
         val original = existingJournal ?: return currentState.title.isNotBlank() ||
                 currentState.content.isNotBlank() ||
                 currentState.images.isNotEmpty() ||
@@ -435,6 +465,8 @@ class EditorVM(
             val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
             val currentMarkdown = if (isMarkdownEnabled && hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
 
+            if (currentState.images.any { it.startsWith("content://") }) return@launch
+
             if (currentState.title.isBlank() &&
                 currentMarkdown.isBlank() &&
                 currentState.emoji == null &&
@@ -471,7 +503,7 @@ class EditorVM(
                 _state.update { it.copy(journalId = newId, content = currentMarkdown, isDirty = false, isDraft = true) }
             } else {
                 val imagesToDelete = existingJournal?.images.orEmpty().toSet() - currentState.images.toSet()
-                imagesToDelete.forEach { FileUtils.deleteMedia(it) }
+                imagesToDelete.forEach { MediaStorageManager.deleteMedia(it) }
                 journalRepo.updateJournal(journalToSave)
                 existingJournal = journalToSave
                 _state.update { it.copy(content = currentMarkdown, isDirty = false) }
@@ -481,6 +513,9 @@ class EditorVM(
 
     private fun saveJournal() {
         viewModelScope.launch {
+            if (_state.value.processingMediaPaths.any { it.startsWith("content://") }) {
+                _state.first { current -> current.processingMediaPaths.none { it.startsWith("content://") } }
+            }
             val currentState = _state.value
             val currentTime = System.currentTimeMillis()
             val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()

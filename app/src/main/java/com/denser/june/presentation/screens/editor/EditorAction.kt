@@ -14,8 +14,11 @@ sealed interface EditorAction {
 
     data class AddImage(val uri: String) : EditorAction
     data class AddImages(val uris: List<String>) : EditorAction
+    data class ReplaceImage(val oldUri: String, val newPath: String) : EditorAction
+    data class SetMediaProcessing(val path: String, val isProcessing: Boolean) : EditorAction
     data class RemoveImage(val uri: String) : EditorAction
     data class MoveImageToFront(val uri: String) : EditorAction
+    data object Refresh : EditorAction
 
     data class UpdateTags(val tags: List<String>) : EditorAction
     data class SearchTags(val query: String) : EditorAction
