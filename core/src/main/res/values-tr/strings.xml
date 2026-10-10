@@ -153,7 +153,7 @@
     <string name="display_text_label">Görüntü Metni</string>
     <string name="display_text_placeholder">Görüntülenecek metni girin</string>
     <string name="fetch_song_require_internet">Şarkı detaylarını almak için internet erişimini etkinleştirin.</string>
-    <string name="app_font">Yazı Tipi</string>
+    <string name="app_font">Uygulama Yazı Tipi</string>
     <string name="app_theme">Uygulama Teması</string>
     <string name="dark">Koyu</string>
     <string name="font">Yazı Tipi</string>
@@ -165,4 +165,11 @@
     <string name="time_format_12h">12-Saat</string>
     <string name="time_format">Saat Formatı</string>
     <string name="start_of_week">Hafta Başlangıçı</string>
+    <string name="app_icon">Uygulama İkonu</string>
+    <string name="update_available">Güncelleme Mevcut</string>
+    <string name="update_available_foss">June\'un yeni bir sürümü yayınlandı. İşte yenilikler:</string>
+    <string name="update_available_play_store">June uygulamasının yeni sürümü Google Play Store\'da mevcut.</string>
+    <string name="update_check_failed">Güncelleme Kontrolü Başarısız Oldu</string>
+    <string name="up_to_date">Güncel</string>
+    <string name="switch_provider_desc">Aktif bulut hedefinizi %1$s yeni sağlayıcı durumuna karşı yerel kütüphanenizi yeniden kontrol edecektir.</string>
 </resources>
