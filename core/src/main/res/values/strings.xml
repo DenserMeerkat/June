@@ -2,7 +2,7 @@
 <resources>
     <!-- Brand Names -->
     <plurals name="app_name">
-        <item quantity="one">Günlük</item>
+        <item quantity="one">June</item>
     </plurals>
     <string name="email" translatable="false">Email</string>
     <string name="github" translatable="false">GitHub</string>
