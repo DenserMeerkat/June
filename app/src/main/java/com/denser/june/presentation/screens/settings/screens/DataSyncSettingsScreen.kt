@@ -230,7 +230,8 @@ fun DataSyncSettingsScreen() {
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.upload_24px),
-                                null
+                                null,
+                                tint = MaterialTheme.colorScheme.secondary
                             )
                         },
                         trailingContent = if (isBackingUp) {
@@ -251,7 +252,8 @@ fun DataSyncSettingsScreen() {
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.download_24px),
-                                null
+                                null,
+                                tint = MaterialTheme.colorScheme.secondary
                             )
                         },
                         trailingContent = if (isRestoring) {
@@ -283,7 +285,8 @@ fun DataSyncSettingsScreen() {
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.file_save_24px),
-                                null
+                                null,
+                                tint = MaterialTheme.colorScheme.secondary
                             )
                         },
                         trailingContent = if (isExportingMarkdown) {
@@ -304,7 +307,8 @@ fun DataSyncSettingsScreen() {
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.folder_open_24px),
-                                null
+                                null,
+                                tint = MaterialTheme.colorScheme.secondary
                             )
                         },
                         trailingContent = if (isImportingMarkdown) {
@@ -374,6 +378,3 @@ fun DataSyncSettingsScreen() {
         )
     }
 }
-
-@Composable
-fun SyncBackupSettingsScreen() = DataSyncSettingsScreen()

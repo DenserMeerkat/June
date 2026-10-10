@@ -51,7 +51,7 @@ object TagUtils {
             TagCategory.Spaces -> CategoryUiSpec(
                 iconRes = R.drawable.view_cozy_24px,
                 filledIconRes = R.drawable.view_cozy_24px_fill,
-                color = MaterialTheme.colorScheme.secondary,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 emptyMessageRes = R.string.spaces_empty_msg,
                 descriptionRes = R.string.spaces_desc
@@ -60,7 +60,7 @@ object TagUtils {
             TagCategory.People -> CategoryUiSpec(
                 iconRes = R.drawable.groups_24px,
                 filledIconRes = R.drawable.groups_24px_fill,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 emptyMessageRes = R.string.people_empty_msg,
                 descriptionRes = R.string.people_desc
@@ -69,7 +69,7 @@ object TagUtils {
             TagCategory.Topics -> CategoryUiSpec(
                 iconRes = R.drawable.cards_stack_24px,
                 filledIconRes = R.drawable.cards_stack_24px_fill,
-                color = MaterialTheme.colorScheme.tertiary,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 emptyMessageRes = R.string.topics_empty_msg,
                 descriptionRes = R.string.topics_desc

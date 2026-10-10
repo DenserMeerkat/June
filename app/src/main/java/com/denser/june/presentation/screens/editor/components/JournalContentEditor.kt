@@ -224,7 +224,7 @@ fun JournalContentEditor(
                         ),
                         italicStyle = SpanStyle(
                             fontStyle = FontStyle.Italic,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = MaterialTheme.colorScheme.primary
                         ),
                         strikethroughStyle = SpanStyle(
                             textDecoration = TextDecoration.LineThrough,
