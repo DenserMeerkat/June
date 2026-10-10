@@ -21,18 +21,11 @@ import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.utils.toSongDurationString
-import com.denser.june.core.utils.toSongTimestamp
+import com.denser.june.presentation.components.ConnectedBarAction
+import com.denser.june.presentation.components.JuneConnectedActionBar
 import com.denser.june.presentation.components.RestrictedAsyncImage
 import com.denser.june.presentation.components.SmallPlayPauseButton
 import com.denser.june.presentation.utils.rememberSongPlayerState
-
-private data class ActiveBarAction(
-    val iconRes: Int,
-    val contentDescription: String,
-    val onClick: () -> Unit,
-    val isActive: Boolean = false,
-    val isDestructive: Boolean = false
-)
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -76,28 +69,29 @@ fun ActiveJournalSongBar(
 
     val totalDuration = playerState.exoPlayer?.duration?.takeIf { it > 0L }
     val effectiveEnd = song.clipEndMs ?: totalDuration
-    val startStr = song.clipStartMs.toSongTimestamp()
-    val endStr = effectiveEnd?.toSongTimestamp() ?: "Full"
     val durationMs = effectiveEnd?.let { (it - song.clipStartMs).coerceAtLeast(0L) }
     val durationStr = durationMs?.toSongDurationString()
 
-    val actions = remember(onEdit, onTrim) {
+    val connectedActions = remember(onEdit, onTrim) {
         listOf(
-            ActiveBarAction(
-                iconRes = R.drawable.edit_24px,
-                contentDescription = "Edit Details",
-                onClick = onEdit
-            ),
-            ActiveBarAction(
-                iconRes = R.drawable.more_time_24px,
-                contentDescription = "Trim Clip",
-                onClick = onTrim
-            ),
-            ActiveBarAction(
+            ConnectedBarAction(
                 iconRes = R.drawable.delete_24px,
+                label = null,
                 contentDescription = "Remove from journal",
                 onClick = { showRemoveConfirm = true },
                 isDestructive = true
+            ),
+            ConnectedBarAction(
+                iconRes = R.drawable.edit_24px,
+                label = "Edit",
+                contentDescription = "Edit Details",
+                onClick = onEdit
+            ),
+            ConnectedBarAction(
+                iconRes = R.drawable.more_time_24px,
+                label = "Trim",
+                contentDescription = "Trim Clip",
+                onClick = onTrim
             )
         )
     }
@@ -157,13 +151,31 @@ fun ActiveJournalSongBar(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Text(
-                        text = song.artistName,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = song.artistName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        if (durationStr != null) {
+                            Text(
+                                text = "•",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                text = durationStr,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
 
                 SmallPlayPauseButton(
@@ -179,100 +191,11 @@ fun ActiveJournalSongBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 14.dp, end = 14.dp, top = 2.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(start = 14.dp, end = 14.dp, top = 6.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.padding(start = 8.dp, end = 4.dp)
-                ) {
-                    Text(
-                        text = startStr,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "-",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
-                    Text(
-                        text = endStr,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    if (durationStr != null) {
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ) {
-                            Text(
-                                text = durationStr,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    actions.forEachIndexed { index, action ->
-                        val shape = when {
-                            actions.size == 1 -> ToggleButtonDefaults.shapes()
-                            index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            index == actions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                        }
-                        val contentColor = when {
-                            action.isDestructive -> MaterialTheme.colorScheme.error
-                            action.isActive -> MaterialTheme.colorScheme.primary
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                        val buttonModifier = when {
-                            actions.size == 1 -> Modifier
-                                .height(34.dp)
-                                .width(44.dp)
-
-                            index == 0 || index == actions.lastIndex -> Modifier
-                                .height(34.dp)
-                                .width(40.dp)
-
-                            else -> Modifier
-                                .height(34.dp)
-                                .width(36.dp)
-                        }
-
-                        ToggleButton(
-                            checked = action.isActive,
-                            onCheckedChange = { action.onClick() },
-                            shapes = shape,
-                            colors = ToggleButtonDefaults.toggleButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                contentColor = contentColor,
-                                checkedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                checkedContentColor = MaterialTheme.colorScheme.primary
-                            ),
-                            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp),
-                            modifier = buttonModifier
-                        ) {
-                            Icon(
-                                painter = painterResource(action.iconRes),
-                                contentDescription = action.contentDescription,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                }
+                JuneConnectedActionBar(actions = connectedActions)
             }
         }
     }

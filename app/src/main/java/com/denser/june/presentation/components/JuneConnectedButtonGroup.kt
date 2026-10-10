@@ -5,8 +5,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -105,3 +110,100 @@ fun <T> JuneConnectedButtonGroup(
         )
     }
 }
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun JuneConnectedActionBar(
+    actions: List<ConnectedBarAction>,
+    modifier: Modifier = Modifier,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    checkedContainerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    checkedContentColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    destructiveColor: Color = MaterialTheme.colorScheme.error,
+    buttonHeight: Dp = 36.dp,
+    iconOnlyWidth: Dp = 42.dp
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = horizontalArrangement,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        actions.forEachIndexed { index, action ->
+            val shape = when {
+                actions.size == 1 -> ToggleButtonDefaults.shapes()
+                index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                index == actions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+            }
+            val itemContentColor = when {
+                action.isDestructive -> destructiveColor
+                action.isActive -> checkedContentColor
+                else -> contentColor
+            }
+            val buttonModifier = if (action.label != null) {
+                Modifier.height(buttonHeight)
+            } else {
+                Modifier.height(buttonHeight).width(iconOnlyWidth)
+            }
+
+            ToggleButton(
+                checked = action.isActive,
+                onCheckedChange = { action.onClick() },
+                shapes = shape,
+                colors = ToggleButtonDefaults.toggleButtonColors(
+                    containerColor = containerColor,
+                    contentColor = itemContentColor,
+                    checkedContainerColor = checkedContainerColor,
+                    checkedContentColor = checkedContentColor
+                ),
+                contentPadding = if (action.label != null) {
+                    PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                } else {
+                    PaddingValues(0.dp)
+                },
+                modifier = buttonModifier
+            ) {
+                val desc = action.contentDescription ?: action.contentDescriptionRes?.let { stringResource(it) }
+                if (action.label != null) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (action.iconRes != null) {
+                            Icon(
+                                painter = painterResource(action.iconRes),
+                                contentDescription = desc,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Text(
+                            text = action.label,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
+                } else if (action.iconRes != null) {
+                    Icon(
+                        painter = painterResource(action.iconRes),
+                        contentDescription = desc,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+data class ConnectedBarAction(
+    val iconRes: Int? = null,
+    val label: String? = null,
+    val contentDescription: String? = null,
+    val contentDescriptionRes: Int? = null,
+    val onClick: () -> Unit,
+    val isActive: Boolean = false,
+    val isDestructive: Boolean = false
+)

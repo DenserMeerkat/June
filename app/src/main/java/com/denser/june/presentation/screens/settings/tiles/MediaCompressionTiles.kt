@@ -27,6 +27,7 @@ fun CompressPhotosTile() {
 
     SettingsItem(
         title = stringResource(R.string.compress_photos),
+        subtitle = stringResource(R.string.compress_photos_desc),
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.photo_24px),
@@ -81,6 +82,7 @@ fun CompressVideosTile() {
 
     SettingsItem(
         title = stringResource(R.string.compress_videos),
+        subtitle = stringResource(R.string.compress_videos_desc),
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.videocam_24px),
