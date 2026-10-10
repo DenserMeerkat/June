@@ -159,7 +159,7 @@
     <string name="include_time_desc">Habilitar siempre la hora al crear diarios</string>
     <string name="internet_access_disabled">Acceso a Internet Deshabilitado</string>
     <string name="internet_access_restricted">Acceso a Internet restringido</string>
-    <string name="maps_require_internet">Los mapas requieren de acceso a internet.</string>
+    <string name="maps_require_internet">Se necesita conexión a internet para cargar los mapas.</string>
     <string name="maptiler_api_key_placeholder">Clave API de MapTiler</string>
     <string name="markdown_editor">Editor Markdown</string>
     <string name="markdown_editor_desc">Formato de texto enriquecido habilitado</string>
@@ -312,4 +312,28 @@
         <item quantity="many">%1$d diarios pendientes</item>
         <item quantity="other">%1$d diarios pendientes</item>
     </plurals>
+    <string name="api_credentials">Credenciales de API</string>
+    <string name="mapbox_access_token_placeholder">Token de acceso de Mapbox</string>
+    <string name="get_api_key_or_token">Obtener clave API or token de acceso</string>
+    <string name="maps_require_internet_tiles">Se necesita conexión a internet para cargar los mosaicos de los mapas.</string>
+    <string name="maps_require_internet_locations">Se necesita conexión a internet para cargar los mapas y mostrar las ubicaciones.</string>
+    <string name="maps_search_require_internet">Se necesita una conexión a internet para usar mapas y hacer búsquedas.</string>
+    <string name="stadia_api_key_placeholder">Clave API de Stadia</string>
+    <string name="about_june_desc">versión y enlace a github</string>
+    <string name="map_credits_desc">Créditos y licencias de los mapas y sus datos</string>
+    <string name="no_matches_found">No hay coincidencias</string>
+    <string name="no_matches_found_desc">No encontramos ningún diario que coincida con tu búsqueda o los filtros actuales.</string>
+    <string name="search_your_journal">Busca en tu diario</string>
+    <string name="fetch_song_require_internet">Habilita el acceso a internet para obtener información de las canciones.</string>
+    <string name="link_url_label">Enlace URL</string>
+    <string name="internet_restricted_desc">Para usar esta función, habilita la conexión a internet en los ajustes de la aplicación.</string>
+    <string name="journaling_reminders">Recordatorios del Diario</string>
+    <string name="question_first_entry_city">¿En qué ciudad escribiste tu primera entrada?</string>
+    <string name="question_motto">¿Cuál es el lema o la frase corta que te representa?</string>
+    <string name="question_perfect_day">¿Qué palabra describe tu día perfecto?</string>
+    <string name="question_writing_place">¿Cuál es tu lugar o santuario favorito para escribir?</string>
+    <string name="question_custom">Escribe una pregunta personalizada...</string>
+    <string name="placeholder_default_answer">p. ej. Escribe tu respuesta</string>
+    <string name="placeholder_motto">p. eje. carpe diem, sigue adelante</string>
+    <string name="placeholder_perfect_day">p. ej. paz, creativo, acogedor</string>
 </resources>
