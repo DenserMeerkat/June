@@ -1,9 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Brand Names -->
-    <string name="app_name" translatable="false">June</string>
+    <plurals name="app_name">
+        <item quantity="one">Günlük</item>
+    </plurals>
     <string name="email" translatable="false">Email</string>
     <string name="github" translatable="false">GitHub</string>
-
     <!-- Actions -->
     <string name="advanced">Advanced</string>
     <string name="all">All</string>
@@ -61,7 +63,6 @@
     <string name="sync_now">Sync Now</string>
     <string name="take_photo">Take Photo</string>
     <string name="verify_and_reset_pin">Verify &amp; Reset PIN</string>
-
     <!-- Status Labels -->
     <string name="all_caught_up">All caught up</string>
     <string name="already_latest_version">You are already using the latest version of June.</string>
@@ -116,7 +117,6 @@
     <string name="updated">Updated</string>
     <string name="verifying_connection">Verifying connection...</string>
     <string name="whats_new">What\'s New</string>
-
     <!-- Dialogs & Banners -->
     <string name="save_entry">Save Entry?</string>
     <string name="change_lock_title">Change lock?</string>
@@ -155,7 +155,6 @@
     <string name="update_available_play_store">A new version of June is available on the Google Play Store.</string>
     <string name="update_check_failed">Update Check Failed</string>
     <string name="up_to_date">Up to date</string>
-
     <!-- Plurals -->
     <plurals name="active_filters_count">
         <item quantity="one">%1$d active</item>
@@ -181,7 +180,6 @@
         <item quantity="one">%1$d word</item>
         <item quantity="other">%1$d words</item>
     </plurals>
-
     <!-- Settings Categories -->
     <string name="about">About</string>
     <string name="about_desc">Version, developer, licenses, links</string>
@@ -200,7 +198,6 @@
     <string name="sync_and_backup_desc">Cloud sync, local backup, WebDAV</string>
     <string name="data_and_sync">Data &amp; Sync</string>
     <string name="data_and_sync_desc">Backups, cloud sync, export &amp; import</string>
-
     <!-- Settings - General -->
     <string name="always_open_new_note">Open editor on startup</string>
     <string name="always_open_new_note_desc">Always open a new note when launching the app</string>
@@ -223,7 +220,6 @@
     <string name="time_format">Time format</string>
     <string name="time_format_12h">12-Hour</string>
     <string name="time_format_24h">24-Hour</string>
-
     <!-- Settings - Appearance -->
     <string name="amoled">True Black Mode</string>
     <string name="amoled_desc">Optimized for AMOLED displays</string>
@@ -243,7 +239,6 @@
     <string name="seed_color">Seed color</string>
     <string name="seed_color_desc">Color to generate palette from</string>
     <string name="system">System</string>
-
     <!-- Settings - Language & Weblate -->
     <string name="editor_direction">Editor Direction</string>
     <string name="editor_direction_auto">Auto (Follow App Locale)</string>
@@ -255,7 +250,6 @@
     <string name="language">Language</string>
     <string name="translate_app">Help translate June</string>
     <string name="translate_dialog_desc">June\'s translations are crowd-sourced and hosted on Hosted Weblate, a web-based open-source translation platform.\n\nYou can easily add translations for your language or suggest improvements directly in your browser without any coding knowledge.</string>
-
     <!-- Settings - Privacy & Security -->
     <string name="app_lock">App Lock</string>
     <string name="app_lock_desc">Lock app with biometric or device credential</string>
@@ -273,7 +267,6 @@
     <string name="security_question">Security Question</string>
     <string name="switch_lock_warning">You are switching away from Custom PIN. Your current PIN will be removed, and you will need to set it up again if you switch back.</string>
     <string name="ways_to_lock">Ways to lock</string>
-
     <!-- Security - PIN & Recovery -->
     <string name="answer_cannot_be_empty">Answer cannot be empty</string>
     <string name="answer_label">Answer</string>
@@ -309,7 +302,6 @@
     <string name="recovery_question">Recovery Question</string>
     <string name="recovery_setup_desc">Configure a recovery question. If you forget your PIN, answering this question correctly allows you to reset it.</string>
     <string name="your_answer_label">Your Answer</string>
-
     <!-- Settings - Permissions -->
     <string name="internet_access">Internet Access</string>
     <string name="internet_access_desc">Used for maps, cloud sync, song metadata, and online fonts.</string>
@@ -319,7 +311,6 @@
     <string name="notification_permission_granted">Permission granted. Used to show journaling reminders.</string>
     <string name="notification_permission_needed">Tap to enable. Used to show journaling reminders.</string>
     <string name="permission_already_granted">Permission already granted</string>
-
     <!-- Settings - Reminders -->
     <string name="journaling_reminders">Journaling Reminders</string>
     <string name="reminder_screen_desc">Stay consistent with your journaling by setting up reminders</string>
@@ -330,7 +321,6 @@
     <string name="repeat_weekdays">Weekdays</string>
     <string name="repeat_weekends">Weekends</string>
     <string name="schedule">Schedule</string>
-
     <!-- Settings - Sync & Backup -->
     <string name="advanced_sync_desc">Analysis &amp; repair tools</string>
     <string name="analyze_sync">Analyze Sync</string>
@@ -411,7 +401,6 @@
     <string name="sync_logging_desc">Enable verbose logs for cloud sync operations</string>
     <string name="wifi_only_sync">Auto-sync on Wi-Fi only</string>
     <string name="wifi_only_sync_desc">Avoid syncing over mobile data</string>
-
     <!-- Settings - WebDAV -->
     <string name="password_app_token_label">Password / App Token</string>
     <string name="server_url_label">Server URL</string>
@@ -419,7 +408,6 @@
     <string name="username_label">Username</string>
     <string name="username_placeholder">your-username</string>
     <string name="webdav_configuration">WebDAV Configuration</string>
-
     <!-- Settings - Bin & Deletion -->
     <string name="bin_empty_desc">Journals you delete will appear here for 30 days before being permanently removed.</string>
     <string name="bin_is_empty">Bin is empty</string>
@@ -432,7 +420,6 @@
     <string name="empty_bin_title">Empty Bin?</string>
     <string name="restore_all_desc">This will restore all deleted entries back to your timeline.</string>
     <string name="restore_all_title">Restore All?</string>
-
     <!-- Tags & Categories -->
     <string name="about_to_delete">You are about to delete:</string>
     <string name="delete_tag_title">Delete Tag?</string>
@@ -455,7 +442,6 @@
     <string name="tag_merge_warning">Already exists in %1$s. This will merge all entries.</string>
     <string name="topics_desc">Note the moods, settings, or details of your day.</string>
     <string name="topics_empty_msg">Capture any specifics (#topic)</string>
-
     <!-- Reminders & Notifications -->
     <string name="reminder_msg_1">Don\'t forget to record your thoughts for today.</string>
     <string name="reminder_msg_2">Your journal is waiting for your story.</string>
@@ -471,7 +457,6 @@
     <string name="reminder_title_5">Daily Reflection</string>
     <string name="reminder_title_6">Note to self</string>
     <string name="reminder_title_7">Unwind and write</string>
-
     <!-- Maps & Location -->
     <string name="api_credentials">API Credentials</string>
     <string name="carto" translatable="false">CARTO</string>
@@ -496,7 +481,6 @@
     <string name="preview">Preview</string>
     <string name="stadia" translatable="false">Stadia Maps</string>
     <string name="stadia_api_key_placeholder">Stadia API key</string>
-
     <!-- About & Diagnostics -->
     <string name="about_june">About June</string>
     <string name="about_june_desc">version and github link</string>
@@ -520,7 +504,6 @@
     <string name="supported_abis" translatable="false">Supported ABIs</string>
     <string name="version_code" translatable="false">Version Code</string>
     <string name="version_name" translatable="false">Version Name</string>
-
     <!-- Home & Search -->
     <string name="bookmarked">Bookmarked</string>
     <string name="draft">Draft</string>
@@ -535,7 +518,6 @@
     <string name="search_your_journal">Search your journal</string>
     <string name="tags">Tags</string>
     <string name="timeline">Timeline</string>
-
     <!-- Editor & Formatting -->
     <string name="add_attachment">Add Attachment</string>
     <string name="add_emoji">Add Emoji</string>
