@@ -188,7 +188,6 @@ fun AddSongScreen(
                     when (currentStep) {
                         AddSongStep.Library -> {
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 FilledTonalIconButton(
@@ -380,8 +379,9 @@ fun AddSongScreen(
                         currentStep = AddSongStep.EditJournal
                     },
                     onTrim = {
-                        activeTrimmerSong = attachedSong
-                        viewModel.onAction(EditorAction.OpenClipTrimmer(attachedSong))
+                        val songToTrim = state.songDetails ?: attachedSong
+                        activeTrimmerSong = songToTrim
+                        viewModel.onAction(EditorAction.OpenClipTrimmer(songToTrim))
                         currentStep = AddSongStep.Trimmer
                     },
                     onRemove = { viewModel.onAction(EditorAction.RemoveSong) }
@@ -475,8 +475,9 @@ fun AddSongScreen(
                                         song = song,
                                         isCurrentlyAttached = isCurrentlyAttached,
                                         onClick = {
-                                            activeTrimmerSong = song
-                                            viewModel.onAction(EditorAction.OpenClipTrimmer(song))
+                                            val songToTrim = if (isCurrentlyAttached) state.songDetails ?: song else song
+                                            activeTrimmerSong = songToTrim
+                                            viewModel.onAction(EditorAction.OpenClipTrimmer(songToTrim))
                                             currentStep = AddSongStep.Trimmer
                                         },
                                         onEdit = {
@@ -565,14 +566,16 @@ fun AddSongScreen(
 
             AddSongStep.Trimmer -> {
                 activeTrimmerSong?.let { song ->
-                    TrimmerStepView(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        songDetails = song,
-                        onBindSaveAction = { pendingTrimmerSave = it },
-                        onSaveClip = trimmerSaveClip
-                    )
+                    key(song.title, song.artistName, song.clipStartMs, song.clipEndMs, song.localPreviewPath) {
+                        TrimmerStepView(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues),
+                            songDetails = song,
+                            onBindSaveAction = { pendingTrimmerSave = it },
+                            onSaveClip = trimmerSaveClip
+                        )
+                    }
                 }
             }
 
