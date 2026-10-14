@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.denser.june.presentation.screens.settings.screens.sync.sections
 
 import com.denser.june.presentation.components.JuneDropdownMenu

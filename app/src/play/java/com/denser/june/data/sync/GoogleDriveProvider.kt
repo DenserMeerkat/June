@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.denser.june.data.sync
 
 import android.content.Context

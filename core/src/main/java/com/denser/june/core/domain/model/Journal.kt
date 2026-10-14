@@ -27,6 +27,7 @@ data class Journal(
     val cloudId: String? = null,
 ) {
     val isDeleted: Boolean get() = deletedAt != null
+    val isSynced: Boolean get() = !isDraft && syncedAt != null && (updatedAt == null || syncedAt >= updatedAt)
 
     fun isContentEqualTo(other: Journal): Boolean {
         val thisSongNormalized = this.songDetails?.copy(
