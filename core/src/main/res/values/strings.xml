@@ -93,6 +93,7 @@
     <string name="no_journals_yet_desc">Start capturing your journey today. Create your first entry to start your collection.</string>
     <string name="no_links_available">No links available</string>
     <string name="no_locations_this_month">No locations added for this month.</string>
+    <string name="no_locations_found">No locations found</string>
     <string name="no_media_this_month">No media this month.</string>
     <string name="no_music_this_month">No music tracked this month.</string>
     <string name="empty_library">Your library is empty</string>
@@ -515,8 +516,25 @@
     <string name="maps_require_internet_tiles">Maps require internet access to load tiles.</string>
     <string name="maps_search_require_internet">Maps and search require internet access.</string>
     <string name="preview">Preview</string>
+    <string name="collapse_map">Collapse Map</string>
+    <string name="confirm_location">Confirm Location</string>
+    <string name="current_location">Current Location</string>
+    <string name="expand_map">Expand Map</string>
+    <string name="fetching_address">Fetching address…</string>
+    <string name="gps_accuracy_estimate">GPS • ±5m</string>
+    <string name="locating">Locating…</string>
+    <string name="move_map_to_select">Move map to select</string>
+    <string name="network_restricted">Network restricted</string>
+    <string name="no_address_available">No address available</string>
+    <string name="pinned_location">Pinned Location</string>
+    <string name="remove_location">Remove Location</string>
+    <string name="search_location_placeholder">Search location…</string>
     <string name="stadia" translatable="false">Stadia Maps</string>
     <string name="stadia_api_key_placeholder">Stadia API key</string>
+    <string name="toggle_dark_mode">Toggle Dark Mode</string>
+    <string name="unknown_place">Unknown Place</string>
+    <string name="zoom_in">Zoom In</string>
+    <string name="zoom_out">Zoom Out</string>
 
     <!-- About & Diagnostics -->
     <string name="about_june">About June</string>

@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.MapStyleProvider
@@ -59,7 +60,7 @@ fun MapControlColumn(
             ) {
                 Icon(
                     painter = painterResource(if (isMapExpanded) R.drawable.fullscreen_exit_24px else R.drawable.fullscreen_24px),
-                    contentDescription = if (isMapExpanded) "Collapse Map" else "Expand Map",
+                    contentDescription = stringResource(if (isMapExpanded) R.string.collapse_map else R.string.expand_map),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -76,7 +77,7 @@ fun MapControlColumn(
             ) {
                 Icon(
                     painter = painterResource(if (isDarkMode) R.drawable.light_mode_24px else R.drawable.dark_mode_24px),
-                    contentDescription = "Toggle Dark Mode",
+                    contentDescription = stringResource(R.string.toggle_dark_mode),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -94,7 +95,7 @@ fun MapControlColumn(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.add_24px),
-                    contentDescription = "Zoom In",
+                    contentDescription = stringResource(R.string.zoom_in),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -112,7 +113,7 @@ fun MapControlColumn(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.remove_24px),
-                    contentDescription = "Zoom Out",
+                    contentDescription = stringResource(R.string.zoom_out),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -138,7 +139,7 @@ fun MapControlColumn(
                 } else {
                     Icon(
                         painter = painterResource(R.drawable.my_location_24px_fill),
-                        contentDescription = "Current Location",
+                        contentDescription = stringResource(R.string.current_location),
                         modifier = Modifier.size(24.dp)
                     )
                 }

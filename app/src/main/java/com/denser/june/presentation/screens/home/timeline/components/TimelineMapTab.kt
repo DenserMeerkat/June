@@ -1,6 +1,5 @@
 package com.denser.june.presentation.screens.home.timeline.components
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,11 +15,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.painterResource
@@ -29,19 +26,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
@@ -60,11 +53,14 @@ import com.denser.june.presentation.theme.LocalInternetAllowed
 import com.denser.june.presentation.utils.MapProviderUtils
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import org.maplibre.android.annotations.IconFactory
-import org.maplibre.android.annotations.MarkerOptions
+import android.graphics.Bitmap
+import org.maplibre.android.style.expressions.Expression
+import org.maplibre.android.style.layers.Property
+import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.MapLibreMapOptions
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.LineLayer
@@ -86,7 +82,6 @@ fun TimelineMapTab(
 ) {
     val isInternetAllowed = LocalInternetAllowed.current
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
 
     val isCalendarExpanded by viewModel.isCalendarExpanded.collectAsStateWithLifecycle()
     val isMapExpanded = !isCalendarExpanded
@@ -131,16 +126,19 @@ fun TimelineMapTab(
         value = MapProviderUtils.getStyleUrl(mapStyleProvider, isDarkMap)
     }
     val mapView = remember(isInternetAllowed) {
-        if (isInternetAllowed) MapView(context).apply { isClickable = true; isFocusable = true }
-        else null
+        if (isInternetAllowed) {
+            val options = MapLibreMapOptions.createFromAttributes(context).apply {
+                textureMode(true)
+            }
+            MapView(context, options).apply { isClickable = true; isFocusable = true }
+        } else null
     }
 
-    val dateBubbleCache = remember { mutableMapOf<String, org.maplibre.android.annotations.Icon>() }
+    val markerBitmapCache = remember(primaryColor, onPrimaryColor) { mutableMapOf<String, Bitmap>() }
 
-    fun getMarkerIcon(text: String): org.maplibre.android.annotations.Icon {
-        return dateBubbleCache.getOrPut(text) {
-            val bitmap = TimelineMapUtils.createMarkerBitmap(context, text, primaryColor, onPrimaryColor)
-            IconFactory.getInstance(context).fromBitmap(bitmap)
+    fun getMarkerBitmap(text: String): Bitmap {
+        return markerBitmapCache.getOrPut(text) {
+            TimelineMapUtils.createMarkerBitmap(context, text, primaryColor, onPrimaryColor)
         }
     }
 
@@ -160,7 +158,6 @@ fun TimelineMapTab(
     }
 
     fun renderMapContent(mapboxMap: MapLibreMap, style: Style) {
-        mapboxMap.clear()
         val pathPoints = locationGroups.map { LatLng(it.location.latitude, it.location.longitude) }
 
         val lines = if (pathPoints.size > 1) {
@@ -195,12 +192,41 @@ fun TimelineMapTab(
             style.getLayer(layerId)?.setProperties(PropertyFactory.lineColor(mutedLineColor))
         }
 
+        val markerSourceId = "timeline-marker-source"
+        val markerLayerId = "timeline-marker-layer"
+
         locationGroups.forEach { group ->
             val locationName = group.location.name?.ifBlank { "Location" } ?: "Location"
-            mapboxMap.addMarker(
-                MarkerOptions()
-                    .position(LatLng(group.location.latitude, group.location.longitude))
-                    .icon(getMarkerIcon(locationName))
+            val imageId = "marker-icon-$locationName"
+            style.addImage(imageId, getMarkerBitmap(locationName))
+        }
+
+        val markerFeatures = locationGroups.map { group ->
+            val locationName = group.location.name?.ifBlank { "Location" } ?: "Location"
+            val imageId = "marker-icon-$locationName"
+            Feature.fromGeometry(Point.fromLngLat(group.location.longitude, group.location.latitude)).apply {
+                addStringProperty("icon-image", imageId)
+            }
+        }
+        val markerFeatureCollection = FeatureCollection.fromFeatures(markerFeatures)
+
+        val existingMarkerSource = style.getSource(markerSourceId) as? GeoJsonSource
+        if (existingMarkerSource != null) {
+            existingMarkerSource.setGeoJson(markerFeatureCollection)
+        } else {
+            style.addSource(GeoJsonSource(markerSourceId, markerFeatureCollection))
+        }
+
+        if (style.getLayer(markerLayerId) == null) {
+            style.addLayer(
+                SymbolLayer(markerLayerId, markerSourceId).apply {
+                    setProperties(
+                        PropertyFactory.iconImage(Expression.get("icon-image")),
+                        PropertyFactory.iconAllowOverlap(true),
+                        PropertyFactory.iconIgnorePlacement(true),
+                        PropertyFactory.iconAnchor(Property.ICON_ANCHOR_BOTTOM)
+                    )
+                }
             )
         }
 

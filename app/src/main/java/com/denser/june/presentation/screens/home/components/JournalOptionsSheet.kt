@@ -116,8 +116,8 @@ fun JournalOptionsSheet(
                         ) {
                             JuneBadge(
                                 show = LocalSyncEnabled.current,
-                                icon = if (journal.cloudId != null) R.drawable.cloud_24px else R.drawable.devices_24px,
-                                label = if (journal.cloudId != null) stringResource(R.string.cloud) else stringResource(R.string.local)
+                                icon = if (journal.isSynced) R.drawable.cloud_24px else R.drawable.devices_24px,
+                                label = if (journal.isSynced) stringResource(R.string.cloud) else stringResource(R.string.local)
                             )
                             JuneBadge(show = journal.images.isNotEmpty(), icon = R.drawable.photo_24px, label = "${journal.images.size}")
                             JuneBadge(show = journal.songDetails != null, icon = R.drawable.music_note_24px)

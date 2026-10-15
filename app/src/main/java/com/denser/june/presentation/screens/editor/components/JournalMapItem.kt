@@ -41,6 +41,7 @@ import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.map.RenderOptions
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.style.BaseStyle
@@ -95,6 +96,9 @@ fun JournalMapItem(
                     baseStyle = BaseStyle.Uri(mapStyleUrl),
                     cameraState = cameraState,
                     options = MapOptions(
+                        renderOptions = RenderOptions(
+                            renderMode = RenderOptions.RenderMode.TextureView
+                        ),
                         gestureOptions = GestureOptions(
                             isTiltEnabled = false,
                             isZoomEnabled = false,
@@ -140,7 +144,7 @@ fun JournalMapItem(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = location.name ?: "Pinned Location",
+                        text = location.name ?: stringResource(R.string.pinned_location),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,

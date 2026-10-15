@@ -217,8 +217,8 @@ fun JournalMetadataBadges(
         )
         JuneBadge(
             show = isSyncEnabled,
-            icon = if (journal.cloudId != null) R.drawable.cloud_24px else R.drawable.devices_24px,
-            label = if (journal.cloudId != null) stringResource(R.string.cloud) else stringResource(
+            icon = if (journal.isSynced) R.drawable.cloud_24px else R.drawable.devices_24px,
+            label = if (journal.isSynced) stringResource(R.string.cloud) else stringResource(
                 R.string.local
             )
         )
