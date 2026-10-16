@@ -2,6 +2,7 @@ package com.denser.june.presentation.utils
 
 import android.Manifest
 import android.content.Context
+import android.location.LocationManager
 import androidx.annotation.RequiresPermission
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.enums.MapStyleProvider
@@ -225,6 +226,19 @@ object MapProviderUtils : KoinComponent {
 
     private fun generateFallbackLabel(center: LatLng): String {
         return "Lat: ${"%.4f".format(Locale.US, center.latitude)}, Lon: ${"%.4f".format(Locale.US, center.longitude)}"
+    }
+
+    fun isLocationServiceEnabled(context: Context): Boolean {
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return false
+        return lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
+    fun isSameCoordinates(lat1: Double, lon1: Double, lat2: Double, lon2: Double, threshold: Double = 1e-5): Boolean {
+        return kotlin.math.abs(lat1 - lat2) < threshold && kotlin.math.abs(lon1 - lon2) < threshold
+    }
+
+    fun formatCoordinates(lat: Double, lon: Double): String {
+        return "${String.format(Locale.US, "%.5f", lat)}, ${String.format(Locale.US, "%.5f", lon)}"
     }
 
     suspend fun testApiKey(provider: MapStyleProvider, key: String): Boolean {

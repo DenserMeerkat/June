@@ -5,10 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
-import android.location.LocationManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,8 +19,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import kotlinx.coroutines.Job
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
@@ -30,7 +39,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.denser.june.presentation.components.JuneFullScreenDialog
 import androidx.core.content.ContextCompat
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.enums.MapTheme
@@ -57,6 +65,7 @@ import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.map.RenderOptions
 import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.spatialk.geojson.Position
@@ -84,6 +93,7 @@ fun AddLocationDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     MapLibreInitializer(isInternetAllowed)
 
@@ -93,9 +103,64 @@ fun AddLocationDialog(
     var isAddressLoading by remember { mutableStateOf(false) }
     var searchResults by remember { mutableStateOf<List<MapSearchResult>>(emptyList()) }
     var isSearchFocused by remember { mutableStateOf(false) }
+    var showSearchResults by remember { mutableStateOf(false) }
+    var hasSearched by remember { mutableStateOf(false) }
+
+    val dummyFocusRequester = remember { FocusRequester() }
+
+    fun dismissSearchAndKeyboard() {
+        dummyFocusRequester.requestFocus()
+        focusManager.clearFocus(force = true)
+        keyboardController?.hide()
+        showSearchResults = false
+    }
+
+    val searchCache = remember { mutableMapOf<String, List<MapSearchResult>>() }
+    var searchJob by remember { mutableStateOf<Job?>(null) }
+
+    fun executeSearch(query: String, immediate: Boolean = false) {
+        val trimmed = query.trim()
+        val minChars = if (immediate) 1 else 3
+        if (trimmed.length < minChars) {
+            searchJob?.cancel()
+            isSearching = false
+            hasSearched = false
+            searchResults = emptyList()
+            showSearchResults = false
+            return
+        }
+
+        val cached = searchCache[trimmed.lowercase()]
+        if (cached != null) {
+            searchJob?.cancel()
+            isSearching = false
+            hasSearched = true
+            searchResults = cached
+            showSearchResults = true
+            return
+        }
+
+        searchJob?.cancel()
+        searchJob = scope.launch {
+            if (!immediate) {
+                delay(500)
+            }
+            if (!isInternetAllowed) return@launch
+            isSearching = true
+            hasSearched = true
+            val results = MapProviderUtils.searchLocation(context, trimmed)
+            searchCache[trimmed.lowercase()] = results
+            searchResults = results
+            isSearching = false
+            showSearchResults = true
+        }
+    }
+
+    val defaultLocationName = stringResource(R.string.move_map_to_select)
+    val networkRestrictedText = stringResource(R.string.network_restricted)
 
     var currentLocation by remember {
-        mutableStateOf(existingLocation ?: JournalLocation(0.0, 0.0, name = "Move map to select"))
+        mutableStateOf(existingLocation ?: JournalLocation(0.0, 0.0, name = defaultLocationName))
     }
 
     val startPosition = remember {
@@ -117,9 +182,7 @@ fun AddLocationDialog(
         derivedStateOf {
             existingLocation?.let { existing ->
                 val target = cameraState.position.target
-                val latDiff = abs(target.latitude - existing.latitude)
-                val lonDiff = abs(target.longitude - existing.longitude)
-                latDiff < 0.00001 && lonDiff < 0.00001
+                MapProviderUtils.isSameCoordinates(target.latitude, target.longitude, existing.latitude, existing.longitude)
             } ?: false
         }
     }
@@ -141,12 +204,8 @@ fun AddLocationDialog(
         val newLatLng = LatLng(target.latitude, target.longitude)
         val lastFetched = lastFetchedLatLng.value
 
-        if (lastFetched != null) {
-            val latDiff = abs(newLatLng.latitude - lastFetched.latitude)
-            val lngDiff = abs(newLatLng.longitude - lastFetched.longitude)
-            if (latDiff < 1e-5 && lngDiff < 1e-5) {
-                return@LaunchedEffect
-            }
+        if (lastFetched != null && MapProviderUtils.isSameCoordinates(newLatLng.latitude, newLatLng.longitude, lastFetched.latitude, lastFetched.longitude)) {
+            return@LaunchedEffect
         }
 
         isAddressLoading = true
@@ -186,10 +245,7 @@ fun AddLocationDialog(
     }
 
     fun checkSettingsAndFetch() {
-        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val gpsEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        val networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-        if (gpsEnabled || networkEnabled) {
+        if (MapProviderUtils.isLocationServiceEnabled(context)) {
             performLocationFetch()
         } else {
             val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
@@ -225,8 +281,8 @@ fun AddLocationDialog(
     val dialogBgColor = if (isMapDarkMode) Color(0xFF121212) else Color(0xFFFFFFFF)
     JuneFullScreenDialog(
         onDismissRequest = {
-            if (isSearchFocused) {
-                focusManager.clearFocus()
+            if (showSearchResults || isSearchFocused) {
+                dismissSearchAndKeyboard()
             } else {
                 onDismiss()
             }
@@ -241,12 +297,21 @@ fun AddLocationDialog(
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-            if (isInternetAllowed) {
+                Box(
+                    modifier = Modifier
+                        .size(0.dp)
+                        .focusRequester(dummyFocusRequester)
+                        .focusable()
+                )
+            if (isInternetAllowed && mapStyleUrl.isNotBlank()) {
                 MaplibreMap(
                     modifier = Modifier.fillMaxSize(),
                     baseStyle = BaseStyle.Uri(mapStyleUrl),
                     cameraState = cameraState,
                     options = MapOptions(
+                        renderOptions = RenderOptions(
+                            renderMode = RenderOptions.RenderMode.TextureView
+                        ),
                         ornamentOptions = OrnamentOptions(
                             isLogoEnabled = false,
                             isAttributionEnabled = false,
@@ -313,8 +378,8 @@ fun AddLocationDialog(
                 }
 
                 MapBottomBar(
-                    location = if (!isInternetAllowed && currentLocation.name == "Move map to select") {
-                        currentLocation.copy(name = "Network restricted")
+                    location = if (!isInternetAllowed && (currentLocation.name == defaultLocationName || currentLocation.name == networkRestrictedText || currentLocation.name == "Move map to select")) {
+                        currentLocation.copy(name = networkRestrictedText)
                     } else currentLocation,
                     isLoading = isAddressLoading,
                     isAtTarget = isAtSelectedLocation,
@@ -339,6 +404,19 @@ fun AddLocationDialog(
                 )
             }
 
+            if (showSearchResults && isSearchFocused) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            dismissSearchAndKeyboard()
+                        }
+                )
+            }
+
             Column(
                 modifier = Modifier
                     .statusBarsPadding()
@@ -349,25 +427,39 @@ fun AddLocationDialog(
                     query = searchQuery,
                     onQueryChange = {
                         searchQuery = it
-                        if (it.isBlank()) {
-                            searchResults = emptyList()
-                        }
+                        executeSearch(it, immediate = false)
                     },
                     onSearch = {
-                        focusManager.clearFocus()
-                        scope.launch {
-                            isSearching = true
-                            searchResults = MapProviderUtils.searchLocation(context, searchQuery)
-                            isSearching = false
-                        }
+                        keyboardController?.hide()
+                        executeSearch(searchQuery, immediate = true)
+                    },
+                    onClear = {
+                        searchJob?.cancel()
+                        searchQuery = ""
+                        searchResults = emptyList()
+                        hasSearched = false
+                        showSearchResults = false
                     },
                     isSearching = isSearching,
                     onBack = onDismiss,
                     enabled = isInternetAllowed,
-                    onFocusChanged = { isSearchFocused = it }
+                    onFocusChanged = { isFocused ->
+                        isSearchFocused = isFocused
+                        if (isFocused) {
+                            val trimmed = searchQuery.trim()
+                            if (trimmed.length >= 3) {
+                                val cached = searchCache[trimmed.lowercase()]
+                                if (cached != null) {
+                                    searchResults = cached
+                                    hasSearched = true
+                                }
+                                showSearchResults = true
+                            }
+                        }
+                    }
                 )
 
-                if (isSearchFocused && searchResults.isNotEmpty()) {
+                if (showSearchResults && isSearchFocused && (searchResults.isNotEmpty() || (hasSearched && !isSearching))) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -376,48 +468,83 @@ fun AddLocationDialog(
                         ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                        ) {
-                            searchResults.forEach { result ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            focusManager.clearFocus()
-                                            animateToLocation(LatLng(result.latitude, result.longitude))
-                                            searchQuery = result.name
-                                            searchResults = emptyList()
-                                        }
-                                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.location_on_24px),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column {
-                                        Text(
-                                            text = result.name,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        Text(
-                                            text = result.address,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                        if (searchResults.isNotEmpty()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 280.dp)
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                searchResults.forEachIndexed { index, result ->
+                                    if (index > 0) {
+                                        HorizontalDivider(
+                                            modifier = Modifier.padding(horizontal = 16.dp),
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                                         )
                                     }
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                dismissSearchAndKeyboard()
+                                                animateToLocation(LatLng(result.latitude, result.longitude))
+                                                val prevQuery = searchQuery
+                                                searchQuery = result.name
+                                                searchCache[result.name.trim().lowercase()] = searchResults
+                                                if (prevQuery.isNotBlank()) {
+                                                    searchCache[prevQuery.trim().lowercase()] = searchResults
+                                                }
+                                            }
+                                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.location_on_24px),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = result.name,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = result.address,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
                                 }
+                            }
+                        } else if (hasSearched && !isSearching) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.search_off_24px),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = stringResource(R.string.no_locations_found),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
@@ -464,7 +591,7 @@ fun MapBottomBar(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (isLoading) "Locating..." else (location.name ?: "Unknown Place"),
+                        text = if (isLoading) stringResource(R.string.locating) else (location.name ?: stringResource(R.string.unknown_place)),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -473,7 +600,7 @@ fun MapBottomBar(
                     )
 
                     Text(
-                        text = if (isLoading) "Fetching address..." else (location.address ?: "No address available"),
+                        text = if (isLoading) stringResource(R.string.fetching_address) else (location.address ?: stringResource(R.string.no_address_available)),
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isLoading) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
@@ -525,13 +652,7 @@ fun MapBottomBar(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (isLoading) "Locating..." else "${
-                            String.format(
-                                Locale.US,
-                                "%.5f",
-                                location.latitude
-                            )
-                        }, ${String.format(Locale.US, "%.5f", location.longitude)}",
+                        text = if (isLoading) stringResource(R.string.locating) else MapProviderUtils.formatCoordinates(location.latitude, location.longitude),
                         style = MaterialTheme.typography.labelMedium,
                         fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.secondary
@@ -547,7 +668,7 @@ fun MapBottomBar(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "GPS • ±5m",
+                        text = stringResource(R.string.gps_accuracy_estimate),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.tertiary
                     )
@@ -575,7 +696,7 @@ fun MapBottomBar(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.delete_24px),
-                            contentDescription = "Remove Location",
+                            contentDescription = stringResource(R.string.remove_location),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -589,7 +710,7 @@ fun MapBottomBar(
                     enabled = !isLoading && enabled
                 ) {
                     Text(
-                        "Confirm Location",
+                        stringResource(R.string.confirm_location),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1
@@ -606,6 +727,7 @@ fun MapSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
+    onClear: () -> Unit = {},
     isSearching: Boolean,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -620,15 +742,19 @@ fun MapSearchBar(
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 4.dp)
+                .padding(horizontal = 6.dp)
                 .height(56.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.size(40.dp)
+            ) {
                 Icon(
                     painterResource(R.drawable.arrow_back_24px),
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onSurface
+                    contentDescription = stringResource(R.string.back),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(24.dp)
                 )
             }
             TextField(
@@ -636,13 +762,28 @@ fun MapSearchBar(
                 onValueChange = onQueryChange,
                 placeholder = {
                     Text(
-                        "Search location...",
+                        stringResource(R.string.search_location_placeholder),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 },
+                trailingIcon = if (query.isNotEmpty()) {
+                    {
+                        IconButton(
+                            onClick = onClear,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.close_24px),
+                                contentDescription = stringResource(R.string.clear),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                } else null,
                 modifier = Modifier
                     .weight(1f)
                     .onFocusChanged { focusState ->
@@ -655,17 +796,22 @@ fun MapSearchBar(
                 colors = UiUtils.getTransparentTextFieldColors(),
                 textStyle = MaterialTheme.typography.bodyLarge
             )
-            IconButton(onClick = onSearch, enabled = !isSearching && enabled) {
+            IconButton(
+                onClick = onSearch,
+                enabled = !isSearching && enabled,
+                modifier = Modifier.size(40.dp)
+            ) {
                 if (isSearching) {
                     CircularWavyProgressIndicator(
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(20.dp),
                         color = MaterialTheme.colorScheme.primary
                     )
                 } else {
                     Icon(
                         painterResource(R.drawable.search_24px),
-                        contentDescription = "Search",
-                        tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        contentDescription = stringResource(R.string.search),
+                        tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }

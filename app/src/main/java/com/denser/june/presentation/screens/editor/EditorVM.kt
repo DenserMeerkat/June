@@ -535,7 +535,9 @@ class EditorVM(
                 dateTime = currentState.dateTime,
                 isBookmarked = currentState.isBookmarked,
                 isArchived = currentState.isArchived,
-                isDraft = false
+                isDraft = false,
+                syncedAt = existingJournal?.syncedAt,
+                cloudId = existingJournal?.cloudId
             )
 
             if (existingJournal != null) {
