@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
@@ -27,6 +28,7 @@ import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.settings.components.ColorPickerSheet
 import com.denser.june.presentation.screens.settings.components.*
+import com.denser.june.core.domain.billing.BillingHandler
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.utils.InternetDisabledException
 import com.denser.june.presentation.utils.UpdateChecker
@@ -40,6 +42,8 @@ fun SettingsScreen() {
     val state by settingsVM.state.collectAsStateWithLifecycle()
     val onAction = settingsVM::onAction
     val navigator = koinInject<AppNavigator>()
+    val billingHandler = koinInject<BillingHandler>()
+    val isPro by billingHandler.isPro.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -97,6 +101,25 @@ fun SettingsScreen() {
                         Icon(
                             painter = painterResource(R.drawable.arrow_back_24px),
                             contentDescription = "Back",
+                        )
+                    }
+                },
+                actions = {
+                    Button(
+                        onClick = {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                            navigator.navigateTo(Route.JuneProPaywall)
+                        },
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                        modifier = Modifier
+                            .height(36.dp)
+                            .padding(end = 8.dp)
+                    ) {
+                        Text(
+                            text = if (isPro) "Pro" else "Get Pro",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }

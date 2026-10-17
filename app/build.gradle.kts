@@ -89,12 +89,13 @@ android {
         }
     }
 
+val revenueCatApiKey = (localProperties["REVENUECAT_API_KEY"] ?: System.getenv("REVENUECAT_API_KEY") ?: "") as String
+
     flavorDimensions += "distribution"
 
     productFlavors {
         create("foss") {
             dimension = "distribution"
-            isDefault = true
             signingConfigs.findByName("release")?.let {
                 if (it.storeFile?.exists() == true) {
                     signingConfig = it
@@ -105,6 +106,8 @@ android {
             dimension = "distribution"
             applicationIdSuffix = ".play"
             versionNameSuffix = "-play"
+            isDefault = true
+            buildConfigField("String", "REVENUECAT_API_KEY", "\"$revenueCatApiKey\"")
             signingConfigs.findByName("playRelease")?.let {
                 if (it.storeFile?.exists() == true) {
                     signingConfig = it
@@ -254,6 +257,8 @@ dependencies {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")
         exclude(group = "org.apache.httpcomponents", module = "httpcore")
     }
+    "playImplementation"(libs.revenuecat.purchases)
+    "playImplementation"(libs.revenuecat.purchases.ui)
 
 }
 aboutLibraries {

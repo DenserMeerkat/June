@@ -111,6 +111,11 @@ class SyncManager(
                 AppLogger.setCategoryEnabled(AppLogger.Category.DATABASE, enabled)
             }
         }
+        applicationScope.launch {
+            syncPrefs.getBillingLoggingEnabled().collect { enabled ->
+                AppLogger.setCategoryEnabled(AppLogger.Category.BILLING, enabled)
+            }
+        }
 
         applicationScope.launch(Dispatchers.IO) {
             val lastVersion = syncPrefs.getLastCompletedDataRepairVersion().first()

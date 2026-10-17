@@ -32,6 +32,7 @@ class SyncPreferencesImpl(
         private val syncLoggingEnabled = booleanPreferencesKey("sync_logging_enabled")
         private val backupLoggingEnabled = booleanPreferencesKey("backup_logging_enabled")
         private val databaseLoggingEnabled = booleanPreferencesKey("database_logging_enabled")
+        private val billingLoggingEnabled = booleanPreferencesKey("billing_logging_enabled")
         private val developerModeEnabled = booleanPreferencesKey("developer_mode_enabled")
     }
 
@@ -150,6 +151,15 @@ class SyncPreferencesImpl(
     override suspend fun setDatabaseLoggingEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[databaseLoggingEnabled] = enabled
+        }
+    }
+
+    override fun getBillingLoggingEnabled(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[billingLoggingEnabled] ?: false }
+
+    override suspend fun setBillingLoggingEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[billingLoggingEnabled] = enabled
         }
     }
 

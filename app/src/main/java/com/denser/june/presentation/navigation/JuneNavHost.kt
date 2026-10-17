@@ -193,5 +193,11 @@ fun JuneNavHost(
         composable<Route.DeveloperSettings> {
             DeveloperSettingsScreen()
         }
+
+        composable<Route.JuneProPaywall> {
+            com.denser.june.billing.JuneProPaywallScreen(
+                onDismiss = { navController.popBackStack() }
+            )
+        }
     }
 }

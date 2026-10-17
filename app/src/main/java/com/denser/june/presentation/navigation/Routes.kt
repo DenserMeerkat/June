@@ -89,4 +89,7 @@ sealed interface Route {
 
     @Serializable
     data object DeveloperSettings : Route
+
+    @Serializable
+    data object JuneProPaywall : Route
 }

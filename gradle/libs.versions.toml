@@ -53,6 +53,7 @@ appcompat = "1.7.0"
 kaml = "0.104.0"
 exifinterface = "1.4.1"
 telephoto = "0.19.0"
+purchases = "10.28.1"
 
 [libraries]
 # Core
@@ -126,6 +127,8 @@ play-app-update = { group = "com.google.android.play", name = "app-update-ktx", 
 kaml = { group = "com.charleskorn.kaml", name = "kaml", version.ref = "kaml" }
 exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
 telephoto-zoomable-coil = { group = "me.saket.telephoto", name = "zoomable-image-coil", version.ref = "telephoto" }
+revenuecat-purchases = { group = "com.revenuecat.purchases", name = "purchases", version.ref = "purchases" }
+revenuecat-purchases-ui = { group = "com.revenuecat.purchases", name = "purchases-ui", version.ref = "purchases" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
