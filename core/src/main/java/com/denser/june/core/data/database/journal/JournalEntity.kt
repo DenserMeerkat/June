@@ -4,7 +4,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.denser.june.core.data.database.converters.JournalTypeConverters
+import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.core.domain.model.JournalLocation
+import com.denser.june.core.domain.model.JournalTheme
 import com.denser.june.core.domain.model.SongDetails
 
 @Entity(tableName = "journals")
@@ -25,6 +27,10 @@ data class JournalEntity(
     val isBookmarked: Boolean = false,
     val isArchived: Boolean = false,
     val isDraft: Boolean = true,
+    val isLocked: Boolean = false,
+    val theme: JournalTheme? = null,
+    val font: String? = null,
+    val fontVariation: FontVariationConfig? = null,
     val deletedAt: Long? = null,
     val syncedAt: Long? = null,
     val cloudId: String? = null,

@@ -22,6 +22,10 @@ data class Journal(
     val isBookmarked: Boolean = false,
     val isArchived: Boolean = false,
     val isDraft: Boolean = true,
+    val isLocked: Boolean = false,
+    val theme: JournalTheme? = null,
+    val font: String? = null,
+    val fontVariation: FontVariationConfig? = null,
     val deletedAt: Long? = null,
     val syncedAt: Long? = null,
     val cloudId: String? = null,
@@ -48,6 +52,10 @@ data class Journal(
                this.isBookmarked == other.isBookmarked &&
                this.isArchived == other.isArchived &&
                this.isDraft == other.isDraft &&
+               this.isLocked == other.isLocked &&
+               this.theme == other.theme &&
+               this.font == other.font &&
+               this.fontVariation == other.fontVariation &&
                this.deletedAt == other.deletedAt
     }
 
