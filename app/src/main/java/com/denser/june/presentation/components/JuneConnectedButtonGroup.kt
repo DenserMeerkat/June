@@ -1,5 +1,6 @@
 package com.denser.june.presentation.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ fun <T> JuneConnectedButtonGroup(
         checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
     ),
+    border: BorderStroke? = null,
     content: @Composable RowScope.(item: T, isSelected: Boolean) -> Unit
 ) {
     Row(
@@ -58,7 +60,8 @@ fun <T> JuneConnectedButtonGroup(
                 shapes = shape,
                 modifier = itemModifier,
                 contentPadding = contentPadding,
-                colors = colors
+                colors = colors,
+                border = border
             ) {
                 content(item, isChecked)
             }
@@ -89,7 +92,8 @@ fun <T> JuneConnectedButtonGroup(
         checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
         checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-    )
+    ),
+    border: BorderStroke? = null
 ) {
     JuneConnectedButtonGroup(
         options = options,
@@ -101,7 +105,8 @@ fun <T> JuneConnectedButtonGroup(
         contentPadding = contentPadding,
         buttonModifier = buttonModifier,
         horizontalArrangement = horizontalArrangement,
-        colors = colors
+        colors = colors,
+        border = border
     ) { item, isSelected ->
         Text(
             text = label(item),
@@ -131,7 +136,7 @@ fun JuneConnectedActionBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         actions.forEachIndexed { index, action ->
-            val shape = when {
+            val shape = action.shapes ?: when {
                 actions.size == 1 -> ToggleButtonDefaults.shapes()
                 index == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
                 index == actions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
@@ -139,9 +144,10 @@ fun JuneConnectedActionBar(
             }
             val itemContentColor = when {
                 action.isDestructive -> destructiveColor
-                action.isActive -> checkedContentColor
+                action.isActive -> action.activeContentColor ?: checkedContentColor
                 else -> contentColor
             }
+            val itemCheckedContainerColor = action.activeContainerColor ?: checkedContainerColor
             val buttonModifier = if (action.label != null) {
                 Modifier.height(buttonHeight)
             } else {
@@ -155,8 +161,8 @@ fun JuneConnectedActionBar(
                 colors = ToggleButtonDefaults.toggleButtonColors(
                     containerColor = containerColor,
                     contentColor = itemContentColor,
-                    checkedContainerColor = checkedContainerColor,
-                    checkedContentColor = checkedContentColor
+                    checkedContainerColor = itemCheckedContainerColor,
+                    checkedContentColor = itemContentColor
                 ),
                 contentPadding = if (action.label != null) {
                     PaddingValues(horizontal = 12.dp, vertical = 0.dp)
@@ -186,6 +192,8 @@ fun JuneConnectedActionBar(
                             softWrap = false
                         )
                     }
+                } else if (action.customContent != null) {
+                    action.customContent.invoke()
                 } else if (action.iconRes != null) {
                     Icon(
                         painter = painterResource(action.iconRes),
@@ -198,6 +206,7 @@ fun JuneConnectedActionBar(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 data class ConnectedBarAction(
     val iconRes: Int? = null,
     val label: String? = null,
@@ -205,5 +214,9 @@ data class ConnectedBarAction(
     val contentDescriptionRes: Int? = null,
     val onClick: () -> Unit,
     val isActive: Boolean = false,
-    val isDestructive: Boolean = false
+    val isDestructive: Boolean = false,
+    val customContent: (@Composable () -> Unit)? = null,
+    val shapes: ToggleButtonShapes? = null,
+    val activeContainerColor: Color? = null,
+    val activeContentColor: Color? = null
 )

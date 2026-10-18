@@ -28,6 +28,7 @@ fun JuneRadioTile(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     badge: String? = null,
+    badgeContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     radioPosition: JuneRadioTilePosition = JuneRadioTilePosition.Leading,
     shape: Shape = RoundedCornerShape(12.dp),
@@ -41,7 +42,7 @@ fun JuneRadioTile(
     val resolvedTitleColor = titleColor ?: if (selected) {
         MaterialTheme.colorScheme.primary
     } else {
-        MaterialTheme.colorScheme.onSurface
+        MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f)
     }
 
     Surface(
@@ -97,7 +98,9 @@ fun JuneRadioTile(
                         style = titleTextStyle,
                         color = resolvedTitleColor
                     )
-                    if (badge != null) {
+                    if (badgeContent != null) {
+                        badgeContent()
+                    } else if (badge != null) {
                         Surface(
                             color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
