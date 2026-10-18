@@ -10,6 +10,7 @@ import com.denser.june.core.domain.preferences.FontPreferences
 import com.denser.june.core.domain.backup.ExportRepo
 import com.denser.june.core.domain.backup.MarkdownImportRepo
 import com.denser.june.core.domain.backup.RestoreRepo
+import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.presentation.utils.AsyncOp
 import com.denser.june.presentation.utils.toAsyncOp
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
@@ -58,6 +59,7 @@ class SettingsVM(
             journalPrefs.startOfWeek(),
             journalPrefs.timeFormat(),
             fontPrefs.getAppFont(),
+            fontPrefs.getAppFontVariation(),
             privacyPrefs.getIsInternetAllowedFlow(),
             journalPrefs.mapTheme(),
             journalPrefs.isMarkdownEnabled(),
@@ -84,20 +86,20 @@ class SettingsVM(
             isAutoTimeEnabled = array[10] as Boolean,
             startOfWeek = array[11] as DayOfWeek,
             timeFormat = array[12] as TimeFormat,
-            isInternetAllowed = array[14] as Boolean,
-            mapTheme = array[15] as MapTheme,
-            isMarkdownEnabled = array[16] as Boolean,
-            securityQuestion = array[17] as String?,
-            securityAnswerHash = array[18] as String?,
-            alwaysOpenNewNote = array[19] as Boolean,
-            isKeyboardAutocorrectEnabled = array[20] as Boolean,
-            isKeyboardCapitalizationEnabled = array[21] as Boolean,
-            editorLayoutDirection = array[22] as EditorLayoutDirection,
-            isForceLtrUi = array[23] as Boolean,
-            isCompressPhotosEnabled = array[24] as Boolean,
-            photoCompressionQuality = array[25] as Int,
-            isCompressVideosEnabled = array[26] as Boolean,
-            videoCompressionQuality = array[27] as Int,
+            isInternetAllowed = array[15] as Boolean,
+            mapTheme = array[16] as MapTheme,
+            isMarkdownEnabled = array[17] as Boolean,
+            securityQuestion = array[18] as String?,
+            securityAnswerHash = array[19] as String?,
+            alwaysOpenNewNote = array[20] as Boolean,
+            isKeyboardAutocorrectEnabled = array[21] as Boolean,
+            isKeyboardCapitalizationEnabled = array[22] as Boolean,
+            editorLayoutDirection = array[23] as EditorLayoutDirection,
+            isForceLtrUi = array[24] as Boolean,
+            isCompressPhotosEnabled = array[25] as Boolean,
+            photoCompressionQuality = array[26] as Int,
+            isCompressVideosEnabled = array[27] as Boolean,
+            videoCompressionQuality = array[28] as Int,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -106,6 +108,7 @@ class SettingsVM(
                 style = array[4] as PaletteStyle,
                 materialTheme = array[5] as Boolean,
                 appFont = array[13] as String,
+                appFontVariation = array[14] as? FontVariationConfig,
             )
         )
     }.stateIn(
@@ -172,9 +175,18 @@ class SettingsVM(
                         FontType.APP -> fontPrefs.updateAppFont(action.fontName)
                     }
                 }
+                is SettingsAction.OnAppFontVariationChange -> {
+                    fontPrefs.updateAppFontVariation(action.variation)
+                }
+                SettingsAction.OnResetAppFontVariation -> {
+                    fontPrefs.updateAppFontVariation(FontVariationConfig.DEFAULT)
+                }
                 SettingsAction.OnResetFonts -> {
                     when (_localState.value.selectedFontType) {
-                        FontType.APP -> fontPrefs.updateAppFont("Google Sans Flex")
+                        FontType.APP -> {
+                            fontPrefs.updateAppFont("Google Sans Flex")
+                            fontPrefs.updateAppFontVariation(FontVariationConfig.DEFAULT)
+                        }
                     }
                 }
                 is SettingsAction.OnMaterialThemeToggle -> themePrefs.updateMaterialTheme(action.pref)
