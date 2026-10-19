@@ -69,6 +69,8 @@ fun JournalContentEditor(
     isKeyboardAutocorrectEnabled: Boolean = true,
     isKeyboardCapitalizationEnabled: Boolean = true,
     editorLayoutDirection: EditorLayoutDirection = EditorLayoutDirection.AUTO,
+    fontFamily: FontFamily? = null,
+    readOnly: Boolean = false,
 ) {
     val layoutDirectionOverride = when (editorLayoutDirection) {
         EditorLayoutDirection.AUTO -> null
@@ -158,19 +160,30 @@ fun JournalContentEditor(
 
         val interactionSource = remember { MutableInteractionSource() }
 
-        Box(
-            modifier = modifier.clickable(
+        val boxModifier = if (!readOnly) {
+            modifier.clickable(
                 interactionSource = interactionSource,
                 indication = null
             ) {
                 focusRequester.requestFocus()
                 keyboardController?.show()
             }
+        } else {
+            modifier
+        }
+
+        Box(
+            modifier = boxModifier
         ) {
+            val resolvedTextStyle = MaterialTheme.typography.bodyLarge.copy(
+                fontFamily = fontFamily ?: MaterialTheme.typography.bodyLarge.fontFamily
+            )
+
             if (!isMarkdownEnabled) {
                 TextField(
                     value = rawContent,
                     onValueChange = onMarkdownChange,
+                    readOnly = readOnly,
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester)
@@ -180,7 +193,7 @@ fun JournalContentEditor(
                     placeholder = {
                         Text(
                             stringResource(R.string.whats_on_your_mind),
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = resolvedTextStyle,
                         )
                     },
                     keyboardOptions = keyboardOptions,
@@ -188,7 +201,7 @@ fun JournalContentEditor(
                         unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                         focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     ),
-                    textStyle = MaterialTheme.typography.bodyLarge,
+                    textStyle = resolvedTextStyle,
                 )
             } else {
                 HyphenTextField(
@@ -204,10 +217,11 @@ fun JournalContentEditor(
                         .onFocusChanged { focusState ->
                             onFocusChanged(focusState.isFocused)
                         },
+                    textStyle = resolvedTextStyle,
                     placeholder = {
                         Text(
                             stringResource(R.string.whats_on_your_mind),
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = resolvedTextStyle,
                         )
                     },
                     keyboardOptions = keyboardOptions,
@@ -298,6 +312,18 @@ fun JournalContentEditor(
                         modifier = Modifier.size(100.dp)
                     )
                 }
+            }
+
+            if (readOnly) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {}
+                        )
+                )
             }
         }
     }

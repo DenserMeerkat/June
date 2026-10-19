@@ -2,6 +2,7 @@ package com.denser.june.presentation.screens.editor
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,11 +52,17 @@ import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
 import com.denser.june.core.utils.LanguageHelper
 import com.denser.june.presentation.components.ExportJournalBottomSheet
-import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.components.font.FontCustomizationPanel
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.editor.components.*
 import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
+import androidx.compose.animation.*
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import com.denser.june.core.domain.billing.BillingHandler
+import com.denser.june.core.domain.model.FontPresets
+import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.presentation.utils.UiUtils
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -109,6 +116,9 @@ fun EditorScreen() {
     var isEditorFocused by remember { mutableStateOf(false) }
     val showSaveButton = if (state.isDraft) state.hasContent else state.isDirty
 
+    val billingHandler = koinInject<BillingHandler>()
+    var isFontMode by remember { mutableStateOf(false) }
+
     val formattedDate = remember(state.dateTime) { state.dateTime.toDateWithDay() }
     val formattedTime = remember(state.dateTime, state.timeFormat) {
         val time = state.dateTime.toLocalTime()
@@ -135,7 +145,13 @@ fun EditorScreen() {
         viewModel.onAction(EditorAction.Refresh)
     }
 
-    BackHandler { onBack() }
+    BackHandler {
+        if (isFontMode) {
+            isFontMode = false
+        } else {
+            onBack()
+        }
+    }
 
     val mediaOperations = remember(state.images) {
         MediaOperations(
@@ -175,106 +191,45 @@ fun EditorScreen() {
 
     Scaffold(
         topBar = {
-            JuneTopAppBar(
-                title = {},
-                navigationIcon = {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FilledIconButton(
-                            onClick = { onBack() },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.75f
-                                )
-                            )
-                        ) {
-                            Icon(
-                                painterResource(R.drawable.close_24px),
-                                stringResource(R.string.close)
-                            )
-                        }
-
-                        FilledIconButton(
-                            onClick = { dialogState.showEmojiPicker = true },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = if (state.emoji != null) {
-                                    MaterialTheme.colorScheme.secondaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceContainerLow
-                                },
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.75F
-                                )
-                            )
-                        ) {
-                            if (state.emoji != null) Text(state.emoji!!, fontSize = 22.sp)
-                            else Icon(
-                                painterResource(if (dialogState.showEmojiPicker) R.drawable.sentiment_very_satisfied_24px_fill else R.drawable.sentiment_very_satisfied_24px),
-                                stringResource(R.string.add_emoji)
-                            )
-                        }
-
-                        FilledIconButton(
-                            onClick = {
-                                keyboardController?.hide()
-                                focusManager.clearFocus(force = true)
-                                dialogState.showAddItemSheet = true
-                            },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.75F
-                                )
-                            )
-                        ) {
-                            Icon(
-                                painterResource(if (dialogState.showAddItemSheet) R.drawable.add_circle_24px_fill else R.drawable.add_circle_24px),
-                                stringResource(R.string.add_attachment)
-                            )
-                        }
-
-
+            EditorTopAppBar(
+                isFontMode = isFontMode,
+                showAddItemSheet = dialogState.showAddItemSheet,
+                hasCustomFont = state.font != null || state.fontVariation != null,
+                showSaveButton = showSaveButton,
+                isLoading = state.isLoading,
+                onCloseClick = {
+                    if (isFontMode) isFontMode = false else onBack()
+                },
+                isFontDirty = state.isFontDirty,
+                onResetFont = {
+                    viewModel.onAction(EditorAction.SetJournalFont(state.initialFont, state.initialFontVariation))
+                },
+                onFontModeToggle = {
+                    if (billingHandler.isPro.value) {
+                        keyboardController?.hide()
+                        focusManager.clearFocus(force = true)
+                        isFontMode = !isFontMode
+                    } else {
+                        navigator.navigateTo(Route.JuneProPaywall, isSingleTop = true)
                     }
                 },
-                actions = {
-                    if (showSaveButton) {
-                        Button(
-                            enabled = !state.isLoading,
-                            onClick = {
-                                keyboardController?.hide()
-                                focusManager.clearFocus(force = true)
-                                if (!state.isLoading) {
-                                    state.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
-                                    viewModel.onAction(EditorAction.SaveJournal)
-                                }
-                            },
-                        ) {
-                            Text(stringResource(R.string.save))
-                        }
+                onAddItemClick = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus(force = true)
+                    dialogState.showAddItemSheet = true
+                },
+                onSaveClick = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus(force = true)
+                    if (!state.isLoading) {
+                        state.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                        viewModel.onAction(EditorAction.SaveJournal)
                     }
-
-                    Box {
-                        IconButton(
-                            onClick = {
-                                keyboardController?.hide()
-                                focusManager.clearFocus(force = true)
-                                showOptionsSheet = true
-                            },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.75f
-                                )
-                            ),
-                        ) {
-                            Icon(
-                                painterResource(R.drawable.more_vert_24px),
-                                stringResource(R.string.options)
-                            )
-                        }
-                    }
+                },
+                onOptionsClick = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus(force = true)
+                    showOptionsSheet = true
                 }
             )
         },
@@ -292,11 +247,30 @@ fun EditorScreen() {
             var toolbarHeight by remember { mutableStateOf(0.dp) }
             val density = LocalDensity.current
 
-            Column(modifier = Modifier.fillMaxSize()) {
+            val journalFontFamily = com.denser.june.presentation.theme.getJournalFontFamily(
+                fontName = state.font,
+                variation = state.fontVariation
+            )
+
+            val fontAnimDuration = 300
+            val fontEasing = FastOutSlowInEasing
+            val fontEnterTransition = remember {
+                slideInVertically(
+                    animationSpec = tween(fontAnimDuration, easing = fontEasing),
+                    initialOffsetY = { it }
+                ) + fadeIn(animationSpec = tween(fontAnimDuration, easing = fontEasing))
+            }
+            val fontExitTransition = remember {
+                slideOutVertically(
+                    animationSpec = tween(fontAnimDuration, easing = fontEasing),
+                    targetOffsetY = { it }
+                ) + fadeOut(animationSpec = tween(fontAnimDuration, easing = fontEasing))
+            }
+
+            Box(modifier = Modifier.fillMaxSize()) {
                 Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
+                        .fillMaxSize()
                         .verticalScroll(scrollState)
                 ) {
                     Column(
@@ -306,21 +280,31 @@ fun EditorScreen() {
                                 fixedContentHeight = with(density) { size.height.toDp() }
                             }
                     ) {
-                        if (state.images.isNotEmpty() || state.songDetails != null || state.location != null) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            JournalItemsPreview(
-                                mediaPaths = state.images,
-                                mediaOperations = mediaOperations,
-                                songDetails = state.songDetails,
-                                location = state.location,
-                                processingMediaPaths = state.processingMediaPaths,
-                                onShowAllClick = {
-                                    navigator.navigateTo(
-                                        Route.JournalMedia(journalId = state.journalId ?: ""),
-                                        isSingleTop = true
-                                    )
-                                }
-                            )
+                        AnimatedVisibility(
+                            visible = !isFontMode,
+                            enter = expandVertically(
+                                animationSpec = tween(fontAnimDuration, easing = fontEasing)
+                            ) + fadeIn(animationSpec = tween(fontAnimDuration, easing = fontEasing)),
+                            exit = shrinkVertically(
+                                animationSpec = tween(fontAnimDuration, easing = fontEasing)
+                            ) + fadeOut(animationSpec = tween(fontAnimDuration, easing = fontEasing))
+                        ) {
+                            if (state.images.isNotEmpty() || state.songDetails != null || state.location != null) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                JournalItemsPreview(
+                                    mediaPaths = state.images,
+                                    mediaOperations = mediaOperations,
+                                    songDetails = state.songDetails,
+                                    location = state.location,
+                                    processingMediaPaths = state.processingMediaPaths,
+                                    onShowAllClick = {
+                                        navigator.navigateTo(
+                                            Route.JournalMedia(journalId = state.journalId ?: ""),
+                                            isSingleTop = true
+                                        )
+                                    }
+                                )
+                            }
                         }
 
                         val editorDirection = when (editorLayoutDirection) {
@@ -329,16 +313,21 @@ fun EditorScreen() {
                             EditorLayoutDirection.RTL -> LayoutDirection.Rtl
                         }
 
+                        val titleTextStyle = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = journalFontFamily ?: MaterialTheme.typography.headlineMedium.fontFamily
+                        )
+
                         CompositionLocalProvider(LocalLayoutDirection provides editorDirection) {
                             TextField(
                                 value = state.title,
                                 onValueChange = { viewModel.onAction(EditorAction.ChangeTitle(it)) },
+                                readOnly = isFontMode,
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = {
                                     Text(
                                         stringResource(R.string.add_title),
-                                        style = MaterialTheme.typography.headlineMedium,
-                                        fontWeight = FontWeight.SemiBold,
+                                        style = titleTextStyle,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                                             alpha = 0.5f
                                         )
@@ -348,104 +337,48 @@ fun EditorScreen() {
                                     capitalization = if (isKeyboardCapitalizationEnabled) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
                                     autoCorrectEnabled = isKeyboardAutocorrectEnabled
                                 ),
-                                textStyle = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.SemiBold
-                                ),
+                                textStyle = titleTextStyle,
                                 colors = UiUtils.getTransparentTextFieldColors()
                             )
                         }
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 0.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        AnimatedVisibility(
+                            visible = !isFontMode,
+                            enter = expandVertically(
+                                animationSpec = tween(fontAnimDuration, easing = fontEasing)
+                            ) + fadeIn(animationSpec = tween(fontAnimDuration, easing = fontEasing)),
+                            exit = shrinkVertically(
+                                animationSpec = tween(fontAnimDuration, easing = fontEasing)
+                            ) + fadeOut(animationSpec = tween(fontAnimDuration, easing = fontEasing))
                         ) {
-                        JuneConnectedActionBar(
-                            actions = listOf(
-                                ConnectedBarAction(
-                                    iconRes = R.drawable.today_24px,
-                                    contentDescriptionRes = R.string.date_time_picker,
-                                    onClick = {
-                                        keyboardController?.hide()
-                                        focusManager.clearFocus()
-                                        dialogState.datePickerInitialTab = 0
-                                        dialogState.showDatePicker = true
-                                    }
-                                ),
-                                ConnectedBarAction(
-                                    label = formattedDate,
-                                    onClick = {
-                                        keyboardController?.hide()
-                                        focusManager.clearFocus()
-                                        dialogState.datePickerInitialTab = 0
-                                        dialogState.showDatePicker = true
-                                    }
-                                ),
-                                ConnectedBarAction(
-                                    iconRes = if (formattedTime == null) R.drawable.schedule_24px else null,
-                                    label = formattedTime,
-                                    contentDescriptionRes = R.string.time_format,
-                                    onClick = {
-                                        keyboardController?.hide()
-                                        focusManager.clearFocus()
-                                        dialogState.datePickerInitialTab = 1
-                                        dialogState.showDatePicker = true
-                                    }
-                                )
-                            ),
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                            checkedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            buttonHeight = 32.dp,
-                            iconOnlyWidth = 38.dp
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                            Button(
-                                onClick = {
+                            EditorMetadataBar(
+                                emoji = state.emoji,
+                                formattedDate = formattedDate,
+                                formattedTime = formattedTime,
+                                tagCount = state.tags.size,
+                                onEmojiClick = {
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus()
+                                    dialogState.showEmojiPicker = true
+                                },
+                                onDatePickerOpen = {
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus()
+                                    dialogState.datePickerInitialTab = 0
+                                    dialogState.showDatePicker = true
+                                },
+                                onTimePickerOpen = {
+                                    keyboardController?.hide()
+                                    focusManager.clearFocus()
+                                    dialogState.datePickerInitialTab = 1
+                                    dialogState.showDatePicker = true
+                                },
+                                onTagsClick = {
                                     keyboardController?.hide()
                                     focusManager.clearFocus()
                                     dialogState.showTagsDialog = true
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (state.tags.isNotEmpty()) {
-                                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-                                    } else {
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                                    },
-                                    contentColor = if (state.tags.isNotEmpty()) {
-                                        MaterialTheme.colorScheme.secondary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    }
-                                ),
-                                shape = RoundedCornerShape(50),
-                                contentPadding = PaddingValues(
-                                    horizontal = if (state.tags.isNotEmpty()) 12.dp else 0.dp,
-                                    vertical = 0.dp
-                                ),
-                                modifier = Modifier
-                                    .height(32.dp)
-                                    .then(if (state.tags.isEmpty()) Modifier.width(38.dp) else Modifier)
-                            ) {
-                                Icon(
-                                    painter = painterResource(
-                                        if (state.tags.isNotEmpty()) R.drawable.sell_24px_fill else R.drawable.sell_24px
-                                    ),
-                                    contentDescription = stringResource(R.string.tags),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                if (state.tags.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = state.tags.size.toString(),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        maxLines = 1,
-                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                        softWrap = false
-                                    )
                                 }
-                            }
+                            )
                         }
                     }
 
@@ -464,6 +397,8 @@ fun EditorScreen() {
                         isKeyboardAutocorrectEnabled = isKeyboardAutocorrectEnabled,
                         isKeyboardCapitalizationEnabled = isKeyboardCapitalizationEnabled,
                         editorLayoutDirection = editorLayoutDirection,
+                        fontFamily = journalFontFamily,
+                        readOnly = isFontMode,
                         modifier = Modifier
                             .fillMaxWidth()
                             .defaultMinSize(
@@ -471,10 +406,11 @@ fun EditorScreen() {
                                     84.dp
                                 )
                             )
-                            .padding(bottom = 16.dp)
+                            .padding(bottom = if (isFontMode) 380.dp else 16.dp)
                     )
                 }
-                if (isEditorFocused && isMarkdownEnabled) {
+
+                if (!isFontMode && isEditorFocused && isMarkdownEnabled) {
                     EditorToolbar(
                         state = hyphenState,
                         activeTrigger = activeTrigger,
@@ -482,11 +418,33 @@ fun EditorScreen() {
                         currentTags = state.tags,
                         onTagSelect = onTagSelect,
                         modifier = Modifier
+                            .align(Alignment.BottomCenter)
                             .fillMaxWidth()
                             .navigationBarsPadding()
                             .onSizeChanged { size ->
                                 toolbarHeight = with(density) { size.height.toDp() }
                             }
+                    )
+                }
+
+                AnimatedVisibility(
+                    visible = isFontMode,
+                    enter = fontEnterTransition,
+                    exit = fontExitTransition,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    FontCustomizationPanel(
+                        selectedFontName = state.font,
+                        currentVariation = state.fontVariation,
+                        onFontSelect = { newFont ->
+                            val defaultVar = newFont?.let { FontPresets.getDefaultVariation(it) }
+                            viewModel.onAction(EditorAction.SetJournalFont(newFont, defaultVar))
+                        },
+                        onVariationChange = { newVariation ->
+                            viewModel.onAction(EditorAction.SetJournalFont(state.font, newVariation))
+                        },
+                        showAppDefault = true,
+                        contentHeight = 360.dp
                     )
                 }
             }

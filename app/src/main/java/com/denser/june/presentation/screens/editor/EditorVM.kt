@@ -204,6 +204,9 @@ class EditorVM(
             is EditorAction.Refresh -> updateState { it }
 
             is EditorAction.UpdateTags -> updateState { it.copy(tags = action.tags) }
+            is EditorAction.SetJournalFont -> {
+                updateState { it.copy(font = action.fontName, fontVariation = action.variation) }
+            }
             is EditorAction.SearchTags -> {
                 searchTagsJob?.cancel()
                 searchTagsJob = viewModelScope.launch {
@@ -349,7 +352,9 @@ class EditorVM(
                 currentState.emoji != null ||
                 currentState.tags.isNotEmpty() ||
                 currentState.songDetails != null ||
-                currentState.location != null
+                currentState.location != null ||
+                currentState.font != null ||
+                currentState.fontVariation != null
 
         return original.title.trim() != currentState.title.trim() ||
                 original.content.trim() != currentState.content.trim() ||
@@ -358,7 +363,9 @@ class EditorVM(
                 original.images != currentState.images ||
                 original.location != currentState.location ||
                 original.dateTime != currentState.dateTime ||
-                original.songDetails != currentState.songDetails
+                original.songDetails != currentState.songDetails ||
+                original.font != currentState.font ||
+                original.fontVariation != currentState.fontVariation
     }
 
     private fun toggleBookmark() {
@@ -445,6 +452,10 @@ class EditorVM(
                         isBookmarked = journal.isBookmarked,
                         isArchived = journal.isArchived,
                         isDraft = journal.isDraft,
+                        font = journal.font,
+                        fontVariation = journal.fontVariation,
+                        initialFont = journal.font,
+                        initialFontVariation = journal.fontVariation,
                         deletedAt = journal.deletedAt,
                         syncedAt = journal.syncedAt,
                         cloudId = journal.cloudId,
@@ -493,7 +504,9 @@ class EditorVM(
                 dateTime = currentState.dateTime,
                 isBookmarked = currentState.isBookmarked,
                 isArchived = currentState.isArchived,
-                isDraft = true
+                isDraft = true,
+                font = currentState.font,
+                fontVariation = currentState.fontVariation
             )
 
             if (isNewEntry) {
@@ -536,6 +549,8 @@ class EditorVM(
                 isBookmarked = currentState.isBookmarked,
                 isArchived = currentState.isArchived,
                 isDraft = false,
+                font = currentState.font,
+                fontVariation = currentState.fontVariation,
                 syncedAt = existingJournal?.syncedAt,
                 cloudId = existingJournal?.cloudId
             )
@@ -549,7 +564,14 @@ class EditorVM(
                 _state.update { it.copy(journalId = newId) }
             }
 
-            _state.update { it.copy(isDirty = false, isDraft = false) }
+            _state.update {
+                it.copy(
+                    isDirty = false,
+                    isDraft = false,
+                    initialFont = it.font,
+                    initialFontVariation = it.fontVariation
+                )
+            }
         }
     }
 

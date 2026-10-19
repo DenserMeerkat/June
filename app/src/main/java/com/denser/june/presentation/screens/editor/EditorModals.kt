@@ -27,6 +27,7 @@ import com.denser.june.presentation.screens.editor.components.emoji.loadEmojiAss
 import com.denser.june.presentation.screens.editor.components.JournalTagsDialog
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.denser.june.core.domain.billing.BillingHandler
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,6 +59,7 @@ fun EditorModals(
     val context = LocalContext.current
     val navigator = koinInject<AppNavigator>()
     val journalPrefs = koinInject<JournalPreferences>()
+    val billingHandler = koinInject<BillingHandler>()
     val isCompressPhotosEnabled by journalPrefs.isCompressPhotosEnabled().collectAsStateWithLifecycle(initialValue = false)
     val photoQuality by journalPrefs.getPhotoCompressionQuality().collectAsStateWithLifecycle(initialValue = 80)
     val isCompressVideosEnabled by journalPrefs.isCompressVideosEnabled().collectAsStateWithLifecycle(initialValue = false)

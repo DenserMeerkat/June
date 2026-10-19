@@ -1,5 +1,6 @@
 package com.denser.june.presentation.screens.editor
 
+import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongFetchProgress
@@ -38,9 +39,15 @@ data class EditorState(
     val clipTrimmerSong: SongDetails? = null,
     val pendingStagedSong: SongDetails? = null,
     val journalEditSongPending: Boolean = false,
-    val processingMediaPaths: Set<String> = emptySet()
+    val processingMediaPaths: Set<String> = emptySet(),
+    val font: String? = null,
+    val fontVariation: FontVariationConfig? = null,
+    val initialFont: String? = null,
+    val initialFontVariation: FontVariationConfig? = null
 ) {
     val isDeleted: Boolean get() = deletedAt != null
+    val isFontDirty: Boolean
+        get() = font != initialFont || fontVariation != initialFontVariation
     val hasContent: Boolean
         get() = title.isNotBlank() ||
                 content.isNotBlank() ||
