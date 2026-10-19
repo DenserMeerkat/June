@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import com.mikepenz.aboutlibraries.entity.Library
 import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.denser.june.core.R
+import com.denser.june.presentation.components.JuneConnectedItem
+import com.denser.june.presentation.components.JuneConnectedList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,40 +61,44 @@ fun AboutLibrariesBottomSheet(
                         .padding(bottom = 16.dp)
                 )
             }
-            items(libraryList, key = { it.uniqueId }) { library ->
-                val firstLicense = library.licenses.firstOrNull()
-                val licenseName = firstLicense?.name ?: stringResource(R.string.unknown_license)
-                val url = library.website ?: library.scm?.url
-                val versionText = library.artifactVersion?.let { "v$it" } ?: stringResource(R.string.unknown_version)
+            item {
+                JuneConnectedList {
+                    libraryList.forEach { library ->
+                        val firstLicense = library.licenses.firstOrNull()
+                        val licenseName = firstLicense?.name ?: stringResource(R.string.unknown_license)
+                        val url = library.website ?: library.scm?.url
+                        val versionText = library.artifactVersion?.let { "v$it" } ?: stringResource(R.string.unknown_version)
 
-                SettingsItem(
-                    title = library.name,
-                    subtitle = versionText,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    onClick = { selectedLibraryForLicense = library },
-                    trailingContent = if (!url.isNullOrBlank()) {
-                        {
-                            IconButton(
-                                onClick = { uriHandler.openUri(url) }
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.open_in_new_24px),
-                                    contentDescription = "Open Website",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
+                        JuneConnectedItem(
+                            title = library.name,
+                            subtitle = versionText,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            onClick = { selectedLibraryForLicense = library },
+                            trailingContent = if (!url.isNullOrBlank()) {
+                                {
+                                    IconButton(
+                                        onClick = { uriHandler.openUri(url) }
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.open_in_new_24px),
+                                            contentDescription = "Open Website",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            } else null
+                        ) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = licenseName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
-                    } else null
-                ) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = licenseName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }

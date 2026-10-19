@@ -54,6 +54,7 @@ fun SettingsScreen() {
     var showColorPickerSheet by remember { mutableStateOf(false) }
     var showLicenseSheet by remember { mutableStateOf(false) }
     var showMapCreditsSheet by remember { mutableStateOf(false) }
+    var showFontCreditsSheet by remember { mutableStateOf(false) }
     var showAboutLibrariesSheet by remember { mutableStateOf(false) }
     var showChangelogSheet by remember { mutableStateOf(false) }
     var showCheckingUpdatesDialog by remember { mutableStateOf(false) }
@@ -147,6 +148,11 @@ fun SettingsScreen() {
                     focusManager.clearFocus()
                     keyboardController?.hide()
                     showMapCreditsSheet = true
+                },
+                onFontCreditsClick = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    showFontCreditsSheet = true
                 },
                 onAboutLibrariesClick = {
                     focusManager.clearFocus()
@@ -423,6 +429,12 @@ fun SettingsScreen() {
     if (showMapCreditsSheet) {
         MapCreditsBottomSheet(
             setShowSheet = { showMapCreditsSheet = it }
+        )
+    }
+
+    if (showFontCreditsSheet) {
+        FontCreditsBottomSheet(
+            setShowSheet = { showFontCreditsSheet = it }
         )
     }
 

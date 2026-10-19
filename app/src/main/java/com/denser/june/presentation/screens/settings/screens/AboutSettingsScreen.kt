@@ -43,6 +43,7 @@ fun AboutSettingsScreen() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var showLicenseSheet by remember { mutableStateOf(false) }
     var showMapCreditsSheet by remember { mutableStateOf(false) }
+    var showFontCreditsSheet by remember { mutableStateOf(false) }
     var showAboutLibrariesSheet by remember { mutableStateOf(false) }
     var showChangelogSheet by remember { mutableStateOf(false) }
 
@@ -82,6 +83,7 @@ fun AboutSettingsScreen() {
                 onAboutHeaderClick = { showDiagnosticsDialog = true },
                 onLicenseClick = { showLicenseSheet = true },
                 onMapAttributionsClick = { showMapCreditsSheet = true },
+                onFontCreditsClick = { showFontCreditsSheet = true },
                 onAboutLibrariesClick = { showAboutLibrariesSheet = true },
                 onChangelogClick = { showChangelogSheet = true },
                 onCheckForUpdatesClick = {
@@ -155,6 +157,7 @@ fun AboutSettingsScreen() {
                         SettingSection {
                             SettingsTileRegistry.getTile("LICENSE")?.content?.invoke()
                             SettingsTileRegistry.getTile("MAP_CREDITS")?.content?.invoke()
+                            SettingsTileRegistry.getTile("FONT_CREDITS")?.content?.invoke()
                             SettingsTileRegistry.getTile("ABOUT_LIBRARIES")?.content?.invoke()
                         }
                     }
@@ -175,6 +178,12 @@ fun AboutSettingsScreen() {
     if (showMapCreditsSheet) {
         MapCreditsBottomSheet(
             setShowSheet = { showMapCreditsSheet = it }
+        )
+    }
+
+    if (showFontCreditsSheet) {
+        FontCreditsBottomSheet(
+            setShowSheet = { showFontCreditsSheet = it }
         )
     }
 

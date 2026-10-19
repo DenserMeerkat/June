@@ -19,6 +19,7 @@ data class SettingsTriggers(
     val onLicenseClick: () -> Unit = {},
     val onMapAttributionsClick: () -> Unit = {},
     val onAboutLibrariesClick: () -> Unit = {},
+    val onFontCreditsClick: () -> Unit = {},
     val onChangelogClick: () -> Unit = {},
     val onCheckForUpdatesClick: () -> Unit = {},
     val onAboutHeaderClick: () -> Unit = {}
@@ -325,6 +326,14 @@ object SettingsTileRegistry {
                 category = "About",
                 keywords = listOf("map", "attributions", "licenses", "credits", "osm", "maptiler", "mapbox", "stadia", "carto"),
                 content = { MapCreditsTile() }
+            ),
+            SettingTile(
+                key = "FONT_CREDITS",
+                title = stringResource(R.string.font_credits),
+                subtitle = { context, _ -> context.getString(R.string.font_credits_desc) },
+                category = "About",
+                keywords = listOf("font", "typography", "licenses", "credits", "google", "roboto", "recursive", "shantell"),
+                content = { FontCreditsTile() }
             ),
             SettingTile(
                 key = "CHANGELOG",

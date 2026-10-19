@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.utils.Constants
 
+import com.denser.june.presentation.components.JuneConnectedItem
+import com.denser.june.presentation.components.JuneConnectedList
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapCreditsBottomSheet(
@@ -61,23 +64,26 @@ fun MapCreditsBottomSheet(
                         .padding(bottom = 16.dp)
                 )
             }
-            items(items.size) { index ->
-                val item = items[index]
-                SettingsItem(
-                    title = item.name,
-                    subtitle = item.credit,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    trailingContent = {
-                        Icon(
-                            painter = painterResource(R.drawable.open_in_new_24px),
-                            contentDescription = "Open Link",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+            item {
+                JuneConnectedList {
+                    items.forEach { item ->
+                        JuneConnectedItem(
+                            title = item.name,
+                            subtitle = item.credit,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            trailingContent = {
+                                Icon(
+                                    painter = painterResource(R.drawable.open_in_new_24px),
+                                    contentDescription = "Open Link",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
+                            onClick = { uriHandler.openUri(item.url) }
                         )
-                    },
-                    onClick = { uriHandler.openUri(item.url) }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
