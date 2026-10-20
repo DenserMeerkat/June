@@ -1,7 +1,5 @@
 package com.denser.june.presentation.utils
 
-import android.graphics.drawable.BitmapDrawable
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -11,12 +9,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.ColorUtils
-import androidx.palette.graphics.Palette
 import coil.ImageLoader
-import coil.request.ImageRequest
-import coil.request.SuccessResult
+import com.denser.june.core.domain.model.JournalTheme
+import com.denser.june.core.media.color.ExtractedCardColors
+import com.denser.june.core.media.color.MediaColorEngine
+import com.materialkolor.PaletteStyle
+import com.materialkolor.rememberDynamicColorScheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 data class DynamicThemeColors(
     val surface: Color,
@@ -28,86 +29,86 @@ data class DynamicThemeColors(
     val onSecondaryContainer: Color
 )
 
+private val dynamicThemeColorsCache = ConcurrentHashMap<Any, DynamicThemeColors>()
+
 @Composable
 fun rememberDynamicThemeColors(
-    model: Any?
+    model: Any?,
+    theme: JournalTheme? = null
 ): DynamicThemeColors {
     val context = LocalContext.current
 
-    val defaultColors = DynamicThemeColors(
-        surface = MaterialTheme.colorScheme.surface,
-        onSurface = MaterialTheme.colorScheme.onSurface,
-        onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant,
-        primaryContainer = MaterialTheme.colorScheme.primaryContainer,
-        onPrimaryContainer = MaterialTheme.colorScheme.onPrimaryContainer,
-        secondaryContainer = MaterialTheme.colorScheme.secondaryContainer,
-        onSecondaryContainer = MaterialTheme.colorScheme.onSecondaryContainer
-    )
+    val fallbackColors = remember {
+        MediaColorEngine.extractCardColors(theme = null, palette = null).toDynamicThemeColors()
+    }
 
-    var themeColors by remember { mutableStateOf(defaultColors) }
+    if (theme != null) {
+        val style = theme.style?.let {
+            runCatching { PaletteStyle.valueOf(it) }.getOrNull()
+        } ?: if (theme.secondaryColor != null || theme.neutralColor != null) {
+            PaletteStyle.Content
+        } else {
+            PaletteStyle.TonalSpot
+        }
+
+        val scheme = rememberDynamicColorScheme(
+            primary = Color(theme.primaryColor),
+            secondary = theme.secondaryColor?.let { Color(it) },
+            tertiary = theme.tertiaryColor?.let { Color(it) },
+            neutral = theme.neutralColor?.let { Color(it) },
+            style = style,
+            isDark = true,
+            isAmoled = false
+        )
+
+        return remember(scheme) {
+            DynamicThemeColors(
+                surface = scheme.surfaceContainerLow,
+                onSurface = scheme.onSurface,
+                onSurfaceVariant = scheme.onSurfaceVariant,
+                primaryContainer = scheme.primaryContainer,
+                onPrimaryContainer = scheme.onPrimaryContainer,
+                secondaryContainer = scheme.secondaryContainer,
+                onSecondaryContainer = scheme.onSecondaryContainer
+            )
+        }
+    }
+
+    if (model == null) {
+        return fallbackColors
+    }
+
+    val cached = remember(model) { dynamicThemeColorsCache[model] }
+    var themeColors by remember(model) { mutableStateOf(cached ?: fallbackColors) }
 
     LaunchedEffect(model) {
-        if (model == null) return@LaunchedEffect
+        val existing = dynamicThemeColorsCache[model]
+        if (existing != null) {
+            themeColors = existing
+            return@LaunchedEffect
+        }
 
         withContext(Dispatchers.IO) {
             val loader = ImageLoader(context)
-            val request = ImageRequest.Builder(context)
-                .data(model)
-                .allowHardware(false)
-                .build()
+            val bitmap = loadBitmapForPalette(context, loader, model) ?: return@withContext
+            val palette = buildPalette(bitmap)
+            val cardColors = MediaColorEngine.extractCardColors(theme = null, palette = palette)
+            val extracted = cardColors.toDynamicThemeColors()
 
-            val bitmap = when (val result = loader.execute(request)) {
-                is SuccessResult -> (result.drawable as? BitmapDrawable)?.bitmap
-                else -> null
-            }
-
-            if (bitmap != null) {
-                val palette = Palette.from(bitmap).generate()
-
-                val dominantSwatch = palette.dominantSwatch
-                val vibrantSwatch = palette.vibrantSwatch
-                    ?: palette.lightVibrantSwatch
-                    ?: palette.darkVibrantSwatch
-                    ?: dominantSwatch
-
-                val bgHsl = floatArrayOf(0f, 0f, 0f)
-                if (dominantSwatch != null) {
-                    ColorUtils.colorToHSL(dominantSwatch.rgb, bgHsl)
-                } else {
-                    ColorUtils.colorToHSL(android.graphics.Color.DKGRAY, bgHsl)
-                }
-                bgHsl[1] = (bgHsl[1] * 0.4f).coerceAtMost(0.4f)
-                bgHsl[2] = 0.12f
-                val surfaceColor = Color(ColorUtils.HSLToColor(bgHsl))
-
-                val accentHsl = floatArrayOf(0f, 0f, 0f)
-                if (vibrantSwatch != null) {
-                    ColorUtils.colorToHSL(vibrantSwatch.rgb, accentHsl)
-                } else {
-                    ColorUtils.colorToHSL(android.graphics.Color.LTGRAY, accentHsl)
-                }
-
-                accentHsl[1] = accentHsl[1].coerceAtLeast(0.85f)
-                accentHsl[2] = 0.65f
-                val primaryContainerColor = Color(ColorUtils.HSLToColor(accentHsl))
-
-                val onAccentHsl = accentHsl.copyOf()
-                onAccentHsl[1] = (onAccentHsl[1] * 0.8f).coerceAtMost(0.5f)
-                onAccentHsl[2] = 0.15f
-                val onPrimaryContainerColor = Color(ColorUtils.HSLToColor(onAccentHsl))
-
-                themeColors = DynamicThemeColors(
-                    surface = surfaceColor,
-                    onSurface = Color.White,
-                    onSurfaceVariant = Color.White.copy(alpha = 0.7f),
-                    primaryContainer = primaryContainerColor,
-                    onPrimaryContainer = onPrimaryContainerColor,
-                    secondaryContainer = Color.White.copy(alpha = 0.15f),
-                    onSecondaryContainer = Color.White
-                )
-            }
+            dynamicThemeColorsCache[model] = extracted
+            themeColors = extracted
         }
     }
 
     return themeColors
 }
+
+private fun ExtractedCardColors.toDynamicThemeColors() = DynamicThemeColors(
+    surface = Color(surface),
+    onSurface = Color(onSurface),
+    onSurfaceVariant = Color(onSurfaceVariant),
+    primaryContainer = Color(primaryContainer),
+    onPrimaryContainer = Color(onPrimaryContainer),
+    secondaryContainer = Color(secondaryContainer),
+    onSecondaryContainer = Color(onSecondaryContainer)
+)
