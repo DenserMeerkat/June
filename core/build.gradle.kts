@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.jsoup)
     implementation(libs.json.path)
     implementation(libs.materialKolor)
+    implementation(libs.androidx.palette)
 
     // Media
     implementation(libs.media3.exoplayer)
