@@ -256,6 +256,8 @@
     <string name="font">Font</string>
     <string name="journal_font">Journal Font</string>
     <string name="reset_font">Reset Font</string>
+    <string name="journal_theme">Journal Theme</string>
+    <string name="reset_theme">Reset Theme</string>
     <string name="width">Width</string>
     <string name="optical_size">Optical Size</string>
     <string name="light">Light</string>
@@ -263,6 +265,7 @@
     <string name="material_theme">Material Theme</string>
     <string name="material_theme_desc">Theme based on your wallpaper</string>
     <string name="online_fonts_require_internet">Online fonts require internet access.</string>
+    <string name="palette">Palette</string>
     <string name="palette_selection">Palette Selection</string>
     <string name="palette_selection_desc">Choose theme variant palette</string>
     <string name="palette_style">Palette Style</string>
@@ -602,21 +605,6 @@
     <string name="fonts">Fonts</string>
     <string name="style">Style</string>
     <string name="presets">Presets</string>
-    <string name="default_word">Default</string>
-    <string name="preset_zenith">Zenith</string>
-    <string name="preset_classic">Classic</string>
-    <string name="preset_airy">Airy</string>
-    <string name="preset_editorial">Editorial</string>
-    <string name="preset_novel">Novel</string>
-    <string name="preset_dispatch">Dispatch</string>
-    <string name="preset_cadence">Cadence</string>
-    <string name="preset_casual">Casual</string>
-    <string name="preset_mono">Mono</string>
-    <string name="preset_retro">Retro</string>
-    <string name="preset_script">Script</string>
-    <string name="preset_bouncy">Bouncy</string>
-    <string name="preset_loose">Loose</string>
-    <string name="preset_neat">Neat</string>
     <string name="roundness">Roundness</string>
     <string name="grade">Grade</string>
     <string name="slant">Slant</string>
@@ -640,6 +628,8 @@
     <string name="custom_font">Custom Font</string>
     <string name="from_settings">From settings</string>
     <string name="this_entry_only">This entry only</string>
+    <string name="default_theme">Default Theme</string>
+    <string name="custom_theme">Custom Theme</string>
     <string name="font_credits">Font Credits</string>
     <string name="font_credits_desc">Credits and licenses for bundled typography</string>
     <string name="font_credits_body">June bundles high-quality open-source variable fonts for an expressive journaling experience.</string>
