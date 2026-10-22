@@ -4,13 +4,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -26,7 +24,6 @@ import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.settings.components.ColorPickerSheet
 import com.denser.june.presentation.screens.settings.components.*
 import com.denser.june.core.domain.billing.BillingHandler
 import com.denser.june.presentation.screens.settings.components.SettingSection
@@ -51,7 +48,7 @@ fun SettingsScreen() {
 
     var searchQuery by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var showColorPickerSheet by remember { mutableStateOf(false) }
+    var themeSheetTab by remember { mutableStateOf<com.denser.june.presentation.components.color.ColorScreenTab?>(null) }
     var showLicenseSheet by remember { mutableStateOf(false) }
     var showMapCreditsSheet by remember { mutableStateOf(false) }
     var showFontCreditsSheet by remember { mutableStateOf(false) }
@@ -134,10 +131,10 @@ fun SettingsScreen() {
                     keyboardController?.hide()
                     showDeleteDialog = true
                 },
-                onColorPickerClick = {
+                onThemeSheetClick = { tab ->
                     focusManager.clearFocus()
                     keyboardController?.hide()
-                    showColorPickerSheet = true
+                    themeSheetTab = tab
                 },
                 onLicenseClick = {
                     focusManager.clearFocus()
@@ -412,11 +409,10 @@ fun SettingsScreen() {
         )
     }
 
-    if (showColorPickerSheet) {
-        ColorPickerSheet(
-            initialColor = Color(state.appTheme.seedColor),
-            onSelect = { onAction(SettingsAction.OnSeedColorChange(it.toArgb())) },
-            onDismiss = { showColorPickerSheet = false }
+    themeSheetTab?.let { tab ->
+        com.denser.june.presentation.screens.settings.components.ThemeCustomizationSheet(
+            initialTab = tab,
+            onDismiss = { themeSheetTab = null }
         )
     }
 

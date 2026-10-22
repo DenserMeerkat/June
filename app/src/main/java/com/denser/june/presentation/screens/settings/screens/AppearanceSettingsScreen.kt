@@ -38,7 +38,7 @@ fun AppearanceSettingsScreen() {
     val onAction = settingsVM::onAction
     val navigator = koinInject<AppNavigator>()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var showColorPickerSheet by remember { mutableStateOf(false) }
+    var themeSheetTab by remember { mutableStateOf<com.denser.june.presentation.components.color.ColorScreenTab?>(null) }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -66,7 +66,7 @@ fun AppearanceSettingsScreen() {
     ) { innerPadding ->
         val triggers = remember {
             SettingsTriggers(
-                onColorPickerClick = { showColorPickerSheet = true }
+                onThemeSheetClick = { themeSheetTab = it }
             )
         }
 
@@ -136,11 +136,10 @@ fun AppearanceSettingsScreen() {
         }
     }
 
-    if (showColorPickerSheet) {
-        ColorPickerSheet(
-            initialColor = Color(state.appTheme.seedColor),
-            onSelect = { onAction(SettingsAction.OnSeedColorChange(it.toArgb())) },
-            onDismiss = { showColorPickerSheet = false }
+    themeSheetTab?.let { tab ->
+        ThemeCustomizationSheet(
+            initialTab = tab,
+            onDismiss = { themeSheetTab = null }
         )
     }
 }

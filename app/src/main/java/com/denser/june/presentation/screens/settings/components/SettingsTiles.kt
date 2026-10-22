@@ -15,7 +15,7 @@ import com.denser.june.core.R
 
 data class SettingsTriggers(
     val onDeleteAllJournals: () -> Unit = {},
-    val onColorPickerClick: () -> Unit = {},
+    val onThemeSheetClick: (com.denser.june.presentation.components.color.ColorScreenTab) -> Unit = {},
     val onLicenseClick: () -> Unit = {},
     val onMapAttributionsClick: () -> Unit = {},
     val onAboutLibrariesClick: () -> Unit = {},
@@ -247,7 +247,7 @@ object SettingsTileRegistry {
                 subtitle = { context, _ -> context.getString(R.string.palette_selection_desc) },
                 category = "Appearance",
                 keywords = listOf("palette", "style", "theme", "tonal", "scheme"),
-                content = { PaletteSelectionSettingsItem() }
+                content = { PaletteSettingsItem() }
             ),
             SettingTile(
                 key = "APP_LOCK",

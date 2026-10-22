@@ -7,6 +7,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
+import com.denser.june.presentation.components.color.ColorScreenTab
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.screens.settings.components.LocalSettingsTriggers
 import com.denser.june.presentation.screens.settings.components.SettingsItem
@@ -30,6 +31,6 @@ fun SeedColorTile() {
             )
         },
         enabled = enabled,
-        onClick = { triggers.onColorPickerClick() }
+        onClick = { triggers.onThemeSheetClick(ColorScreenTab.COLOR) }
     )
 }
