@@ -10,6 +10,7 @@ import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.repository.SongRepository
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.JournalTheme
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongFetchEvent
 import com.denser.june.core.domain.model.SongFetchProgress
@@ -207,6 +208,9 @@ class EditorVM(
             is EditorAction.SetJournalFont -> {
                 updateState { it.copy(font = action.fontName, fontVariation = action.variation) }
             }
+            is EditorAction.SetJournalTheme -> {
+                updateState { it.copy(theme = action.theme) }
+            }
             is EditorAction.SearchTags -> {
                 searchTagsJob?.cancel()
                 searchTagsJob = viewModelScope.launch {
@@ -354,7 +358,8 @@ class EditorVM(
                 currentState.songDetails != null ||
                 currentState.location != null ||
                 currentState.font != null ||
-                currentState.fontVariation != null
+                currentState.fontVariation != null ||
+                currentState.theme != null
 
         return original.title.trim() != currentState.title.trim() ||
                 original.content.trim() != currentState.content.trim() ||
@@ -365,7 +370,8 @@ class EditorVM(
                 original.dateTime != currentState.dateTime ||
                 original.songDetails != currentState.songDetails ||
                 original.font != currentState.font ||
-                original.fontVariation != currentState.fontVariation
+                original.fontVariation != currentState.fontVariation ||
+                original.theme != currentState.theme
     }
 
     private fun toggleBookmark() {
@@ -456,6 +462,8 @@ class EditorVM(
                         fontVariation = journal.fontVariation,
                         initialFont = journal.font,
                         initialFontVariation = journal.fontVariation,
+                        theme = journal.theme,
+                        initialTheme = journal.theme,
                         deletedAt = journal.deletedAt,
                         syncedAt = journal.syncedAt,
                         cloudId = journal.cloudId,
@@ -505,6 +513,7 @@ class EditorVM(
                 isBookmarked = currentState.isBookmarked,
                 isArchived = currentState.isArchived,
                 isDraft = true,
+                theme = currentState.theme,
                 font = currentState.font,
                 fontVariation = currentState.fontVariation
             )
@@ -549,6 +558,7 @@ class EditorVM(
                 isBookmarked = currentState.isBookmarked,
                 isArchived = currentState.isArchived,
                 isDraft = false,
+                theme = currentState.theme,
                 font = currentState.font,
                 fontVariation = currentState.fontVariation,
                 syncedAt = existingJournal?.syncedAt,
@@ -569,7 +579,8 @@ class EditorVM(
                     isDirty = false,
                     isDraft = false,
                     initialFont = it.font,
-                    initialFontVariation = it.fontVariation
+                    initialFontVariation = it.fontVariation,
+                    initialTheme = it.theme
                 )
             }
         }

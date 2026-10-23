@@ -4,6 +4,7 @@ import com.denser.june.core.domain.model.JournalLocation
 
 import android.net.Uri
 import com.denser.june.core.domain.model.FontVariationConfig
+import com.denser.june.core.domain.model.JournalTheme
 import com.denser.june.core.domain.model.SongDetails
 
 sealed interface EditorAction {
@@ -27,6 +28,10 @@ sealed interface EditorAction {
     data class SetJournalFont(
         val fontName: String?,
         val variation: FontVariationConfig? = null
+    ) : EditorAction
+
+    data class SetJournalTheme(
+        val theme: JournalTheme?
     ) : EditorAction
 
     data class FetchSong(val url: String) : EditorAction

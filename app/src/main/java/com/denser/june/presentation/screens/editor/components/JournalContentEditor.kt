@@ -206,6 +206,7 @@ fun JournalContentEditor(
             } else {
                 HyphenTextField(
                     state = state,
+                    readOnly = readOnly,
                     layoutDirection = layoutDirectionOverride,
                     linkConfig = linkConfig,
                     showDefaultSuggestionsPopup = false,
@@ -242,7 +243,7 @@ fun JournalContentEditor(
                         ),
                         strikethroughStyle = SpanStyle(
                             textDecoration = TextDecoration.LineThrough,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         ),
                         highlightStyle = SpanStyle(
                             background = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
@@ -256,11 +257,11 @@ fun JournalContentEditor(
                         ),
                         blockquoteSpanStyle = SpanStyle(
                             fontStyle = FontStyle.Italic,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
                         blockquoteStyle = BlockquoteStyle(
-                            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
-                            borderColor = MaterialTheme.colorScheme.tertiary,
+                            backgroundColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.6f),
+                            borderColor = MaterialTheme.colorScheme.primary,
                         ),
                         h1Style = SpanStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
                         h2Style = SpanStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
@@ -270,12 +271,12 @@ fun JournalContentEditor(
                         h6Style = SpanStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp),
                         bulletListStyle = ListItemStyle(
                             prefixStyle = SpanStyle(
-                                color = MaterialTheme.colorScheme.tertiary
+                                color = MaterialTheme.colorScheme.primary
                             )
                         ),
                         orderedListStyle = ListItemStyle(
                             prefixStyle = SpanStyle(
-                                color = MaterialTheme.colorScheme.tertiary
+                                color = MaterialTheme.colorScheme.primary
                             )
                         ),
                         linkStyle = SpanStyle(

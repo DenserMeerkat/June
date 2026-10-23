@@ -50,8 +50,8 @@ import org.maplibre.spatialk.geojson.Position
 @Composable
 fun JournalMapItem(
     location: JournalLocation,
-    onMapClick: () -> Unit,
-    onRemove: () -> Unit,
+    onMapClick: (() -> Unit)? = null,
+    onRemove: (() -> Unit)? = null,
     modifier: Modifier = Modifier.fillMaxWidth().aspectRatio(1.7f)
 ) {
     val isInternetAllowed = LocalInternetAllowed.current
@@ -123,8 +123,12 @@ fun JournalMapItem(
                     MapAttributions(provider = mapStyleProvider, isDarkMode = isMapDarkMode)
                 }
             }
+            val isClickable = onMapClick != null
+            val isMenuEnabled = onMapClick != null || onRemove != null
+
             Surface(
-                onClick = onMapClick,
+                onClick = { onMapClick?.invoke() },
+                enabled = isClickable,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(start = 16.dp, top = 8.dp),
@@ -157,12 +161,14 @@ fun JournalMapItem(
                     .fillMaxSize()
                     .clip(RoundedCornerShape(32.dp))
                     .indication(interactionSource, LocalIndication.current)
-                    .pointerInput(Unit) {
+                    .pointerInput(isClickable, isMenuEnabled) {
                         detectTapGestures(
-                            onTap = { onMapClick() },
+                            onTap = { onMapClick?.invoke() },
                             onLongPress = { offset ->
-                                showMenu = true
-                                pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                                if (isMenuEnabled) {
+                                    showMenu = true
+                                    pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                                }
                             },
                             onPress = { offset ->
                                 val press = PressInteraction.Press(offset)
@@ -186,7 +192,7 @@ fun JournalMapItem(
                     MapLocationPin()
                 }
             }
-            if (showMenu) {
+            if (showMenu && isMenuEnabled) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -200,22 +206,26 @@ fun JournalMapItem(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false },
                 ) {
-                    JuneDropdownMenuItem(
-                        text = { Text(stringResource(R.string.change_location)) },
-                        onClick = {
-                            showMenu = false
-                            onMapClick()
-                        },
-                        leadingIcon = { Icon(painterResource(R.drawable.edit_24px), null) }
-                    )
-                    JuneDropdownMenuItem(
-                        text = { Text(stringResource(R.string.remove)) },
-                        onClick = {
-                            showMenu = false
-                            onRemove()
-                        },
-                        leadingIcon = { Icon(painterResource(R.drawable.delete_24px), null) }
-                    )
+                    if (onMapClick != null) {
+                        JuneDropdownMenuItem(
+                            text = { Text(stringResource(R.string.change_location)) },
+                            onClick = {
+                                showMenu = false
+                                onMapClick()
+                            },
+                            leadingIcon = { Icon(painterResource(R.drawable.edit_24px), null) }
+                        )
+                    }
+                    if (onRemove != null) {
+                        JuneDropdownMenuItem(
+                            text = { Text(stringResource(R.string.remove)) },
+                            onClick = {
+                                showMenu = false
+                                onRemove()
+                            },
+                            leadingIcon = { Icon(painterResource(R.drawable.delete_24px), null) }
+                        )
+                    }
                 }
                 }
             }

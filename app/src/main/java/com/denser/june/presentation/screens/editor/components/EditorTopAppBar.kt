@@ -16,23 +16,26 @@ import com.denser.june.presentation.components.JuneTopAppBar
 fun EditorTopAppBar(
     modifier: Modifier = Modifier,
     isFontMode: Boolean,
+    isColorMode: Boolean = false,
     showAddItemSheet: Boolean,
-    hasCustomFont: Boolean,
     showSaveButton: Boolean,
     isLoading: Boolean,
     onCloseClick: () -> Unit,
     onFontModeToggle: () -> Unit,
+    onColorModeToggle: () -> Unit = {},
     onAddItemClick: () -> Unit,
     onSaveClick: () -> Unit,
     onOptionsClick: () -> Unit,
     isFontDirty: Boolean = false,
     onResetFont: () -> Unit = {},
+    isThemeDirty: Boolean = false,
+    onResetTheme: () -> Unit = {},
 ) {
     JuneTopAppBar(
         modifier = modifier,
         title = {},
         navigationIcon = {
-            if (isFontMode) {
+            if (isFontMode || isColorMode) {
                 FilledIconButton(
                     onClick = onCloseClick,
                     colors = IconButtonDefaults.filledIconButtonColors(
@@ -88,6 +91,19 @@ fun EditorTopAppBar(
                             stringResource(R.string.journal_font)
                         )
                     }
+
+                    FilledIconButton(
+                        onClick = onColorModeToggle,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                        )
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.format_paint_24px),
+                            stringResource(R.string.journal_theme)
+                        )
+                    }
                 }
             }
         },
@@ -106,6 +122,45 @@ fun EditorTopAppBar(
                             stringResource(R.string.reset_font)
                         )
                     }
+                }
+                FilledIconButton(
+                    onClick = onCloseClick,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Icon(
+                        painterResource(R.drawable.check_24px),
+                        stringResource(R.string.done)
+                    )
+                }
+            } else if (isColorMode) {
+                if (isThemeDirty) {
+                    FilledIconButton(
+                        onClick = onResetTheme,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                        )
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.replay_24px),
+                            stringResource(R.string.reset_theme)
+                        )
+                    }
+                }
+                FilledIconButton(
+                    onClick = onCloseClick,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Icon(
+                        painterResource(R.drawable.check_24px),
+                        stringResource(R.string.done)
+                    )
                 }
             } else {
                 if (showSaveButton) {

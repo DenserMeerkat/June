@@ -15,6 +15,7 @@ fun JournalMosaicCard(
     operations: MediaOperations,
     roundedCornerShape: RoundedCornerShape = RoundedCornerShape(24.dp),
     processingMediaPaths: Set<String> = emptySet(),
+    enableContextMenu: Boolean = true,
 ) {
     Box(
         modifier = modifier
@@ -29,6 +30,7 @@ fun JournalMosaicCard(
                         modifier = Modifier.fillMaxSize(),
                         isLargeItem = true,
                         enablePlayback = enablePlayback,
+                        enableContextMenu = enableContextMenu,
                         operations = operations,
                         isProcessing = processingMediaPaths.contains(mediaList[0]),
                     )
@@ -39,6 +41,7 @@ fun JournalMosaicCard(
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                         isLargeItem = false,
                         enablePlayback = enablePlayback,
+                        enableContextMenu = enableContextMenu,
                         operations = operations,
                         isProcessing = processingMediaPaths.contains(mediaList[0]),
                     )
@@ -48,6 +51,7 @@ fun JournalMosaicCard(
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                         isLargeItem = false,
                         enablePlayback = enablePlayback,
+                        enableContextMenu = enableContextMenu,
                         operations = operations,
                         isProcessing = processingMediaPaths.contains(mediaList[1]),
                     )
@@ -58,6 +62,7 @@ fun JournalMosaicCard(
                         modifier = Modifier.weight(0.66f).fillMaxHeight(),
                         isLargeItem = true,
                         enablePlayback = enablePlayback,
+                        enableContextMenu = enableContextMenu,
                         operations = operations,
                         isProcessing = processingMediaPaths.contains(mediaList[0]),
                     )
@@ -68,6 +73,7 @@ fun JournalMosaicCard(
                             modifier = Modifier.weight(1f).fillMaxWidth(),
                             isLargeItem = false,
                             enablePlayback = enablePlayback,
+                            enableContextMenu = enableContextMenu,
                             operations = operations,
                             isProcessing = processingMediaPaths.contains(mediaList[1]),
                         )
@@ -77,6 +83,7 @@ fun JournalMosaicCard(
                             modifier = Modifier.weight(1f).fillMaxWidth(),
                             isLargeItem = false,
                             enablePlayback = enablePlayback,
+                            enableContextMenu = enableContextMenu,
                             operations = operations,
                             isProcessing = processingMediaPaths.contains(mediaList[2]),
                         )

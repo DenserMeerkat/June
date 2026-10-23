@@ -147,7 +147,8 @@ fun ItemGalleryScreen(
                         onOpenLibrary = { mediaOperations.onSongSheetToggle(true) },
                         onTrim = mediaOperations.onTrimSong,
                         isInLibrary = isInLibrary,
-                        onAddToLibrary = { viewModel.onAction(EditorAction.AddSongToLibrary(currentSong)) }
+                        onAddToLibrary = { viewModel.onAction(EditorAction.AddSongToLibrary(currentSong)) },
+                        theme = state.theme
                     )
                 }
             }

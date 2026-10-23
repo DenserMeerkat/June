@@ -30,12 +30,13 @@ import com.denser.june.presentation.utils.rememberSongPlayerState
 fun JournalSongItem(
     details: SongDetails?,
     isFetching: Boolean,
-    onRemove: () -> Unit,
-    onEditJournal: () -> Unit,
-    onOpenLibrary: () -> Unit,
+    onRemove: (() -> Unit)? = null,
+    onEditJournal: (() -> Unit)? = null,
+    onOpenLibrary: (() -> Unit)? = null,
     onTrim: (() -> Unit)? = null,
     onAddToLibrary: (() -> Unit)? = null,
     isInLibrary: Boolean = true,
+    theme: com.denser.june.core.domain.model.JournalTheme? = null,
     modifier: Modifier = Modifier.fillMaxWidth().aspectRatio(1.7f)
 ) {
     val context = LocalContext.current
@@ -59,16 +60,21 @@ fun JournalSongItem(
         }
 
         details != null -> {
+            val isClickable = onOpenLibrary != null
+            val isMenuEnabled = onEditJournal != null || onOpenLibrary != null || onTrim != null || onAddToLibrary != null || onRemove != null
+
             Box(
                 modifier = modifier
                     .clip(RoundedCornerShape(32.dp))
                     .indication(interactionSource, LocalIndication.current)
-                    .pointerInput(Unit) {
+                    .pointerInput(isClickable, isMenuEnabled) {
                         detectTapGestures(
-                            onTap = { onOpenLibrary() },
+                            onTap = { onOpenLibrary?.invoke() },
                             onLongPress = { offset ->
-                                pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
-                                showMenu = true
+                                if (isMenuEnabled) {
+                                    pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                                    showMenu = true
+                                }
                             },
                             onPress = { offset ->
                                 val press = PressInteraction.Press(offset)
@@ -89,10 +95,11 @@ fun JournalSongItem(
                     onSeek = playerState.onSeek,
                     onSeekFinished = playerState.onSeekFinished,
                     onToggleRepeat = playerState.onToggleRepeat,
+                    theme = theme,
                     modifier = Modifier.fillMaxSize()
                 )
 
-                if (showMenu) {
+                if (showMenu && isMenuEnabled) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -106,26 +113,30 @@ fun JournalSongItem(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
                         ) {
-                            JuneDropdownMenuItem(
-                                text = { Text("Edit Details") },
-                                onClick = {
-                                    showMenu = false
-                                    onEditJournal()
-                                },
-                                leadingIcon = {
-                                    Icon(painterResource(R.drawable.edit_24px), null)
-                                }
-                            )
-                            JuneDropdownMenuItem(
-                                text = { Text("Open Library") },
-                                onClick = {
-                                    showMenu = false
-                                    onOpenLibrary()
-                                },
-                                leadingIcon = {
-                                    Icon(painterResource(R.drawable.music_note_24px), null)
-                                }
-                            )
+                            if (onEditJournal != null) {
+                                JuneDropdownMenuItem(
+                                    text = { Text("Edit Details") },
+                                    onClick = {
+                                        showMenu = false
+                                        onEditJournal()
+                                    },
+                                    leadingIcon = {
+                                        Icon(painterResource(R.drawable.edit_24px), null)
+                                    }
+                                )
+                            }
+                            if (onOpenLibrary != null) {
+                                JuneDropdownMenuItem(
+                                    text = { Text("Open Library") },
+                                    onClick = {
+                                        showMenu = false
+                                        onOpenLibrary()
+                                    },
+                                    leadingIcon = {
+                                        Icon(painterResource(R.drawable.music_note_24px), null)
+                                    }
+                                )
+                            }
                             if (onTrim != null && hasLocalAudio) {
                                 JuneDropdownMenuItem(
                                     text = { Text("Trim Clip") },
@@ -150,16 +161,18 @@ fun JournalSongItem(
                                     }
                                 )
                             }
-                            JuneDropdownMenuItem(
-                                text = { Text(stringResource(R.string.remove)) },
-                                onClick = {
-                                    showMenu = false
-                                    onRemove()
-                                },
-                                leadingIcon = {
-                                    Icon(painterResource(R.drawable.delete_24px), null)
-                                }
-                            )
+                            if (onRemove != null) {
+                                JuneDropdownMenuItem(
+                                    text = { Text(stringResource(R.string.remove)) },
+                                    onClick = {
+                                        showMenu = false
+                                        onRemove()
+                                    },
+                                    leadingIcon = {
+                                        Icon(painterResource(R.drawable.delete_24px), null)
+                                    }
+                                )
+                            }
                         }
                     }
                 }

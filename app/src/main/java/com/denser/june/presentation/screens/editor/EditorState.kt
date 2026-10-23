@@ -2,6 +2,7 @@ package com.denser.june.presentation.screens.editor
 
 import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.core.domain.model.JournalLocation
+import com.denser.june.core.domain.model.JournalTheme
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongFetchProgress
 import com.denser.june.core.domain.model.enums.TimeFormat
@@ -43,11 +44,15 @@ data class EditorState(
     val font: String? = null,
     val fontVariation: FontVariationConfig? = null,
     val initialFont: String? = null,
-    val initialFontVariation: FontVariationConfig? = null
+    val initialFontVariation: FontVariationConfig? = null,
+    val theme: JournalTheme? = null,
+    val initialTheme: JournalTheme? = null
 ) {
     val isDeleted: Boolean get() = deletedAt != null
     val isFontDirty: Boolean
         get() = font != initialFont || fontVariation != initialFontVariation
+    val isThemeDirty: Boolean
+        get() = theme != initialTheme
     val hasContent: Boolean
         get() = title.isNotBlank() ||
                 content.isNotBlank() ||

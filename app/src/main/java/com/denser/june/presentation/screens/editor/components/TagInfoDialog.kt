@@ -81,7 +81,7 @@ private fun TagInfoRow(
 ) {
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = containerColor.copy(alpha = 0.2f),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(

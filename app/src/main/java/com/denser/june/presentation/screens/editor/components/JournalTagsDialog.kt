@@ -210,6 +210,7 @@ fun JournalTagsDialog(
                         },
                         emptyMessage = stringResource(spec.emptyMessageRes),
                         tintColor = spec.color,
+                        containerColor = spec.containerColor,
                         onAddClick = {
                             val prefix = category.prefix ?: ""
                             tagInput = prefix
@@ -235,6 +236,7 @@ fun TagSectionCard(
     onRemove: (String) -> Unit,
     emptyMessage: String,
     tintColor: Color,
+    containerColor: Color,
     onAddClick: () -> Unit
 ) {
     Surface(
@@ -248,7 +250,7 @@ fun TagSectionCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     shape = MaterialShapes.Cookie4Sided.toShape(),
-                    color = tintColor.copy(alpha = 0.12f),
+                    color = containerColor,
                     modifier = Modifier.size(44.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -414,7 +416,7 @@ fun TagInputArea(
                                 )
                             },
                             colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = spec.containerColor.copy(alpha = 0.5f),
+                                containerColor = spec.containerColor,
                                 labelColor = spec.color
                             ),
                             border = null,
