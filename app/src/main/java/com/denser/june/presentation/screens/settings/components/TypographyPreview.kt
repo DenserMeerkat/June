@@ -28,8 +28,6 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.JournalLocation
-import com.denser.june.presentation.components.ConnectedBarAction
-import com.denser.june.presentation.components.JuneConnectedActionBar
 import com.denser.june.presentation.screens.editor.components.EditorMetadataBar
 import com.denser.june.presentation.screens.home.timeline.components.TimelineJournalCard
 import com.denser.june.presentation.theme.provideTypography
@@ -179,7 +177,7 @@ Bartosz said we were just chasing an adventure, but @Martha and I knew better. N
                     ),
                     strikethroughStyle = SpanStyle(
                         textDecoration = TextDecoration.LineThrough,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     ),
                     highlightStyle = SpanStyle(
                         background = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
@@ -193,11 +191,11 @@ Bartosz said we were just chasing an adventure, but @Martha and I knew better. N
                     ),
                     blockquoteSpanStyle = SpanStyle(
                         fontStyle = FontStyle.Italic,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     blockquoteStyle = BlockquoteStyle(
-                        backgroundColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
-                        borderColor = MaterialTheme.colorScheme.tertiary
+                        backgroundColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.6f),
+                        borderColor = MaterialTheme.colorScheme.primary
                     ),
                     h1Style = SpanStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
                     h2Style = SpanStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
@@ -207,12 +205,12 @@ Bartosz said we were just chasing an adventure, but @Martha and I knew better. N
                     h6Style = SpanStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp),
                     bulletListStyle = ListItemStyle(
                         prefixStyle = SpanStyle(
-                            color = MaterialTheme.colorScheme.tertiary
+                            color = MaterialTheme.colorScheme.primary
                         )
                     ),
                     orderedListStyle = ListItemStyle(
                         prefixStyle = SpanStyle(
-                            color = MaterialTheme.colorScheme.tertiary
+                            color = MaterialTheme.colorScheme.primary
                         )
                     ),
                     linkStyle = SpanStyle(

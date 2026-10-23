@@ -9,7 +9,7 @@ sealed interface NavigationIntent {
         val route: Route,
         val popUpToRoute: Route? = null,
         val inclusive: Boolean = false,
-        val isSingleTop: Boolean = false
+        val isSingleTop: Boolean = true
     ) : NavigationIntent
     data object NavigateBack : NavigationIntent
 }
@@ -21,7 +21,7 @@ interface AppNavigator {
         route: Route,
         popUpToRoute: Route? = null,
         inclusive: Boolean = false,
-        isSingleTop: Boolean = false
+        isSingleTop: Boolean = true
     )
     fun navigateBack()
 }

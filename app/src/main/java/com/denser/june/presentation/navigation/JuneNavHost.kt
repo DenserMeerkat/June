@@ -37,6 +37,7 @@ import com.denser.june.presentation.screens.settings.screens.EditorSettingsScree
 import com.denser.june.presentation.screens.settings.screens.reminder.ReminderScreen
 import com.denser.june.presentation.screens.settings.screens.sync.SyncScreen
 import com.denser.june.presentation.screens.settings.screens.trash.BinScreen
+import com.denser.june.presentation.theme.JuneThemeWrapper
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -73,7 +74,14 @@ fun JuneNavHost(
                 navController.getBackStackEntry<Route.Editor>()
             }
             val viewModel: EditorVM = koinViewModel(viewModelStoreOwner = parentEntry)
-            ItemGalleryScreen(viewModel = viewModel)
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            JuneThemeWrapper(
+                theme = state.theme,
+                font = state.font,
+                fontVariation = state.fontVariation
+            ) {
+                ItemGalleryScreen(viewModel = viewModel)
+            }
         }
 
         composable<Route.AddSong> { backStackEntry ->
@@ -81,10 +89,17 @@ fun JuneNavHost(
                 navController.getBackStackEntry<Route.Editor>()
             }
             val viewModel: EditorVM = koinViewModel(viewModelStoreOwner = parentEntry)
-            AddSongScreen(
-                viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() }
-            )
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            JuneThemeWrapper(
+                theme = state.theme,
+                font = state.font,
+                fontVariation = state.fontVariation
+            ) {
+                AddSongScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
 
         composable<Route.MediaViewerRoute>(
@@ -112,16 +127,22 @@ fun JuneNavHost(
             val state by viewModel.state.collectAsStateWithLifecycle()
             val editorImages = remember(state.images) { state.images.reversed() }
 
-            JuneMediaLightbox(
-                mediaPaths = editorImages,
-                initialIndex = args.initialIndex,
-                dateTime = args.dateTime ?: state.dateTime,
-                journalId = args.journalId,
-                allowCompression = true,
-                onDeleteMedia = { path ->
-                    viewModel.onAction(EditorAction.RemoveImage(path))
-                }
-            )
+            JuneThemeWrapper(
+                theme = state.theme,
+                font = state.font,
+                fontVariation = state.fontVariation
+            ) {
+                JuneMediaLightbox(
+                    mediaPaths = editorImages,
+                    initialIndex = args.initialIndex,
+                    dateTime = args.dateTime ?: state.dateTime,
+                    journalId = args.journalId,
+                    allowCompression = true,
+                    onDeleteMedia = { path ->
+                        viewModel.onAction(EditorAction.RemoveImage(path))
+                    }
+                )
+            }
         }
 
         composable<Route.Settings> {

@@ -38,15 +38,18 @@ fun JuneConnectedItem(
     leadingContent: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
+    shape: Shape = JuneConnectedItemShape,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    contentPadding: PaddingValues = PaddingValues(16.dp),
     onClick: (() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null
 ) {
     Surface(
         color = containerColor.copy(alpha = if (enabled) 1f else 0.5f),
+        shape = shape,
         modifier = modifier
             .fillMaxWidth()
-            .clip(JuneConnectedItemShape)
+            .clip(shape)
             .then(
                 if (onClick != null) {
                     Modifier.clickable(enabled = enabled, onClick = onClick)
@@ -55,7 +58,7 @@ fun JuneConnectedItem(
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(contentPadding)
                 .fillMaxWidth()
         ) {
             Row(

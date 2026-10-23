@@ -216,7 +216,6 @@ dependencies {
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.koin.compose.viewmodel.navigation)
     implementation(libs.materialKolor)           
-    implementation(libs.colorpicker.compose)     
     implementation(libs.wavy.slider)             
     implementation(libs.composeIcons.fontAwesome)
     implementation(libs.androidx.core.splashscreen) 

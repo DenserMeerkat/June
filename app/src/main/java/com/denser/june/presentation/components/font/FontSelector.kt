@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.Fonts
 import com.denser.june.core.utils.FontUtils
+import com.denser.june.presentation.components.JuneConnectedItem
 import com.denser.june.presentation.components.JuneRadioTile
 import com.denser.june.presentation.components.JuneRadioTilePosition
 import com.denser.june.presentation.theme.SYSTEM_FONT_NAME
@@ -54,53 +55,24 @@ fun FontSelector(
     ) {
         if (showAppDefault) {
             item(key = "__app_font_switch__") {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .clickable {
-                            if (isJournalFontActive) {
-                                onFontSelect(null)
-                            } else {
-                                onFontSelect(Fonts.GOOGLE_SANS_FLEX.fullName)
-                            }
+                JuneConnectedItem(
+                    title = if (isJournalFontActive) {
+                        stringResource(R.string.custom_font)
+                    } else {
+                        stringResource(R.string.default_font)
+                    },
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    contentPadding = PaddingValues(start = 20.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    onClick = {
+                        if (isJournalFontActive) {
+                            onFontSelect(null)
+                        } else {
+                            onFontSelect(Fonts.GOOGLE_SANS_FLEX.fullName)
                         }
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            Text(
-                                text = if (isJournalFontActive) {
-                                    stringResource(R.string.custom_font)
-                                } else {
-                                    stringResource(R.string.default_font)
-                                },
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = if (isJournalFontActive) {
-                                    stringResource(R.string.this_entry_only)
-                                } else {
-                                    stringResource(R.string.from_settings)
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
+                    },
+                    trailingContent = {
                         Switch(
                             checked = isJournalFontActive,
                             onCheckedChange = { checked ->
@@ -112,7 +84,7 @@ fun FontSelector(
                             }
                         )
                     }
-                }
+                )
             }
         }
 

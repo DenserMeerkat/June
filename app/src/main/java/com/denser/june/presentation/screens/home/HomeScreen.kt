@@ -173,12 +173,12 @@ fun HomeScreen() {
                             if (appState.isSyncEnabled && appState.isInternetAllowed) {
                                 SyncIndicator(
                                     status = appState.syncStatus,
-                                    onClick = { navigator.navigateTo(Route.SyncSettings) }
+                                    onClick = { navigator.navigateTo(Route.SyncSettings, isSingleTop = true) }
                                 )
                             }
                             Spacer(Modifier.width(4.dp))
                             FilledIconButton(
-                                onClick = { navigator.navigateTo(Route.Settings) },
+                                onClick = { navigator.navigateTo(Route.Settings, isSingleTop = true) },
                                 colors = IconButtonDefaults.filledIconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)

@@ -6,11 +6,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.core.utils.FontUtils
@@ -34,7 +34,7 @@ fun FontCustomizationPanel(
     contentHeight: Dp = 380.dp,
     initialTab: FontScreenTab = FontScreenTab.FONTS
 ) {
-    var selectedTab by remember { mutableStateOf(initialTab) }
+    var selectedTab by rememberSaveable { mutableStateOf(initialTab) }
     val navBottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val floatingBarBottomInset = 64.dp + navBottomPadding
     val totalHeight = contentHeight + 16.dp + navBottomPadding
@@ -56,9 +56,7 @@ fun FontCustomizationPanel(
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = sheetShape,
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
-            shadowElevation = 16.dp,
-            tonalElevation = 2.dp
+            color = MaterialTheme.colorScheme.surfaceContainerLowest
         ) {
             Box(
                 modifier = Modifier
@@ -92,7 +90,8 @@ fun FontCustomizationPanel(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(bottom = 8.dp)
+                .padding(bottom = 8.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         ) {
             FontScreenTab.entries.forEach { tab ->
                 val isSelected = selectedTab == tab

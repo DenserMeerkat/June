@@ -188,8 +188,8 @@ fun LightboxTopBar(
                     FilledIconButton(
                         onClick = { showMenu = true },
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = if (showMenu) MaterialTheme.colorScheme.primaryContainer else if (isDarkTheme) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerHigh,
-                            contentColor = if (showMenu) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                            containerColor = if (isDarkTheme) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                         ),
                     ) {
                         Icon(
@@ -203,6 +203,7 @@ fun LightboxTopBar(
                     JuneDropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false },
+                        containerColor = if (isDarkTheme) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerHigh,
                     ) {
                         JuneDropdownMenuItem(
                             text = { Text("Info") },

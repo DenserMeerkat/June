@@ -22,6 +22,7 @@ fun <T> JuneConnectedButtonGroup(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    itemEnabled: (T) -> Boolean = { true },
     equalWeight: Boolean = false,
     contentPadding: PaddingValues = ToggleButtonDefaults.ContentPadding,
     buttonModifier: Modifier = Modifier,
@@ -56,7 +57,7 @@ fun <T> JuneConnectedButtonGroup(
             ToggleButton(
                 checked = isChecked,
                 onCheckedChange = { onSelect(item) },
-                enabled = enabled,
+                enabled = enabled && itemEnabled(item),
                 shapes = shape,
                 modifier = itemModifier,
                 contentPadding = contentPadding,
@@ -78,6 +79,7 @@ fun <T> JuneConnectedButtonGroup(
     label: @Composable (T) -> String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    itemEnabled: (T) -> Boolean = { true },
     equalWeight: Boolean = false,
     textStyle: TextStyle = MaterialTheme.typography.labelLarge,
     contentPadding: PaddingValues = ToggleButtonDefaults.ContentPadding,
@@ -101,6 +103,7 @@ fun <T> JuneConnectedButtonGroup(
         onSelect = onSelect,
         modifier = modifier,
         enabled = enabled,
+        itemEnabled = itemEnabled,
         equalWeight = equalWeight,
         contentPadding = contentPadding,
         buttonModifier = buttonModifier,
@@ -157,6 +160,7 @@ fun JuneConnectedActionBar(
             ToggleButton(
                 checked = action.isActive,
                 onCheckedChange = { action.onClick() },
+                enabled = action.enabled,
                 shapes = shape,
                 colors = ToggleButtonDefaults.toggleButtonColors(
                     containerColor = containerColor,
@@ -215,6 +219,7 @@ data class ConnectedBarAction(
     val onClick: () -> Unit,
     val isActive: Boolean = false,
     val isDestructive: Boolean = false,
+    val enabled: Boolean = true,
     val customContent: (@Composable () -> Unit)? = null,
     val shapes: ToggleButtonShapes? = null,
     val activeContainerColor: Color? = null,

@@ -162,7 +162,7 @@ fun FontStyleContent(
                             onVariationChange(preset.config)
                         },
                         enabled = true,
-                        label = { stringResource(it.labelRes) },
+                        label = { it.label },
                         colors = ToggleButtonDefaults.toggleButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
