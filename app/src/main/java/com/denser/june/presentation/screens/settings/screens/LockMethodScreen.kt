@@ -55,7 +55,7 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import com.denser.june.presentation.components.JuneDialog
 import com.denser.june.presentation.components.JuneTextField
-import com.denser.june.presentation.components.PinLockScreen
+import com.denser.june.presentation.components.lock.PinLockScreen
 import com.denser.june.core.utils.SecurityUtils
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.text.input.KeyboardType

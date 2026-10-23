@@ -1,4 +1,8 @@
-package com.denser.june.presentation.components
+package com.denser.june.presentation.components.lock
+
+import com.denser.june.presentation.components.JuneAppBarType
+import com.denser.june.presentation.components.JuneTextField
+import com.denser.june.presentation.components.JuneTopAppBar
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -43,6 +47,7 @@ fun PinRecoveryScreen(
     onPinResetSuccess: () -> Unit
 ) {
     val context = LocalContext.current
+    val pinResetSuccessMsg = stringResource(R.string.pin_reset_successfully)
     BackHandler {
         onBackClick()
     }
@@ -125,7 +130,7 @@ fun PinRecoveryScreen(
                     val inputHash = SecurityUtils.hashAnswer(answerInput)
                     if (inputHash == storedAnswerHash) {
                         onPinResetSuccess()
-                        Toast.makeText(context, context.getString(R.string.pin_reset_successfully), Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, pinResetSuccessMsg, Toast.LENGTH_LONG).show()
                     } else {
                         isAnswerError = true
                     }
