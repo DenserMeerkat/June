@@ -18,8 +18,8 @@ import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.toFullDate
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.editor.components.JournalMediaItem
-import com.denser.june.presentation.screens.editor.components.MediaOperations
+import com.denser.june.presentation.components.journal.JournalMediaItem
+import com.denser.june.presentation.components.journal.MediaOperations
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalFoundationApi::class)

@@ -1,15 +1,20 @@
-package com.denser.june.presentation.screens.home.components
+package com.denser.june.presentation.components.journal
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -18,17 +23,8 @@ import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.toDayOfMonth
 import com.denser.june.core.utils.toFullDate
 import com.denser.june.core.utils.toShortMonth
-import com.denser.june.presentation.components.JournalActionButton
-import com.denser.june.presentation.components.JournalCardColors
-import com.denser.june.presentation.components.JournalMetadataBadges
-import com.denser.june.presentation.components.JournalThumbnail
-import com.denser.june.presentation.components.JuneBadge
-import com.denser.june.presentation.components.rememberJournalCardColors
-import com.denser.june.presentation.components.rememberJournalDisplayTitle
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.editor.components.JournalMosaicCard
-import com.denser.june.presentation.screens.editor.components.MediaOperations
 import org.koin.compose.koinInject
 import com.denser.june.core.R
 
@@ -40,20 +36,33 @@ fun JournalCard(
     shape: Shape = RoundedCornerShape(24.dp),
     is24Hour: Boolean = false,
     showDate: Boolean = false,
+    isHighlighted: Boolean = false,
     actionIcon: Int? = null,
     onActionClick: (() -> Unit)? = null,
     onToggleBookmark: (() -> Unit)? = null,
     onJournalClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
-    colors: JournalCardColors = rememberJournalCardColors(journal)
+    colors: JournalCardColors = rememberJournalCardColors(journal),
+    leadingContent: (@Composable RowScope.() -> Unit)? = null
 ) {
     val navigator = if (onJournalClick == null) koinInject<AppNavigator>() else null
     val mediaOperations = remember { MediaOperations(onMediaClick = null) }
     val displayTitle = rememberJournalDisplayTitle(journal)
 
+    val highlightBorderColor by animateColorAsState(
+        targetValue = if (isHighlighted) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+        } else {
+            Color.Transparent
+        },
+        animationSpec = tween(durationMillis = 600),
+        label = "journal_card_highlight"
+    )
+
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .border(width = 2.dp, color = highlightBorderColor, shape = shape)
             .clip(shape)
             .combinedClickable(
                 onClick = {
@@ -76,13 +85,17 @@ fun JournalCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            JournalThumbnail(
-                journal = journal,
-                containerColor = colors.innerContainerColor,
-                mediaOperations = mediaOperations
-            )
-
-            Spacer(modifier = Modifier.width(14.dp))
+            if (leadingContent != null) {
+                leadingContent()
+                Spacer(modifier = Modifier.width(4.dp))
+            } else {
+                JournalThumbnail(
+                    journal = journal,
+                    containerColor = colors.innerContainerColor,
+                    mediaOperations = mediaOperations
+                )
+                Spacer(modifier = Modifier.width(14.dp))
+            }
 
             Column(
                 modifier = Modifier.weight(1f),

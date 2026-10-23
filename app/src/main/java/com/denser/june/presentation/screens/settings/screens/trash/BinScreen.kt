@@ -23,8 +23,8 @@ import com.denser.june.presentation.components.JuneDropdownMenuItem
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
-import com.denser.june.presentation.screens.home.components.JournalCard
-import com.denser.june.presentation.screens.home.components.RecentJournalCard
+import com.denser.june.presentation.components.journal.JournalCard
+import com.denser.june.presentation.components.journal.RecentJournalCard
 import com.denser.june.presentation.components.JuneConfirmationDialog
 import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet

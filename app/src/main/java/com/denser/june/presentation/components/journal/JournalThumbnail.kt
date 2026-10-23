@@ -1,4 +1,4 @@
-package com.denser.june.presentation.components
+package com.denser.june.presentation.components.journal
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -19,8 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
-import com.denser.june.presentation.screens.editor.components.JournalMosaicCard
-import com.denser.june.presentation.screens.editor.components.MediaOperations
+import com.denser.june.presentation.components.RestrictedAsyncImage
 
 @Composable
 fun JournalThumbnail(

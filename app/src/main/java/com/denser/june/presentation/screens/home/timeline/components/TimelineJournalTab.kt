@@ -22,7 +22,7 @@ import org.koin.compose.koinInject
 
 import com.denser.june.core.R
 import com.denser.june.core.utils.toLocalDate
-import com.denser.june.presentation.components.DayJournalGroupData
+import com.denser.june.presentation.components.journal.DayJournalGroupData
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.milliseconds
 

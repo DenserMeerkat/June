@@ -23,18 +23,18 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.toLocalDate
-import com.denser.june.presentation.components.DayJournalGroupData
-import com.denser.june.presentation.components.ExportJournalBottomSheet
+import com.denser.june.presentation.components.journal.DayJournalGroupData
+import com.denser.june.presentation.components.journal.ExportJournalSheet
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import com.denser.june.presentation.screens.home.components.DayJournalGroup
-import com.denser.june.presentation.screens.home.components.JournalCard
+import com.denser.june.presentation.components.journal.JournalCard
 import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
-import com.denser.june.presentation.components.SearchFilterChip
+import com.denser.june.presentation.components.journal.SearchFilterChip
 import com.denser.june.presentation.utils.UiUtils
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.home.components.RecentJournalCard
+import com.denser.june.presentation.components.journal.RecentJournalCard
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -83,7 +83,7 @@ fun JournalsPage(
 
     var journalToExport by remember { mutableStateOf<Journal?>(null) }
 
-    ExportJournalBottomSheet(
+    ExportJournalSheet(
         journal = journalToExport,
         onDismiss = { journalToExport = null }
     )

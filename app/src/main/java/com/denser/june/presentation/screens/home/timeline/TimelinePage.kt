@@ -24,7 +24,7 @@ import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.*
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.components.ExportJournalBottomSheet
+import com.denser.june.presentation.components.journal.ExportJournalSheet
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
 import com.denser.june.presentation.screens.home.timeline.components.TimelineCalendarPage
@@ -70,7 +70,7 @@ fun TimelinePage(
 
     var journalToExport by remember { mutableStateOf<Journal?>(null) }
 
-    ExportJournalBottomSheet(
+    ExportJournalSheet(
         journal = journalToExport,
         onDismiss = { journalToExport = null }
     )

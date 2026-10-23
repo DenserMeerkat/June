@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.editor.components
+package com.denser.june.presentation.components.journal
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

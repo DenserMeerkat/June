@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.editor.components
+package com.denser.june.presentation.components.journal
 
 import android.net.Uri
 import android.view.LayoutInflater

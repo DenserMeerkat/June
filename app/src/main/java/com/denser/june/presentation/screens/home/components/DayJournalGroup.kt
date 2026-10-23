@@ -6,6 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.presentation.components.journal.JournalCard
+import com.denser.june.presentation.components.journal.RecentJournalCard
+import com.denser.june.presentation.components.journal.rememberJournalGroupShape
 import java.time.LocalDate
 
 @Composable
@@ -25,7 +28,7 @@ fun DayJournalGroup(
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         journals.forEachIndexed { index, journal ->
-            val shape = com.denser.june.presentation.components.rememberJournalGroupShape(
+            val shape = rememberJournalGroupShape(
                 index = index,
                 totalCount = journals.size
             )
