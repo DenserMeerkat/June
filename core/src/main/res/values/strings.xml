@@ -504,18 +504,20 @@
     <!-- Maps & Location -->
     <string name="api_credentials">API Credentials</string>
     <string name="carto" translatable="false">CARTO</string>
-    <string name="carto_auto_notice">CARTO Voyager (Light) and Dark Matter vector styles are resolved automatically. No API key required.</string>
+    <string name="carto_auto_notice">CARTO doesn\'t require an API key and is automatically configured.</string>
     <string name="check_api_key_or_internet">Check your API key or internet connection</string>
     <string name="configure_api_key_for_preview">Configure and test API key below to enable preview</string>
     <string name="connect_internet_for_map">Connect to the internet to load map preview</string>
     <string name="default_map_theme">Default map theme</string>
+    <string name="map_theme_accents">Theme accents</string>
+    <string name="map_theme_accents_desc">Applies only to CARTO and Stadia maps</string>
     <string name="failed_to_load_map">Failed to load map</string>
     <string name="get_api_key_or_token">Get API key or access token</string>
     <string name="internet_connection_required">Internet connection required</string>
     <string name="map" translatable="false">Map</string>
     <string name="map_credits_body">June uses vector tiles and geocoding services from various open data and mapping providers.</string>
-    <string name="mapbox" translatable="false">Mapbox</string>
-    <string name="mapbox_access_token_placeholder">Mapbox access token</string>
+    <string name="openmap" translatable="false">OpenMap</string>
+    <string name="openmap_auto_notice">OpenMap doesn\'t require an API key and is automatically configured.</string>
     <string name="maptiler" translatable="false">MapTiler</string>
     <string name="maptiler_api_key_placeholder">MapTiler API key</string>
     <string name="maps_require_internet">Maps require internet access.</string>

@@ -418,7 +418,8 @@
     <string name="reminder_title_6">ملاحظة للنفس</string>
     <string name="reminder_title_7">استرخ واكتب</string>
     <string name="api_credentials">بيانات اعتماد API</string>
-    <string name="carto_auto_notice">يتم تحديد أنماط المتجهات الخاصة بـ CARTO Voyager (Light) و Dark Matter تلقائيًا. لا يلزم وجود مفتاح API.</string>
+    <string name="carto_auto_notice">لا يتطلب CARTO مفتاح API ويتم تهيئته تلقائيًا.</string>
+    <string name="openmap_auto_notice">لا يتطلب OpenMap مفتاح API ويتم تهيئته تلقائيًا.</string>
     <string name="configure_api_key_for_preview">تهيئة واختبار مفتاح API أدناه لتمكين المعاينة</string>
     <string name="connect_internet_for_map">اتصل بالإنترنت لتحميل معاينة الخريطة</string>
     <string name="default_map_theme">سمة الخريطة الافتراضية</string>
@@ -464,7 +465,6 @@
     <string name="take_photo_or_video">التقاط صورة / فيديو</string>
     <string name="whats_on_your_mind">ما الذي يدور في ذهنك؟</string>
     <string name="map_credits_body">يستخدم June المتجهات وخدمات الترميز الجغرافي من مختلف مزودي البيانات المفتوحة ورسم الخرائط.</string>
-    <string name="mapbox_access_token_placeholder">رمز وصول Mapbox</string>
     <string name="maptiler_api_key_placeholder">مفتاح API ل MapTiler</string>
     <string name="maps_require_internet">تتطلب الخرائط الاتصال بالإنترنت.</string>
     <string name="maps_require_internet_locations">تتطلب الخرائط اتصالًا بالإنترنت لتحميل وعرض المواقع.</string>

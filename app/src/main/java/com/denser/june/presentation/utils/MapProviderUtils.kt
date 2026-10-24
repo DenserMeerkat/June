@@ -31,8 +31,7 @@ object MapProviderUtils : KoinComponent {
         provider: MapStyleProvider,
         isDark: Boolean,
         mapTilerKey: String,
-        stadiaKey: String,
-        mapboxKey: String
+        stadiaKey: String
     ): String {
         return when (provider) {
             MapStyleProvider.MAPTILER -> {
@@ -45,12 +44,12 @@ object MapProviderUtils : KoinComponent {
                 "${Constants.STADIA_MAPS_BASE_URL}$styleName.json$keyQuery"
             }
             MapStyleProvider.CARTO -> {
-                val styleName = if (isDark) "dark-matter-gl-style" else "voyager-gl-style"
+                val styleName = if (isDark) "dark-matter-gl-style" else "positron-gl-style"
                 "${Constants.CARTO_MAPS_BASE_URL}$styleName/style.json"
             }
-            MapStyleProvider.MAPBOX -> {
-                val styleName = if (isDark) "dark-v10" else "streets-v11"
-                "${Constants.MAPBOX_MAPS_BASE_URL}$styleName?access_token=$mapboxKey"
+            MapStyleProvider.OPENMAP -> {
+                val styleName = if (isDark) "fiord" else "bright"
+                "${Constants.OPENMAP_MAPS_BASE_URL}$styleName"
             }
         }
     }
@@ -61,8 +60,7 @@ object MapProviderUtils : KoinComponent {
     ): String {
         val mapTilerKey = journalPreferences.maptilerKey().first()
         val stadiaKey = journalPreferences.stadiaKey().first()
-        val mapboxKey = journalPreferences.mapboxkey().first()
-        return getStyleUrlWithKeys(provider, isDark, mapTilerKey, stadiaKey, mapboxKey)
+        return getStyleUrlWithKeys(provider, isDark, mapTilerKey, stadiaKey)
     }
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
@@ -250,10 +248,8 @@ object MapProviderUtils : KoinComponent {
             MapStyleProvider.STADIA -> {
                 "${Constants.STADIA_MAPS_BASE_URL}alidade_smooth.json?api_key=$key"
             }
-            MapStyleProvider.MAPBOX -> {
-                "${Constants.MAPBOX_MAPS_BASE_URL}streets-v11?access_token=$key"
-            }
-            MapStyleProvider.CARTO -> return true
+            MapStyleProvider.CARTO,
+            MapStyleProvider.OPENMAP -> return true
         }
 
         return withContext(Dispatchers.IO) {

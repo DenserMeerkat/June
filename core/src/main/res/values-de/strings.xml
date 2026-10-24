@@ -322,7 +322,8 @@
     <string name="reminder_title_6">Notiz an mich selbst</string>
     <string name="reminder_title_7">Abschalten und schreiben</string>
     <string name="api_credentials">API-Zugangsdaten</string>
-    <string name="carto_auto_notice">Die Vektorstile CARTO Voyager (Hell) und Dunkle Materie werden automatisch geladen. Kein API-Schlüssel erforderlich.</string>
+    <string name="carto_auto_notice">CARTO erfordert keinen API-Schlüssel und wird automatisch konfiguriert.</string>
+    <string name="openmap_auto_notice">OpenMap erfordert keinen API-Schlüssel und wird automatisch konfiguriert.</string>
     <string name="check_api_key_or_internet">Prüfe deinen API-Schlüssel oder deine Internet Verbindung</string>
     <string name="configure_api_key_for_preview">Konfigurieren und testen Sie den API-Schlüssel unten, um die Vorschau zu aktivieren</string>
     <string name="connect_internet_for_map">Stelle eine Verbindung mit dem Internet her, um die Kartenvorschau zu laden</string>
@@ -331,7 +332,6 @@
     <string name="get_api_key_or_token">Hol dir einen API-Schlüssel oder Zugangsschlüssel</string>
     <string name="internet_connection_required">Internetverbindung erforderlich</string>
     <string name="map_credits_body">June verwendet Vektorkacheln und Geodaten von verschiedenen offenen Quellen und Kartenanbietern.</string>
-    <string name="mapbox_access_token_placeholder">Mapbox-Zugangsschlüssel</string>
     <string name="maptiler_api_key_placeholder">MapTiler-API-Schlüssel</string>
     <string name="maps_require_internet">Karten erfordern eine Internetverbindung.</string>
     <string name="maps_require_internet_locations">Karten erfordern eine Internetverbindung, um Kacheln zu laden und Standorte anzuzeigen.</string>

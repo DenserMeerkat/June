@@ -42,9 +42,6 @@ interface JournalPreferences {
     fun stadiaKey(): Flow<String>
     suspend fun setStadiaKey(key: String)
 
-    fun mapboxkey(): Flow<String>
-    suspend fun setMapboxkey(key: String)
-
     fun isMapProviderVerified(provider: MapStyleProvider): Flow<Boolean>
     suspend fun setMapProviderVerified(provider: MapStyleProvider, verified: Boolean)
 
@@ -74,4 +71,7 @@ interface JournalPreferences {
 
     fun getVideoCompressionQuality(): Flow<Int>
     suspend fun setVideoCompressionQuality(quality: Int)
+
+    fun isMapThemeAccentEnabled(): Flow<Boolean>
+    suspend fun setMapThemeAccentEnabled(enabled: Boolean)
 }

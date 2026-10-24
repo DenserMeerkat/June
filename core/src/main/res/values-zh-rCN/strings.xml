@@ -383,7 +383,8 @@
     <string name="reminder_title_6">备忘录</string>
     <string name="reminder_title_7">放松一下，提笔写写</string>
     <string name="api_credentials">API 访问凭证</string>
-    <string name="carto_auto_notice">CARTO Voyager（浅色）和 Dark Matter 矢量样式将自动解析，无需 API 密钥。</string>
+    <string name="carto_auto_notice">CARTO 无需 API 密钥，已自动配置。</string>
+    <string name="openmap_auto_notice">OpenMap 无需 API 密钥，已自动配置。</string>
     <string name="check_api_key_or_internet">请检查您的 API 密钥或网络连接</string>
     <string name="configure_api_key_for_preview">请在下方配置并测试 API 密钥以启用预览功能</string>
     <string name="connect_internet_for_map">请连接互联网以加载地图预览</string>
@@ -392,7 +393,6 @@
     <string name="get_api_key_or_token">获取 API 密钥或访问令牌</string>
     <string name="internet_connection_required">需要互联网连接</string>
     <string name="map_credits_body">June 使用来自多个开放数据和地图服务提供商的矢量瓦片与地理编码服务。</string>
-    <string name="mapbox_access_token_placeholder">Mapbox 访问令牌</string>
     <string name="maptiler_api_key_placeholder">MapTiler API 密钥</string>
     <string name="maps_require_internet">使用地图需要连接互联网。</string>
     <string name="maps_require_internet_locations">地图需要连接互联网才能加载并显示位置。</string>
