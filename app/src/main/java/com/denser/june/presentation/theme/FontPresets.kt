@@ -1,5 +1,6 @@
-package com.denser.june.core.domain.model
+package com.denser.june.presentation.theme
 
+import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.core.domain.model.enums.Fonts
 import com.denser.june.core.utils.FontUtils
 

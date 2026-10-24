@@ -19,13 +19,13 @@ import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
 import com.denser.june.presentation.theme.LocalAppTheme
-import com.denser.june.presentation.utils.ExtractedMediaColor
-import com.denser.june.presentation.utils.ExtractedMediaTheme
+import com.denser.june.core.media.color.ExtractedMediaColor
+import com.denser.june.core.media.color.ExtractedMediaTheme
 import com.materialkolor.PaletteStyle
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ColorCustomizationPanel(
+fun ThemePanel(
     journalTheme: JournalTheme?,
     extractedMediaColors: List<ExtractedMediaColor> = emptyList(),
     extractedMediaThemes: List<ExtractedMediaTheme> = emptyList(),
@@ -33,9 +33,9 @@ fun ColorCustomizationPanel(
     modifier: Modifier = Modifier,
     showAppDefault: Boolean = true,
     contentHeight: Dp = 420.dp,
-    initialTab: ColorScreenTab = ColorScreenTab.COLOR,
-    selectedTab: ColorScreenTab? = null,
-    onTabSelect: ((ColorScreenTab) -> Unit)? = null,
+    initialTab: ColorTab = ColorTab.COLOR,
+    selectedTab: ColorTab? = null,
+    onTabSelect: ((ColorTab) -> Unit)? = null,
     toggleTitle: String? = null,
     toggleChecked: Boolean? = null,
     onToggleChange: ((Boolean) -> Unit)? = null,
@@ -43,7 +43,7 @@ fun ColorCustomizationPanel(
 ) {
     var internalTab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(initialTab) }
     val currentTab = selectedTab ?: internalTab
-    val handleTabSelect: (ColorScreenTab) -> Unit = { tab ->
+    val handleTabSelect: (ColorTab) -> Unit = { tab ->
         if (onTabSelect != null) {
             onTabSelect(tab)
         } else {
@@ -64,26 +64,10 @@ fun ColorCustomizationPanel(
     }
 
     val isMediaTheme = journalTheme != null && (journalTheme.secondaryColor != null || journalTheme.neutralColor != null)
-    val selectedSeedColor = journalTheme?.takeUnless { isMediaTheme }?.primaryColor
     val appDefaultSeedColor = if (appTheme.materialTheme && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         colorResource(android.R.color.system_accent1_200).toArgb()
     } else {
         appTheme.seedColor
-    }
-
-    val effectiveSeedColor = selectedSeedColor ?: appDefaultSeedColor
-
-    val currentPaletteStyle = journalTheme?.style?.let {
-        runCatching { PaletteStyle.valueOf(it) }.getOrNull()
-    } ?: appTheme.style
-
-    val isCustomActive = journalTheme != null
-    val isPaletteActive = isCustomActive || allowPaletteWhenDefault
-
-    LaunchedEffect(isPaletteActive) {
-        if (!isPaletteActive && currentTab == ColorScreenTab.PALETTE) {
-            handleTabSelect(ColorScreenTab.COLOR)
-        }
     }
 
     val availableMediaSources = remember(extractedMediaColors, extractedMediaThemes) {
@@ -103,6 +87,47 @@ fun ColorCustomizationPanel(
             }
         }
         list
+    }
+
+    var selectedSeedColor by androidx.compose.runtime.saveable.rememberSaveable {
+        mutableIntStateOf(
+            when {
+                journalTheme == null -> appDefaultSeedColor
+                !isMediaTheme -> journalTheme.primaryColor
+                else -> {
+                    availableMediaSources.firstOrNull { media ->
+                        extractedMediaThemes.any { mt ->
+                            (mt.mediaUri == media.mediaUri || mt.sourceLabel == media.sourceLabel) &&
+                            mt.theme.primaryColor == journalTheme.primaryColor &&
+                            mt.theme.secondaryColor == journalTheme.secondaryColor
+                        }
+                    }?.seedColor ?: journalTheme.primaryColor
+                }
+            }
+        )
+    }
+
+    var lastSelectedStyle by androidx.compose.runtime.saveable.rememberSaveable {
+        mutableStateOf(
+            journalTheme?.style?.let {
+                runCatching { PaletteStyle.valueOf(it) }.getOrNull()
+            } ?: appTheme.style
+        )
+    }
+
+    val effectiveSeedColor = selectedSeedColor
+
+    val currentPaletteStyle = journalTheme?.style?.let {
+        runCatching { PaletteStyle.valueOf(it) }.getOrNull()
+    } ?: lastSelectedStyle
+
+    val isCustomActive = journalTheme != null
+    val isPaletteActive = isCustomActive || allowPaletteWhenDefault
+
+    LaunchedEffect(isPaletteActive) {
+        if (!isPaletteActive && currentTab == ColorTab.PALETTE) {
+            handleTabSelect(ColorTab.COLOR)
+        }
     }
 
     var activeColorSource by remember {
@@ -136,6 +161,7 @@ fun ColorCustomizationPanel(
     LaunchedEffect(journalTheme) {
         if (journalTheme == null) {
             activeColorSource = ColorSource.App
+            selectedSeedColor = appDefaultSeedColor
         } else if (journalTheme.secondaryColor != null || journalTheme.neutralColor != null) {
             val matchedMediaTheme = extractedMediaThemes.firstOrNull { mt ->
                 mt.theme.primaryColor == journalTheme.primaryColor &&
@@ -149,24 +175,40 @@ fun ColorCustomizationPanel(
                     it.sourceLabel == matchedMediaTheme.sourceLabel
                 }
                 if (mediaSource != null) {
+                    val isDifferentMedia = activeColorSource is ColorSource.Media && (
+                        (activeColorSource as ColorSource.Media).mediaUri != mediaSource.mediaUri ||
+                        (activeColorSource as ColorSource.Media).sourceLabel != mediaSource.sourceLabel
+                    )
+                    if (activeColorSource !is ColorSource.Media || isDifferentMedia) {
+                        selectedSeedColor = mediaSource.seedColor
+                    }
                     activeColorSource = mediaSource
                 }
             }
-        } else if (activeColorSource is ColorSource.Media) {
-            val currentMedia = activeColorSource as ColorSource.Media
-            val isColorFromCurrentMedia = extractedMediaColors.any { mc ->
-                (mc.mediaUri == currentMedia.mediaUri || mc.sourceLabel == currentMedia.sourceLabel) &&
-                mc.color == journalTheme.primaryColor
-            } || currentMedia.seedColor == journalTheme.primaryColor
-
-            if (!isColorFromCurrentMedia) {
-                val otherMedia = availableMediaSources.firstOrNull { media ->
-                    extractedMediaColors.any { mc ->
-                        (mc.mediaUri == media.mediaUri || mc.sourceLabel == media.sourceLabel) &&
-                        mc.color == journalTheme.primaryColor
-                    } || media.seedColor == journalTheme.primaryColor
+        } else {
+            selectedSeedColor = journalTheme.primaryColor
+            journalTheme.style.let { styleName ->
+                runCatching { PaletteStyle.valueOf(styleName) }.getOrNull()?.let {
+                    lastSelectedStyle = it
                 }
-                activeColorSource = otherMedia ?: ColorSource.Custom
+            }
+
+            if (activeColorSource is ColorSource.Media) {
+                val currentMedia = activeColorSource as ColorSource.Media
+                val isColorFromCurrentMedia = extractedMediaColors.any { mc ->
+                    (mc.mediaUri == currentMedia.mediaUri || mc.sourceLabel == currentMedia.sourceLabel) &&
+                    mc.color == journalTheme.primaryColor
+                } || currentMedia.seedColor == journalTheme.primaryColor
+
+                if (!isColorFromCurrentMedia) {
+                    val otherMedia = availableMediaSources.firstOrNull { media ->
+                        extractedMediaColors.any { mc ->
+                            (mc.mediaUri == media.mediaUri || mc.sourceLabel == media.sourceLabel) &&
+                            mc.color == journalTheme.primaryColor
+                        } || media.seedColor == journalTheme.primaryColor
+                    }
+                    activeColorSource = otherMedia ?: ColorSource.Custom
+                }
             }
         }
     }
@@ -188,7 +230,7 @@ fun ColorCustomizationPanel(
                     .padding(top = 16.dp)
             ) {
                 when (currentTab) {
-                    ColorScreenTab.COLOR -> {
+                    ColorTab.COLOR -> {
                         ColorTabContent(
                             isCustomActive = isCustomActive,
                             activeColorSource = activeColorSource,
@@ -203,14 +245,16 @@ fun ColorCustomizationPanel(
                             onToggleCustom = { enabled ->
                                 if (enabled) {
                                     activeColorSource = ColorSource.Custom
+                                    selectedSeedColor = appDefaultSeedColor
                                     onThemeChange(
                                         JournalTheme(
                                             primaryColor = appDefaultSeedColor,
-                                            style = appTheme.style.name
+                                            style = lastSelectedStyle.name
                                         )
                                     )
                                 } else {
                                     activeColorSource = ColorSource.App
+                                    selectedSeedColor = appDefaultSeedColor
                                     onThemeChange(null)
                                 }
                             },
@@ -218,21 +262,24 @@ fun ColorCustomizationPanel(
                                 activeColorSource = source
                                 when (source) {
                                     ColorSource.App -> {
+                                        selectedSeedColor = appDefaultSeedColor
                                         onThemeChange(null)
                                     }
                                     is ColorSource.Media -> {
+                                        selectedSeedColor = source.seedColor
                                         onThemeChange(
                                             JournalTheme(
                                                 primaryColor = source.seedColor,
-                                                style = currentPaletteStyle.name
+                                                style = lastSelectedStyle.name
                                             )
                                         )
                                     }
                                     ColorSource.Custom -> {
+                                        selectedSeedColor = appDefaultSeedColor
                                         onThemeChange(
                                             JournalTheme(
                                                 primaryColor = appDefaultSeedColor,
-                                                style = currentPaletteStyle.name
+                                                style = lastSelectedStyle.name
                                             )
                                         )
                                     }
@@ -246,7 +293,7 @@ fun ColorCustomizationPanel(
                             onToggleChange = onToggleChange
                         )
                     }
-                    ColorScreenTab.PALETTE -> {
+                    ColorTab.PALETTE -> {
                         PaletteTabContent(
                             activeColorSource = activeColorSource,
                             effectiveSeedColor = effectiveSeedColor,
@@ -264,25 +311,20 @@ fun ColorCustomizationPanel(
                                     }
                                 }
                                 if (matchedMedia != null) {
+                                    val isDifferentMedia = activeColorSource is ColorSource.Media && (
+                                        (activeColorSource as ColorSource.Media).mediaUri != matchedMedia.mediaUri ||
+                                        (activeColorSource as ColorSource.Media).sourceLabel != matchedMedia.sourceLabel
+                                    )
+                                    if (activeColorSource !is ColorSource.Media || isDifferentMedia) {
+                                        selectedSeedColor = matchedMedia.seedColor
+                                    }
                                     activeColorSource = matchedMedia
                                 }
                                 onThemeChange(mediaTheme)
                             },
                             onStyleSelect = { style ->
-                                val isFromMediaPalette = journalTheme?.secondaryColor != null ||
-                                    journalTheme?.neutralColor != null ||
-                                    journalTheme?.tertiaryColor != null
-
-                                val seed = if (isFromMediaPalette) {
-                                    appDefaultSeedColor
-                                } else {
-                                    effectiveSeedColor
-                                }
-
-                                if (isFromMediaPalette) {
-                                    activeColorSource = ColorSource.Custom
-                                }
-
+                                lastSelectedStyle = style
+                                val seed = selectedSeedColor
                                 val isDefaultAppSeed = seed == appDefaultSeedColor
                                 val isDefaultAppStyle = style == appTheme.style
                                 if (activeColorSource is ColorSource.App && isDefaultAppStyle && isDefaultAppSeed) {
@@ -313,19 +355,19 @@ fun ColorCustomizationPanel(
                 .padding(bottom = 8.dp),
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ) {
-            ColorScreenTab.entries.forEach { tab ->
+            ColorTab.entries.forEach { tab ->
                 val isSelected = currentTab == tab
                 val isTabEnabled = when (tab) {
-                    ColorScreenTab.COLOR -> true
-                    ColorScreenTab.PALETTE -> isPaletteActive
+                    ColorTab.COLOR -> true
+                    ColorTab.PALETTE -> isPaletteActive
                 }
                 val label = when (tab) {
-                    ColorScreenTab.COLOR -> "Color"
-                    ColorScreenTab.PALETTE -> "Palette"
+                    ColorTab.COLOR -> "Color"
+                    ColorTab.PALETTE -> "Palette"
                 }
                 val iconRes = when (tab) {
-                    ColorScreenTab.COLOR -> R.drawable.colors_24px
-                    ColorScreenTab.PALETTE -> R.drawable.palette_24px
+                    ColorTab.COLOR -> R.drawable.colors_24px
+                    ColorTab.PALETTE -> R.drawable.palette_24px
                 }
 
                 JuneFloatingAction(

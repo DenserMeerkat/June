@@ -28,7 +28,7 @@ import com.denser.june.presentation.theme.googleFontsMetadata
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun FontSelector(
+fun FontListTab(
     modifier: Modifier = Modifier,
     selectedFontName: String?,
     onFontSelect: (String?) -> Unit,
@@ -133,4 +133,3 @@ fun FontSelector(
         }
     }
 }
-

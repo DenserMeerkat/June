@@ -26,7 +26,7 @@ import androidx.core.graphics.ColorUtils
 import coil.compose.AsyncImage
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.JournalTheme
-import com.denser.june.presentation.utils.ExtractedMediaTheme
+import com.denser.june.core.media.color.ExtractedMediaTheme
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 
@@ -184,15 +184,9 @@ fun PaletteTabContent(
         }
         }
 
-        val stylesSeedColor = if (!isAnyMediaPaletteSelected && activeJournalTheme != null) {
-            activeJournalTheme.primaryColor
-        } else {
-            effectiveSeedColor
-        }
-
         NormalPalettesSection(
             title = "Palettes",
-            seedColor = stylesSeedColor,
+            seedColor = effectiveSeedColor,
             isDark = isDark,
             isAmoled = isAmoled,
             isSelected = { style ->
@@ -245,8 +239,9 @@ private fun NormalPalettesSection(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     pair.forEach { style ->
+                        val effectiveSeed = if (style == PaletteStyle.Monochrome) Color.Gray else Color(seedColor)
                         val scheme = rememberDynamicColorScheme(
-                            seedColor = Color(seedColor),
+                            seedColor = effectiveSeed,
                             isDark = isDark,
                             isAmoled = isAmoled,
                             style = style

@@ -26,7 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
-import com.denser.june.core.domain.model.FontPresets
+import com.denser.june.presentation.theme.FontPresets
 import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.core.utils.FontUtils
 import com.denser.june.presentation.components.JuneConnectedButtonGroup
@@ -35,7 +35,7 @@ import kotlin.math.round
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun FontStyleContent(
+fun FontAxesTab(
     fontName: String,
     currentVariation: FontVariationConfig?,
     onVariationChange: (FontVariationConfig?) -> Unit,

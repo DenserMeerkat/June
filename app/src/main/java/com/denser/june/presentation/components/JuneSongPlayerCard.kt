@@ -32,7 +32,7 @@ import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongSourceType
 import com.denser.june.core.media.storage.SongMediaStorage
 import com.denser.june.presentation.theme.LocalInternetAllowed
-import com.denser.june.presentation.utils.rememberDynamicThemeColors
+import com.denser.june.presentation.theme.rememberDynamicThemeColors
 import ir.mahozad.multiplatform.wavyslider.material3.WavySlider
 import kotlinx.coroutines.launch
 

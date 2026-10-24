@@ -1,15 +1,14 @@
-package com.denser.june.presentation.utils
+package com.denser.june.presentation.components.color
 
 import android.content.Context
 import coil.ImageLoader
 import com.denser.june.core.media.color.ExtractedMediaColor
 import com.denser.june.core.media.color.ExtractedMediaTheme
 import com.denser.june.core.media.color.MediaColorEngine
+import com.denser.june.presentation.theme.buildPalette
+import com.denser.june.presentation.theme.loadBitmapForPalette
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-typealias ExtractedMediaColor = ExtractedMediaColor
-typealias ExtractedMediaTheme = ExtractedMediaTheme
 
 object MediaColorExtractor {
 

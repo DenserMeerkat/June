@@ -32,7 +32,7 @@ import org.koin.core.parameter.parametersOf
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.LayoutDirection
-import com.denser.june.presentation.screens.settings.components.WhatsNewBottomSheet
+import com.denser.june.presentation.screens.settings.components.sheets.WhatsNewBottomSheet
 import com.denser.june.presentation.utils.handleAnnouncementAction
 
 @Composable

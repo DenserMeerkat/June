@@ -1,6 +1,6 @@
 package com.denser.june.presentation.components.color
 
-enum class ColorScreenTab {
+enum class ColorTab {
     COLOR,
     PALETTE
 }

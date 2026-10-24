@@ -47,23 +47,25 @@ import com.denser.june.core.utils.toDateWithDay
 import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
 import com.denser.june.core.utils.LanguageHelper
-import com.denser.june.presentation.components.ExportJournalBottomSheet
-import com.denser.june.presentation.components.font.FontCustomizationPanel
-import com.denser.june.presentation.components.color.ColorCustomizationPanel
+import com.denser.june.presentation.components.journal.ExportJournalSheet
+import com.denser.june.presentation.components.font.FontPanel
+import com.denser.june.presentation.components.color.ThemePanel
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.editor.components.*
+import com.denser.june.presentation.screens.editor.components.audio.*
+import com.denser.june.presentation.screens.editor.components.dialogs.*
 import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
 import com.denser.june.presentation.theme.JuneThemeWrapper
-import com.denser.june.presentation.utils.ExtractedMediaColor
-import com.denser.june.presentation.utils.ExtractedMediaTheme
-import com.denser.june.presentation.utils.MediaColorExtractor
+import com.denser.june.core.media.color.ExtractedMediaColor
+import com.denser.june.core.media.color.ExtractedMediaTheme
+import com.denser.june.presentation.components.color.MediaColorExtractor
 import com.denser.june.presentation.theme.LocalAppTheme
 import androidx.compose.animation.*
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import com.denser.june.core.domain.model.FontPresets
-import com.denser.june.presentation.components.color.ColorScreenTab
+import com.denser.june.presentation.theme.FontPresets
+import com.denser.june.presentation.components.color.ColorTab
 import com.denser.june.presentation.theme.getJournalFontFamily
 import com.denser.june.presentation.utils.UiUtils
 import kotlinx.coroutines.launch
@@ -122,7 +124,7 @@ fun EditorScreen() {
 
     var isFontMode by remember { mutableStateOf(false) }
     var isColorMode by remember { mutableStateOf(false) }
-    var editorColorTab by rememberSaveable { mutableStateOf(ColorScreenTab.COLOR) }
+    var editorColorTab by rememberSaveable { mutableStateOf(ColorTab.COLOR) }
     var previewSlideIndex by rememberSaveable { mutableIntStateOf(0) }
 
     var extractedMediaColors by remember { mutableStateOf<List<ExtractedMediaColor>>(emptyList()) }
@@ -506,7 +508,7 @@ fun EditorScreen() {
                     exit = fontExitTransition,
                     modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
-                    FontCustomizationPanel(
+                    FontPanel(
                         selectedFontName = state.font,
                         currentVariation = state.fontVariation,
                         onFontSelect = { newFont ->
@@ -527,7 +529,7 @@ fun EditorScreen() {
                     exit = fontExitTransition,
                     modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
-                    ColorCustomizationPanel(
+                    ThemePanel(
                         journalTheme = state.theme,
                         extractedMediaColors = extractedMediaColors,
                         extractedMediaThemes = extractedMediaThemes,
@@ -552,7 +554,7 @@ fun EditorScreen() {
 
         var journalToExport by remember { mutableStateOf<Journal?>(null) }
 
-        ExportJournalBottomSheet(
+        ExportJournalSheet(
             journal = journalToExport,
             onDismiss = { journalToExport = null }
         )

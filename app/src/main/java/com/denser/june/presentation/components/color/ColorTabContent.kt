@@ -29,8 +29,8 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.JournalTheme
 import com.denser.june.presentation.components.JuneConnectedItem
 import com.denser.june.presentation.components.JuneSliderTile
-import com.denser.june.presentation.utils.ExtractedMediaColor
-import com.denser.june.presentation.utils.ExtractedMediaTheme
+import com.denser.june.core.media.color.ExtractedMediaColor
+import com.denser.june.core.media.color.ExtractedMediaTheme
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 import kotlinx.coroutines.delay
@@ -284,7 +284,7 @@ fun ColorTabContent(
                                 Box(modifier = Modifier.width(14.dp))
                                 mediaColors.forEach { mc ->
                                     val isColorSelected = isChosenMedia && !isMediaPaletteSelected && effectiveSeedColor == mc.color
-                                    ColorCircleItem(
+                                    ColorSwatch(
                                         color = mc.color,
                                         isSelected = isColorSelected,
                                         enabled = isCustomActive,
@@ -318,7 +318,7 @@ fun ColorTabContent(
                                         paletteScheme.tertiary
                                     )
 
-                                    CustomPaletteCircleItem(
+                                    PaletteSwatch(
                                         colors = swatchColors,
                                         isSelected = true,
                                         enabled = isCustomActive,

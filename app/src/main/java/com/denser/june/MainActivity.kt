@@ -34,8 +34,8 @@ import androidx.compose.runtime.SideEffect
 import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.model.enums.LockType
-import com.denser.june.presentation.components.PinLockScreen
-import com.denser.june.presentation.components.PinRecoveryScreen
+import com.denser.june.presentation.components.lock.PinLockScreen
+import com.denser.june.presentation.components.lock.PinRecoveryScreen
 import com.denser.june.core.utils.SecurityUtils
 import com.denser.june.presentation.JuneApp
 import com.denser.june.presentation.navigation.Route

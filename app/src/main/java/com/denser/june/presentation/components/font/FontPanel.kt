@@ -17,14 +17,9 @@ import com.denser.june.core.utils.FontUtils
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
 
-enum class FontScreenTab {
-    FONTS,
-    STYLE
-}
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun FontCustomizationPanel(
+fun FontPanel(
     selectedFontName: String?,
     currentVariation: FontVariationConfig?,
     onFontSelect: (String?) -> Unit,
@@ -32,7 +27,7 @@ fun FontCustomizationPanel(
     modifier: Modifier = Modifier,
     showAppDefault: Boolean = false,
     contentHeight: Dp = 380.dp,
-    initialTab: FontScreenTab = FontScreenTab.FONTS
+    initialTab: FontTab = FontTab.FONTS
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(initialTab) }
     val navBottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -42,8 +37,8 @@ fun FontCustomizationPanel(
     val isVariableFont = FontUtils.isVariableFont(selectedFontName)
 
     LaunchedEffect(isVariableFont) {
-        if (!isVariableFont && selectedTab == FontScreenTab.STYLE) {
-            selectedTab = FontScreenTab.FONTS
+        if (!isVariableFont && selectedTab == FontTab.STYLE) {
+            selectedTab = FontTab.FONTS
         }
     }
 
@@ -64,8 +59,8 @@ fun FontCustomizationPanel(
                     .padding(top = 16.dp)
             ) {
                 when (selectedTab) {
-                    FontScreenTab.FONTS -> {
-                        FontSelector(
+                    FontTab.FONTS -> {
+                        FontListTab(
                             selectedFontName = selectedFontName,
                             onFontSelect = onFontSelect,
                             showAppDefault = showAppDefault,
@@ -73,8 +68,8 @@ fun FontCustomizationPanel(
                             bottomPadding = floatingBarBottomInset
                         )
                     }
-                    FontScreenTab.STYLE -> {
-                        FontStyleContent(
+                    FontTab.STYLE -> {
+                        FontAxesTab(
                             fontName = selectedFontName ?: "",
                             currentVariation = currentVariation,
                             onVariationChange = onVariationChange,
@@ -93,16 +88,16 @@ fun FontCustomizationPanel(
                 .padding(bottom = 8.dp),
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         ) {
-            FontScreenTab.entries.forEach { tab ->
+            FontTab.entries.forEach { tab ->
                 val isSelected = selectedTab == tab
-                val isTabEnabled = tab == FontScreenTab.FONTS || isVariableFont
+                val isTabEnabled = tab == FontTab.FONTS || isVariableFont
                 val label = when (tab) {
-                    FontScreenTab.FONTS -> stringResource(R.string.fonts)
-                    FontScreenTab.STYLE -> stringResource(R.string.style)
+                    FontTab.FONTS -> stringResource(R.string.fonts)
+                    FontTab.STYLE -> stringResource(R.string.style)
                 }
                 val iconRes = when (tab) {
-                    FontScreenTab.FONTS -> R.drawable.format_size_24px
-                    FontScreenTab.STYLE -> R.drawable.tune_24px
+                    FontTab.FONTS -> R.drawable.format_size_24px
+                    FontTab.STYLE -> R.drawable.tune_24px
                 }
 
                 JuneFloatingAction(
@@ -124,3 +119,4 @@ fun FontCustomizationPanel(
         }
     }
 }
+

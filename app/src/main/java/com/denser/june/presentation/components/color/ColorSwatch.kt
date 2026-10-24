@@ -26,7 +26,7 @@ import com.denser.june.core.R
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ColorCircleItem(
+fun ColorSwatch(
     color: Int,
     isSelected: Boolean,
     enabled: Boolean,
@@ -67,7 +67,7 @@ fun ColorCircleItem(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun CustomPaletteCircleItem(
+fun PaletteSwatch(
     colors: List<Color>,
     isSelected: Boolean,
     enabled: Boolean,

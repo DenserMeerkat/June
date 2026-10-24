@@ -1,4 +1,4 @@
-package com.denser.june.presentation.utils
+package com.denser.june.presentation.theme
 
 import android.content.Context
 import android.graphics.Bitmap

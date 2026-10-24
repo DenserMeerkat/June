@@ -42,6 +42,7 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.presentation.components.JuneConnectedButtonGroup
+import com.denser.june.presentation.components.journal.JournalMosaicCard
 import kotlinx.coroutines.launch
 
 sealed interface JournalPreviewItem {
@@ -50,19 +51,7 @@ sealed interface JournalPreviewItem {
     data class Map(val location: JournalLocation) : JournalPreviewItem
 }
 
-data class MediaOperations(
-    val onItemSheetToggle: (Boolean) -> Unit = {},
-    val onRemoveMedia: (String) -> Unit = {},
-    val onMoveToFront: (String) -> Unit = {},
-    val onMediaClick: ((String) -> Unit)? = {},
-    val frontMediaPath: String? = null,
-    val onRemoveSong: () -> Unit = {},
-    val onSongSheetToggle: (Boolean) -> Unit = {},
-    val onTrimSong: () -> Unit = {},
-    val onEditJournalSong: () -> Unit = {},
-    val onRemoveLocation: () -> Unit = {},
-    val onLocationDialogToggle: (Boolean) -> Unit = {},
-)
+typealias MediaOperations = com.denser.june.presentation.components.journal.MediaOperations
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable

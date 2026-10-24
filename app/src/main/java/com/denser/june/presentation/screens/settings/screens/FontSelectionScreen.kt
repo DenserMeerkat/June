@@ -13,14 +13,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
-import com.denser.june.core.domain.model.FontPresets
+import com.denser.june.presentation.theme.FontPresets
 import com.denser.june.core.domain.model.enums.FontType
 import com.denser.june.presentation.components.*
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.SettingsVM
-import com.denser.june.presentation.components.font.FontCustomizationPanel
-import com.denser.june.presentation.screens.settings.components.TypographyPreview
+import com.denser.june.presentation.components.font.FontPanel
+import com.denser.june.presentation.components.font.TypographyPreview
 import com.denser.june.presentation.theme.LocalInternetAllowed
 import com.denser.june.presentation.theme.getAppFontFamily
 import org.koin.compose.koinInject
@@ -132,7 +132,7 @@ fun FontSelectionScreen(
                 )
             }
 
-            FontCustomizationPanel(
+            FontPanel(
                 selectedFontName = draftFontName,
                 currentVariation = draftVariation,
                 onFontSelect = { newFont ->

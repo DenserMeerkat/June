@@ -1,5 +1,6 @@
-package com.denser.june.presentation.utils
+package com.denser.june.presentation.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -11,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.ColorUtils
 import coil.ImageLoader
 import com.denser.june.core.domain.model.JournalTheme
+import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.media.color.ExtractedCardColors
 import com.denser.june.core.media.color.MediaColorEngine
 import com.materialkolor.PaletteStyle
@@ -43,6 +45,14 @@ fun rememberDynamicThemeColors(
     }
 
     if (theme != null) {
+        val appTheme = LocalAppTheme.current
+        val isSystemDark = isSystemInDarkTheme()
+        val isDark = when (appTheme.themeMode) {
+            ThemeMode.SYSTEM -> isSystemDark
+            ThemeMode.DARK -> true
+            ThemeMode.LIGHT -> false
+        }
+
         val style = theme.style?.let {
             runCatching { PaletteStyle.valueOf(it) }.getOrNull()
         } ?: if (theme.secondaryColor != null || theme.neutralColor != null) {
@@ -52,13 +62,13 @@ fun rememberDynamicThemeColors(
         }
 
         val scheme = rememberDynamicColorScheme(
-            primary = Color(theme.primaryColor),
+            primary = if (style == PaletteStyle.Monochrome) Color.Gray else Color(theme.primaryColor),
             secondary = theme.secondaryColor?.let { Color(it) },
             tertiary = theme.tertiaryColor?.let { Color(it) },
             neutral = theme.neutralColor?.let { Color(it) },
             style = style,
-            isDark = true,
-            isAmoled = false
+            isDark = isDark,
+            isAmoled = appTheme.withAmoled
         )
 
         return remember(scheme) {

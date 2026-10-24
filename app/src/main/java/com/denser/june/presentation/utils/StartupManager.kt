@@ -3,7 +3,7 @@ package com.denser.june.presentation.utils
 import android.content.Context
 import com.denser.june.BuildConfig
 import com.denser.june.core.domain.preferences.PrivacyPreferences
-import com.denser.june.presentation.screens.settings.components.VersionEntry
+import com.denser.june.presentation.screens.settings.components.sheets.VersionEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
