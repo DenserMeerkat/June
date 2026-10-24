@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.presentation.components.JuneAppBarType
+import com.denser.june.presentation.components.JuneSelectableTabChip
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.screens.settings.components.SettingSection
@@ -216,52 +217,14 @@ fun SyncScreen() {
                             val providerDisplayName = if (provider == "GoogleDrive") "Google Drive" else provider
                             val iconRes = if (provider == "GoogleDrive") R.drawable.drive_export_24px else R.drawable.cloud_24px
 
-                            Surface(
-                                onClick = { syncVM.selectProvider(provider) },
-                                shape = RoundedCornerShape(24.dp),
-                                color = if (isSelected) {
-                                    MaterialTheme.colorScheme.primaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                },
-                                contentColor = if (isSelected) {
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                                border = BorderStroke(
-                                    1.dp,
-                                    if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-                                )
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        painter = painterResource(iconRes),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = providerDisplayName,
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
-                                        )
-                                    )
-                                    if (isSelected) {
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Icon(
-                                            painter = painterResource(R.drawable.check_circle_24px_fill),
-                                            contentDescription = "Active",
-                                            modifier = Modifier.size(16.dp),
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
-                            }
+                            JuneSelectableTabChip(
+                                item = provider,
+                                label = providerDisplayName,
+                                isSelected = isSelected,
+                                onSelect = { syncVM.selectProvider(it) },
+                                leadingIcon = painterResource(iconRes),
+                                showActiveIndicator = isSelected
+                            )
                         }
                     }
                 }

@@ -76,6 +76,7 @@ import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTextField
 import com.denser.june.presentation.components.InternetRestrictedBanner
+import com.denser.june.presentation.components.JuneSelectableTabChip
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.components.MapLibreInitializer
 import com.denser.june.presentation.components.MapViewLifecycleEffect
@@ -84,7 +85,9 @@ import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.screens.settings.tiles.DefaultMapThemeTile
+import com.denser.june.presentation.screens.settings.tiles.MapThemeAccentTile
 import com.denser.june.presentation.theme.LocalInternetAllowed
+import com.denser.june.presentation.utils.MapAccentColorizer
 import com.denser.june.presentation.utils.MapProviderUtils
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -110,26 +113,24 @@ fun MapSettingsScreen() {
     val stadiaKey by journalPreferences.stadiaKey()
         .collectAsStateWithLifecycle(initialValue = "")
 
-    val mapboxKey by journalPreferences.mapboxkey()
-        .collectAsStateWithLifecycle(initialValue = "")
+    val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
+        .collectAsStateWithLifecycle(initialValue = true)
+    val colorScheme = MaterialTheme.colorScheme
 
     var maptilerKeyInput by remember(mapTilerKey) { mutableStateOf(mapTilerKey) }
     var stadiaKeyInput by remember(stadiaKey) { mutableStateOf(stadiaKey) }
-    var mapboxKeyInput by remember(mapboxKey) { mutableStateOf(mapboxKey) }
 
     var isMaptilerKeyLocked by remember { mutableStateOf(true) }
     var isMaptilerKeyObscured by remember { mutableStateOf(true) }
     var isStadiaKeyLocked by remember { mutableStateOf(true) }
     var isStadiaKeyObscured by remember { mutableStateOf(true) }
-    var isMapboxKeyLocked by remember { mutableStateOf(true) }
-    var isMapboxKeyObscured by remember { mutableStateOf(true) }
 
-    val tabs = listOf("CARTO", "MapTiler", "Stadia", "Mapbox")
+    val tabs = listOf("CARTO", "OpenMap", "Stadia", "MapTiler")
     val selectedTabIndex = when (currentProvider) {
         MapStyleProvider.CARTO -> 0
-        MapStyleProvider.MAPTILER -> 1
+        MapStyleProvider.OPENMAP -> 1
         MapStyleProvider.STADIA -> 2
-        MapStyleProvider.MAPBOX -> 3
+        MapStyleProvider.MAPTILER -> 3
     }
 
     var keyTestStatus by remember(selectedTabIndex) { mutableStateOf<Boolean?>(null) }
@@ -141,24 +142,30 @@ fun MapSettingsScreen() {
         .collectAsStateWithLifecycle(initialValue = MapTheme.APP)
     var isPreviewDarkMode by rememberMapDarkMode(savedMapTheme)
 
+    val currentKey = when (currentProvider) {
+        MapStyleProvider.CARTO,
+        MapStyleProvider.OPENMAP -> ""
+        MapStyleProvider.MAPTILER -> mapTilerKey
+        MapStyleProvider.STADIA -> stadiaKey
+    }
+
     MapLibreInitializer(isInternetAllowed)
 
     val isTilerConfigured = mapTilerKey.isNotBlank()
     val isStadiaConfigured = stadiaKey.isNotBlank()
-    val isMapboxConfigured = mapboxKey.isNotBlank()
 
     val isCurrentProviderConfigured = when (currentProvider) {
-        MapStyleProvider.CARTO -> true
+        MapStyleProvider.CARTO,
+        MapStyleProvider.OPENMAP -> true
         MapStyleProvider.MAPTILER -> isTilerConfigured
         MapStyleProvider.STADIA -> isStadiaConfigured
-        MapStyleProvider.MAPBOX -> isMapboxConfigured
     }
 
     val isCurrentKeyUnlocked = when (currentProvider) {
-        MapStyleProvider.CARTO -> false
+        MapStyleProvider.CARTO,
+        MapStyleProvider.OPENMAP -> false
         MapStyleProvider.MAPTILER -> !isMaptilerKeyLocked
         MapStyleProvider.STADIA -> !isStadiaKeyLocked
-        MapStyleProvider.MAPBOX -> !isMapboxKeyLocked
     }
 
     var isMapLoading by remember { mutableStateOf(false) }
@@ -215,6 +222,7 @@ fun MapSettingsScreen() {
 
             SettingSection {
                 DefaultMapThemeTile()
+                MapThemeAccentTile()
             }
 
             Column(
@@ -293,7 +301,7 @@ fun MapSettingsScreen() {
                         }
                     }
 
-                    var currentStyleUrl by remember { mutableStateOf("") }
+                    var currentStyleKey by remember { mutableStateOf("") }
 
                     LaunchedEffect(selectedLocationIndex) {
                         previewMapView.getMapAsync { mapboxMap ->
@@ -311,13 +319,12 @@ fun MapSettingsScreen() {
                     }
 
                     MapViewLifecycleEffect(previewMapView)
-                    val mapStyleUrl = remember(currentProvider, isPreviewDarkMode, mapTilerKey, stadiaKey, mapboxKey) {
+                    val mapStyleUrl = remember(currentProvider, isPreviewDarkMode, mapTilerKey, stadiaKey) {
                         MapProviderUtils.getStyleUrlWithKeys(
                             provider = currentProvider,
                             isDark = isPreviewDarkMode,
                             mapTilerKey = mapTilerKey,
-                            stadiaKey = stadiaKey,
-                            mapboxKey = mapboxKey
+                            stadiaKey = stadiaKey
                         )
                     }
                       Box(
@@ -332,20 +339,29 @@ fun MapSettingsScreen() {
                                 factory = { previewMapView },
                                 modifier = Modifier.fillMaxSize(),
                                 update = { map ->
-                                     val styleUrl = mapStyleUrl
+                                    val styleUrl = mapStyleUrl
+                                    val styleKey = "$styleUrl?accent=$isMapThemeAccentEnabled&key=$currentKey"
                                     if (isCurrentKeyUnlocked) {
-                                        currentStyleUrl = ""
+                                        currentStyleKey = ""
                                         isMapLoading = false
-                                    } else if (styleUrl != currentStyleUrl) {
-                                        currentStyleUrl = styleUrl
+                                    } else if (styleKey != currentStyleKey) {
+                                        currentStyleKey = styleKey
                                         isMapLoading = true
                                         mapLoadError = null
                                         map.getMapAsync { mapboxMap ->
                                             mapboxMap.uiSettings.isAttributionEnabled = false
                                             mapboxMap.uiSettings.isLogoEnabled = false
                                             mapboxMap.uiSettings.isCompassEnabled = false
-                                            mapboxMap.setStyle(styleUrl) {
+                                            mapboxMap.setStyle(styleUrl) { style ->
                                                 isMapLoading = false
+                                                if (isMapThemeAccentEnabled) {
+                                                    MapAccentColorizer.applyThemeAccents(
+                                                        style = style,
+                                                        colorScheme = colorScheme,
+                                                        provider = currentProvider,
+                                                        isDark = isPreviewDarkMode
+                                                    )
+                                                }
                                                 val loc = locations[selectedLocationIndex]
                                                 mapboxMap.moveCamera(
                                                     org.maplibre.android.camera.CameraUpdateFactory.newCameraPosition(
@@ -579,66 +595,28 @@ fun MapSettingsScreen() {
                     tabs.forEachIndexed { index, title ->
                         val tabProvider = when (index) {
                             0 -> MapStyleProvider.CARTO
-                            1 -> MapStyleProvider.MAPTILER
+                            1 -> MapStyleProvider.OPENMAP
                             2 -> MapStyleProvider.STADIA
-                            3 -> MapStyleProvider.MAPBOX
+                            3 -> MapStyleProvider.MAPTILER
                             else -> MapStyleProvider.CARTO
                         }
                         val isSelected = selectedTabIndex == index
                         val isActive = currentProvider == tabProvider
 
-                        Surface(
-                            onClick = {
+                        JuneSelectableTabChip(
+                            item = tabProvider,
+                            label = title,
+                            isSelected = isSelected,
+                            onSelect = { provider ->
                                 if (!isMapLoading) {
                                     scope.launch {
-                                        journalPreferences.setMapStyleProvider(tabProvider)
+                                        journalPreferences.setMapStyleProvider(provider)
                                     }
                                 }
                             },
                             enabled = !isMapLoading,
-                            shape = RoundedCornerShape(24.dp),
-                            color = if (isSelected) {
-                                MaterialTheme.colorScheme.primaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            },
-                            contentColor = if (isSelected) {
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            },
-                            border = BorderStroke(
-                                1.dp,
-                                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-                            ),
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp, 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = title,
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
-                                    )
-                                )
-                                if (isActive) {
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Icon(
-                                        painter = painterResource(R.drawable.check_circle_24px_fill),
-                                        contentDescription = "Active",
-                                        modifier = Modifier.size(16.dp),
-                                        tint = if (isSelected) {
-                                            MaterialTheme.colorScheme.primary
-                                        } else {
-                                            MaterialTheme.colorScheme.secondary
-                                        }
-                                    )
-                                }
-                            }
-                        }
+                            showActiveIndicator = isActive
+                        )
                     }
 
                     Spacer(modifier = Modifier.width(12.dp))
@@ -657,47 +635,11 @@ fun MapSettingsScreen() {
                     }
 
                     1 -> {
-                        ApiCredentialsSection(
-                            keyInput = maptilerKeyInput,
-                            onKeyChange = {
-                                maptilerKeyInput = it
-                                scope.launch {
-                                    journalPreferences.setMaptilerKey(it.trim())
-                                    journalPreferences.setMapProviderVerified(
-                                        MapStyleProvider.MAPTILER,
-                                        false
-                                    )
-                                }
-                                keyTestStatus = null
-                            },
-                            isKeyLocked = isMaptilerKeyLocked,
-                            onKeyLockedChange = { isMaptilerKeyLocked = it },
-                            isKeyObscured = isMaptilerKeyObscured,
-                            onKeyObscuredChange = { isMaptilerKeyObscured = it },
-                            placeholder = stringResource(R.string.maptiler_api_key_placeholder),
-                            isTesting = isTestingKey,
-                            testStatus = keyTestStatus,
-                            onTest = {
-                                isTestingKey = true
-                                keyTestStatus = null
-                                scope.launch {
-                                    val isValid = MapProviderUtils.testApiKey(
-                                        MapStyleProvider.MAPTILER,
-                                        maptilerKeyInput.trim()
-                                    )
-                                    keyTestStatus = isValid
-                                    journalPreferences.setMapProviderVerified(
-                                        MapStyleProvider.MAPTILER,
-                                        isValid
-                                    )
-                                    if (isValid) {
-                                        journalPreferences.setMapStyleProvider(MapStyleProvider.MAPTILER)
-                                    }
-                                    isTestingKey = false
-                                }
-                            },
-                            isActionsEnabled = !isMapLoading,
-                            providerUrl = Constants.MAPTILER_CLOUD_URL
+                        Text(
+                            text = stringResource(R.string.openmap_auto_notice),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)
                         )
                     }
 
@@ -748,23 +690,23 @@ fun MapSettingsScreen() {
 
                     3 -> {
                         ApiCredentialsSection(
-                            keyInput = mapboxKeyInput,
-                            onKeyChange = { boxKey ->
-                                mapboxKeyInput = boxKey
+                            keyInput = maptilerKeyInput,
+                            onKeyChange = {
+                                maptilerKeyInput = it
                                 scope.launch {
-                                    journalPreferences.setMapboxkey(boxKey.trim())
+                                    journalPreferences.setMaptilerKey(it.trim())
                                     journalPreferences.setMapProviderVerified(
-                                        MapStyleProvider.MAPBOX,
+                                        MapStyleProvider.MAPTILER,
                                         false
                                     )
                                 }
                                 keyTestStatus = null
                             },
-                            isKeyLocked = isMapboxKeyLocked,
-                            onKeyLockedChange = { isMapboxKeyLocked = it },
-                            isKeyObscured = isMapboxKeyObscured,
-                            onKeyObscuredChange = { isMapboxKeyObscured = it },
-                            placeholder = stringResource(R.string.mapbox_access_token_placeholder),
+                            isKeyLocked = isMaptilerKeyLocked,
+                            onKeyLockedChange = { isMaptilerKeyLocked = it },
+                            isKeyObscured = isMaptilerKeyObscured,
+                            onKeyObscuredChange = { isMaptilerKeyObscured = it },
+                            placeholder = stringResource(R.string.maptiler_api_key_placeholder),
                             isTesting = isTestingKey,
                             testStatus = keyTestStatus,
                             onTest = {
@@ -772,22 +714,22 @@ fun MapSettingsScreen() {
                                 keyTestStatus = null
                                 scope.launch {
                                     val isValid = MapProviderUtils.testApiKey(
-                                        MapStyleProvider.MAPBOX,
-                                        mapboxKeyInput.trim()
+                                        MapStyleProvider.MAPTILER,
+                                        maptilerKeyInput.trim()
                                     )
                                     keyTestStatus = isValid
                                     journalPreferences.setMapProviderVerified(
-                                        MapStyleProvider.MAPBOX,
+                                        MapStyleProvider.MAPTILER,
                                         isValid
                                     )
                                     if (isValid) {
-                                        journalPreferences.setMapStyleProvider(MapStyleProvider.MAPBOX)
+                                        journalPreferences.setMapStyleProvider(MapStyleProvider.MAPTILER)
                                     }
                                     isTestingKey = false
                                 }
                             },
                             isActionsEnabled = !isMapLoading,
-                            providerUrl = Constants.MAPBOX_ACCOUNT_URL
+                            providerUrl = Constants.MAPTILER_CLOUD_URL
                         )
                     }
                 }
