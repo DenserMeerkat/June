@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.settings.components
+package com.denser.june.presentation.screens.settings.components.sheets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

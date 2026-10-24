@@ -25,6 +25,7 @@ import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.settings.components.*
+import com.denser.june.presentation.screens.settings.components.sheets.*
 import com.denser.june.core.domain.billing.BillingHandler
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.utils.InternetDisabledException
@@ -48,7 +49,7 @@ fun SettingsScreen() {
 
     var searchQuery by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var themeSheetTab by remember { mutableStateOf<com.denser.june.presentation.components.color.ColorScreenTab?>(null) }
+    var themeSheetTab by remember { mutableStateOf<com.denser.june.presentation.components.color.ColorTab?>(null) }
     var showLicenseSheet by remember { mutableStateOf(false) }
     var showMapCreditsSheet by remember { mutableStateOf(false) }
     var showFontCreditsSheet by remember { mutableStateOf(false) }
@@ -410,7 +411,7 @@ fun SettingsScreen() {
     }
 
     themeSheetTab?.let { tab ->
-        com.denser.june.presentation.screens.settings.components.ThemeCustomizationSheet(
+        com.denser.june.presentation.screens.settings.components.sheets.ThemeCustomizationSheet(
             initialTab = tab,
             onDismiss = { themeSheetTab = null }
         )

@@ -38,14 +38,7 @@ import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.screens.editor.EditorAction
 import com.denser.june.presentation.screens.editor.EditorVM
-import com.denser.june.presentation.screens.editor.components.ActiveJournalSongBar
-import com.denser.june.presentation.screens.editor.components.EditSongScope
-import com.denser.june.presentation.screens.editor.components.EditSongView
-import com.denser.june.presentation.screens.editor.components.LibrarySongRow
-import com.denser.june.presentation.screens.editor.components.SongInputCard
-import com.denser.june.presentation.screens.editor.components.TrimmerStepView
-import com.denser.june.presentation.screens.editor.components.UnimportedSongRow
-import com.denser.june.presentation.screens.editor.components.UnimportedSongsHeader
+import com.denser.june.presentation.screens.editor.components.audio.*
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 

@@ -16,7 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.presentation.components.JuneConnectedItem
-import com.denser.june.presentation.components.color.ColorScreenTab
+import com.denser.june.presentation.components.color.ColorTab
 import com.denser.june.presentation.components.color.PaletteCard
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.screens.settings.components.LocalSettingsTriggers
@@ -80,14 +80,14 @@ fun PaletteSettingsItem() {
                 tint = MaterialTheme.colorScheme.secondary
             )
         },
-        onClick = { triggers.onThemeSheetClick(ColorScreenTab.PALETTE) }
+        onClick = { triggers.onThemeSheetClick(ColorTab.PALETTE) }
     ) {
         Spacer(modifier = Modifier.height(10.dp))
         PaletteCard(
             name = displayName,
             colors = paletteColors,
             isSelected = false,
-            onClick = { triggers.onThemeSheetClick(ColorScreenTab.PALETTE) },
+            onClick = { triggers.onThemeSheetClick(ColorTab.PALETTE) },
             modifier = Modifier.padding(start = 40.dp)
         )
     }

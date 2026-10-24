@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.editor.components
+package com.denser.june.presentation.screens.editor.components.dialogs
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow

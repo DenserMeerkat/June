@@ -25,6 +25,7 @@ import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.screens.settings.components.*
+import com.denser.june.presentation.screens.settings.components.sheets.*
 import com.denser.june.presentation.theme.LocalAppTheme
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -38,7 +39,7 @@ fun AppearanceSettingsScreen() {
     val onAction = settingsVM::onAction
     val navigator = koinInject<AppNavigator>()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var themeSheetTab by remember { mutableStateOf<com.denser.june.presentation.components.color.ColorScreenTab?>(null) }
+    var themeSheetTab by remember { mutableStateOf<com.denser.june.presentation.components.color.ColorTab?>(null) }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),

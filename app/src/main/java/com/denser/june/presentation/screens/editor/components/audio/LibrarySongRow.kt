@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.editor.components
+package com.denser.june.presentation.screens.editor.components.audio
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background

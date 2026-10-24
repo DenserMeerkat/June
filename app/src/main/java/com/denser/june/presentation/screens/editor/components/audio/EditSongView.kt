@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.editor.components
+package com.denser.june.presentation.screens.editor.components.audio
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult

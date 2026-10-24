@@ -1,4 +1,6 @@
-package com.denser.june.presentation.screens.editor.components
+package com.denser.june.presentation.screens.editor.components.audio
+
+import com.denser.june.presentation.screens.editor.components.dialogs.DurationPickerBottomSheet
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState

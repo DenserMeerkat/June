@@ -310,7 +310,9 @@ fun JournalContentEditor(
                     contentAlignment = Alignment.Center
                 ) {
                     ContainedLoadingIndicator(
-                        modifier = Modifier.size(100.dp)
+                        modifier = Modifier.size(80.dp),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        indicatorColor = MaterialTheme.colorScheme.primary
                     )
                 }
             }

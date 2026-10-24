@@ -15,7 +15,7 @@ import com.denser.june.core.R
 
 data class SettingsTriggers(
     val onDeleteAllJournals: () -> Unit = {},
-    val onThemeSheetClick: (com.denser.june.presentation.components.color.ColorScreenTab) -> Unit = {},
+    val onThemeSheetClick: (com.denser.june.presentation.components.color.ColorTab) -> Unit = {},
     val onLicenseClick: () -> Unit = {},
     val onMapAttributionsClick: () -> Unit = {},
     val onAboutLibrariesClick: () -> Unit = {},

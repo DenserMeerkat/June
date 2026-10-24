@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.settings.components
+package com.denser.june.presentation.screens.settings.components.sheets
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,7 +36,7 @@ fun MapCreditsBottomSheet(
             AttributionItem("MapTiler", Constants.MAPTILER_COPYRIGHT_URL, "© MapTiler © OpenStreetMap contributors"),
             AttributionItem("Stadia Maps", Constants.STADIA_ATTRIBUTION_URL, "© Stadia Maps © OpenStreetMap contributors"),
             AttributionItem("CARTO", Constants.CARTO_ATTRIBUTION_URL, "© CARTO © OpenStreetMap contributors"),
-            AttributionItem("Mapbox", Constants.MAPBOX_ATTRIBUTION_URL, "© Mapbox © OpenStreetMap contributors"),
+            AttributionItem("OpenFreeMap", Constants.OPENMAP_URL, "© OpenFreeMap © OpenStreetMap contributors"),
             AttributionItem("OpenStreetMap", Constants.OPENSTREETMAP_COPYRIGHT_URL, "© OpenStreetMap contributors")
         )
 

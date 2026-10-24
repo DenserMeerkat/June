@@ -24,9 +24,9 @@ import com.denser.june.core.utils.toFullDateTime
 import com.denser.june.core.utils.toShortMonth
 import java.util.Locale
 import com.denser.june.presentation.components.ConnectedBarAction
-import com.denser.june.presentation.components.JuneBadge
+import com.denser.june.presentation.components.journal.JuneBadge
 import com.denser.june.presentation.components.JuneConnectedActionBar
-import com.denser.june.presentation.components.JuneMetadataRow
+import com.denser.june.presentation.components.journal.JuneMetadataRow
 import com.denser.june.presentation.theme.LocalSyncEnabled
 import java.util.Date
 import com.denser.june.presentation.utils.TagUtils

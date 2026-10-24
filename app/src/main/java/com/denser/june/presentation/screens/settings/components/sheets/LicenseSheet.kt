@@ -15,7 +15,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.denser.june.presentation.screens.settings.components
+package com.denser.june.presentation.screens.settings.components.sheets
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding

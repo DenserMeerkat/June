@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.editor.components
+package com.denser.june.presentation.screens.editor.components.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

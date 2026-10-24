@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.settings.components
+package com.denser.june.presentation.screens.settings.components.sheets
 
 import android.content.ClipData
 import android.content.ClipboardManager

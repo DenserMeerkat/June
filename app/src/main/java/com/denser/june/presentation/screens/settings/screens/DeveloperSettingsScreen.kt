@@ -20,7 +20,7 @@ import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.screens.settings.components.SettingsItem
-import com.denser.june.presentation.screens.settings.components.ConsoleLogsBottomSheet
+import com.denser.june.presentation.screens.settings.components.sheets.ConsoleLogsBottomSheet
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import com.denser.june.core.R

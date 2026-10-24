@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.settings.components
+package com.denser.june.presentation.screens.settings.components.sheets
 
 import android.os.Build
 import androidx.compose.foundation.background
@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.JournalTheme
-import com.denser.june.presentation.components.color.ColorCustomizationPanel
-import com.denser.june.presentation.components.color.ColorScreenTab
+import com.denser.june.presentation.components.color.ThemePanel
+import com.denser.june.presentation.components.color.ColorTab
 import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.materialkolor.PaletteStyle
@@ -32,7 +32,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeCustomizationSheet(
-    initialTab: ColorScreenTab = ColorScreenTab.COLOR,
+    initialTab: ColorTab = ColorTab.COLOR,
     onDismiss: () -> Unit
 ) {
     val viewModel: SettingsVM = koinViewModel()
@@ -70,7 +70,7 @@ fun ThemeCustomizationSheet(
                     )
             )
 
-            ColorCustomizationPanel(
+            ThemePanel(
                 journalTheme = currentJournalTheme,
                 onThemeChange = { newTheme ->
                     if (newTheme != null) {

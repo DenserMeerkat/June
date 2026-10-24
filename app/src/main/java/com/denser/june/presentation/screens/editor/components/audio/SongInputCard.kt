@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.editor.components
+package com.denser.june.presentation.screens.editor.components.audio
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
