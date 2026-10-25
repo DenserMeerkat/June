@@ -33,6 +33,8 @@ import com.denser.june.presentation.components.MapAttributions
 import com.denser.june.presentation.components.MapLibreInitializer
 import com.denser.june.presentation.components.rememberMapDarkMode
 import com.denser.june.presentation.utils.MapProviderUtils
+import com.denser.june.presentation.utils.MapAccentColorizer
+import com.denser.june.presentation.utils.MapAccentColorizer.getMapLibreMap
 import com.denser.june.core.domain.preferences.JournalPreferences
 import org.koin.compose.koinInject
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -66,6 +68,9 @@ fun JournalMapItem(
 
     val mapStyleProvider by journalPreferences.mapStyleProvider()
         .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
+    val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
+        .collectAsStateWithLifecycle(initialValue = true)
+    val colorScheme = MaterialTheme.colorScheme
 
     MapLibreInitializer(isInternetAllowed)
 
@@ -95,6 +100,18 @@ fun JournalMapItem(
                     modifier = Modifier.fillMaxSize(),
                     baseStyle = BaseStyle.Uri(mapStyleUrl),
                     cameraState = cameraState,
+                    onMapLoadFinished = {
+                        if (isMapThemeAccentEnabled) {
+                            cameraState.getMapLibreMap()?.getStyle { style ->
+                                MapAccentColorizer.applyThemeAccents(
+                                    style = style,
+                                    colorScheme = colorScheme,
+                                    provider = mapStyleProvider,
+                                    isDark = isMapDarkMode
+                                )
+                            }
+                        }
+                    },
                     options = MapOptions(
                         renderOptions = RenderOptions(
                             renderMode = RenderOptions.RenderMode.TextureView
@@ -113,6 +130,18 @@ fun JournalMapItem(
                         )
                     )
                 )
+
+                LaunchedEffect(mapStyleUrl, isMapThemeAccentEnabled, colorScheme, isMapDarkMode) {
+                    if (!isMapThemeAccentEnabled || mapStyleUrl.isBlank()) return@LaunchedEffect
+                    cameraState.getMapLibreMap()?.getStyle { style ->
+                        MapAccentColorizer.applyThemeAccents(
+                            style = style,
+                            colorScheme = colorScheme,
+                            provider = mapStyleProvider,
+                            isDark = isMapDarkMode
+                        )
+                    }
+                }
             }
             Box(
                 modifier = Modifier

@@ -27,6 +27,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.presentation.theme.LocalAppTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.denser.june.core.domain.preferences.JournalPreferences
+import com.denser.june.presentation.utils.MapProviderUtils
+import org.koin.compose.koinInject
 import org.maplibre.android.MapLibre
 import org.maplibre.android.maps.MapView
 
@@ -231,9 +235,9 @@ fun MapAttributions(
                     style = MaterialTheme.typography.labelSmall
                 )
             }
-            MapStyleProvider.MAPBOX -> {
+            MapStyleProvider.OPENMAP -> {
                 Text(
-                    text = "© Mapbox © OpenStreetMap",
+                    text = "© OpenFreeMap © OpenStreetMap",
                     color = contentColor,
                     style = MaterialTheme.typography.labelSmall
                 )

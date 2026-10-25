@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.editor.components
+package com.denser.june.presentation.screens.editor.components.dialogs
 
 import android.Manifest
 import android.content.Context
@@ -71,11 +71,17 @@ import org.maplibre.compose.map.GestureOptions
 import org.maplibre.spatialk.geojson.Position
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.compose.style.BaseStyle
+import com.denser.june.presentation.utils.MapAccentColorizer
+import com.denser.june.presentation.utils.MapAccentColorizer.getMapLibreMap
 import java.util.Locale
+
+import com.denser.june.core.domain.model.JournalTheme
+import com.denser.june.presentation.theme.JuneThemeWrapper
 
 @Composable
 fun AddLocationDialog(
     existingLocation: JournalLocation? = null,
+    journalTheme: JournalTheme? = null,
     onLocationSelected: (JournalLocation) -> Unit = {},
     onRemoveLocation: (() -> Unit)? = null,
     onDismiss: () -> Unit
@@ -89,6 +95,8 @@ fun AddLocationDialog(
 
     val mapStyleProvider by journalPreferences.mapStyleProvider()
         .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
+    val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
+        .collectAsStateWithLifecycle(initialValue = true)
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -290,10 +298,12 @@ fun AddLocationDialog(
         isDarkTheme = isMapDarkMode,
         windowBackgroundColor = dialogBgColor
     ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = dialogBgColor
-        ) {
+        JuneThemeWrapper(theme = journalTheme) {
+            val colorScheme = MaterialTheme.colorScheme
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = dialogBgColor
+            ) {
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -308,6 +318,18 @@ fun AddLocationDialog(
                     modifier = Modifier.fillMaxSize(),
                     baseStyle = BaseStyle.Uri(mapStyleUrl),
                     cameraState = cameraState,
+                    onMapLoadFinished = {
+                        if (isMapThemeAccentEnabled) {
+                            cameraState.getMapLibreMap()?.getStyle { style ->
+                                MapAccentColorizer.applyThemeAccents(
+                                    style = style,
+                                    colorScheme = colorScheme,
+                                    provider = mapStyleProvider,
+                                    isDark = isMapDarkMode
+                                )
+                            }
+                        }
+                    },
                     options = MapOptions(
                         renderOptions = RenderOptions(
                             renderMode = RenderOptions.RenderMode.TextureView
@@ -326,6 +348,18 @@ fun AddLocationDialog(
                         )
                     )
                 )
+
+                LaunchedEffect(mapStyleUrl, isMapThemeAccentEnabled, colorScheme, isMapDarkMode) {
+                    if (!isMapThemeAccentEnabled || mapStyleUrl.isBlank()) return@LaunchedEffect
+                    cameraState.getMapLibreMap()?.getStyle { style ->
+                        MapAccentColorizer.applyThemeAccents(
+                            style = style,
+                            colorScheme = colorScheme,
+                            provider = mapStyleProvider,
+                            isDark = isMapDarkMode
+                        )
+                    }
+                }
             }
 
             if (isInternetAllowed) {
@@ -558,6 +592,7 @@ fun AddLocationDialog(
             }
         }
     }
+}
 }
 }
 
