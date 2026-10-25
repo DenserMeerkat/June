@@ -1,4 +1,4 @@
-package com.denser.june.presentation.components.lock
+package com.denser.june.presentation.screens.settings.screens.lock
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*

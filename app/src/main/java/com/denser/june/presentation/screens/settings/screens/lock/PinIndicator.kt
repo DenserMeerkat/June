@@ -1,7 +1,5 @@
-package com.denser.june.presentation.components.lock
+package com.denser.june.presentation.screens.settings.screens.lock
 
-import android.graphics.Matrix
-import android.graphics.RectF
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,22 +13,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.asComposePath
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.RoundedPolygon
-import androidx.graphics.shapes.toPath
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PinIndicatorRow(
     pinLength: Int,
     maxPinLength: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isError: Boolean = false
 ) {
     val expressiveShapes = remember {
         listOf(
@@ -57,7 +50,8 @@ fun PinIndicatorRow(
             PinDot(
                 isFilled = index < pinLength,
                 isLastInput = index == pinLength - 1,
-                popShape = shapesForIndices[index]
+                popShape = shapesForIndices[index],
+                isError = isError
             )
         }
     }
@@ -68,7 +62,8 @@ fun PinDot(
     isFilled: Boolean,
     isLastInput: Boolean,
     popShape: Shape,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isError: Boolean = false
 ) {
     var shapeState by remember { mutableIntStateOf(0) }
     val scale = remember { Animatable(1f) }
@@ -111,36 +106,21 @@ fun PinDot(
         contentAlignment = Alignment.Center
     ) {
         if (isFilled) {
+            val fillColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
             Box(
                 modifier = Modifier
                     .size(animatedSize)
                     .clip(currentShape)
-                    .background(MaterialTheme.colorScheme.onSurface)
+                    .background(fillColor)
             )
         } else {
+            val borderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
             Box(
                 modifier = Modifier
                     .size(16.dp)
-                    .border(2.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape)
+                    .border(2.dp, borderColor, CircleShape)
             )
         }
     }
 }
 
-class RoundedPolygonShape(private val polygon: RoundedPolygon) : Shape {
-    override fun createOutline(
-        size: Size, layoutDirection: LayoutDirection, density: Density
-    ): Outline {
-        val path = android.graphics.Path()
-        polygon.toPath(path)
-        val bounds = RectF()
-        path.computeBounds(bounds, true)
-        val matrix = Matrix()
-        matrix.postTranslate(-bounds.left, -bounds.top)
-        val scaleX = size.width / bounds.width()
-        val scaleY = size.height / bounds.height()
-        matrix.postScale(scaleX, scaleY)
-        path.transform(matrix)
-        return Outline.Generic(path.asComposePath())
-    }
-}
