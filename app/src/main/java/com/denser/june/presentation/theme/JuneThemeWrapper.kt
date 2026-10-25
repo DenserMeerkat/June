@@ -18,16 +18,25 @@ fun JuneThemeWrapper(
     fontVariation: FontVariationConfig? = null,
     content: @Composable () -> Unit
 ) {
-    val appTheme = LocalAppTheme.current
-    val effectiveSeedColor = theme?.primaryColor?.let { Color(it) } ?: if (appTheme.materialTheme && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        colorResource(android.R.color.system_accent1_200)
-    } else {
-        Color(appTheme.seedColor)
+    if (theme == null && font == null && fontVariation == null) {
+        content()
+        return
     }
 
+    val appTheme = LocalAppTheme.current
     val effectivePaletteStyle = theme?.style?.let {
         runCatching { PaletteStyle.valueOf(it) }.getOrNull()
     } ?: appTheme.style
+
+    val effectiveSeedColor = if (effectivePaletteStyle == PaletteStyle.Monochrome) {
+        Color.Gray
+    } else {
+        theme?.primaryColor?.let { Color(it) } ?: if (appTheme.materialTheme && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            colorResource(android.R.color.system_accent1_200)
+        } else {
+            Color(appTheme.seedColor)
+        }
+    }
 
     val isDark = when (appTheme.themeMode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme()

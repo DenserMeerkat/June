@@ -20,11 +20,11 @@ import com.denser.june.presentation.components.JuneDateTimePicker
 import com.denser.june.presentation.components.JuneDateTimePickerMode
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.editor.components.AddItemSheet
-import com.denser.june.presentation.screens.editor.components.AddLocationDialog
+import com.denser.june.presentation.screens.editor.components.dialogs.AddItemSheet
+import com.denser.june.presentation.screens.editor.components.dialogs.AddLocationDialog
 import com.denser.june.presentation.screens.editor.components.emoji.JournalEmojiPickerSheet
 import com.denser.june.presentation.screens.editor.components.emoji.loadEmojiAssets
-import com.denser.june.presentation.screens.editor.components.JournalTagsDialog
+import com.denser.june.presentation.screens.editor.components.dialogs.JournalTagsDialog
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.domain.billing.BillingHandler
@@ -218,6 +218,7 @@ fun EditorModals(
     if (dialogState.showLocationDialog) {
         AddLocationDialog(
             existingLocation = editorState.location,
+            journalTheme = editorState.theme,
             onLocationSelected = { loc -> onAction(EditorAction.SetLocation(loc)) },
             onRemoveLocation = { onAction(EditorAction.RemoveLocation) },
             onDismiss = { dialogState.showLocationDialog = false }

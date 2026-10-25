@@ -36,11 +36,11 @@ import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.screens.editor.EditorAction
-import com.denser.june.presentation.screens.editor.components.AddLocationDialog
+import com.denser.june.presentation.screens.editor.components.dialogs.AddLocationDialog
 import com.denser.june.presentation.screens.editor.components.JournalMapItem
-import com.denser.june.presentation.screens.editor.components.JournalMediaItem
+import com.denser.june.presentation.components.journal.JournalMediaItem
 import com.denser.june.presentation.screens.editor.components.JournalSongItem
-import com.denser.june.presentation.screens.editor.components.MediaOperations
+import com.denser.june.presentation.components.journal.MediaOperations
 import com.denser.june.presentation.screens.editor.EditorVM
 import android.widget.Toast
 import androidx.compose.runtime.LaunchedEffect
@@ -180,6 +180,7 @@ fun ItemGalleryScreen(
     if (showLocationDialog) {
         AddLocationDialog(
             existingLocation = state.location,
+            journalTheme = state.theme,
             onLocationSelected = { loc ->
                 viewModel.onAction(EditorAction.SetLocation(loc))
             },
