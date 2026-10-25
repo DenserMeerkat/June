@@ -89,4 +89,8 @@ class FakeSyncPreferences(
     override suspend fun setLastCompletedDataRepairVersion(version: Int) { lastCompletedDataRepairVersion = version; _dataRepairVersion.value = version }
     override fun getLastPurgeTime(): Flow<Long> = _lastPurgeTime
     override suspend fun setLastPurgeTime(time: Long) { lastPurgeTime = time; _lastPurgeTime.value = time }
+    private val _billingLogging = MutableStateFlow(false)
+    var billingLoggingEnabled = false
+    override fun getBillingLoggingEnabled(): Flow<Boolean> = _billingLogging
+    override suspend fun setBillingLoggingEnabled(enabled: Boolean) { billingLoggingEnabled = enabled; _billingLogging.value = enabled }
 }

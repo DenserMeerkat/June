@@ -18,6 +18,7 @@
     <string name="discard">Verwerfen</string>
     <string name="done">Fertig</string>
     <string name="edit">Bearbeiten</string>
+    <string name="next">Weiter</string>
     <string name="edit_link">Link bearbeiten</string>
     <string name="edit_song">Lied bearbeiten</string>
     <string name="enable">Aktivieren</string>
@@ -52,6 +53,7 @@
     <string name="save">Speichern</string>
     <string name="save_and_enable_lock">Speichern &amp; Sperre aktivieren</string>
     <string name="skip">Überspringen</string>
+    <string name="skip_and_enable_lock">Überspringen &amp; Sperre aktivieren</string>
     <string name="stop_sync">Synchronisation stoppen</string>
     <string name="sync_now">Jetzt synchronisieren</string>
     <string name="take_photo">Foto aufnehmen</string>
@@ -193,8 +195,7 @@
     <string name="translate_dialog_desc">Die Übersetzungen von June entstehen durch die Community und werden auf Hosted Weblate bereitgestellt, einer webbasierten Open-Source-Übersetzungsplattform.\n\nDu kannst ganz einfach und ohne Programmierkenntnisse Übersetzungen für deine Sprache hinzufügen oder Verbesserungen direkt im Browser vorschlagen.</string>
     <string name="app_lock">App-Sperre</string>
     <string name="app_lock_desc">App mit Biometrie oder Gerätesperre sperren</string>
-    <string name="custom_pin">Benutzerdefinierte PIN</string>
-    <string name="enter_pin_to_verify">Gebe PIN ein, um zu verifizieren</string>
+    <string name="custom_pin">PIN</string>
     <string name="lock_journal_desc">Schütze deine Privatsphäre mit einer zusätzlichen Sicherheitsstufe für dein Tagebuch</string>
     <string name="lock_your_journal">Sperre dein Tagebuch</string>
     <string name="no_lock">Keine Sperre</string>
@@ -205,14 +206,16 @@
     <string name="screen_privacy">Bildschirmschutz</string>
     <string name="screen_privacy_desc">Screenshots verhindern und App-Vorschau im Taskmanager ausblenden</string>
     <string name="security_question">Sicherheitsfrage</string>
-    <string name="switch_lock_warning">Du deaktivierst gerade die benutzerdefinierte PIN. Deine aktuelle PIN wird gelöscht. Wenn du zu dieser Option zurückkehrst, musst du sie neu einrichten.</string>
+    <string name="switch_lock_warning">Das Wechseln der Sperrmethode setzt deine aktuellen Zugangsdaten zurück.</string>
     <string name="ways_to_lock">Sperrmethoden</string>
     <string name="answer_label">Antwort</string>
     <string name="answer_placeholder">Gebe deine Sicherheitsantwort ein</string>
     <string name="custom_question_label">Benutzerdefinierte Frage</string>
     <string name="custom_question_placeholder">z. B. Wie lautet dein geheimer Spitzname?</string>
-    <string name="forgot_pin">PIN vergessen</string>
-    <string name="pin_recovery_desc">Um deine benutzerdefinierte PIN zurückzusetzen, beantworte bitte die folgende Sicherheitsfrage.</string>
+    <string name="does_not_match">Stimmt nicht überein, erneut versuchen</string>
+    <string name="forgot_lock">Vergessen?</string>
+    <string name="lock_set_successfully">Sperrmethode erfolgreich eingerichtet</string>
+    <string name="lock_disabled_successfully">App-Sperre deaktiviert</string>
     <string name="recovery_question">Wiederherstellungsfrage</string>
     <string name="recovery_setup_desc">Richte eine Sicherheitsfrage ein. Wenn du deine PIN vergisst, kannst du sie durch die richtige Beantwortung dieser Frage zurücksetzen.</string>
     <string name="your_answer_label">Deine Antwort</string>
@@ -420,8 +423,6 @@
     <string name="developer_options_desc">Konfiguriere Entwickleroptionen und schaue Systemkonsonlen-Protokoll an.</string>
     <string name="developer_options_disabled">Entwickleroptionen deaktiviert</string>
     <string name="important">Wichtig</string>
-    <string name="pin_no_recovery_warning_desc">Falls du deine benutzerdefinierte PIN vergisst, wirst du den Zugriff auf dein Tagebuch verlieren. Es gibt keine Wiederherstellungsoption. Bitte konfiguriere eine Wiederherstellungsfrage.</string>
-    <string name="pin_recovery_configured_desc">Falls du deine benutzerdefinierte PIN vergisst, kannst du es wiederherstellen/zurücksetzen mit deiner konfigurierten Sicherheitsfrage.</string>
     <string name="setup_recovery">Wiederherstellung der Konfiguration</string>
     <string name="question_artist">Wer ist dein(e) Lieblingskünstler(in) oder deine Lieblingsband?</string>
     <string name="question_book">Wie heißt ein Buch, das dich tief inspiriert hat?</string>
@@ -448,4 +449,5 @@
     <string name="add_song">Lied hinzufügen</string>
     <string name="add_song_link">Lied hinzufügen</string>
     <string name="take_photo_or_video">Foto / Video aufnehmen</string>
+    <string name="locked">Gesperrt</string>
 </resources>

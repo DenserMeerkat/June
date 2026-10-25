@@ -169,6 +169,25 @@ class JournalRepositoryImpl(
         ))
     }
 
+    override suspend fun toggleLock(id: String) {
+        val journal = journalDao.getJournalById(id) ?: return
+        val newLocked = !journal.isLocked
+        val updated = if (newLocked) {
+            journal.copy(
+                isLocked = true,
+                cloudId = null,
+                syncedAt = null,
+                updatedAt = System.currentTimeMillis()
+            )
+        } else {
+            journal.copy(
+                isLocked = false,
+                updatedAt = System.currentTimeMillis()
+            )
+        }
+        journalDao.updateJournal(updated)
+    }
+
     override fun getDeletedJournals(): Flow<List<Journal>> {
         return journalDao.getDeletedJournals().map { it.asDomain() }
     }
@@ -215,5 +234,13 @@ class JournalRepositoryImpl(
 
     override suspend fun hasTombstones(): Boolean {
         return journalDao.hasTombstones()
+    }
+
+    override fun getLockedJournals(): Flow<List<Journal>> {
+        return journalDao.getLockedJournals().map { it.asDomain() }
+    }
+
+    override fun getLockedJournalsCount(): Flow<Int> {
+        return journalDao.getLockedJournalsCount()
     }
 }

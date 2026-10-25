@@ -18,6 +18,7 @@
     <string name="ok">حسنًا</string>
     <string name="merge_and_save">دمج وحفظ</string>
     <string name="back">عودة</string>
+    <string name="next">التالي</string>
     <string name="open_folder">افتح مجلد</string>
     <string name="remove_bookmark">إزالة الإشارة المرجعية</string>
     <string name="open_link">فتح الرابط</string>
@@ -31,6 +32,7 @@
     <string name="paste">لصق</string>
     <string name="restore_all">إعادة الكل</string>
     <string name="save_and_enable_lock">حفظ وتفعيل القفل</string>
+    <string name="skip_and_enable_lock">تخطي وتفعيل القفل</string>
     <string name="stop_sync">أوقف المزامنة</string>
     <string name="console_logs">سجلات وحدة التحكم</string>
     <string name="restore">إعادة</string>
@@ -260,8 +262,7 @@
         <item quantity="other">%1$d كلمة</item>
     </plurals>
     <string name="about">حول</string>
-    <string name="custom_pin">رمز PIN مخصص</string>
-    <string name="enter_pin_to_verify">أدخل رمز PIN للتحقق</string>
+    <string name="custom_pin">رمز PIN</string>
     <string name="lock_journal_desc">حافظ على خصوصية يومياتك بإضافة طبقة أمان إضافية</string>
     <string name="lock_your_journal">أغلق دفتر يومياتك</string>
     <string name="no_lock">بدون قفل</string>
@@ -272,7 +273,7 @@
     <string name="screen_privacy">خصوصية الشاشة</string>
     <string name="screen_privacy_desc">منع لقطات الشاشة وإخفاء محتوى التطبيق في التطبيقات الأخيرة</string>
     <string name="security_question">سؤال أمان</string>
-    <string name="switch_lock_warning">ستقوم بتغيير إعدادات رمز PIN المخصص. سيتم إيقاف رمز PIN الحالي، وسيتعين عليك تعيينه مرة أخرى إذا أردت العودة إليه.</string>
+    <string name="switch_lock_warning">سيؤدي تغيير طريقة القفل إلى إعادة تعيين بيانات الاعتماد الحالية.</string>
     <string name="ways_to_lock">طرق القفل</string>
     <string name="answer_cannot_be_empty">لا يمكن أن تكون الإجابة فارغة</string>
     <string name="answer_label">الإجابة</string>
@@ -284,10 +285,11 @@
     <string name="custom_question_placeholder">كمثال. ما هو اسمك السري؟</string>
     <string name="developer_options_desc">قم بتهيئة خيارات تسجيل المطور وعرض سجلات وحدة تحكم النظام.</string>
     <string name="developer_options_disabled">خيارات المطوّر معطلة</string>
-    <string name="forgot_pin">نسيت رمز PIN</string>
+    <string name="does_not_match">غير متطابق، حاول مرة أخرى</string>
+    <string name="forgot_lock">نسيت؟</string>
+    <string name="lock_set_successfully">تم إعداد القفل بنجاح</string>
+    <string name="lock_disabled_successfully">تم تعطيل قفل التطبيق</string>
     <string name="important">مهم</string>
-    <string name="pin_no_recovery_warning_desc">إذا نسيت رمز PIN المخصص، فستفقد الوصول إلى يومياتك. لا يوجد خيار للاستعادة. يُرجى إضافة سؤال استعادة.</string>
-    <string name="pin_recovery_configured_desc">إذا نسيت رمز PIN المخصص، يمكنك استعادته/إعادة تعيينه باستخدام سؤال الأمان الذي قمت بتعيينه.</string>
     <string name="setup_recovery">إعداد الاستعادة</string>
     <string name="placeholder_artist">مثال: نجيب محفوظ، أحمد شوقي</string>
     <string name="placeholder_book">مثال: الكيميائي، 1984</string>
@@ -296,7 +298,6 @@
     <string name="placeholder_motto">مثلاً. من جد وجد، خير الكلام ما قل ودل</string>
     <string name="placeholder_perfect_day">مثال: راحة، إبداع، دفء</string>
     <string name="placeholder_writing_place">مثلاً. غرفه الضيوف، مقهي</string>
-    <string name="pin_recovery_desc">لإعادة تعيين رمز PIN المخصص، يرجى الإجابة على سؤال الاستعادة أدناه.</string>
     <string name="question_artist">من هو الموسيقي أو الفرقة الموسيقية المفضلة لديك؟</string>
     <string name="question_book">ما اسم الكتاب الذي ألهمك بشكل كبير؟</string>
     <string name="question_cannot_be_empty">لا يمكن أن يكون السؤال فارغًا</string>
@@ -473,4 +474,5 @@
     <string name="stadia_api_key_placeholder">مفتاح API ل Stadia</string>
     <string name="about_june">حول June</string>
     <string name="about_june_desc">الإصدار ورابط GitHub</string>
+    <string name="locked">مقفل</string>
 </resources>

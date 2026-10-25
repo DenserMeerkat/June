@@ -23,6 +23,7 @@
     <string name="discard">Discard</string>
     <string name="done">Done</string>
     <string name="edit">Edit</string>
+    <string name="next">Next</string>
     <string name="edit_link">Edit Link</string>
     <string name="edit_song">Edit Song</string>
     <string name="enable">Enable</string>
@@ -56,7 +57,13 @@
     <string name="review">Review</string>
     <string name="save">Save</string>
     <string name="save_and_enable_lock">Save &amp; Enable Lock</string>
+    <string name="share">Share</string>
+    <string name="lock">Lock</string>
+    <string name="unlock">Unlock</string>
+    <string name="unlock_june">Unlock June</string>
+    <string name="unlock_vault">Unlock Vault</string>
     <string name="skip">Skip</string>
+    <string name="skip_and_enable_lock">Skip &amp; Enable Lock</string>
     <string name="stop_sync">Stop Sync</string>
     <string name="sync_now">Sync Now</string>
     <string name="take_photo">Take Photo</string>
@@ -124,6 +131,7 @@
     <string name="checking_for_updates">Checking for updates</string>
     <string name="diagnostics">Diagnostics</string>
     <string name="enter_pin">Enter PIN</string>
+    <string name="locked">Locked</string>
     <string name="incorrect_answer_try_again">Incorrect answer. Please try again.</string>
     <string name="internet_access_disabled">Internet Access Disabled</string>
     <string name="internet_access_restricted">Internet access restricted</string>
@@ -161,7 +169,7 @@
     <string name="type_to_confirm">\n\nType \'%1$s\' below to confirm.</string>
     <string name="unknown_license">Unknown License</string>
     <string name="unknown_version">Unknown version</string>
-    <string name="wrong_pin_try_again">Wrong PIN. Try again.</string>
+    <string name="wrong_pin_try_again">Incorrect, try again</string>
     <string name="switch_provider">Switch Provider</string>
     <string name="switch_provider_desc">Switching your active cloud target to %1$s will re-check your local library against the new provider state.</string>
     <string name="switch_provider_title">Switch Provider?</string>
@@ -288,8 +296,9 @@
     <!-- Settings - Privacy & Security -->
     <string name="app_lock">App Lock</string>
     <string name="app_lock_desc">Lock app with biometric or device credential</string>
-    <string name="custom_pin">Custom PIN</string>
-    <string name="enter_pin_to_verify">Enter PIN to verify</string>
+    <string name="custom_pin">PIN</string>
+    <string name="custom_password">Password</string>
+    <string name="custom_pattern">Pattern</string>
     <string name="lock_journal_desc">Keep your journal private by adding an extra layer of security</string>
     <string name="lock_your_journal">Lock your journal</string>
     <string name="no_lock">No lock</string>
@@ -300,24 +309,51 @@
     <string name="screen_privacy">Screen Privacy</string>
     <string name="screen_privacy_desc">Prevent screenshots and hide app content in recents</string>
     <string name="security_question">Security Question</string>
-    <string name="switch_lock_warning">You are switching away from Custom PIN. Your current PIN will be removed, and you will need to set it up again if you switch back.</string>
+    <string name="switch_lock_warning">Switching lock method will reset your current credentials.</string>
     <string name="ways_to_lock">Ways to lock</string>
+    <string name="lock_method">Lock method</string>
+    <string name="vault">Vault</string>
+    <string name="vault_desc">Keep sensitive journals hidden and protected</string>
+    <string name="move_to_vault">Move to Vault</string>
+    <string name="move_out_of_vault">Move out of Vault</string>
+    <string name="move_to_vault_desc">Move to Vault? It will be hidden and protected behind your lock.</string>
+    <string name="move_out_of_vault_desc">Move out of Vault? It will be visible in your journals timeline again.</string>
+    <string name="moved_to_vault">Moved to Vault</string>
+    <string name="moved_out_of_vault">Moved out of Vault</string>
+    <string name="vault_empty_title">Vault is empty</string>
+    <string name="vault_empty_desc">Journals you lock will appear here</string>
+    <string name="vault_notice">Journals in Vault are hidden from feeds and will not be synced.</string>
 
-    <!-- Security - PIN & Recovery -->
+    <!-- Security - PIN, Password, Pattern & Recovery -->
     <string name="answer_cannot_be_empty">Answer cannot be empty</string>
     <string name="answer_label">Answer</string>
     <string name="answer_placeholder">Enter your recovery answer</string>
     <string name="change_recovery">Change recovery</string>
     <string name="confirm_pin">Confirm PIN</string>
     <string name="create_pin">Create PIN</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="create_password">Create Password</string>
+    <string name="confirm_pattern">Confirm Pattern</string>
+    <string name="create_pattern">Draw Pattern</string>
+    <string name="enter_password">Enter Password</string>
+    <string name="enter_pattern">Draw Pattern</string>
+    <string name="pattern_too_short">Connect at least 4 dots</string>
+    <string name="password_cannot_be_empty">Password cannot be empty</string>
+    <string name="does_not_match">Doesn\'t match, try again</string>
+    <string name="forgot_lock">Forgot?</string>
+    <string name="reset_lock">Reset Lock</string>
+    <string name="verify_and_reset_lock">Verify and reset lock</string>
+    <string name="lock_reset_successfully">Lock reset successfully</string>
+    <string name="lock_set_successfully">Lock set successfully</string>
+    <string name="lock_disabled_successfully">App lock disabled</string>
+    <string name="lock_recovery_desc">Answer your recovery question to reset your lock.</string>
+    <string name="lock_no_recovery_warning_desc">Without a recovery question, forgotten credentials cannot be reset.</string>
+    <string name="lock_recovery_configured_desc">You can reset your lock using your security question.</string>
     <string name="custom_question_label">Custom Question</string>
     <string name="custom_question_placeholder">e.g. What is your secret nickname?</string>
     <string name="developer_options_desc">Configure developer logging options and view system console logs.</string>
     <string name="developer_options_disabled">Developer options disabled</string>
-    <string name="forgot_pin">Forgot PIN</string>
     <string name="important">Important</string>
-    <string name="pin_no_recovery_warning_desc">If you forget your Custom PIN, you will lose access to your journal. There is no recovery option. Please configure a recovery question.</string>
-    <string name="pin_recovery_configured_desc">If you forget your Custom PIN, you can recover/reset it using your configured security question.</string>
     <string name="setup_recovery">Setup recovery</string>
     <string name="placeholder_artist">e.g. Coldplay, Taylor Swift</string>
     <string name="placeholder_book">e.g. Alchemist, 1984</string>
@@ -326,7 +362,6 @@
     <string name="placeholder_motto">e.g. carpe diem, keep going</string>
     <string name="placeholder_perfect_day">e.g. peace, creative, cozy</string>
     <string name="placeholder_writing_place">e.g. bedroom, local cafe</string>
-    <string name="pin_recovery_desc">To reset your Custom PIN, please answer the recovery question below.</string>
     <string name="question_artist">Who is your favorite musical artist or band?</string>
     <string name="question_book">What is the name of a book that deeply inspired you?</string>
     <string name="question_cannot_be_empty">Question cannot be empty</string>
@@ -336,7 +371,7 @@
     <string name="question_perfect_day">What single word describes your perfect day?</string>
     <string name="question_writing_place">What is your favorite writing place or sanctuary?</string>
     <string name="recovery_question">Recovery Question</string>
-    <string name="recovery_setup_desc">Configure a recovery question. If you forget your PIN, answering this question correctly allows you to reset it.</string>
+    <string name="recovery_setup_desc">If you forget your credentials, answering this question will allow you to reset your lock.</string>
     <string name="your_answer_label">Your Answer</string>
 
     <!-- Settings - Permissions -->
@@ -530,7 +565,6 @@
     <string name="current_location">Current Location</string>
     <string name="expand_map">Expand Map</string>
     <string name="fetching_address">Fetching address…</string>
-    <string name="gps_accuracy_estimate">GPS • ±5m</string>
     <string name="locating">Locating…</string>
     <string name="move_map_to_select">Move map to select</string>
     <string name="network_restricted">Network restricted</string>
