@@ -22,9 +22,11 @@ import com.denser.june.presentation.screens.home.HomeScreen
 import com.denser.june.presentation.screens.settings.screens.FontSelectionScreen
 import com.denser.june.presentation.screens.settings.SettingsScreen
 
-import com.denser.june.presentation.screens.settings.screens.LockMethodScreen
-import com.denser.june.presentation.screens.settings.screens.PermissionsScreen
+import com.denser.june.presentation.screens.settings.screens.AppLockSettingsScreen
+import com.denser.june.presentation.screens.settings.screens.VaultLockSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.PinSetupScreen
+import com.denser.june.presentation.screens.settings.screens.PasswordSetupScreen
+import com.denser.june.presentation.screens.settings.screens.PatternSetupScreen
 import com.denser.june.presentation.screens.settings.screens.RecoverySetupScreen
 import com.denser.june.presentation.screens.settings.screens.GeneralSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.MapSettingsScreen
@@ -37,6 +39,7 @@ import com.denser.june.presentation.screens.settings.screens.EditorSettingsScree
 import com.denser.june.presentation.screens.settings.screens.reminder.ReminderScreen
 import com.denser.june.presentation.screens.settings.screens.sync.SyncScreen
 import com.denser.june.presentation.screens.settings.screens.trash.BinScreen
+import com.denser.june.presentation.screens.settings.screens.vault.VaultScreen
 import com.denser.june.presentation.theme.JuneThemeWrapper
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -178,20 +181,36 @@ fun JuneNavHost(
         }
 
 
-        composable<Route.Permissions> {
-            PermissionsScreen()
+        composable<Route.AppLockSettings> {
+            AppLockSettingsScreen()
         }
 
-        composable<Route.LockMethod> {
-            LockMethodScreen()
+        composable<Route.VaultLockSettings> {
+            VaultLockSettingsScreen()
         }
 
-        composable<Route.PinSetup> {
-            PinSetupScreen()
+        composable<Route.PinSetup> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.PinSetup>()
+            PinSetupScreen(forVault = args.forVault)
         }
 
-        composable<Route.RecoverySetup> {
-            RecoverySetupScreen()
+        composable<Route.PasswordSetup> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.PasswordSetup>()
+            PasswordSetupScreen(forVault = args.forVault)
+        }
+
+        composable<Route.PatternSetup> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.PatternSetup>()
+            PatternSetupScreen(forVault = args.forVault)
+        }
+
+        composable<Route.RecoverySetup> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.RecoverySetup>()
+            RecoverySetupScreen(lockType = args.lockType, forVault = args.forVault)
+        }
+
+        composable<Route.Vault> {
+            VaultScreen()
         }
 
         composable<Route.Bin> {
