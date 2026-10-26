@@ -289,7 +289,7 @@ fun SettingsScreen() {
                                     title = stringResource(R.string.privacy_and_security),
                                     leadingContent = {
                                         Icon(
-                                            painter = painterResource(R.drawable.lock_24px),
+                                            painter = painterResource(R.drawable.shield_lock_24px),
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.secondary,
                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
@@ -315,6 +315,22 @@ fun SettingsScreen() {
                                         focusManager.clearFocus()
                                         keyboardController?.hide()
                                         navigator.navigateTo(Route.SyncBackupSettings)
+                                    }
+                                )
+                                SettingsItem(
+                                    title = stringResource(R.string.vault),
+                                    leadingContent = {
+                                        Icon(
+                                            painter = painterResource(R.drawable.lock_24px),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                                        )
+                                    },
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                        navigator.navigateTo(Route.Vault)
                                     }
                                 )
                                 SettingsItem(

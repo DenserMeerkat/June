@@ -127,7 +127,7 @@ fun UpdateDialogs(
                 Button(
                     onClick = {
                         onDismissInternetDisabled()
-                        navigator.navigateTo(Route.Permissions)
+                        navigator.navigateTo(Route.PrivacySecuritySettings)
                     }
                 ) {
                     Text(stringResource(R.string.enable))

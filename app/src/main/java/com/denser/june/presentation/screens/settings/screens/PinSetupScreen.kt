@@ -1,32 +1,39 @@
 package com.denser.june.presentation.screens.settings.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.denser.june.core.domain.model.enums.LockType
-import com.denser.june.presentation.navigation.AppNavigator
-import com.denser.june.presentation.components.lock.PinLockScreen
-import com.denser.june.presentation.screens.settings.SettingsAction
-import com.denser.june.core.utils.SecurityUtils
-import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.settings.SettingsVM
 import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
+import com.denser.june.core.domain.model.enums.LockType
+import com.denser.june.core.utils.SecurityUtils
+import com.denser.june.presentation.screens.settings.screens.lock.PinLockContent
+import com.denser.june.presentation.navigation.AppNavigator
+import com.denser.june.presentation.navigation.Route
+import com.denser.june.presentation.screens.settings.SettingsAction
+import com.denser.june.presentation.screens.settings.SettingsVM
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+
+import androidx.compose.runtime.rememberCoroutineScope
+import com.denser.june.core.domain.preferences.PrivacyPreferences
+import kotlinx.coroutines.launch
 
 private enum class SetupStep { CREATE, CONFIRM }
 
 @Composable
-fun PinSetupScreen() {
+fun PinSetupScreen(forVault: Boolean = false) {
     val settingsVM: SettingsVM = koinViewModel()
     val onAction = settingsVM::onAction
+    val privacyPreferences = koinInject<PrivacyPreferences>()
+    val coroutineScope = rememberCoroutineScope()
     val navigator = koinInject<AppNavigator>()
     var step by remember { mutableStateOf(SetupStep.CREATE) }
     var firstPin by remember { mutableStateOf("") }
+    var currentPinInput by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
 
     val title = when (step) {
@@ -34,35 +41,71 @@ fun PinSetupScreen() {
         SetupStep.CONFIRM -> stringResource(R.string.confirm_pin)
     }
 
-    key(step) {
-        PinLockScreen(
-            title = title,
-            isError = isError,
-            onPinSubmitted = { pin ->
-                when (step) {
-                    SetupStep.CREATE -> {
-                        firstPin = pin
-                        step = SetupStep.CONFIRM
-                        isError = false
-                    }
+    val submitPin = { pin: String ->
+        when (step) {
+            SetupStep.CREATE -> {
+                firstPin = pin
+                currentPinInput = ""
+                step = SetupStep.CONFIRM
+                isError = false
+            }
 
-                    SetupStep.CONFIRM -> {
-                        if (pin == firstPin) {
-                            val hash = SecurityUtils.hashPin(pin)
-                            onAction(SettingsAction.UpdatePinHash(hash))
-                            navigator.navigateTo(
-                                route = Route.RecoverySetup,
-                                popUpToRoute = Route.PinSetup,
-                                inclusive = true
-                            )
-                        } else {
-                            isError = true
-                            step = SetupStep.CREATE
-                            firstPin = ""
+            SetupStep.CONFIRM -> {
+                if (pin == firstPin) {
+                    val hash = SecurityUtils.hashPin(pin)
+                    if (forVault) {
+                        coroutineScope.launch {
+                            privacyPreferences.updateVaultPinHash(hash)
                         }
+                        navigator.navigateTo(
+                            route = Route.RecoverySetup(LockType.PIN, forVault = true),
+                            popUpToRoute = Route.PinSetup(forVault = true),
+                            inclusive = true
+                        )
+                    } else {
+                        onAction(SettingsAction.UpdatePinHash(hash))
+                        navigator.navigateTo(
+                            route = Route.RecoverySetup(LockType.PIN, forVault = false),
+                            popUpToRoute = Route.PinSetup(forVault = false),
+                            inclusive = true
+                        )
                     }
+                } else {
+                    isError = true
+                    currentPinInput = ""
                 }
             }
-        )
+        }
     }
+
+    BackHandler(enabled = step == SetupStep.CONFIRM) {
+        step = SetupStep.CREATE
+        currentPinInput = firstPin
+        isError = false
+    }
+
+    PinLockContent(
+        title = title,
+        isError = isError,
+        errorText = stringResource(R.string.does_not_match),
+        onErrorDismissed = { isError = false },
+        onPinChange = { currentPinInput = it },
+        onNextClick = {
+            submitPin(currentPinInput)
+        },
+        nextEnabled = currentPinInput.length == 6,
+        isNextConfirm = step == SetupStep.CONFIRM,
+        onBackClick = {
+            if (step == SetupStep.CONFIRM) {
+                step = SetupStep.CREATE
+                currentPinInput = firstPin
+                isError = false
+            } else {
+                navigator.navigateBack()
+            }
+        },
+        onPinSubmitted = { pin ->
+            submitPin(pin)
+        }
+    )
 }

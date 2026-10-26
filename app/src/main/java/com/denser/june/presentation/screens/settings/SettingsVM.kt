@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.denser.june.core.domain.billing.BillingHandler
 
 class SettingsVM(
     private val repo: JournalRepository,
@@ -38,7 +39,8 @@ class SettingsVM(
     private val fontPrefs: FontPreferences,
     private val exportRepo: ExportRepo,
     private val restoreRepo: RestoreRepo,
-    private val markdownImportRepo: MarkdownImportRepo
+    private val markdownImportRepo: MarkdownImportRepo,
+    private val billingHandler: BillingHandler
 ) : ViewModel() {
 
     private val _localState = MutableStateFlow(SettingsState())
@@ -73,7 +75,10 @@ class SettingsVM(
             journalPrefs.isCompressPhotosEnabled(),
             journalPrefs.getPhotoCompressionQuality(),
             journalPrefs.isCompressVideosEnabled(),
-            journalPrefs.getVideoCompressionQuality()
+            journalPrefs.getVideoCompressionQuality(),
+            privacyPrefs.getPasswordHashFlow(),
+            privacyPrefs.getPatternHashFlow(),
+            billingHandler.isPro
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -82,6 +87,9 @@ class SettingsVM(
             isAppLockEnabled = array[6] as Boolean,
             lockType = array[7] as LockType,
             pinHash = array[8] as String?,
+            passwordHash = array[29] as String?,
+            patternHash = array[30] as String?,
+            isPro = array[31] as Boolean,
             isScreenPrivacyEnabled = array[9] as Boolean,
             isAutoTimeEnabled = array[10] as Boolean,
             startOfWeek = array[11] as DayOfWeek,
@@ -193,6 +201,8 @@ class SettingsVM(
                 is SettingsAction.OnAppLockToggle -> privacyPrefs.updateAppLock(action.enabled)
                 is SettingsAction.UpdateLockType -> privacyPrefs.updateLockType(action.type)
                 is SettingsAction.UpdatePinHash -> privacyPrefs.updatePinHash(action.hash)
+                is SettingsAction.UpdatePasswordHash -> privacyPrefs.updatePasswordHash(action.hash)
+                is SettingsAction.UpdatePatternHash -> privacyPrefs.updatePatternHash(action.hash)
                 is SettingsAction.UpdateSecurityQuestionAndAnswer -> privacyPrefs.updateSecurityQuestionAndAnswer(action.question, action.answerHash)
                 is SettingsAction.OnScreenPrivacyToggle -> privacyPrefs.updateScreenPrivacy(action.enabled)
                 is SettingsAction.OnAutoTimeToggle -> journalPrefs.setAutoTimeEnabled(action.enabled)

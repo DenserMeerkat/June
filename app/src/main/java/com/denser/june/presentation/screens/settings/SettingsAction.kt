@@ -34,6 +34,8 @@ sealed interface SettingsAction {
     data class OnAppLockToggle(val enabled: Boolean) : SettingsAction
     data class UpdateLockType(val type: LockType) : SettingsAction
     data class UpdatePinHash(val hash: String?) : SettingsAction
+    data class UpdatePasswordHash(val hash: String?) : SettingsAction
+    data class UpdatePatternHash(val hash: String?) : SettingsAction
     data class UpdateSecurityQuestionAndAnswer(val question: String?, val answerHash: String?) : SettingsAction
     data class OnScreenPrivacyToggle(val enabled: Boolean) : SettingsAction
     data class OnAutoTimeToggle(val enabled: Boolean) : SettingsAction

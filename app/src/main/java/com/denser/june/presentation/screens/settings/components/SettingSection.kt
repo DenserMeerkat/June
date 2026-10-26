@@ -45,6 +45,7 @@ fun SettingsItem(
     trailingContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    contentPadding: PaddingValues = PaddingValues(16.dp),
     onClick: (() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null
 ) {
@@ -56,6 +57,7 @@ fun SettingsItem(
         trailingContent = trailingContent,
         enabled = enabled,
         containerColor = containerColor,
+        contentPadding = contentPadding,
         onClick = onClick,
         content = content
     )
