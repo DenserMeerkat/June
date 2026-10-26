@@ -122,7 +122,7 @@ fun AddItem(
         Icon(
             painter = painterResource(icon),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+            tint = MaterialTheme.colorScheme.secondaryFixed,
             modifier = Modifier.size(24.dp)
         )
 

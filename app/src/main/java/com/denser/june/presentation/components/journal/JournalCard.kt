@@ -26,6 +26,8 @@ import com.denser.june.core.utils.toShortMonth
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import org.koin.compose.koinInject
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -142,7 +144,7 @@ fun JournalCard(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun RecentJournalCard(
+fun HighlightJournalCard(
     journal: Journal,
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(24.dp),

@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,19 +35,14 @@ fun <T> JuneSelectableTabChip(
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
 ) {
     val containerColor = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer
+        MaterialTheme.colorScheme.tertiaryContainer
     } else {
         MaterialTheme.colorScheme.surfaceContainerHigh
     }
     val contentColor = if (isSelected) {
-        MaterialTheme.colorScheme.onPrimaryContainer
+        MaterialTheme.colorScheme.onTertiaryContainer
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    val borderStroke = if (isSelected) {
-        BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
-    } else {
-        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
     }
 
     Surface(
@@ -57,7 +51,6 @@ fun <T> JuneSelectableTabChip(
         shape = RoundedCornerShape(20.dp),
         color = containerColor,
         contentColor = contentColor,
-        border = borderStroke,
         modifier = modifier.padding(vertical = 4.dp)
     ) {
         Row(
@@ -85,11 +78,6 @@ fun <T> JuneSelectableTabChip(
                     painter = painterResource(R.drawable.check_circle_24px_fill),
                     contentDescription = "Active",
                     modifier = Modifier.size(16.dp),
-                    tint = if (isSelected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.secondary
-                    }
                 )
             }
         }

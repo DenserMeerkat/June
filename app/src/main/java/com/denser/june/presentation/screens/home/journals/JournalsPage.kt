@@ -34,7 +34,7 @@ import com.denser.june.presentation.components.journal.SearchFilterChip
 import com.denser.june.presentation.utils.UiUtils
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.components.journal.RecentJournalCard
+import com.denser.june.presentation.components.journal.HighlightJournalCard
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -77,8 +77,10 @@ fun JournalsPage(
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var showLockConfirmation by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val deleteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val lockSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
     var journalToExport by remember { mutableStateOf<Journal?>(null) }
@@ -105,6 +107,11 @@ fun JournalsPage(
                 onToggleBookmark = {
                     viewModel.toggleBookmark(currentJournalForOptions.id)
                 },
+                onToggleLock = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        showLockConfirmation = true
+                    }
+                },
                 onExportMarkdown = {
                     journalToExport = currentJournalForOptions
                     selectedJournalForOptions = null
@@ -123,6 +130,33 @@ fun JournalsPage(
                 }
             )
         }
+    }
+
+    if (showLockConfirmation && selectedJournalForOptions != null) {
+        val target = selectedJournalForOptions
+        DeleteConfirmationSheet(
+            sheetState = lockSheetState,
+            onDismissRequest = {
+                showLockConfirmation = false
+                selectedJournalForOptions = null
+            },
+            onConfirm = {
+                val id = target?.id
+                scope.launch { lockSheetState.hide() }.invokeOnCompletion {
+                    showLockConfirmation = false
+                    if (id != null) viewModel.toggleLock(id)
+                    selectedJournalForOptions = null
+                }
+            },
+            message = stringResource(
+                if (target?.isLocked == true) R.string.move_out_of_vault_desc else R.string.move_to_vault_desc
+            ),
+            confirmText = stringResource(
+                if (target?.isLocked == true) R.string.move_out_of_vault else R.string.move_to_vault
+            ),
+            iconRes = if (target?.isLocked == true) R.drawable.lock_open_right_24px else R.drawable.lock_24px,
+            iconAndTextColor = MaterialTheme.colorScheme.primary
+        )
     }
 
     if (showDeleteConfirmation && selectedJournalForOptions != null) {
@@ -282,7 +316,7 @@ fun JournalsPage(
                             val singleJournal = dayGroup.journals.first()
                             item(key = "single_journal_${singleJournal.id}") {
                                 if (singleJournal.id == recentJournalId) {
-                                    RecentJournalCard(
+                                    HighlightJournalCard(
                                         journal = singleJournal,
                                         is24Hour = is24Hour,
                                         onToggleBookmark = { viewModel.toggleBookmark(singleJournal.id) },

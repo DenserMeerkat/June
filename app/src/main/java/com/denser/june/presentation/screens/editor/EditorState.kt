@@ -23,6 +23,7 @@ data class EditorState(
     val updatedAt: Long? = null,
     val dateTime: Long = getTodayAtMidnight(),
     val isBookmarked: Boolean = false,
+    val isLocked: Boolean = false,
     val isArchived: Boolean = false,
     val isLoading: Boolean = false,
     val isDirty: Boolean = false,

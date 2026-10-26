@@ -320,6 +320,7 @@ class EditorVM(
             is EditorAction.RemoveLocation -> updateState { it.copy(location = null) }
 
             is EditorAction.ToggleBookmark -> toggleBookmark()
+            is EditorAction.ToggleLock -> toggleLock()
             is EditorAction.ToggleArchive -> toggleArchive()
             is EditorAction.SaveJournal -> saveJournal()
             is EditorAction.NavigateBack -> {
@@ -371,7 +372,8 @@ class EditorVM(
                 original.songDetails != currentState.songDetails ||
                 original.font != currentState.font ||
                 original.fontVariation != currentState.fontVariation ||
-                original.theme != currentState.theme
+                original.theme != currentState.theme ||
+                original.isLocked != currentState.isLocked
     }
 
     private fun toggleBookmark() {
@@ -385,6 +387,32 @@ class EditorVM(
                     isBookmarked = newBookmarkState,
                     updatedAt = System.currentTimeMillis()
                 )
+                journalRepo.updateJournal(updatedJournal)
+                existingJournal = updatedJournal
+            }
+        }
+    }
+
+    private fun toggleLock() {
+        viewModelScope.launch {
+            val currentState = _state.value
+            val newLockState = !currentState.isLocked
+            _state.update { it.copy(isLocked = newLockState) }
+
+            existingJournal?.let {
+                val updatedJournal = if (newLockState) {
+                    it.copy(
+                        isLocked = true,
+                        cloudId = null,
+                        syncedAt = null,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                } else {
+                    it.copy(
+                        isLocked = false,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                }
                 journalRepo.updateJournal(updatedJournal)
                 existingJournal = updatedJournal
             }
@@ -456,6 +484,7 @@ class EditorVM(
                         updatedAt = journal.updatedAt,
                         dateTime = journal.dateTime,
                         isBookmarked = journal.isBookmarked,
+                        isLocked = journal.isLocked,
                         isArchived = journal.isArchived,
                         isDraft = journal.isDraft,
                         font = journal.font,
@@ -511,6 +540,7 @@ class EditorVM(
                 updatedAt = currentTime,
                 dateTime = currentState.dateTime,
                 isBookmarked = currentState.isBookmarked,
+                isLocked = currentState.isLocked,
                 isArchived = currentState.isArchived,
                 isDraft = true,
                 theme = currentState.theme,
@@ -556,13 +586,14 @@ class EditorVM(
                 updatedAt = currentTime,
                 dateTime = currentState.dateTime,
                 isBookmarked = currentState.isBookmarked,
+                isLocked = currentState.isLocked,
                 isArchived = currentState.isArchived,
                 isDraft = false,
                 theme = currentState.theme,
                 font = currentState.font,
                 fontVariation = currentState.fontVariation,
-                syncedAt = existingJournal?.syncedAt,
-                cloudId = existingJournal?.cloudId
+                syncedAt = if (currentState.isLocked) null else existingJournal?.syncedAt,
+                cloudId = if (currentState.isLocked) null else existingJournal?.cloudId
             )
 
             if (existingJournal != null) {

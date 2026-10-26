@@ -665,7 +665,7 @@ fun MapBottomBar(
                             Icon(
                                 painter = painterResource(icon),
                                 contentDescription = null,
-                                tint = if (isAtTarget) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
+                                tint = if (isAtTarget) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
                     }
@@ -676,38 +676,21 @@ fun MapBottomBar(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painter = painterResource(R.drawable.explore_24px),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = if (isLoading) stringResource(R.string.locating) else MapProviderUtils.formatCoordinates(location.latitude, location.longitude),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painter = painterResource(R.drawable.my_location_24px_fill),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(R.string.gps_accuracy_estimate),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.tertiary
-                    )
-                }
+                Icon(
+                    painter = painterResource(R.drawable.explore_24px),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = if (isLoading) stringResource(R.string.locating) else MapProviderUtils.formatCoordinates(location.latitude, location.longitude),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.secondary
+                )
             }
 
             Row(

@@ -54,6 +54,7 @@ sealed interface EditorAction {
     data object RemoveLocation : EditorAction
 
     data object ToggleBookmark : EditorAction
+    data object ToggleLock : EditorAction
     data object ToggleArchive : EditorAction
 
     data object SaveJournal : EditorAction

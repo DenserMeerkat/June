@@ -16,9 +16,11 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.*
@@ -58,8 +60,10 @@ fun TimelinePage(
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var showLockConfirmation by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val deleteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val lockSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     fun dismissSheet(action: () -> Unit) {
         action()
@@ -92,6 +96,11 @@ fun TimelinePage(
                 onToggleBookmark = {
                     viewModel.toggleBookmark(currentJournalForOptions.id)
                 },
+                onToggleLock = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        showLockConfirmation = true
+                    }
+                },
                 onExportMarkdown = {
                     journalToExport = currentJournalForOptions
                     selectedJournalForOptions = null
@@ -107,6 +116,33 @@ fun TimelinePage(
                 }
             )
         }
+    }
+
+    if (showLockConfirmation && selectedJournalForOptions != null) {
+        val target = selectedJournalForOptions
+        DeleteConfirmationSheet(
+            sheetState = lockSheetState,
+            onDismissRequest = {
+                showLockConfirmation = false
+                selectedJournalForOptions = null
+            },
+            onConfirm = {
+                val id = target?.id
+                scope.launch { lockSheetState.hide() }.invokeOnCompletion {
+                    showLockConfirmation = false
+                    if (id != null) viewModel.toggleLock(id)
+                    selectedJournalForOptions = null
+                }
+            },
+            message = stringResource(
+                if (target?.isLocked == true) R.string.move_out_of_vault_desc else R.string.move_to_vault_desc
+            ),
+            confirmText = stringResource(
+                if (target?.isLocked == true) R.string.move_out_of_vault else R.string.move_to_vault
+            ),
+            iconRes = if (target?.isLocked == true) R.drawable.lock_open_right_24px else R.drawable.lock_24px,
+            iconAndTextColor = MaterialTheme.colorScheme.primary
+        )
     }
 
     if (showDeleteConfirmation && selectedJournalForOptions != null) {

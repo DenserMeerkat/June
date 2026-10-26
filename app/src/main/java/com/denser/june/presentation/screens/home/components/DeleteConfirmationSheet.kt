@@ -18,6 +18,8 @@ fun DeleteConfirmationSheet(
     onConfirm: () -> Unit,
     message: String = stringResource(R.string.move_to_bin_default_desc),
     confirmText: String = stringResource(R.string.move_to_bin),
+    iconRes: Int = R.drawable.delete_24px,
+    iconAndTextColor: Color = MaterialTheme.colorScheme.error,
     sheetState: SheetState = rememberModalBottomSheetState()
 ) {
     ModalBottomSheet(
@@ -51,15 +53,15 @@ fun DeleteConfirmationSheet(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.delete_24px),
+                        painter = painterResource(iconRes),
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
+                        tint = iconAndTextColor,
                         modifier = Modifier.size(24.dp)
                     )
                     Text(
                         text = confirmText,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.error
+                        color = iconAndTextColor
                     )
                 }
             }

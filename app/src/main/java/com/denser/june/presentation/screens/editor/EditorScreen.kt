@@ -576,6 +576,7 @@ fun EditorScreen() {
                     isBookmarked = state.isBookmarked,
                     isArchived = state.isArchived,
                     isDraft = state.isDraft,
+                    isLocked = state.isLocked,
                     deletedAt = state.deletedAt,
                     syncedAt = state.syncedAt,
                     cloudId = state.cloudId
@@ -593,6 +594,12 @@ fun EditorScreen() {
                     journal = journalPreview,
                     is24Hour = state.timeFormat == TimeFormat.TWENTY_FOUR_HOUR,
                     onToggleBookmark = { viewModel.onAction(EditorAction.ToggleBookmark) },
+                    onToggleLock = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            showOptionsSheet = false
+                            dialogState.showLockConfirmation = true
+                        }
+                    },
                     onExportMarkdown = {
                         showOptionsSheet = false
                         journalToExport = journalPreview

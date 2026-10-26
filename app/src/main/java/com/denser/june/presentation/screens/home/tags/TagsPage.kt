@@ -78,8 +78,10 @@ fun TagsPage() {
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var showLockConfirmation by remember { mutableStateOf(false) }
     val optionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val deleteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val lockSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
     fun dismissOptionsSheet(action: () -> Unit) {
@@ -377,6 +379,11 @@ fun TagsPage() {
                     onToggleBookmark = {
                         viewModel.toggleBookmark(currentJournalForOptions.id)
                     },
+                    onToggleLock = {
+                        scope.launch { optionsSheetState.hide() }.invokeOnCompletion {
+                            showLockConfirmation = true
+                        }
+                    },
                     onExportMarkdown = {
                         journalToExport = currentJournalForOptions
                         selectedJournalForOptions = null
@@ -392,6 +399,33 @@ fun TagsPage() {
                     }
                 )
             }
+        }
+
+        if (showLockConfirmation && selectedJournalForOptions != null) {
+            val target = selectedJournalForOptions
+            DeleteConfirmationSheet(
+                sheetState = lockSheetState,
+                onDismissRequest = {
+                    showLockConfirmation = false
+                    selectedJournalForOptions = null
+                },
+                onConfirm = {
+                    val id = target?.id
+                    scope.launch { lockSheetState.hide() }.invokeOnCompletion {
+                        showLockConfirmation = false
+                        if (id != null) viewModel.toggleLock(id)
+                        selectedJournalForOptions = null
+                    }
+                },
+                message = stringResource(
+                    if (target?.isLocked == true) R.string.move_out_of_vault_desc else R.string.move_to_vault_desc
+                ),
+                confirmText = stringResource(
+                    if (target?.isLocked == true) R.string.move_out_of_vault else R.string.move_to_vault
+                ),
+                iconRes = if (target?.isLocked == true) R.drawable.lock_open_right_24px else R.drawable.lock_24px,
+                iconAndTextColor = MaterialTheme.colorScheme.primary
+            )
         }
 
         if (showDeleteConfirmation && selectedJournalForOptions != null) {

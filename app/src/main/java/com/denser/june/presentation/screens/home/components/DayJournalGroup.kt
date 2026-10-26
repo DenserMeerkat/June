@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.presentation.components.journal.JournalCard
-import com.denser.june.presentation.components.journal.RecentJournalCard
+import com.denser.june.presentation.components.journal.HighlightJournalCard
 import com.denser.june.presentation.components.journal.rememberJournalGroupShape
 import java.time.LocalDate
 
@@ -18,7 +18,10 @@ fun DayJournalGroup(
     journals: List<Journal>,
     is24Hour: Boolean,
     recentJournalId: String? = null,
-    onToggleBookmark: (String) -> Unit,
+    allowMediaHighlight: Boolean = false,
+    actionIcon: Int? = null,
+    onActionClick: ((Journal) -> Unit)? = null,
+    onToggleBookmark: ((String) -> Unit)? = null,
     onJournalClick: ((Journal) -> Unit)? = null,
     onLongClick: (Journal) -> Unit,
 ) {
@@ -33,12 +36,16 @@ fun DayJournalGroup(
                 totalCount = journals.size
             )
 
-            if (journal.id == recentJournalId) {
-                RecentJournalCard(
+            val isHighlight = journal.id == recentJournalId || allowMediaHighlight
+
+            if (isHighlight) {
+                HighlightJournalCard(
                     journal = journal,
                     shape = shape,
                     is24Hour = is24Hour,
-                    onToggleBookmark = { onToggleBookmark(journal.id) },
+                    actionIcon = actionIcon,
+                    onActionClick = onActionClick?.let { { it(journal) } },
+                    onToggleBookmark = onToggleBookmark?.let { { it(journal.id) } },
                     onJournalClick = onJournalClick?.let { { it(journal) } },
                     onLongClick = { onLongClick(journal) }
                 )
@@ -48,7 +55,9 @@ fun DayJournalGroup(
                     shape = shape,
                     is24Hour = is24Hour,
                     showDate = true,
-                    onToggleBookmark = { onToggleBookmark(journal.id) },
+                    actionIcon = actionIcon,
+                    onActionClick = onActionClick?.let { { it(journal) } },
+                    onToggleBookmark = onToggleBookmark?.let { { it(journal.id) } },
                     onJournalClick = onJournalClick?.let { { it(journal) } },
                     onLongClick = { onLongClick(journal) }
                 )

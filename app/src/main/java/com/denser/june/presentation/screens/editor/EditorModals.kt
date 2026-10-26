@@ -37,6 +37,7 @@ import org.koin.compose.koinInject
 class EditorDialogState {
     var showExitDialog by mutableStateOf(false)
     var showDeleteConfirmation by mutableStateOf(false)
+    var showLockConfirmation by mutableStateOf(false)
     var showDatePicker by mutableStateOf(false)
     var datePickerInitialTab by mutableIntStateOf(0)
     var showAddItemSheet by mutableStateOf(false)
@@ -197,6 +198,24 @@ fun EditorModals(
                 dialogState.showDeleteConfirmation = false
                 onAction(EditorAction.DeleteJournal)
             }
+        )
+    }
+
+    if (dialogState.showLockConfirmation) {
+        DeleteConfirmationSheet(
+            onDismissRequest = { dialogState.showLockConfirmation = false },
+            onConfirm = {
+                dialogState.showLockConfirmation = false
+                onAction(EditorAction.ToggleLock)
+            },
+            message = stringResource(
+                if (editorState.isLocked) R.string.move_out_of_vault_desc else R.string.move_to_vault_desc
+            ),
+            confirmText = stringResource(
+                if (editorState.isLocked) R.string.move_out_of_vault else R.string.move_to_vault
+            ),
+            iconRes = if (editorState.isLocked) R.drawable.lock_open_right_24px else R.drawable.lock_24px,
+            iconAndTextColor = MaterialTheme.colorScheme.primary
         )
     }
 

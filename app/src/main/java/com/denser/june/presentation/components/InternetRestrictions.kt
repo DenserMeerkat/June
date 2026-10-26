@@ -52,7 +52,7 @@ fun InternetRestrictedIndicator(
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { navigator.navigateTo(Route.Permissions) },
+            onClick = { navigator.navigateTo(Route.PrivacySecuritySettings) },
         ) {
             Text(stringResource(R.string.permissions))
         }
@@ -92,7 +92,7 @@ fun InternetRestrictedBanner(
                 color = MaterialTheme.colorScheme.onSurface
             )
             TextButton(
-                onClick = { navigator.navigateTo(Route.Permissions) }
+                onClick = { navigator.navigateTo(Route.PrivacySecuritySettings) }
             ) {
                 Text(
                     text = stringResource(R.string.settings),

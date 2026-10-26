@@ -1,5 +1,6 @@
 package com.denser.june.presentation.components
 
+import android.os.Build
 import android.view.WindowManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -37,7 +38,9 @@ fun JuneFullScreenDialog(
             controller.isAppearanceLightStatusBars = !isDarkTheme
             controller.isAppearanceLightNavigationBars = !isDarkTheme
             WindowCompat.setDecorFitsSystemWindows(window, false)
-            window.isNavigationBarContrastEnforced = false
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
+            }
             window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         }
         content()

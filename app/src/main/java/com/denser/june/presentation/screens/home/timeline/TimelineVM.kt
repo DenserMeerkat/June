@@ -264,6 +264,10 @@ class TimelineVM(
         viewModelScope.launch { repo.toggleBookmark(id) }
     }
 
+    fun toggleLock(id: String) {
+        viewModelScope.launch { repo.toggleLock(id) }
+    }
+
     fun deleteJournal(id: String) {
         viewModelScope.launch { repo.softDeleteJournal(id) }
     }

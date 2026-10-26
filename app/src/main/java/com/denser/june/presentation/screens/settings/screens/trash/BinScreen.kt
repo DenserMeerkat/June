@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.TimeFormat
+import com.denser.june.core.utils.toLocalDate
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneDropdownMenu
 import com.denser.june.presentation.components.JuneDropdownMenuItem
@@ -24,8 +25,11 @@ import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.components.journal.JournalCard
-import com.denser.june.presentation.components.journal.RecentJournalCard
+import com.denser.june.presentation.components.journal.HighlightJournalCard
 import com.denser.june.presentation.components.JuneConfirmationDialog
+import com.denser.june.presentation.components.journal.DayJournalGroupData
+import com.denser.june.presentation.components.journal.ExportJournalSheet
+import com.denser.june.presentation.screens.home.components.DayJournalGroup
 import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
 import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import kotlinx.coroutines.launch
@@ -42,11 +46,18 @@ fun BinScreen() {
     val isSyncEnabled by binVM.isSyncEnabled.collectAsStateWithLifecycle()
     val navigator = koinInject<AppNavigator>()
 
+    val dayGroups = remember(deletedJournals) {
+        deletedJournals
+            .groupBy { it.dateTime.toLocalDate() }
+            .map { (date, journalsOnDay) -> DayJournalGroupData(date, journalsOnDay) }
+    }
+
     var showMenu by remember { mutableStateOf(false) }
     var showEmptyBinDialog by remember { mutableStateOf(false) }
     var showRestoreAllDialog by remember { mutableStateOf(false) }
     var showPermanentDeleteConfirmation by remember { mutableStateOf(false) }
     var journalToDeletePermanently by remember { mutableStateOf<Journal?>(null) }
+    var journalToExport by remember { mutableStateOf<Journal?>(null) }
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
     val optionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -168,23 +179,33 @@ fun BinScreen() {
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
-                    items(deletedJournals, key = { it.id }) { journal ->
-                        if (journal.images.isNotEmpty()) {
-                            RecentJournalCard(
-                                journal = journal,
-                                modifier = Modifier,
-                                actionIcon = R.drawable.restore_from_trash_24px,
-                                onActionClick = { binVM.restoreJournal(journal.id) },
-                                onLongClick = { selectedJournalForOptions = journal }
-                            )
+                    dayGroups.forEach { dayGroup ->
+                        if (dayGroup.journals.size > 1) {
+                            item(key = "day_group_${dayGroup.date}") {
+                                DayJournalGroup(
+                                    date = dayGroup.date,
+                                    journals = dayGroup.journals,
+                                    is24Hour = is24Hour,
+                                    allowMediaHighlight = true,
+                                    actionIcon = R.drawable.restore_from_trash_24px,
+                                    onActionClick = { journal -> binVM.restoreJournal(journal.id) },
+                                    onJournalClick = null,
+                                    onLongClick = { journal -> selectedJournalForOptions = journal },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
                         } else {
-                            JournalCard(
-                                journal = journal,
-                                modifier = Modifier,
-                                actionIcon = R.drawable.restore_from_trash_24px,
-                                onActionClick = { binVM.restoreJournal(journal.id) },
-                                onLongClick = { selectedJournalForOptions = journal }
-                            )
+                            val singleJournal = dayGroup.journals.first()
+                            item(key = "single_journal_${singleJournal.id}") {
+                                HighlightJournalCard(
+                                    journal = singleJournal,
+                                    is24Hour = is24Hour,
+                                    actionIcon = R.drawable.restore_from_trash_24px,
+                                    onActionClick = { binVM.restoreJournal(singleJournal.id) },
+                                    onLongClick = { selectedJournalForOptions = singleJournal },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
                         }
                     }
                 }
@@ -221,6 +242,11 @@ fun BinScreen() {
             )
         }
 
+        ExportJournalSheet(
+            journal = journalToExport,
+            onDismiss = { journalToExport = null }
+        )
+
         val currentJournalForOptions = remember(selectedJournalForOptions, deletedJournals) {
             val id = selectedJournalForOptions?.id ?: return@remember null
             deletedJournals.find { it.id == id }
@@ -235,7 +261,12 @@ fun BinScreen() {
                 JournalOptionsSheet(
                     journal = currentJournalForOptions,
                     is24Hour = is24Hour,
-                    onToggleBookmark = { dismissOptionsSheet { binVM.toggleBookmark(currentJournalForOptions.id) } },
+                    onToggleBookmark = { binVM.toggleBookmark(currentJournalForOptions.id) },
+                    onExportMarkdown = {
+                        dismissOptionsSheet {
+                            journalToExport = currentJournalForOptions
+                        }
+                    },
                     onDeleteOrRestore = { dismissOptionsSheet { binVM.restoreJournal(currentJournalForOptions.id) } },
                     onPermanentDelete = {
                         dismissOptionsSheet {

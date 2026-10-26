@@ -130,7 +130,7 @@ fun MapControlColumn(
                 shape = RoundedCornerShape(20.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                     disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 ),
                 modifier = Modifier.size(56.dp)
@@ -138,7 +138,7 @@ fun MapControlColumn(
                 if (isFetchingLocation) {
                     CircularWavyProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 } else {
                     Icon(
