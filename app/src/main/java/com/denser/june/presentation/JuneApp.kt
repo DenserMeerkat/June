@@ -93,13 +93,19 @@ fun JuneApp(
         }
     }
 
+    val billingHandler = koinInject<com.denser.june.core.domain.billing.BillingHandler>()
+    val isPro by billingHandler.isPro.collectAsStateWithLifecycle()
+    val proSheetController = com.denser.june.presentation.pro.rememberProSheetController()
+
     val uiDirection = if (appState.isForceLtrUi) LayoutDirection.Ltr else LocalLayoutDirection.current
 
     CompositionLocalProvider(
         LocalAppTheme provides appState.appTheme,
         LocalInternetAllowed provides appState.isInternetAllowed,
         LocalSyncEnabled provides appState.isSyncEnabled,
-        LocalLayoutDirection provides uiDirection
+        LocalLayoutDirection provides uiDirection,
+        com.denser.june.presentation.pro.LocalIsPro provides isPro,
+        com.denser.june.presentation.pro.LocalProSheetController provides proSheetController
     ) {
         JuneTheme(appTheme = appState.appTheme) {
             Surface(modifier = Modifier.fillMaxSize()) {
@@ -108,6 +114,8 @@ fun JuneApp(
                     startDestination = Route.Home
                 )
             }
+
+            com.denser.june.presentation.pro.JuneProPaywallScreen(controller = proSheetController)
 
             val uriHandler = LocalUriHandler.current
 
