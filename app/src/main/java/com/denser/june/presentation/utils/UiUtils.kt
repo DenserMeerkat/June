@@ -1,14 +1,32 @@
 package com.denser.june.presentation.utils
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TextFieldDefaults
+import androidx.annotation.DrawableRes
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import com.denser.june.core.R
 
 object UiUtils {
 
     val BOTTOM_BAR_PADDING = 100.dp
+
+    @DrawableRes
+    val PRO_ICON_RES = R.drawable.diamond_24px_fill
+
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
+    val proShape: Shape
+        @Composable
+        get() = MaterialShapes.Clover4Leaf.toShape()
+
+    val proContainerColor: Color
+        @Composable
+        get() = MaterialTheme.colorScheme.tertiaryContainer
+
+    val proContentColor: Color
+        @Composable
+        get() = MaterialTheme.colorScheme.onTertiaryContainer
 
     @Composable
     fun getTransparentTextFieldColors() = TextFieldDefaults.colors(

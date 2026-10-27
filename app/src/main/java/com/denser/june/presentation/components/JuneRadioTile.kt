@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 enum class JuneRadioTilePosition {
@@ -29,6 +28,7 @@ fun JuneRadioTile(
     subtitle: String? = null,
     badge: String? = null,
     badgeContent: (@Composable () -> Unit)? = null,
+    prefixContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     radioPosition: JuneRadioTilePosition = JuneRadioTilePosition.Leading,
     shape: Shape = RoundedCornerShape(12.dp),
@@ -93,6 +93,7 @@ fun JuneRadioTile(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    prefixContent?.invoke()
                     Text(
                         text = title,
                         style = titleTextStyle,

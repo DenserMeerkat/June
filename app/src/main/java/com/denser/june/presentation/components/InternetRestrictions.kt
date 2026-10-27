@@ -1,20 +1,93 @@
 package com.denser.june.presentation.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
-import com.denser.june.presentation.navigation.AppNavigator
-import com.denser.june.presentation.navigation.Route
+import com.denser.june.core.domain.preferences.PrivacyPreferences
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+
+@Composable
+fun InternetAccessDialog(
+    onDismissRequest: () -> Unit
+) {
+    val privacyPreferences = koinInject<PrivacyPreferences>()
+    val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
+        .collectAsStateWithLifecycle(initialValue = null)
+    var draftAllowed by remember { mutableStateOf<Boolean?>(null) }
+    val currentAllowed = draftAllowed ?: isInternetAllowed ?: false
+    val scope = rememberCoroutineScope()
+
+    JuneDialog(
+        onDismissRequest = onDismissRequest,
+        icon = if (currentAllowed) R.drawable.wifi_24px else R.drawable.wifi_off_24px,
+        title = stringResource(R.string.internet_access),
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.internet_access_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Switch(
+                        checked = currentAllowed,
+                        onCheckedChange = { draftAllowed = it },
+                        thumbContent = {
+                            Icon(
+                                painter = painterResource(
+                                    if (currentAllowed) R.drawable.check_24px else R.drawable.close_24px
+                                ),
+                                contentDescription = null,
+                                modifier = Modifier.size(SwitchDefaults.IconSize)
+                            )
+                        },
+                        modifier = Modifier.scale(1.4f)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            OutlinedButton(
+                onClick = {
+                    scope.launch {
+                        if (draftAllowed != null && isInternetAllowed != null && draftAllowed != isInternetAllowed) {
+                            privacyPreferences.updateIsInternetAllowed(draftAllowed!!)
+                        }
+                        onDismissRequest()
+                    }
+                }
+            ) {
+                Text(stringResource(R.string.done))
+            }
+        },
+        dismissButton = null
+    )
+}
 
 @Composable
 fun InternetRestrictedIndicator(
@@ -22,7 +95,13 @@ fun InternetRestrictedIndicator(
     title: String = stringResource(R.string.internet_access_disabled),
     description: String = stringResource(R.string.internet_restricted_desc),
 ) {
-    val navigator = koinInject<AppNavigator>()
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        InternetAccessDialog(
+            onDismissRequest = { showDialog = false }
+        )
+    }
 
     Column(
         modifier = modifier.padding(16.dp),
@@ -52,7 +131,7 @@ fun InternetRestrictedIndicator(
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { navigator.navigateTo(Route.PrivacySecuritySettings) },
+            onClick = { showDialog = true }
         ) {
             Text(stringResource(R.string.permissions))
         }
@@ -62,14 +141,23 @@ fun InternetRestrictedIndicator(
 @Composable
 fun InternetRestrictedBanner(
     modifier: Modifier = Modifier,
-    description: String = stringResource(R.string.internet_access_restricted)
+    description: String = stringResource(R.string.internet_access_restricted),
+    useCompactSettingsButton: Boolean = false,
+    onNavigateToSettings: (() -> Unit)? = null
 ) {
-    val navigator = koinInject<AppNavigator>()
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        InternetAccessDialog(
+            onDismissRequest = { showDialog = false }
+        )
+    }
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp),
+            .height(56.dp)
+            .clickable { showDialog = true },
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shadowElevation = 4.dp
@@ -91,14 +179,27 @@ fun InternetRestrictedBanner(
                 modifier = Modifier.weight(1f),
                 color = MaterialTheme.colorScheme.onSurface
             )
-            TextButton(
-                onClick = { navigator.navigateTo(Route.PrivacySecuritySettings) }
-            ) {
-                Text(
-                    text = stringResource(R.string.settings),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+            if (useCompactSettingsButton) {
+                IconButton(
+                    onClick = { showDialog = true }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.settings_b_roll_24px),
+                        contentDescription = stringResource(R.string.settings),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            } else {
+                TextButton(
+                    onClick = { showDialog = true }
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
