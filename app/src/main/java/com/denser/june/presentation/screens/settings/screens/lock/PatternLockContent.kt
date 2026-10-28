@@ -217,6 +217,25 @@ fun PatternLockContent(
             Spacer(modifier = Modifier.weight(1f, fill = false))
         }
 
+        if (onBackClick != null) {
+            FilledIconButton(
+                onClick = onBackClick,
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 8.dp, start = 16.dp)
+                    .align(Alignment.TopStart),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.arrow_back_24px),
+                    contentDescription = stringResource(R.string.back)
+                )
+            }
+        }
+
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)

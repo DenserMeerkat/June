@@ -2,7 +2,6 @@ package com.denser.june.presentation.screens.settings.screens.vault
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -26,13 +25,14 @@ import com.denser.june.presentation.screens.settings.screens.lock.LockGate
 import com.denser.june.presentation.screens.home.components.DayJournalGroup
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
-import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
+import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 import androidx.compose.runtime.DisposableEffect
+import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.pro.LocalProSheetController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,8 +57,6 @@ fun VaultScreen() {
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
     var journalToExport by remember { mutableStateOf<Journal?>(null) }
-    var journalToDelete by remember { mutableStateOf<Journal?>(null) }
-    var journalToUnlock by remember { mutableStateOf<Journal?>(null) }
     val optionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
@@ -69,6 +67,9 @@ fun VaultScreen() {
         )
         return
     }
+
+    val isPro = LocalIsPro.current
+    val proSheetController = LocalProSheetController.current
 
     Scaffold(
         topBar = {
@@ -115,7 +116,18 @@ fun VaultScreen() {
                 modifier = Modifier.padding(paddingValues),
                 icon = R.drawable.lock_24px,
                 title = stringResource(R.string.vault_empty_title),
-                subtitle = stringResource(R.string.vault_empty_desc)
+                subtitle = stringResource(R.string.vault_empty_desc),
+                action = if (!isPro) {
+                    {
+                        Button(
+                            onClick = {
+                                proSheetController.show()
+                            }
+                        ) {
+                            Text(stringResource(R.string.unlock_june_pro))
+                        }
+                    }
+                } else null
             )
         } else {
             val dayGroups = remember(lockedJournals) {
@@ -202,14 +214,12 @@ fun VaultScreen() {
                 JournalOptionsSheet(
                     journal = currentJournal,
                     is24Hour = is24Hour,
+                    onDismiss = { selectedJournalForOptions = null },
                     onToggleBookmark = {
                         vaultVM.toggleBookmark(currentJournal.id)
                     },
                     onToggleLock = {
-                        scope.launch { optionsSheetState.hide() }.invokeOnCompletion {
-                            journalToUnlock = currentJournal
-                            selectedJournalForOptions = null
-                        }
+                        vaultVM.unlockJournal(currentJournal.id)
                     },
                     onExportMarkdown = {
                         journalToExport = currentJournal
@@ -218,39 +228,10 @@ fun VaultScreen() {
                         }
                     },
                     onDeleteOrRestore = {
-                        scope.launch { optionsSheetState.hide() }.invokeOnCompletion {
-                            journalToDelete = currentJournal
-                            selectedJournalForOptions = null
-                        }
+                        vaultVM.deleteJournal(currentJournal.id)
                     }
                 )
             }
-        }
-
-        journalToUnlock?.let { target ->
-            DeleteConfirmationSheet(
-                onDismissRequest = { journalToUnlock = null },
-                onConfirm = {
-                    vaultVM.unlockJournal(target.id)
-                    journalToUnlock = null
-                },
-                message = stringResource(R.string.move_out_of_vault_desc),
-                confirmText = stringResource(R.string.move_out_of_vault),
-                iconRes = R.drawable.lock_open_right_24px,
-                iconAndTextColor = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        journalToDelete?.let { target ->
-            DeleteConfirmationSheet(
-                onDismissRequest = { journalToDelete = null },
-                onConfirm = {
-                    vaultVM.deleteJournal(target.id)
-                    journalToDelete = null
-                },
-                message = stringResource(R.string.delete_journal_local_desc),
-                confirmText = stringResource(R.string.delete)
-            )
         }
     }
 }

@@ -1,15 +1,13 @@
 package com.denser.june.presentation.components.font
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -22,9 +20,13 @@ import com.denser.june.core.utils.FontUtils
 import com.denser.june.presentation.components.JuneConnectedItem
 import com.denser.june.presentation.components.JuneRadioTile
 import com.denser.june.presentation.components.JuneRadioTilePosition
+import com.denser.june.presentation.components.pro.ProBadge
+import com.denser.june.presentation.components.pro.ProLeadingIconContainer
+import com.denser.june.presentation.pro.LocalIsPro
 import com.denser.june.presentation.theme.SYSTEM_FONT_NAME
 import com.denser.june.presentation.theme.getAppFontFamily
 import com.denser.june.presentation.theme.googleFontsMetadata
+import com.denser.june.presentation.utils.UiUtils
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -40,6 +42,7 @@ fun FontListTab(
         listOf(SYSTEM_FONT_NAME) + bundledFonts.map { it.fullName } + googleFontsMetadata.map { it.name }
     }
 
+    val isPro = LocalIsPro.current
     val isJournalFontActive = selectedFontName != null
     val fontsEnabled = !showAppDefault || isJournalFontActive
 
@@ -61,10 +64,27 @@ fun FontListTab(
                     } else {
                         stringResource(R.string.default_font)
                     },
-                    shape = androidx.compose.foundation.shape.CircleShape,
+                    shape = CircleShape,
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    contentPadding = PaddingValues(start = 20.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
+                    contentPadding = PaddingValues(
+                        start = if (!isPro) 16.dp else 20.dp,
+                        end = 16.dp,
+                        top = 6.dp,
+                        bottom = 6.dp
+                    ),
                     modifier = Modifier.padding(bottom = 8.dp),
+                    leadingContent = if (!isPro) {
+                        {
+                            ProLeadingIconContainer {
+                                Icon(
+                                    painter = painterResource(UiUtils.PRO_ICON_RES),
+                                    contentDescription = null,
+                                    tint = UiUtils.proContentColor,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    } else null,
                     onClick = {
                         if (isJournalFontActive) {
                             onFontSelect(null)
@@ -94,10 +114,22 @@ fun FontListTab(
                 FontUtils.isVariableFont(name)
             }
 
+            val isProFont = remember(name) {
+                name == Fonts.RECURSIVE.fullName || name == Fonts.SHANTELL_SANS.fullName
+            }
+
             JuneRadioTile(
                 selected = fontsEnabled && name == selectedFontName,
                 enabled = fontsEnabled,
                 title = name,
+                prefixContent = if (isProFont && !isPro) {
+                    {
+                        ProBadge(
+                            size = 20.dp,
+                            iconSize = 12.dp
+                        )
+                    }
+                } else null,
                 badge = null,
                 badgeContent = if (isVariableFont) {
                     {

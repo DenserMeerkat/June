@@ -1,17 +1,14 @@
 package com.denser.june.presentation.screens.settings.tiles
 
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.core.domain.preferences.PrivacyPreferences
+import com.denser.june.presentation.components.pro.ProSettingsItem
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.settings.components.SettingsItem
 import org.koin.compose.koinInject
 
 @Composable
@@ -33,16 +30,10 @@ fun VaultLockTile() {
         stringResource(R.string.app_lock)
     }
 
-    SettingsItem(
+    ProSettingsItem(
         title = stringResource(R.string.vault),
         subtitle = subtitle,
-        leadingContent = {
-            Icon(
-                painter = painterResource(R.drawable.lock_open_circle_24px),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary
-            )
-        },
+        iconRes = R.drawable.lock_open_circle_24px,
         onClick = { navigator.navigateTo(Route.VaultLockSettings) }
     )
 }

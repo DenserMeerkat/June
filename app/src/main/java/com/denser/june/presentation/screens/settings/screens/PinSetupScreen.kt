@@ -10,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.core.utils.SecurityUtils
+import com.denser.june.presentation.screens.settings.screens.lock.LockBottomBar
 import com.denser.june.presentation.screens.settings.screens.lock.PinLockContent
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -31,6 +32,8 @@ fun PinSetupScreen(forVault: Boolean = false) {
     val privacyPreferences = koinInject<PrivacyPreferences>()
     val coroutineScope = rememberCoroutineScope()
     val navigator = koinInject<AppNavigator>()
+    val isPro = com.denser.june.presentation.pro.LocalIsPro.current
+    val proSheetController = com.denser.june.presentation.pro.LocalProSheetController.current
     var step by remember { mutableStateOf(SetupStep.CREATE) }
     var firstPin by remember { mutableStateOf("") }
     var currentPinInput by remember { mutableStateOf("") }
@@ -39,6 +42,27 @@ fun PinSetupScreen(forVault: Boolean = false) {
     val title = when (step) {
         SetupStep.CREATE -> stringResource(R.string.create_pin)
         SetupStep.CONFIRM -> stringResource(R.string.confirm_pin)
+    }
+
+    val saveAndCompletePin = { pin: String ->
+        val hash = SecurityUtils.hashPin(pin)
+        if (forVault) {
+            coroutineScope.launch {
+                privacyPreferences.updateVaultPinHash(hash)
+            }
+            navigator.navigateTo(
+                route = Route.RecoverySetup(LockType.PIN, forVault = true),
+                popUpToRoute = Route.PinSetup(forVault = true),
+                inclusive = true
+            )
+        } else {
+            onAction(SettingsAction.UpdatePinHash(hash))
+            navigator.navigateTo(
+                route = Route.RecoverySetup(LockType.PIN, forVault = false),
+                popUpToRoute = Route.PinSetup(forVault = false),
+                inclusive = true
+            )
+        }
     }
 
     val submitPin = { pin: String ->
@@ -52,23 +76,12 @@ fun PinSetupScreen(forVault: Boolean = false) {
 
             SetupStep.CONFIRM -> {
                 if (pin == firstPin) {
-                    val hash = SecurityUtils.hashPin(pin)
-                    if (forVault) {
-                        coroutineScope.launch {
-                            privacyPreferences.updateVaultPinHash(hash)
+                    if (forVault && !isPro) {
+                        proSheetController.show {
+                            saveAndCompletePin(pin)
                         }
-                        navigator.navigateTo(
-                            route = Route.RecoverySetup(LockType.PIN, forVault = true),
-                            popUpToRoute = Route.PinSetup(forVault = true),
-                            inclusive = true
-                        )
                     } else {
-                        onAction(SettingsAction.UpdatePinHash(hash))
-                        navigator.navigateTo(
-                            route = Route.RecoverySetup(LockType.PIN, forVault = false),
-                            popUpToRoute = Route.PinSetup(forVault = false),
-                            inclusive = true
-                        )
+                        saveAndCompletePin(pin)
                     }
                 } else {
                     isError = true
@@ -103,6 +116,25 @@ fun PinSetupScreen(forVault: Boolean = false) {
             } else {
                 navigator.navigateBack()
             }
+        },
+        bottomBar = {
+            LockBottomBar(
+                onLeftClick = if (step == SetupStep.CONFIRM) {
+                    {
+                        step = SetupStep.CREATE
+                        currentPinInput = firstPin
+                        isError = false
+                    }
+                } else null,
+                leftIcon = R.drawable.arrow_back_24px,
+                leftText = stringResource(R.string.back),
+                onRightClick = {
+                    submitPin(currentPinInput)
+                },
+                rightEnabled = currentPinInput.length == 6,
+                rightText = if (step == SetupStep.CONFIRM) stringResource(R.string.confirm) else stringResource(R.string.next),
+                rightIcon = R.drawable.start_24px
+            )
         },
         onPinSubmitted = { pin ->
             submitPin(pin)

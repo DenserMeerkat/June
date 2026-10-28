@@ -27,8 +27,11 @@ import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.settings.components.*
 import com.denser.june.presentation.screens.settings.components.sheets.*
 import com.denser.june.core.domain.billing.BillingHandler
+import com.denser.june.presentation.components.color.ColorTab
+import com.denser.june.presentation.components.pro.ProLeadingIconContainer
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.utils.InternetDisabledException
+import com.denser.june.presentation.utils.UiUtils
 import com.denser.june.presentation.utils.UpdateChecker
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -49,7 +52,7 @@ fun SettingsScreen() {
 
     var searchQuery by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var themeSheetTab by remember { mutableStateOf<com.denser.june.presentation.components.color.ColorTab?>(null) }
+    var themeSheetTab by remember { mutableStateOf<ColorTab?>(null) }
     var showLicenseSheet by remember { mutableStateOf(false) }
     var showMapCreditsSheet by remember { mutableStateOf(false) }
     var showFontCreditsSheet by remember { mutableStateOf(false) }
@@ -82,6 +85,8 @@ fun SettingsScreen() {
         }
     }
 
+    val proSheetController = com.denser.june.presentation.pro.LocalProSheetController.current
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -108,7 +113,7 @@ fun SettingsScreen() {
                         onClick = {
                             focusManager.clearFocus()
                             keyboardController?.hide()
-                            navigator.navigateTo(Route.JuneProPaywall)
+                            proSheetController.show()
                         },
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                         modifier = Modifier
@@ -320,12 +325,23 @@ fun SettingsScreen() {
                                 SettingsItem(
                                     title = stringResource(R.string.vault),
                                     leadingContent = {
-                                        Icon(
-                                            painter = painterResource(R.drawable.lock_24px),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.secondary,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
-                                        )
+                                        if (!isPro) {
+                                            ProLeadingIconContainer {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.lock_24px),
+                                                    contentDescription = null,
+                                                    tint = UiUtils.proContentColor,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        } else {
+                                            Icon(
+                                                painter = painterResource(R.drawable.lock_24px),
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.secondary,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                                            )
+                                        }
                                     },
                                     onClick = {
                                         focusManager.clearFocus()

@@ -1,5 +1,6 @@
 package com.denser.june.presentation.screens.settings.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +21,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 import androidx.compose.runtime.rememberCoroutineScope
 import com.denser.june.core.domain.preferences.PrivacyPreferences
+import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.pro.LocalProSheetController
 import kotlinx.coroutines.launch
 
 private enum class PasswordSetupStep { CREATE, CONFIRM }
@@ -31,6 +34,8 @@ fun PasswordSetupScreen(forVault: Boolean = false) {
     val privacyPreferences = koinInject<PrivacyPreferences>()
     val coroutineScope = rememberCoroutineScope()
     val navigator = koinInject<AppNavigator>()
+    val isPro = LocalIsPro.current
+    val proSheetController = LocalProSheetController.current
     var step by remember { mutableStateOf(PasswordSetupStep.CREATE) }
     var firstPassword by remember { mutableStateOf("") }
     var currentPasswordInput by remember { mutableStateOf("") }
@@ -39,6 +44,27 @@ fun PasswordSetupScreen(forVault: Boolean = false) {
     val title = when (step) {
         PasswordSetupStep.CREATE -> stringResource(R.string.create_password)
         PasswordSetupStep.CONFIRM -> stringResource(R.string.confirm_password)
+    }
+
+    val saveAndCompletePassword = { password: String ->
+        val hash = SecurityUtils.hashPassword(password)
+        if (forVault) {
+            coroutineScope.launch {
+                privacyPreferences.updateVaultPasswordHash(hash)
+            }
+            navigator.navigateTo(
+                route = Route.RecoverySetup(LockType.PASSWORD, forVault = true),
+                popUpToRoute = Route.PasswordSetup(forVault = true),
+                inclusive = true
+            )
+        } else {
+            onAction(SettingsAction.UpdatePasswordHash(hash))
+            navigator.navigateTo(
+                route = Route.RecoverySetup(LockType.PASSWORD, forVault = false),
+                popUpToRoute = Route.PasswordSetup(forVault = false),
+                inclusive = true
+            )
+        }
     }
 
     val submitPassword = { password: String ->
@@ -52,23 +78,12 @@ fun PasswordSetupScreen(forVault: Boolean = false) {
 
             PasswordSetupStep.CONFIRM -> {
                 if (password == firstPassword) {
-                    val hash = SecurityUtils.hashPassword(password)
-                    if (forVault) {
-                        coroutineScope.launch {
-                            privacyPreferences.updateVaultPasswordHash(hash)
+                    if (!isPro) {
+                        proSheetController.show {
+                            saveAndCompletePassword(password)
                         }
-                        navigator.navigateTo(
-                            route = Route.RecoverySetup(LockType.PASSWORD, forVault = true),
-                            popUpToRoute = Route.PasswordSetup(forVault = true),
-                            inclusive = true
-                        )
                     } else {
-                        onAction(SettingsAction.UpdatePasswordHash(hash))
-                        navigator.navigateTo(
-                            route = Route.RecoverySetup(LockType.PASSWORD, forVault = false),
-                            popUpToRoute = Route.PasswordSetup(forVault = false),
-                            inclusive = true
-                        )
+                        saveAndCompletePassword(password)
                     }
                 } else {
                     isError = true
@@ -78,12 +93,27 @@ fun PasswordSetupScreen(forVault: Boolean = false) {
         }
     }
 
+    BackHandler(enabled = step == PasswordSetupStep.CONFIRM) {
+        step = PasswordSetupStep.CREATE
+        currentPasswordInput = firstPassword
+        isError = false
+    }
+
     PasswordLockContent(
         title = title,
         isError = isError,
         errorText = stringResource(R.string.does_not_match),
         onErrorDismissed = { isError = false },
         onPasswordChange = { currentPasswordInput = it },
+        onBackClick = {
+            if (step == PasswordSetupStep.CONFIRM) {
+                step = PasswordSetupStep.CREATE
+                currentPasswordInput = firstPassword
+                isError = false
+            } else {
+                navigator.navigateBack()
+            }
+        },
         bottomBar = {
             LockBottomBar(
                 onLeftClick = if (step == PasswordSetupStep.CONFIRM) {
@@ -108,4 +138,3 @@ fun PasswordSetupScreen(forVault: Boolean = false) {
         }
     )
 }
-

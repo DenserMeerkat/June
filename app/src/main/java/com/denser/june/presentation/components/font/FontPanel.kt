@@ -16,6 +16,9 @@ import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.core.utils.FontUtils
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
+import com.denser.june.presentation.components.pro.ProLeadingIconContainer
+import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.utils.UiUtils
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -81,6 +84,8 @@ fun FontPanel(
             }
         }
 
+        val isPro = LocalIsPro.current
+
         JuneFloatingActionBar(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -100,12 +105,27 @@ fun FontPanel(
                     FontTab.STYLE -> R.drawable.tune_24px
                 }
 
+                val showProStyleIcon = tab == FontTab.STYLE && !isPro
+
                 JuneFloatingAction(
                     selected = isSelected,
                     enabled = isTabEnabled,
                     onClick = { if (isTabEnabled) selectedTab = tab },
                     label = label,
-                    icon = if (isSelected) {
+                    icon = if (showProStyleIcon) {
+                        {
+                            ProLeadingIconContainer(
+                                size = 24.dp
+                            ) {
+                                Icon(
+                                    painter = painterResource(iconRes),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = UiUtils.proContentColor
+                                )
+                            }
+                        }
+                    } else if (isSelected) {
                         {
                             Icon(
                                 painter = painterResource(iconRes),

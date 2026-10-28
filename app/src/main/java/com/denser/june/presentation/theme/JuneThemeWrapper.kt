@@ -3,6 +3,7 @@ package com.denser.june.presentation.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import com.denser.june.core.domain.model.FontVariationConfig
@@ -24,7 +25,19 @@ fun JuneThemeWrapper(
     }
 
     val appTheme = LocalAppTheme.current
-    val effectivePaletteStyle = theme?.style?.let {
+
+    if (theme == null) {
+        MaterialTheme(
+            typography = provideTypography(
+                font = font ?: appTheme.appFont,
+                variation = fontVariation ?: appTheme.appFontVariation
+            ),
+            content = content
+        )
+        return
+    }
+
+    val effectivePaletteStyle = theme.style?.let {
         runCatching { PaletteStyle.valueOf(it) }.getOrNull()
     } ?: appTheme.style
 

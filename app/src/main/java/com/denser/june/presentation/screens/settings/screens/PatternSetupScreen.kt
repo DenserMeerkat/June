@@ -1,5 +1,6 @@
 package com.denser.june.presentation.screens.settings.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +21,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 import androidx.compose.runtime.rememberCoroutineScope
 import com.denser.june.core.domain.preferences.PrivacyPreferences
+import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.pro.LocalProSheetController
 import kotlinx.coroutines.launch
 
 private enum class PatternSetupStep { CREATE, CONFIRM }
@@ -31,6 +34,8 @@ fun PatternSetupScreen(forVault: Boolean = false) {
     val privacyPreferences = koinInject<PrivacyPreferences>()
     val coroutineScope = rememberCoroutineScope()
     val navigator = koinInject<AppNavigator>()
+    val isPro = LocalIsPro.current
+    val proSheetController = LocalProSheetController.current
     var step by remember { mutableStateOf(PatternSetupStep.CREATE) }
     var firstPattern by remember { mutableStateOf<List<Int>>(emptyList()) }
     var currentPatternInput by remember { mutableStateOf<List<Int>>(emptyList()) }
@@ -39,6 +44,27 @@ fun PatternSetupScreen(forVault: Boolean = false) {
     val title = when (step) {
         PatternSetupStep.CREATE -> stringResource(R.string.create_pattern)
         PatternSetupStep.CONFIRM -> stringResource(R.string.confirm_pattern)
+    }
+
+    val saveAndCompletePattern = { pattern: List<Int> ->
+        val hash = SecurityUtils.hashPattern(pattern)
+        if (forVault) {
+            coroutineScope.launch {
+                privacyPreferences.updateVaultPatternHash(hash)
+            }
+            navigator.navigateTo(
+                route = Route.RecoverySetup(LockType.PATTERN, forVault = true),
+                popUpToRoute = Route.PatternSetup(forVault = true),
+                inclusive = true
+            )
+        } else {
+            onAction(SettingsAction.UpdatePatternHash(hash))
+            navigator.navigateTo(
+                route = Route.RecoverySetup(LockType.PATTERN, forVault = false),
+                popUpToRoute = Route.PatternSetup(forVault = false),
+                inclusive = true
+            )
+        }
     }
 
     val submitPattern = { pattern: List<Int> ->
@@ -52,23 +78,12 @@ fun PatternSetupScreen(forVault: Boolean = false) {
 
             PatternSetupStep.CONFIRM -> {
                 if (pattern == firstPattern) {
-                    val hash = SecurityUtils.hashPattern(pattern)
-                    if (forVault) {
-                        coroutineScope.launch {
-                            privacyPreferences.updateVaultPatternHash(hash)
+                    if (!isPro) {
+                        proSheetController.show {
+                            saveAndCompletePattern(pattern)
                         }
-                        navigator.navigateTo(
-                            route = Route.RecoverySetup(LockType.PATTERN, forVault = true),
-                            popUpToRoute = Route.PatternSetup(forVault = true),
-                            inclusive = true
-                        )
                     } else {
-                        onAction(SettingsAction.UpdatePatternHash(hash))
-                        navigator.navigateTo(
-                            route = Route.RecoverySetup(LockType.PATTERN, forVault = false),
-                            popUpToRoute = Route.PatternSetup(forVault = false),
-                            inclusive = true
-                        )
+                        saveAndCompletePattern(pattern)
                     }
                 } else {
                     isError = true
@@ -78,12 +93,27 @@ fun PatternSetupScreen(forVault: Boolean = false) {
         }
     }
 
+    BackHandler(enabled = step == PatternSetupStep.CONFIRM) {
+        step = PatternSetupStep.CREATE
+        currentPatternInput = firstPattern
+        isError = false
+    }
+
     PatternLockContent(
         title = title,
         isError = isError,
         errorText = stringResource(R.string.does_not_match),
         onErrorDismissed = { isError = false },
         onPatternChange = { currentPatternInput = it },
+        onBackClick = {
+            if (step == PatternSetupStep.CONFIRM) {
+                step = PatternSetupStep.CREATE
+                currentPatternInput = firstPattern
+                isError = false
+            } else {
+                navigator.navigateBack()
+            }
+        },
         bottomBar = {
             LockBottomBar(
                 onLeftClick = if (step == PatternSetupStep.CONFIRM) {
@@ -108,4 +138,3 @@ fun PatternSetupScreen(forVault: Boolean = false) {
         }
     )
 }
-

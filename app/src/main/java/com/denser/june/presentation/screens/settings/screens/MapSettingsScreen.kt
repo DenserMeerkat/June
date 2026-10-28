@@ -1,54 +1,14 @@
 package com.denser.june.presentation.screens.settings.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ContainedLoadingIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TextButton
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalUriHandler
-
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,15 +19,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.utils.Constants
@@ -83,6 +40,7 @@ import com.denser.june.presentation.components.MapViewLifecycleEffect
 import com.denser.june.presentation.components.rememberMapDarkMode
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.presentation.navigation.AppNavigator
+import com.denser.june.presentation.pro.LocalIsPro
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.screens.settings.tiles.DefaultMapThemeTile
 import com.denser.june.presentation.screens.settings.tiles.MapThemeAccentTile
@@ -115,6 +73,8 @@ fun MapSettingsScreen() {
 
     val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
         .collectAsStateWithLifecycle(initialValue = true)
+    val isPro = LocalIsPro.current
+    var previewAccentEnabled by remember(isMapThemeAccentEnabled) { mutableStateOf(isMapThemeAccentEnabled) }
     val colorScheme = MaterialTheme.colorScheme
 
     var maptilerKeyInput by remember(mapTilerKey) { mutableStateOf(mapTilerKey) }
@@ -222,7 +182,17 @@ fun MapSettingsScreen() {
 
             SettingSection {
                 DefaultMapThemeTile()
-                MapThemeAccentTile()
+                MapThemeAccentTile(
+                    checked = previewAccentEnabled,
+                    onCheckedChange = { newValue ->
+                        previewAccentEnabled = newValue
+                        if (isPro) {
+                            scope.launch {
+                                journalPreferences.setMapThemeAccentEnabled(newValue)
+                            }
+                        }
+                    }
+                )
             }
 
             Column(
@@ -340,7 +310,7 @@ fun MapSettingsScreen() {
                                 modifier = Modifier.fillMaxSize(),
                                 update = { map ->
                                     val styleUrl = mapStyleUrl
-                                    val styleKey = "$styleUrl?accent=$isMapThemeAccentEnabled&key=$currentKey"
+                                    val styleKey = "$styleUrl?accent=$previewAccentEnabled&key=$currentKey"
                                     if (isCurrentKeyUnlocked) {
                                         currentStyleKey = ""
                                         isMapLoading = false
@@ -354,7 +324,7 @@ fun MapSettingsScreen() {
                                             mapboxMap.uiSettings.isCompassEnabled = false
                                             mapboxMap.setStyle(styleUrl) { style ->
                                                 isMapLoading = false
-                                                if (isMapThemeAccentEnabled) {
+                                                if (previewAccentEnabled) {
                                                     MapAccentColorizer.applyThemeAccents(
                                                         style = style,
                                                         colorScheme = colorScheme,

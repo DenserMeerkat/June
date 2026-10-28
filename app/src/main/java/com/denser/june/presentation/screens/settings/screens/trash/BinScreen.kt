@@ -30,8 +30,7 @@ import com.denser.june.presentation.components.JuneConfirmationDialog
 import com.denser.june.presentation.components.journal.DayJournalGroupData
 import com.denser.june.presentation.components.journal.ExportJournalSheet
 import com.denser.june.presentation.screens.home.components.DayJournalGroup
-import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
-import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
+import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -55,8 +54,6 @@ fun BinScreen() {
     var showMenu by remember { mutableStateOf(false) }
     var showEmptyBinDialog by remember { mutableStateOf(false) }
     var showRestoreAllDialog by remember { mutableStateOf(false) }
-    var showPermanentDeleteConfirmation by remember { mutableStateOf(false) }
-    var journalToDeletePermanently by remember { mutableStateOf<Journal?>(null) }
     var journalToExport by remember { mutableStateOf<Journal?>(null) }
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
@@ -261,41 +258,20 @@ fun BinScreen() {
                 JournalOptionsSheet(
                     journal = currentJournalForOptions,
                     is24Hour = is24Hour,
+                    onDismiss = { selectedJournalForOptions = null },
                     onToggleBookmark = { binVM.toggleBookmark(currentJournalForOptions.id) },
                     onExportMarkdown = {
-                        dismissOptionsSheet {
-                            journalToExport = currentJournalForOptions
-                        }
+                        journalToExport = currentJournalForOptions
+                        selectedJournalForOptions = null
                     },
-                    onDeleteOrRestore = { dismissOptionsSheet { binVM.restoreJournal(currentJournalForOptions.id) } },
+                    onDeleteOrRestore = {
+                        binVM.restoreJournal(currentJournalForOptions.id)
+                    },
                     onPermanentDelete = {
-                        dismissOptionsSheet {
-                            journalToDeletePermanently = currentJournalForOptions
-                            showPermanentDeleteConfirmation = true
-                        }
+                        binVM.deletePermanently(currentJournalForOptions.id)
                     }
                 )
             }
-        }
-
-        if (showPermanentDeleteConfirmation && journalToDeletePermanently != null) {
-            DeleteConfirmationSheet(
-                onDismissRequest = {
-                    showPermanentDeleteConfirmation = false
-                    journalToDeletePermanently = null
-                },
-                onConfirm = {
-                    binVM.deletePermanently(journalToDeletePermanently!!.id)
-                    showPermanentDeleteConfirmation = false
-                    journalToDeletePermanently = null
-                },
-                message = if (isSyncEnabled) {
-                    stringResource(R.string.delete_journal_sync_desc)
-                } else {
-                    stringResource(R.string.delete_journal_local_desc)
-                },
-                confirmText = stringResource(R.string.permanently_delete)
-            )
         }
 
     }

@@ -11,7 +11,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.logging.AppLogger
 import com.denser.june.core.domain.preferences.SyncPreferences
@@ -24,6 +23,7 @@ import com.denser.june.presentation.screens.settings.components.sheets.ConsoleLo
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import com.denser.june.core.R
+import com.denser.june.core.domain.billing.BillingHandler
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -33,6 +33,9 @@ fun DeveloperSettingsScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    val devOptionsDisabledMsg = stringResource(R.string.developer_options_disabled)
+    val proStatusResetMsg = stringResource(R.string.pro_status_reset)
 
     val isSyncLoggingEnabled by syncPrefs.getSyncLoggingEnabled().collectAsState(initial = false)
     val isBackupLoggingEnabled by syncPrefs.getBackupLoggingEnabled().collectAsState(initial = false)
@@ -73,7 +76,7 @@ fun DeveloperSettingsScreen() {
                                     syncPrefs.setDatabaseLoggingEnabled(false)
                                     AppLogger.clearBufferedLogs()
                                     navigator.navigateBack()
-                                    Toast.makeText(context, context.getString(R.string.developer_options_disabled), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, devOptionsDisabledMsg, Toast.LENGTH_SHORT).show()
                                 }
                             }
                         },
@@ -187,6 +190,26 @@ fun DeveloperSettingsScreen() {
                                 onCheckedChange = { enabled ->
                                     scope.launch { syncPrefs.setDatabaseLoggingEnabled(enabled) }
                                 }
+                            )
+                        }
+                    )
+                }
+            }
+
+            item {
+                SettingSection(stringResource(R.string.options)) {
+                    val billingHandler = koinInject<BillingHandler>()
+                    SettingsItem(
+                        title = stringResource(R.string.reset_pro_status),
+                        onClick = {
+                            billingHandler.resetProForTesting()
+                            Toast.makeText(context, proStatusResetMsg, Toast.LENGTH_SHORT).show()
+                        },
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(R.drawable.lock_24px),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
                         }
                     )

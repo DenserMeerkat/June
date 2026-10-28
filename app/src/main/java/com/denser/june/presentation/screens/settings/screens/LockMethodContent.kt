@@ -47,6 +47,7 @@ import com.denser.june.core.utils.SecurityUtils
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneDialog
 import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.components.pro.ProSettingsItem
 import com.denser.june.presentation.screens.settings.screens.lock.PasswordLockContent
 import com.denser.june.presentation.screens.settings.screens.lock.PatternLockContent
 import com.denser.june.presentation.screens.settings.screens.lock.PinLockContent
@@ -103,9 +104,6 @@ fun LockMethodContent(
             isVerifyingForRecovery = false
             verificationError = false
         }
-        val targetPinHash = pinHash
-        val targetPasswordHash = passwordHash
-        val targetPatternHash = patternHash
 
         when (activeLockType) {
             LockType.PIN -> {
@@ -113,9 +111,13 @@ fun LockMethodContent(
                     title = stringResource(R.string.enter_pin),
                     isError = verificationError,
                     onErrorDismissed = { verificationError = false },
+                    onBackClick = {
+                        isVerifyingForRecovery = false
+                        verificationError = false
+                    },
                     onPinSubmitted = { pin ->
                         val inputHash = SecurityUtils.hashPin(pin)
-                        if (inputHash == targetPinHash) {
+                        if (inputHash == pinHash) {
                             onNavigateToRecovery(LockType.PIN)
                             coroutineScope.launch {
                                 delay(500.milliseconds)
@@ -133,9 +135,13 @@ fun LockMethodContent(
                     title = stringResource(R.string.enter_password),
                     isError = verificationError,
                     onErrorDismissed = { verificationError = false },
+                    onBackClick = {
+                        isVerifyingForRecovery = false
+                        verificationError = false
+                    },
                     onPasswordSubmitted = { password ->
                         val inputHash = SecurityUtils.hashPassword(password)
-                        if (inputHash == targetPasswordHash) {
+                        if (inputHash == passwordHash) {
                             onNavigateToRecovery(LockType.PASSWORD)
                             coroutineScope.launch {
                                 delay(500.milliseconds)
@@ -153,9 +159,13 @@ fun LockMethodContent(
                     title = stringResource(R.string.enter_pattern),
                     isError = verificationError,
                     onErrorDismissed = { verificationError = false },
+                    onBackClick = {
+                        isVerifyingForRecovery = false
+                        verificationError = false
+                    },
                     onPatternSubmitted = { pattern ->
                         val inputHash = SecurityUtils.hashPattern(pattern)
-                        if (inputHash == targetPatternHash) {
+                        if (inputHash == patternHash) {
                             onNavigateToRecovery(LockType.PATTERN)
                             coroutineScope.launch {
                                 delay(500.milliseconds)
@@ -214,13 +224,14 @@ fun LockMethodContent(
                     )
                 }
                 Spacer(modifier = Modifier.size(24.dp))
-                val waysToLockPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                val waysToLockPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
 
                 if (primaryOption != null) {
-                    SettingSection {
+                    SettingSection(
+                        title=primaryOption.title
+                    ) {
                         SettingsItem(
-                            title = primaryOption.title,
-                            subtitle = primaryOption.subtitle ?: stringResource(R.string.no_lock),
+                            title = primaryOption.subtitle ?: stringResource(R.string.no_lock),
                             contentPadding = waysToLockPadding,
                             leadingContent = {
                                 Icon(
@@ -297,16 +308,10 @@ fun LockMethodContent(
                     )
 
                     val isPasswordSelected = activeLockType == LockType.PASSWORD
-                    SettingsItem(
+                    ProSettingsItem(
                         title = stringResource(R.string.custom_password),
+                        iconRes = R.drawable.password_24px,
                         contentPadding = waysToLockPadding,
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(R.drawable.password_24px),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.secondary
-                            )
-                        },
                         trailingContent = {
                             RadioButton(
                                 selected = isPasswordSelected,
@@ -321,16 +326,10 @@ fun LockMethodContent(
                     )
 
                     val isPatternSelected = activeLockType == LockType.PATTERN
-                    SettingsItem(
+                    ProSettingsItem(
                         title = stringResource(R.string.custom_pattern),
+                        iconRes = R.drawable.pattern_24px,
                         contentPadding = waysToLockPadding,
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(R.drawable.pattern_24px),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.secondary
-                            )
-                        },
                         trailingContent = {
                             RadioButton(
                                 selected = isPatternSelected,

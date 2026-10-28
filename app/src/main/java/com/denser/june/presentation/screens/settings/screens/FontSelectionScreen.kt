@@ -3,8 +3,6 @@ package com.denser.june.presentation.screens.settings.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
@@ -15,14 +13,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.presentation.theme.FontPresets
 import com.denser.june.core.domain.model.enums.FontType
+import com.denser.june.core.domain.model.enums.Fonts
 import com.denser.june.presentation.components.*
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.components.font.FontPanel
 import com.denser.june.presentation.components.font.TypographyPreview
+import com.denser.june.presentation.components.pro.ProBadge
+import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.pro.LocalProSheetController
 import com.denser.june.presentation.theme.LocalInternetAllowed
-import com.denser.june.presentation.theme.getAppFontFamily
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -54,12 +55,27 @@ fun FontSelectionScreen(
         viewModel.onAction(SettingsAction.SetFontType(type))
     }
 
+    val isPro = LocalIsPro.current
+    val proSheetController = LocalProSheetController.current
+
+    val isProFontSelected = remember(draftFontName) {
+        draftFontName == Fonts.RECURSIVE.fullName || draftFontName == Fonts.SHANTELL_SANS.fullName
+    }
+    val isProStyleSelected = remember(draftFontName, draftVariation) {
+        draftVariation != null && draftVariation != FontPresets.getDefaultVariation(draftFontName)
+    }
+    val isProSelection = isProFontSelected || isProStyleSelected
+
     val isDirty = draftFontName != savedFontName || draftVariation != savedVariation
 
-    val previewFontFamily = getAppFontFamily(
-        fontName = draftFontName,
-        variation = draftVariation
-    )
+    val saveFontsAction = {
+        if (draftFontName != savedFontName) {
+            viewModel.onAction(SettingsAction.OnFontSelect(draftFontName))
+        }
+        if (draftVariation != savedVariation) {
+            viewModel.onAction(SettingsAction.OnAppFontVariationChange(draftVariation))
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -89,15 +105,21 @@ fun FontSelectionScreen(
                     if (isDirty) {
                         Button(
                             onClick = {
-                                if (draftFontName != savedFontName) {
-                                    viewModel.onAction(SettingsAction.OnFontSelect(draftFontName))
-                                }
-                                if (draftVariation != savedVariation) {
-                                    viewModel.onAction(SettingsAction.OnAppFontVariationChange(draftVariation))
+                                if (isProSelection && !isPro) {
+                                    proSheetController.show {
+                                        saveFontsAction()
+                                    }
+                                } else {
+                                    saveFontsAction()
                                 }
                             },
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
                         ) {
+                            if (isProSelection && !isPro) {
+                                ProBadge(
+                                    modifier = Modifier.padding(end = 6.dp)
+                                )
+                            }
                             Text(stringResource(R.string.save))
                         }
                     }

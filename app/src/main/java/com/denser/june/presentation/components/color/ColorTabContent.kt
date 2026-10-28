@@ -2,8 +2,6 @@ package com.denser.june.presentation.components.color
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -13,11 +11,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.*
-import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,12 +26,17 @@ import com.denser.june.presentation.components.JuneConnectedItem
 import com.denser.june.presentation.components.JuneSliderTile
 import com.denser.june.core.media.color.ExtractedMediaColor
 import com.denser.june.core.media.color.ExtractedMediaTheme
+import com.denser.june.presentation.components.pro.ProLeadingIconContainer
+import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.utils.UiUtils
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun ColorTabContent(
+    modifier: Modifier = Modifier,
     isCustomActive: Boolean,
     activeColorSource: ColorSource,
     availableMediaSources: List<ColorSource.Media>,
@@ -51,7 +51,6 @@ fun ColorTabContent(
     onSourceSelect: (ColorSource) -> Unit,
     onThemeChange: (JournalTheme?) -> Unit,
     bottomPadding: Dp,
-    modifier: Modifier = Modifier,
     toggleTitle: String? = null,
     toggleChecked: Boolean = isCustomActive,
     onToggleChange: ((Boolean) -> Unit)? = null,
@@ -63,7 +62,7 @@ fun ColorTabContent(
         val outHsl = FloatArray(3)
         ColorUtils.colorToHSL(effectiveSeedColor, outHsl)
         val defaultS = if (outHsl[1] < 0.05f) 0.8f else outHsl[1]
-        val defaultL = if (outHsl[2] < 0.05f || outHsl[2] > 0.95f) 0.5f else outHsl[2]
+        val defaultL = if (outHsl[2] !in 0.05f..0.95f) 0.5f else outHsl[2]
         floatArrayOf(outHsl[0], defaultS, defaultL)
     }
 
@@ -78,7 +77,7 @@ fun ColorTabContent(
             val outHsl = FloatArray(3)
             ColorUtils.colorToHSL(effectiveSeedColor, outHsl)
             val defaultS = if (outHsl[1] < 0.05f) 0.8f else outHsl[1]
-            val defaultL = if (outHsl[2] < 0.05f || outHsl[2] > 0.95f) 0.5f else outHsl[2]
+            val defaultL = if (outHsl[2] !in 0.05f..0.95f) 0.5f else outHsl[2]
             localHue = outHsl[0]
             localSaturation = defaultS
             localLightness = defaultL
@@ -91,7 +90,7 @@ fun ColorTabContent(
     var pendingColor by remember { mutableStateOf<Int?>(null) }
     LaunchedEffect(pendingColor) {
         val color = pendingColor ?: return@LaunchedEffect
-        delay(35L)
+        delay(35L.milliseconds)
         lastEmittedColor = color
         currentOnThemeChange(
             JournalTheme(
@@ -112,6 +111,8 @@ fun ColorTabContent(
             .padding(bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
+        val isPro = LocalIsPro.current
+        val showProLeading = toggleTitle == null && !isPro
         JuneConnectedItem(
             title = toggleTitle ?: if (isCustomActive) {
                 stringResource(R.string.custom_theme)
@@ -120,8 +121,25 @@ fun ColorTabContent(
             },
             shape = CircleShape,
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            contentPadding = PaddingValues(start = 20.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
+            contentPadding = PaddingValues(
+                start = if (showProLeading) 16.dp else 24.dp,
+                end = 16.dp,
+                top = 6.dp,
+                bottom = 6.dp
+            ),
             modifier = Modifier.padding(horizontal = 20.dp),
+            leadingContent = if (showProLeading) {
+                {
+                    ProLeadingIconContainer {
+                        Icon(
+                            painter = painterResource(UiUtils.PRO_ICON_RES),
+                            contentDescription = null,
+                            tint = UiUtils.proContentColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            } else null,
             onClick = { effectiveOnToggle(!effectiveToggleChecked) },
             trailingContent = {
                 Switch(
