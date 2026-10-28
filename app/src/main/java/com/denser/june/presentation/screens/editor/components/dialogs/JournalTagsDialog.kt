@@ -145,8 +145,8 @@ fun JournalTagsDialog(
                         label = stringResource(R.string.reset),
                         icon = { Icon(painterResource(R.drawable.replay_24px), null) },
                         enabled = hasChanges,
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     JuneFloatingAction(
                         onClick = {

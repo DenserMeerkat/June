@@ -76,6 +76,7 @@ import com.denser.june.presentation.utils.MapAccentColorizer.getMapLibreMap
 import java.util.Locale
 
 import com.denser.june.core.domain.model.JournalTheme
+import com.denser.june.presentation.pro.LocalIsPro
 import com.denser.june.presentation.theme.JuneThemeWrapper
 
 @Composable
@@ -97,6 +98,8 @@ fun AddLocationDialog(
         .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
     val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
         .collectAsStateWithLifecycle(initialValue = true)
+    val isPro = LocalIsPro.current
+    val shouldApplyAccents = isPro && isMapThemeAccentEnabled
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -319,7 +322,7 @@ fun AddLocationDialog(
                     baseStyle = BaseStyle.Uri(mapStyleUrl),
                     cameraState = cameraState,
                     onMapLoadFinished = {
-                        if (isMapThemeAccentEnabled) {
+                        if (shouldApplyAccents) {
                             cameraState.getMapLibreMap()?.getStyle { style ->
                                 MapAccentColorizer.applyThemeAccents(
                                     style = style,
@@ -349,8 +352,8 @@ fun AddLocationDialog(
                     )
                 )
 
-                LaunchedEffect(mapStyleUrl, isMapThemeAccentEnabled, colorScheme, isMapDarkMode) {
-                    if (!isMapThemeAccentEnabled || mapStyleUrl.isBlank()) return@LaunchedEffect
+                LaunchedEffect(mapStyleUrl, shouldApplyAccents, colorScheme, isMapDarkMode) {
+                    if (!shouldApplyAccents || mapStyleUrl.isBlank()) return@LaunchedEffect
                     cameraState.getMapLibreMap()?.getStyle { style ->
                         MapAccentColorizer.applyThemeAccents(
                             style = style,

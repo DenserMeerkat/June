@@ -1,6 +1,7 @@
 package com.denser.june.presentation.screens.editor.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -9,7 +10,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
+import com.denser.june.presentation.components.JuneCloseButton
+import com.denser.june.presentation.components.JuneMoreOptionsButton
 import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.utils.UiUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,41 +35,22 @@ fun EditorTopAppBar(
     onResetFont: () -> Unit = {},
     isThemeDirty: Boolean = false,
     onResetTheme: () -> Unit = {},
+    isProStylingActive: Boolean = false,
 ) {
+    val isPro = LocalIsPro.current
+
     JuneTopAppBar(
         modifier = modifier,
         title = {},
         navigationIcon = {
             if (isFontMode || isColorMode) {
-                FilledIconButton(
-                    onClick = onCloseClick,
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                    )
-                ) {
-                    Icon(
-                        painterResource(R.drawable.close_24px),
-                        stringResource(R.string.close)
-                    )
-                }
+                JuneCloseButton(onClick = onCloseClick)
             } else {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FilledIconButton(
-                        onClick = onCloseClick,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        )
-                    ) {
-                        Icon(
-                            painterResource(R.drawable.close_24px),
-                            stringResource(R.string.close)
-                        )
-                    }
+                    JuneCloseButton(onClick = onCloseClick)
 
                     FilledIconButton(
                         onClick = onAddItemClick,
@@ -166,24 +152,29 @@ fun EditorTopAppBar(
                 if (showSaveButton) {
                     Button(
                         enabled = !isLoading,
-                        onClick = onSaveClick
+                        onClick = onSaveClick,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        modifier = Modifier.height(38.dp)
                     ) {
-                        Text(stringResource(R.string.save))
+                        if (isProStylingActive && !isPro) {
+                            Icon(
+                                painter = painterResource(UiUtils.PRO_ICON_RES),
+                                contentDescription = "Pro",
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(end = 4.dp)
+                            )
+                        }
+                        Text(
+                            text = stringResource(R.string.save),
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
+                    Spacer(Modifier.width(4.dp))
                 }
 
                 Box {
-                    IconButton(
-                        onClick = onOptionsClick,
-                        colors = IconButtonDefaults.iconButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        )
-                    ) {
-                        Icon(
-                            painterResource(R.drawable.more_vert_24px),
-                            stringResource(R.string.options)
-                        )
-                    }
+                    JuneMoreOptionsButton(onClick = onOptionsClick)
                 }
             }
         }

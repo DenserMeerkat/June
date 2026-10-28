@@ -22,6 +22,7 @@ import android.content.Context
 import com.denser.june.core.media.compress.CompressUtils
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
+import com.denser.june.core.domain.billing.BillingHandler
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -37,7 +38,8 @@ class EditorVM(
     private val journalRepo: JournalRepository,
     private val journalPrefs: JournalPreferences,
     private val songRepo: SongRepository,
-    private val navigator: AppNavigator
+    private val navigator: AppNavigator,
+    private val billingHandler: BillingHandler
 ) : ViewModel() {
     private val editorRoute = savedStateHandle.tryRoute<Route.Editor>()
     private val journalId = editorRoute?.journalId
@@ -370,9 +372,8 @@ class EditorVM(
                 original.location != currentState.location ||
                 original.dateTime != currentState.dateTime ||
                 original.songDetails != currentState.songDetails ||
-                original.font != currentState.font ||
-                original.fontVariation != currentState.fontVariation ||
-                original.theme != currentState.theme ||
+                currentState.isFontDirty ||
+                currentState.isThemeDirty ||
                 original.isLocked != currentState.isLocked
     }
 
@@ -469,7 +470,17 @@ class EditorVM(
                 } else {
                     journal.content
                 }
-                existingJournal = existingJournal!!.copy(content = parsedContent)
+                val isPro = billingHandler.isPro.value
+                val loadedFont = if (isPro) journal.font else null
+                val loadedFontVariation = if (isPro) journal.fontVariation else null
+                val loadedTheme = if (isPro) journal.theme else null
+
+                existingJournal = existingJournal!!.copy(
+                    content = parsedContent,
+                    font = loadedFont,
+                    fontVariation = loadedFontVariation,
+                    theme = loadedTheme
+                )
                 _state.update {
                     it.copy(
                         journalId = journal.id,
@@ -487,12 +498,12 @@ class EditorVM(
                         isLocked = journal.isLocked,
                         isArchived = journal.isArchived,
                         isDraft = journal.isDraft,
-                        font = journal.font,
-                        fontVariation = journal.fontVariation,
-                        initialFont = journal.font,
-                        initialFontVariation = journal.fontVariation,
-                        theme = journal.theme,
-                        initialTheme = journal.theme,
+                        font = loadedFont,
+                        fontVariation = loadedFontVariation,
+                        initialFont = loadedFont,
+                        initialFontVariation = loadedFontVariation,
+                        theme = loadedTheme,
+                        initialTheme = loadedTheme,
                         deletedAt = journal.deletedAt,
                         syncedAt = journal.syncedAt,
                         cloudId = journal.cloudId,

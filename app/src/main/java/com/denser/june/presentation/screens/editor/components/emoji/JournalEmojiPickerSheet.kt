@@ -369,8 +369,8 @@ fun JournalEmojiPickerSheet(
                             modifier = Modifier.size(18.dp),
                         )
                     },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 JuneFloatingAction(
                     onClick = {

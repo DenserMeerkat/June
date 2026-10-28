@@ -165,8 +165,8 @@ fun JuneLinkSheet(
                         onClick = onDismiss,
                         label = stringResource(R.string.cancel),
                         icon = { Icon(painterResource(R.drawable.close_24px), null, Modifier.size(20.dp)) },
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     JuneFloatingAction(

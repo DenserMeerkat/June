@@ -5,7 +5,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -39,6 +38,7 @@ import com.denser.june.core.domain.preferences.JournalPreferences
 import org.koin.compose.koinInject
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.domain.model.enums.MapStyleProvider
+import com.denser.june.presentation.pro.LocalIsPro
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.map.GestureOptions
@@ -70,6 +70,8 @@ fun JournalMapItem(
         .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
     val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
         .collectAsStateWithLifecycle(initialValue = true)
+    val isPro = LocalIsPro.current
+    val shouldApplyAccents = isPro && isMapThemeAccentEnabled
     val colorScheme = MaterialTheme.colorScheme
 
     MapLibreInitializer(isInternetAllowed)
@@ -101,7 +103,7 @@ fun JournalMapItem(
                     baseStyle = BaseStyle.Uri(mapStyleUrl),
                     cameraState = cameraState,
                     onMapLoadFinished = {
-                        if (isMapThemeAccentEnabled) {
+                        if (shouldApplyAccents) {
                             cameraState.getMapLibreMap()?.getStyle { style ->
                                 MapAccentColorizer.applyThemeAccents(
                                     style = style,
@@ -131,8 +133,8 @@ fun JournalMapItem(
                     )
                 )
 
-                LaunchedEffect(mapStyleUrl, isMapThemeAccentEnabled, colorScheme, isMapDarkMode) {
-                    if (!isMapThemeAccentEnabled || mapStyleUrl.isBlank()) return@LaunchedEffect
+                LaunchedEffect(mapStyleUrl, shouldApplyAccents, colorScheme, isMapDarkMode) {
+                    if (!shouldApplyAccents || mapStyleUrl.isBlank()) return@LaunchedEffect
                     cameraState.getMapLibreMap()?.getStyle { style ->
                         MapAccentColorizer.applyThemeAccents(
                             style = style,

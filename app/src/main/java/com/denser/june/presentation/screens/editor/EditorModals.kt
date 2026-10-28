@@ -1,6 +1,7 @@
 package com.denser.june.presentation.screens.editor
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,9 +26,9 @@ import com.denser.june.presentation.screens.editor.components.dialogs.AddLocatio
 import com.denser.june.presentation.screens.editor.components.emoji.JournalEmojiPickerSheet
 import com.denser.june.presentation.screens.editor.components.emoji.loadEmojiAssets
 import com.denser.june.presentation.screens.editor.components.dialogs.JournalTagsDialog
-import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.domain.billing.BillingHandler
+import com.denser.june.presentation.screens.editor.components.dialogs.JuneProSaveDialog
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,8 +37,6 @@ import org.koin.compose.koinInject
 
 class EditorDialogState {
     var showExitDialog by mutableStateOf(false)
-    var showDeleteConfirmation by mutableStateOf(false)
-    var showLockConfirmation by mutableStateOf(false)
     var showDatePicker by mutableStateOf(false)
     var datePickerInitialTab by mutableIntStateOf(0)
     var showAddItemSheet by mutableStateOf(false)
@@ -45,6 +44,8 @@ class EditorDialogState {
     var showCameraSelectionDialog by mutableStateOf(false)
     var showLocationDialog by mutableStateOf(false)
     var showTagsDialog by mutableStateOf(false)
+    var showProSaveDialog by mutableStateOf(false)
+    var onProSaveExitAfter by mutableStateOf(false)
 }
 
 @Composable
@@ -61,6 +62,8 @@ fun EditorModals(
     val navigator = koinInject<AppNavigator>()
     val journalPrefs = koinInject<JournalPreferences>()
     val billingHandler = koinInject<BillingHandler>()
+    val isPro = com.denser.june.presentation.pro.LocalIsPro.current
+    val proSheetController = com.denser.june.presentation.pro.LocalProSheetController.current
     val isCompressPhotosEnabled by journalPrefs.isCompressPhotosEnabled().collectAsStateWithLifecycle(initialValue = false)
     val photoQuality by journalPrefs.getPhotoCompressionQuality().collectAsStateWithLifecycle(initialValue = 80)
     val isCompressVideosEnabled by journalPrefs.isCompressVideosEnabled().collectAsStateWithLifecycle(initialValue = false)
@@ -175,9 +178,15 @@ fun EditorModals(
             confirmButton = {
                 Button(onClick = {
                     dialogState.showExitDialog = false
-                    editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
-                    onAction(EditorAction.SaveJournal)
-                    onAction(EditorAction.NavigateBack)
+                    val hasProStyling = (editorState.font != null || editorState.fontVariation != null || editorState.theme != null)
+                    if (!isPro && hasProStyling) {
+                        dialogState.onProSaveExitAfter = true
+                        dialogState.showProSaveDialog = true
+                    } else {
+                        editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                        onAction(EditorAction.SaveJournal)
+                        onAction(EditorAction.NavigateBack)
+                    }
                 }) { Text(stringResource(R.string.save)) }
             },
             dismissButton = {
@@ -191,31 +200,34 @@ fun EditorModals(
         )
     }
 
-    if (dialogState.showDeleteConfirmation) {
-        DeleteConfirmationSheet(
-            onDismissRequest = { dialogState.showDeleteConfirmation = false },
-            onConfirm = {
-                dialogState.showDeleteConfirmation = false
-                onAction(EditorAction.DeleteJournal)
-            }
-        )
-    }
-
-    if (dialogState.showLockConfirmation) {
-        DeleteConfirmationSheet(
-            onDismissRequest = { dialogState.showLockConfirmation = false },
-            onConfirm = {
-                dialogState.showLockConfirmation = false
-                onAction(EditorAction.ToggleLock)
+    if (dialogState.showProSaveDialog) {
+        JuneProSaveDialog(
+            onDismissRequest = { dialogState.showProSaveDialog = false },
+            onUnlockPro = {
+                dialogState.showProSaveDialog = false
+                proSheetController.show {
+                    editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                    onAction(EditorAction.SaveJournal)
+                    if (dialogState.onProSaveExitAfter) {
+                        onAction(EditorAction.NavigateBack)
+                    }
+                }
             },
-            message = stringResource(
-                if (editorState.isLocked) R.string.move_out_of_vault_desc else R.string.move_to_vault_desc
-            ),
-            confirmText = stringResource(
-                if (editorState.isLocked) R.string.move_out_of_vault else R.string.move_to_vault
-            ),
-            iconRes = if (editorState.isLocked) R.drawable.lock_open_right_24px else R.drawable.lock_24px,
-            iconAndTextColor = MaterialTheme.colorScheme.primary
+            onSaveWithoutProStyling = {
+                dialogState.showProSaveDialog = false
+                onAction(EditorAction.SetJournalFont(fontName = null, variation = null))
+                onAction(EditorAction.SetJournalTheme(theme = null))
+                editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                onAction(EditorAction.SaveJournal)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.entry_saved_default_theme),
+                    Toast.LENGTH_SHORT
+                ).show()
+                if (dialogState.onProSaveExitAfter) {
+                    onAction(EditorAction.NavigateBack)
+                }
+            }
         )
     }
 

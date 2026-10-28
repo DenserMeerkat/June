@@ -55,7 +55,7 @@ import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.editor.components.*
 import com.denser.june.presentation.screens.editor.components.audio.*
 import com.denser.june.presentation.screens.editor.components.dialogs.*
-import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
+import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import com.denser.june.presentation.theme.JuneThemeWrapper
 import com.denser.june.core.media.color.ExtractedMediaColor
 import com.denser.june.core.media.color.ExtractedMediaTheme
@@ -225,6 +225,9 @@ fun EditorScreen() {
         )
     }
 
+    val isPro = com.denser.june.presentation.pro.LocalIsPro.current
+    val isProStylingActive = (state.font != null || state.fontVariation != null || state.theme != null)
+
     JuneThemeWrapper(
         theme = state.theme,
         font = state.font,
@@ -238,6 +241,7 @@ fun EditorScreen() {
                     showAddItemSheet = dialogState.showAddItemSheet,
                     showSaveButton = showSaveButton,
                     isLoading = state.isLoading,
+                    isProStylingActive = isProStylingActive,
                     onCloseClick = {
                         if (isFontMode) isFontMode = false
                         else if (isColorMode) isColorMode = false
@@ -272,8 +276,13 @@ fun EditorScreen() {
                         keyboardController?.hide()
                         focusManager.clearFocus(force = true)
                         if (!state.isLoading) {
-                            state.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
-                            viewModel.onAction(EditorAction.SaveJournal)
+                            if (!isPro && isProStylingActive) {
+                                dialogState.onProSaveExitAfter = false
+                                dialogState.showProSaveDialog = true
+                            } else {
+                                state.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                                viewModel.onAction(EditorAction.SaveJournal)
+                            }
                         }
                     },
                     onOptionsClick = {
@@ -593,28 +602,18 @@ fun EditorScreen() {
                 JournalOptionsSheet(
                     journal = journalPreview,
                     is24Hour = state.timeFormat == TimeFormat.TWENTY_FOUR_HOUR,
+                    onDismiss = { showOptionsSheet = false },
                     onToggleBookmark = { viewModel.onAction(EditorAction.ToggleBookmark) },
-                    onToggleLock = {
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            showOptionsSheet = false
-                            dialogState.showLockConfirmation = true
-                        }
-                    },
+                    onToggleLock = { viewModel.onAction(EditorAction.ToggleLock) },
                     onExportMarkdown = {
                         showOptionsSheet = false
                         journalToExport = journalPreview
                     },
                     onDeleteOrRestore = {
                         if (state.isDeleted) {
-                            scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                showOptionsSheet = false
-                                viewModel.onAction(EditorAction.RestoreJournal)
-                            }
+                            viewModel.onAction(EditorAction.RestoreJournal)
                         } else {
-                            scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                showOptionsSheet = false
-                                dialogState.showDeleteConfirmation = true
-                            }
+                            viewModel.onAction(EditorAction.DeleteJournal)
                         }
                     }
                 )
