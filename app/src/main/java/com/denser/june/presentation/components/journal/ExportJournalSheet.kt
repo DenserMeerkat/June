@@ -192,8 +192,8 @@ fun ExportJournalSheet(
                         onClick = onDismiss,
                         label = stringResource(R.string.cancel),
                         icon = { Icon(painterResource(R.drawable.close_24px), contentDescription = null) },
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     JuneFloatingAction(
                         onClick = {

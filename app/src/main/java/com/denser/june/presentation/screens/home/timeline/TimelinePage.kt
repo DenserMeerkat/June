@@ -27,8 +27,7 @@ import com.denser.june.core.utils.*
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.components.journal.ExportJournalSheet
-import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
-import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
+import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import com.denser.june.presentation.screens.home.timeline.components.TimelineCalendarPage
 import com.denser.june.presentation.screens.home.timeline.components.TimelineMonthStrip
 import com.denser.june.presentation.screens.home.timeline.components.TimelineTabs
@@ -59,18 +58,7 @@ fun TimelinePage(
     val scope = rememberCoroutineScope()
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
-    var showLockConfirmation by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val deleteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val lockSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    fun dismissSheet(action: () -> Unit) {
-        action()
-        scope.launch { sheetState.hide() }.invokeOnCompletion {
-            selectedJournalForOptions = null
-        }
-    }
 
     var journalToExport by remember { mutableStateOf<Journal?>(null) }
 
@@ -93,13 +81,12 @@ fun TimelinePage(
             JournalOptionsSheet(
                 journal = currentJournalForOptions,
                 is24Hour = is24Hour,
+                onDismiss = { selectedJournalForOptions = null },
                 onToggleBookmark = {
                     viewModel.toggleBookmark(currentJournalForOptions.id)
                 },
                 onToggleLock = {
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        showLockConfirmation = true
-                    }
+                    viewModel.toggleLock(currentJournalForOptions.id)
                 },
                 onExportMarkdown = {
                     journalToExport = currentJournalForOptions
@@ -107,60 +94,13 @@ fun TimelinePage(
                 },
                 onDeleteOrRestore = {
                     if (currentJournalForOptions.isDeleted) {
-                        dismissSheet { viewModel.restoreJournal(currentJournalForOptions.id) }
+                        viewModel.restoreJournal(currentJournalForOptions.id)
                     } else {
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            showDeleteConfirmation = true
-                        }
+                        viewModel.deleteJournal(currentJournalForOptions.id)
                     }
                 }
             )
         }
-    }
-
-    if (showLockConfirmation && selectedJournalForOptions != null) {
-        val target = selectedJournalForOptions
-        DeleteConfirmationSheet(
-            sheetState = lockSheetState,
-            onDismissRequest = {
-                showLockConfirmation = false
-                selectedJournalForOptions = null
-            },
-            onConfirm = {
-                val id = target?.id
-                scope.launch { lockSheetState.hide() }.invokeOnCompletion {
-                    showLockConfirmation = false
-                    if (id != null) viewModel.toggleLock(id)
-                    selectedJournalForOptions = null
-                }
-            },
-            message = stringResource(
-                if (target?.isLocked == true) R.string.move_out_of_vault_desc else R.string.move_to_vault_desc
-            ),
-            confirmText = stringResource(
-                if (target?.isLocked == true) R.string.move_out_of_vault else R.string.move_to_vault
-            ),
-            iconRes = if (target?.isLocked == true) R.drawable.lock_open_right_24px else R.drawable.lock_24px,
-            iconAndTextColor = MaterialTheme.colorScheme.primary
-        )
-    }
-
-    if (showDeleteConfirmation && selectedJournalForOptions != null) {
-        DeleteConfirmationSheet(
-            sheetState = deleteSheetState,
-            onDismissRequest = {
-                showDeleteConfirmation = false
-                selectedJournalForOptions = null
-            },
-            onConfirm = {
-                val id = selectedJournalForOptions?.id
-                scope.launch { deleteSheetState.hide() }.invokeOnCompletion {
-                    showDeleteConfirmation = false
-                    if (id != null) viewModel.deleteJournal(id)
-                    selectedJournalForOptions = null
-                }
-            }
-        )
     }
 
     val nonDraftJournalsInMonth = journalsInMonth.filter { !it.isDraft }

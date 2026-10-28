@@ -33,9 +33,8 @@ import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.home.components.DayJournalGroup
-import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import com.denser.june.presentation.components.journal.JournalCard
-import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
+import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import com.denser.june.presentation.screens.home.tags.components.DeleteTagDialog
 import com.denser.june.presentation.screens.home.tags.components.FilterBottomSheet
 import com.denser.june.presentation.screens.home.tags.components.FilterFab
@@ -77,19 +76,8 @@ fun TagsPage() {
     var showFilterSheet by remember { mutableStateOf(false) }
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
-    var showLockConfirmation by remember { mutableStateOf(false) }
     val optionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val deleteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val lockSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
-
-    fun dismissOptionsSheet(action: () -> Unit) {
-        action()
-        scope.launch { optionsSheetState.hide() }.invokeOnCompletion {
-            selectedJournalForOptions = null
-        }
-    }
 
     val filterSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -376,13 +364,12 @@ fun TagsPage() {
                 JournalOptionsSheet(
                     journal = currentJournalForOptions,
                     is24Hour = is24Hour,
+                    onDismiss = { selectedJournalForOptions = null },
                     onToggleBookmark = {
                         viewModel.toggleBookmark(currentJournalForOptions.id)
                     },
                     onToggleLock = {
-                        scope.launch { optionsSheetState.hide() }.invokeOnCompletion {
-                            showLockConfirmation = true
-                        }
+                        viewModel.toggleLock(currentJournalForOptions.id)
                     },
                     onExportMarkdown = {
                         journalToExport = currentJournalForOptions
@@ -390,60 +377,13 @@ fun TagsPage() {
                     },
                     onDeleteOrRestore = {
                         if (currentJournalForOptions.isDeleted) {
-                            dismissOptionsSheet { viewModel.restoreJournal(currentJournalForOptions.id) }
+                            viewModel.restoreJournal(currentJournalForOptions.id)
                         } else {
-                            scope.launch { optionsSheetState.hide() }.invokeOnCompletion {
-                                showDeleteConfirmation = true
-                            }
+                            viewModel.softDelete(currentJournalForOptions.id)
                         }
                     }
                 )
             }
-        }
-
-        if (showLockConfirmation && selectedJournalForOptions != null) {
-            val target = selectedJournalForOptions
-            DeleteConfirmationSheet(
-                sheetState = lockSheetState,
-                onDismissRequest = {
-                    showLockConfirmation = false
-                    selectedJournalForOptions = null
-                },
-                onConfirm = {
-                    val id = target?.id
-                    scope.launch { lockSheetState.hide() }.invokeOnCompletion {
-                        showLockConfirmation = false
-                        if (id != null) viewModel.toggleLock(id)
-                        selectedJournalForOptions = null
-                    }
-                },
-                message = stringResource(
-                    if (target?.isLocked == true) R.string.move_out_of_vault_desc else R.string.move_to_vault_desc
-                ),
-                confirmText = stringResource(
-                    if (target?.isLocked == true) R.string.move_out_of_vault else R.string.move_to_vault
-                ),
-                iconRes = if (target?.isLocked == true) R.drawable.lock_open_right_24px else R.drawable.lock_24px,
-                iconAndTextColor = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        if (showDeleteConfirmation && selectedJournalForOptions != null) {
-            DeleteConfirmationSheet(
-                sheetState = deleteSheetState,
-                onDismissRequest = {
-                    showDeleteConfirmation = false
-                    selectedJournalForOptions = null
-                },
-                onConfirm = {
-                    val id = selectedJournalForOptions?.id
-                    scope.launch { deleteSheetState.hide() }.invokeOnCompletion {
-                        showDeleteConfirmation = false
-                        if (id != null) viewModel.softDelete(id)
-                        selectedJournalForOptions = null
-                    }
-                }
-            )
         }
 
         if (selectedPrimaryTag != null && allTags != null) {
