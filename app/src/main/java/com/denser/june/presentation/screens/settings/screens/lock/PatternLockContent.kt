@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens.lock
+import com.denser.june.presentation.components.JuneBackButton
 
 import android.view.SoundEffectConstants
 import androidx.compose.animation.core.*
@@ -118,22 +119,17 @@ fun PatternLockContent(
         val indicatorToInputSpacing = if (isSmallScreen) 28.dp else 56.dp
 
         if (onBackClick != null) {
-            FilledIconButton(
+            JuneBackButton(
                 onClick = onBackClick,
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(top = 8.dp, start = 16.dp)
-                    .align(Alignment.TopStart),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurface
-                )
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.arrow_back_24px),
-                    contentDescription = stringResource(R.string.back)
-                )
-            }
+                ),
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 8.dp, start = 16.dp)
+                    .align(Alignment.TopStart)
+            )
         }
 
         Column(
@@ -218,22 +214,17 @@ fun PatternLockContent(
         }
 
         if (onBackClick != null) {
-            FilledIconButton(
+            JuneBackButton(
                 onClick = onBackClick,
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(top = 8.dp, start = 16.dp)
-                    .align(Alignment.TopStart),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurface
-                )
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.arrow_back_24px),
-                    contentDescription = stringResource(R.string.back)
-                )
-            }
+                ),
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 8.dp, start = 16.dp)
+                    .align(Alignment.TopStart)
+            )
         }
 
         Box(

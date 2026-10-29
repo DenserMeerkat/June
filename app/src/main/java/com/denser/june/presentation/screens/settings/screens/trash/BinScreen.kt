@@ -1,4 +1,6 @@
 package com.denser.june.presentation.screens.settings.screens.trash
+import com.denser.june.presentation.components.JuneBackButton
+import com.denser.june.presentation.components.JuneMoreOptionsButton
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -74,33 +76,14 @@ fun BinScreen() {
                 type = JuneAppBarType.CenterAligned,
                 title = { Text(stringResource(R.string.bin), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Icon(
-                            painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back)
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 },
                 actions = {
                     if (deletedJournals.isNotEmpty()) {
                         Box {
-                            IconButton(
-                                onClick = { showMenu = true },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            ) {
-                                Icon(
-                                    painterResource(R.drawable.more_vert_24px),
-                                    contentDescription = stringResource(R.string.options)
-                                )
-                            }
+                            JuneMoreOptionsButton(
+                                onClick = { showMenu = true }
+                            )
                             JuneDropdownMenu(
                                 expanded = showMenu,
                                 onDismissRequest = { showMenu = false },

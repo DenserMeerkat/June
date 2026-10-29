@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens.lock
+import com.denser.june.presentation.components.JuneBackButton
 
 import android.content.Context
 import android.content.ContextWrapper
@@ -270,22 +271,17 @@ fun LockGate(
         }
 
         if (showBackButton) {
-            FilledIconButton(
+            JuneBackButton(
                 onClick = onDismiss,
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(top = 8.dp, start = 16.dp)
-                    .align(Alignment.TopStart),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurface
-                )
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.arrow_back_24px),
-                    contentDescription = stringResource(R.string.back)
-                )
-            }
+                ),
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 8.dp, start = 16.dp)
+                    .align(Alignment.TopStart)
+            )
         }
     }
 }

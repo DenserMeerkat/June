@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens.vault
+import com.denser.june.presentation.components.JuneBackButton
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -79,18 +80,7 @@ fun VaultScreen() {
                     Text(stringResource(R.string.vault), fontWeight = FontWeight.Bold)
                 },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Icon(
-                            painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back)
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 },
                 actions = {
                     IconButton(

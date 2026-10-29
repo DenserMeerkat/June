@@ -36,6 +36,7 @@ import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.components.JuneBackButton
 import com.denser.june.presentation.screens.editor.EditorAction
 import com.denser.june.presentation.screens.editor.EditorVM
 import com.denser.june.presentation.screens.editor.components.audio.*
@@ -155,7 +156,7 @@ fun AddSongScreen(
                     )
                 },
                 navigationIcon = {
-                    FilledIconButton(
+                    JuneBackButton(
                         onClick = {
                             when (currentStep) {
                                 AddSongStep.Trimmer -> trimmerDismiss()
@@ -165,17 +166,8 @@ fun AddSongScreen(
                                 }
                                 AddSongStep.Library -> onNavigateBack()
                             }
-                        },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        )
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back"
-                        )
-                    }
+                        }
+                    )
                 },
                 actions = {
                     when (currentStep) {

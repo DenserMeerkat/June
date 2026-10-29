@@ -21,6 +21,7 @@ import com.denser.june.core.R
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneConfirmationDialog
 import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.components.JuneBackButton
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -95,18 +96,7 @@ fun SettingsScreen() {
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = "Settings") },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back",
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 },
                 actions = {
                     Button(

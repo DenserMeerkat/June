@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.editor.components.dialogs
+import com.denser.june.presentation.components.JuneCloseButton
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -113,19 +114,8 @@ fun JournalTagsDialog(
                         )
                     },
                     navigationIcon = {
-                        FilledIconButton(
-                            onClick = ::handleDismiss,
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                            ),
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.close_24px),
-                                contentDescription = "Close",
-                            )
-                        }
-                    },
+                    JuneCloseButton(onClick = ::handleDismiss)
+                },
                     actions = {
                         IconButton(onClick = { showInfoDialog = true }) {
                             Icon(

@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens.lock
+import com.denser.june.presentation.components.JuneBackButton
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -42,18 +43,7 @@ fun LockRecoveryContent(
                 title = { Text(stringResource(R.string.reset_lock)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = onBackClick,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
+                    JuneBackButton(onClick = onBackClick)
                 }
             )
         }

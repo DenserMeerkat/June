@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens.lock
+import com.denser.june.presentation.components.JuneBackButton
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.keyframes
@@ -160,22 +161,17 @@ fun PinLockContent(
         }
 
         if (onBackClick != null) {
-            FilledIconButton(
+            JuneBackButton(
                 onClick = onBackClick,
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(top = 8.dp, start = 16.dp)
-                    .align(Alignment.TopStart),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurface
-                )
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.arrow_back_24px),
-                    contentDescription = stringResource(R.string.back)
-                )
-            }
+                ),
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 8.dp, start = 16.dp)
+                    .align(Alignment.TopStart)
+            )
         }
 
         if (bottomBar != null) {

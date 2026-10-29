@@ -95,14 +95,15 @@ fun JuneTopAppBar(
 fun JuneBackButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    colors: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+    ),
     contentDescription: String = stringResource(R.string.back)
 ) {
     FilledIconButton(
         onClick = onClick,
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-        ),
+        colors = colors,
         modifier = modifier
     ) {
         Icon(
@@ -116,14 +117,15 @@ fun JuneBackButton(
 fun JuneCloseButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    colors: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+    ),
     contentDescription: String = stringResource(R.string.close)
 ) {
     FilledIconButton(
         onClick = onClick,
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-        ),
+        colors = colors,
         modifier = modifier
     ) {
         Icon(
@@ -137,15 +139,16 @@ fun JuneCloseButton(
 fun JuneMoreOptionsButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    colors: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+    ),
     contentDescription: String = stringResource(R.string.options)
 ) {
     FilledIconButton(
         onClick = onClick,
         shape = RoundedCornerShape(percent = 50),
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-        ),
+        colors = colors,
         modifier = modifier
             .width(32.dp)
             .height(40.dp)

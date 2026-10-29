@@ -6,12 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.pager.PageSize
-import androidx.compose.foundation.pager.PagerDefaults
-import androidx.compose.foundation.pager.PagerSnapDistance
-import androidx.compose.foundation.pager.VerticalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.denser.june.core.R
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
+import com.denser.june.presentation.components.JuneCloseButton
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -109,26 +105,19 @@ fun DurationPickerBottomSheet(
                     fontSize = 22.sp
                 )
 
-                FilledIconButton(
+                JuneCloseButton(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onDismiss()
                     },
-                    modifier = Modifier
-                        .size(36.dp)
-                        .align(Alignment.CenterEnd),
-                    shape = CircleShape,
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         contentColor = MaterialTheme.colorScheme.onSurface
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.close_24px),
-                        contentDescription = "Close",
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+                    ),
+                    modifier = Modifier
+                        .size(36.dp)
+                        .align(Alignment.CenterEnd)
+                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
