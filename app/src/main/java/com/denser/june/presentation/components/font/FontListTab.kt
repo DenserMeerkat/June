@@ -22,7 +22,9 @@ import com.denser.june.presentation.components.JuneRadioTile
 import com.denser.june.presentation.components.JuneRadioTilePosition
 import com.denser.june.presentation.components.pro.ProBadge
 import com.denser.june.presentation.components.pro.ProLeadingIconContainer
+import com.denser.june.presentation.components.InternetRestrictedBanner
 import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.theme.LocalInternetAllowed
 import com.denser.june.presentation.theme.SYSTEM_FONT_NAME
 import com.denser.june.presentation.theme.getAppFontFamily
 import com.denser.june.presentation.theme.googleFontsMetadata
@@ -43,6 +45,7 @@ fun FontListTab(
     }
 
     val isPro = LocalIsPro.current
+    val isInternetAllowed = LocalInternetAllowed.current
     val isJournalFontActive = selectedFontName != null
     val fontsEnabled = !showAppDefault || isJournalFontActive
 
@@ -56,6 +59,14 @@ fun FontListTab(
         ),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
+        if (!isInternetAllowed) {
+            item(key = "__internet_restricted_banner__") {
+                InternetRestrictedBanner(
+                    description = stringResource(R.string.online_fonts_require_internet),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+        }
         if (showAppDefault) {
             item(key = "__app_font_switch__") {
                 JuneConnectedItem(

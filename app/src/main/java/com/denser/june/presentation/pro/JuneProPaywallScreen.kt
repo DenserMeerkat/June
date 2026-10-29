@@ -280,8 +280,7 @@ private fun JuneProPaywallContent(
                 ) {
                     if (!isInternetAllowed) {
                         InternetRestrictedBanner(
-                            useCompactSettingsButton = true,
-                            modifier = Modifier.fillMaxWidth()
+                                                        modifier = Modifier.fillMaxWidth()
                         )
                     }
 
@@ -455,8 +454,8 @@ private fun HeroTopSection() {
             verticalArrangement = Arrangement.Center
         ) {
             ProBadge(
-                size = 56.dp,
-                iconSize = 32.dp
+                size = 48.dp,
+                iconSize = 36.dp
             )
             Spacer(modifier = Modifier.height(14.dp))
             Text(

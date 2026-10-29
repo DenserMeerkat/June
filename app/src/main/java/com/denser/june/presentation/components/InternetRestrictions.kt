@@ -142,7 +142,7 @@ fun InternetRestrictedIndicator(
 fun InternetRestrictedBanner(
     modifier: Modifier = Modifier,
     description: String = stringResource(R.string.internet_access_restricted),
-    useCompactSettingsButton: Boolean = false,
+    useCompactSettingsButton: Boolean = true,
     onNavigateToSettings: (() -> Unit)? = null
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -179,27 +179,15 @@ fun InternetRestrictedBanner(
                 modifier = Modifier.weight(1f),
                 color = MaterialTheme.colorScheme.onSurface
             )
-            if (useCompactSettingsButton) {
-                IconButton(
-                    onClick = { showDialog = true }
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.settings_b_roll_24px),
-                        contentDescription = stringResource(R.string.settings),
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            } else {
-                TextButton(
-                    onClick = { showDialog = true }
-                ) {
-                    Text(
-                        text = stringResource(R.string.settings),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+            IconButton(
+                onClick = { showDialog = true }
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.settings_b_roll_24px),
+                    contentDescription = stringResource(R.string.settings),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
             }
         }
     }

@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens
+import com.denser.june.presentation.components.JuneBackButton
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -23,7 +24,6 @@ import com.denser.june.presentation.components.font.TypographyPreview
 import com.denser.june.presentation.components.pro.ProBadge
 import com.denser.june.presentation.pro.LocalIsPro
 import com.denser.june.presentation.pro.LocalProSheetController
-import com.denser.june.presentation.theme.LocalInternetAllowed
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -35,7 +35,6 @@ fun FontSelectionScreen(
     val viewModel: SettingsVM = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val navigator = koinInject<AppNavigator>()
-    val isInternetAllowed = LocalInternetAllowed.current
 
     val savedFontName = remember(type, state.appTheme) {
         when (type) {
@@ -88,18 +87,7 @@ fun FontSelectionScreen(
                     Text(title)
                 },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back",
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 },
                 actions = {
                     if (isDirty) {
@@ -144,15 +132,6 @@ fun FontSelectionScreen(
                     .zIndex(0f)
             )
 
-            if (!isInternetAllowed) {
-                InternetRestrictedBanner(
-                    description = stringResource(R.string.online_fonts_require_internet),
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(horizontal = 16.dp, vertical = 2.dp)
-                        .zIndex(1f)
-                )
-            }
 
             FontPanel(
                 selectedFontName = draftFontName,
