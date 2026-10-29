@@ -20,10 +20,10 @@ import com.denser.june.core.utils.FontUtils
 import com.denser.june.presentation.components.JuneConnectedItem
 import com.denser.june.presentation.components.JuneRadioTile
 import com.denser.june.presentation.components.JuneRadioTilePosition
-import com.denser.june.presentation.components.pro.ProBadge
-import com.denser.june.presentation.components.pro.ProLeadingIconContainer
+import com.denser.june.presentation.components.plus.PlusBadge
+import com.denser.june.presentation.components.plus.PlusLeadingIconContainer
 import com.denser.june.presentation.components.InternetRestrictedBanner
-import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.plus.LocalIsPlus
 import com.denser.june.presentation.theme.LocalInternetAllowed
 import com.denser.june.presentation.theme.SYSTEM_FONT_NAME
 import com.denser.june.presentation.theme.getAppFontFamily
@@ -44,7 +44,7 @@ fun FontListTab(
         listOf(SYSTEM_FONT_NAME) + bundledFonts.map { it.fullName } + googleFontsMetadata.map { it.name }
     }
 
-    val isPro = LocalIsPro.current
+    val isPlus = LocalIsPlus.current
     val isInternetAllowed = LocalInternetAllowed.current
     val isJournalFontActive = selectedFontName != null
     val fontsEnabled = !showAppDefault || isJournalFontActive
@@ -78,19 +78,19 @@ fun FontListTab(
                     shape = CircleShape,
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     contentPadding = PaddingValues(
-                        start = if (!isPro) 16.dp else 20.dp,
+                        start = if (!isPlus) 16.dp else 20.dp,
                         end = 16.dp,
                         top = 6.dp,
                         bottom = 6.dp
                     ),
                     modifier = Modifier.padding(bottom = 8.dp),
-                    leadingContent = if (!isPro) {
+                    leadingContent = if (!isPlus) {
                         {
-                            ProLeadingIconContainer {
+                            PlusLeadingIconContainer {
                                 Icon(
-                                    painter = painterResource(UiUtils.PRO_ICON_RES),
+                                    painter = painterResource(UiUtils.PLUS_ICON_RES),
                                     contentDescription = null,
-                                    tint = UiUtils.proContentColor,
+                                    tint = UiUtils.plusContentColor,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -133,9 +133,9 @@ fun FontListTab(
                 selected = fontsEnabled && name == selectedFontName,
                 enabled = fontsEnabled,
                 title = name,
-                prefixContent = if (isProFont && !isPro) {
+                prefixContent = if (isProFont && !isPlus) {
                     {
-                        ProBadge(
+                        PlusBadge(
                             size = 20.dp,
                             iconSize = 12.dp
                         )

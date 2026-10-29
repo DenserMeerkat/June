@@ -496,10 +496,10 @@ class EditorVM(
                     hyphenState.setMarkdown(journal.content)
                 }
                 val parsedContent = journal.content
-                val isPro = billingHandler.isPro.value
-                val loadedFont = if (isPro) journal.font else null
-                val loadedFontVariation = if (isPro) journal.fontVariation else null
-                val loadedTheme = if (isPro) journal.theme else null
+                val isPlus = billingHandler.isPlus.value
+                val loadedFont = if (isPlus) journal.font else null
+                val loadedFontVariation = if (isPlus) journal.fontVariation else null
+                val loadedTheme = if (isPlus) journal.theme else null
 
                 existingJournal = existingJournal!!.copy(
                     content = parsedContent,

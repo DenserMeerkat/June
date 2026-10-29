@@ -26,16 +26,16 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 
 private const val TAG = "BillingHandler"
-private const val ENTITLEMENT_ID = "june_pro"
+private const val ENTITLEMENT_ID = "june_plus"
 
 class BillingHandlerImpl(
     private val privacyPreferences: PrivacyPreferences
 ) : BillingHandler {
-    private val _isPro = MutableStateFlow(false)
-    override val isPro: StateFlow<Boolean> = _isPro.asStateFlow()
+    private val _isPlus = MutableStateFlow(false)
+    override val isPlus: StateFlow<Boolean> = _isPlus.asStateFlow()
 
-    private val _proPrice = MutableStateFlow<String?>(null)
-    override val proPrice: StateFlow<String?> = _proPrice.asStateFlow()
+    private val _plusPrice = MutableStateFlow<String?>(null)
+    override val plusPrice: StateFlow<String?> = _plusPrice.asStateFlow()
 
     private var cachedPackage: Package? = null
 
@@ -51,11 +51,11 @@ class BillingHandlerImpl(
                 if (Purchases.isConfigured) {
                     purchases.updatedCustomerInfoListener =
                         UpdatedCustomerInfoListener { customerInfo ->
-                            updateProStatus(customerInfo)
+                            updatePlusStatus(customerInfo)
                         }
 
                     purchases.getCustomerInfoWith(
-                        onSuccess = { customerInfo -> updateProStatus(customerInfo) },
+                        onSuccess = { customerInfo -> updatePlusStatus(customerInfo) },
                         onError = { error ->
                             AppLogger.e(AppLogger.Category.BILLING, TAG, "Error fetching customer info: $error")
                         }
@@ -77,7 +77,7 @@ class BillingHandlerImpl(
                     val pkg = currentOffering?.lifetime
                         ?: currentOffering?.availablePackages?.firstOrNull()
                     cachedPackage = pkg
-                    _proPrice.value = pkg?.product?.price?.formatted
+                    _plusPrice.value = pkg?.product?.price?.formatted
                 },
                 onError = { error ->
                     AppLogger.e(AppLogger.Category.BILLING, TAG, "Error fetching offerings: $error")
@@ -88,12 +88,12 @@ class BillingHandlerImpl(
         }
     }
 
-    private fun updateProStatus(customerInfo: CustomerInfo) {
-        val proEntitlement = customerInfo.entitlements[ENTITLEMENT_ID]
-        _isPro.value = proEntitlement?.isActive == true
+    private fun updatePlusStatus(customerInfo: CustomerInfo) {
+        val plusEntitlement = customerInfo.entitlements[ENTITLEMENT_ID]
+        _isPlus.value = plusEntitlement?.isActive == true
     }
 
-    override suspend fun purchasePro(activity: Activity): Result<Boolean> {
+    override suspend fun purchasePlus(activity: Activity): Result<Boolean> {
         return try {
             if (!privacyPreferences.getIsInternetAllowedFlow().first()) {
                 return Result.failure(IOException("Internet access restricted in app settings"))
@@ -108,7 +108,7 @@ class BillingHandlerImpl(
                 val current = offerings.current
                 val resolved = current?.lifetime ?: current?.availablePackages?.firstOrNull()
                 cachedPackage = resolved
-                _proPrice.value = resolved?.product?.price?.formatted
+                _plusPrice.value = resolved?.product?.price?.formatted
                 resolved
             } ?: run {
                 AppLogger.e(AppLogger.Category.BILLING, TAG, "No lifetime package found in offerings")
@@ -117,7 +117,7 @@ class BillingHandlerImpl(
 
             val params = PurchaseParams.Builder(activity, pkg).build()
             val purchaseResult = purchases.awaitPurchase(params)
-            updateProStatus(purchaseResult.customerInfo)
+            updatePlusStatus(purchaseResult.customerInfo)
             val isActive = purchaseResult.customerInfo.entitlements[ENTITLEMENT_ID]?.isActive == true
             Result.success(isActive)
         } catch (e: PurchasesTransactionException) {
@@ -128,7 +128,7 @@ class BillingHandlerImpl(
                 Result.failure(e)
             }
         } catch (e: Exception) {
-            AppLogger.e(AppLogger.Category.BILLING, TAG, "Unexpected error in purchasePro", e)
+            AppLogger.e(AppLogger.Category.BILLING, TAG, "Unexpected error in purchasePlus", e)
             Result.failure(e)
         }
     }
@@ -143,7 +143,7 @@ class BillingHandlerImpl(
                 return Result.failure(IllegalStateException("Billing is not configured"))
             }
             val customerInfo = purchases.awaitRestore()
-            updateProStatus(customerInfo)
+            updatePlusStatus(customerInfo)
             val isActive = customerInfo.entitlements[ENTITLEMENT_ID]?.isActive == true
             Result.success(isActive)
         } catch (e: Exception) {
@@ -152,8 +152,8 @@ class BillingHandlerImpl(
         }
     }
 
-    override fun resetProForTesting() {
-        _isPro.value = false
+    override fun resetPlusForTesting() {
+        _isPlus.value = false
         try {
             if (Purchases.isConfigured) {
                 purchases.logOut()

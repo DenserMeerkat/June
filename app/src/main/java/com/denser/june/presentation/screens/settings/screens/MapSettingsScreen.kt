@@ -41,7 +41,7 @@ import com.denser.june.presentation.components.MapViewLifecycleEffect
 import com.denser.june.presentation.components.rememberMapDarkMode
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.presentation.navigation.AppNavigator
-import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.plus.LocalIsPlus
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.screens.settings.tiles.DefaultMapThemeTile
 import com.denser.june.presentation.screens.settings.tiles.MapThemeAccentTile
@@ -74,7 +74,7 @@ fun MapSettingsScreen() {
 
     val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
         .collectAsStateWithLifecycle(initialValue = true)
-    val isPro = LocalIsPro.current
+    val isPlus = LocalIsPlus.current
     var previewAccentEnabled by remember(isMapThemeAccentEnabled) { mutableStateOf(isMapThemeAccentEnabled) }
     val colorScheme = MaterialTheme.colorScheme
 
@@ -176,7 +176,7 @@ fun MapSettingsScreen() {
                     checked = previewAccentEnabled,
                     onCheckedChange = { newValue ->
                         previewAccentEnabled = newValue
-                        if (isPro) {
+                        if (isPlus) {
                             scope.launch {
                                 journalPreferences.setMapThemeAccentEnabled(newValue)
                             }

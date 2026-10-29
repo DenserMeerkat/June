@@ -32,8 +32,8 @@ fun PinSetupScreen(forVault: Boolean = false) {
     val privacyPreferences = koinInject<PrivacyPreferences>()
     val coroutineScope = rememberCoroutineScope()
     val navigator = koinInject<AppNavigator>()
-    val isPro = com.denser.june.presentation.pro.LocalIsPro.current
-    val proSheetController = com.denser.june.presentation.pro.LocalProSheetController.current
+    val isPlus = com.denser.june.presentation.plus.LocalIsPlus.current
+    val plusSheetController = com.denser.june.presentation.plus.LocalPlusSheetController.current
     var step by remember { mutableStateOf(SetupStep.CREATE) }
     var firstPin by remember { mutableStateOf("") }
     var currentPinInput by remember { mutableStateOf("") }
@@ -76,8 +76,8 @@ fun PinSetupScreen(forVault: Boolean = false) {
 
             SetupStep.CONFIRM -> {
                 if (pin == firstPin) {
-                    if (forVault && !isPro) {
-                        proSheetController.show {
+                    if (forVault && !isPlus) {
+                        plusSheetController.show {
                             saveAndCompletePin(pin)
                         }
                     } else {

@@ -32,8 +32,8 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 import androidx.compose.runtime.DisposableEffect
-import com.denser.june.presentation.pro.LocalIsPro
-import com.denser.june.presentation.pro.LocalProSheetController
+import com.denser.june.presentation.plus.LocalIsPlus
+import com.denser.june.presentation.plus.LocalPlusSheetController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,8 +69,8 @@ fun VaultScreen() {
         return
     }
 
-    val isPro = LocalIsPro.current
-    val proSheetController = LocalProSheetController.current
+    val isPlus = LocalIsPlus.current
+    val plusSheetController = LocalPlusSheetController.current
 
     Scaffold(
         topBar = {
@@ -107,14 +107,14 @@ fun VaultScreen() {
                 icon = R.drawable.lock_24px,
                 title = stringResource(R.string.vault_empty_title),
                 subtitle = stringResource(R.string.vault_empty_desc),
-                action = if (!isPro) {
+                action = if (!isPlus) {
                     {
                         Button(
                             onClick = {
-                                proSheetController.show()
+                                plusSheetController.show()
                             }
                         ) {
-                            Text(stringResource(R.string.unlock_june_pro))
+                            Text(stringResource(R.string.unlock_june_plus))
                         }
                     }
                 } else null

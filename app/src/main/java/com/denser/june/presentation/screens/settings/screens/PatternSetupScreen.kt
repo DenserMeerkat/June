@@ -21,8 +21,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 import androidx.compose.runtime.rememberCoroutineScope
 import com.denser.june.core.domain.preferences.PrivacyPreferences
-import com.denser.june.presentation.pro.LocalIsPro
-import com.denser.june.presentation.pro.LocalProSheetController
+import com.denser.june.presentation.plus.LocalIsPlus
+import com.denser.june.presentation.plus.LocalPlusSheetController
 import kotlinx.coroutines.launch
 
 private enum class PatternSetupStep { CREATE, CONFIRM }
@@ -34,8 +34,8 @@ fun PatternSetupScreen(forVault: Boolean = false) {
     val privacyPreferences = koinInject<PrivacyPreferences>()
     val coroutineScope = rememberCoroutineScope()
     val navigator = koinInject<AppNavigator>()
-    val isPro = LocalIsPro.current
-    val proSheetController = LocalProSheetController.current
+    val isPlus = LocalIsPlus.current
+    val plusSheetController = LocalPlusSheetController.current
     var step by remember { mutableStateOf(PatternSetupStep.CREATE) }
     var firstPattern by remember { mutableStateOf<List<Int>>(emptyList()) }
     var currentPatternInput by remember { mutableStateOf<List<Int>>(emptyList()) }
@@ -78,8 +78,8 @@ fun PatternSetupScreen(forVault: Boolean = false) {
 
             PatternSetupStep.CONFIRM -> {
                 if (pattern == firstPattern) {
-                    if (!isPro) {
-                        proSheetController.show {
+                    if (!isPlus) {
+                        plusSheetController.show {
                             saveAndCompletePattern(pattern)
                         }
                     } else {

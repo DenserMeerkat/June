@@ -1,4 +1,4 @@
-package com.denser.june.presentation.components.pro
+package com.denser.june.presentation.components.plus
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,13 +18,13 @@ import com.denser.june.presentation.utils.UiUtils
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ProBadge(
+fun PlusBadge(
     modifier: Modifier = Modifier,
     size: Dp = 18.dp,
     iconSize: Dp = 14.dp,
-    shape: Shape = UiUtils.proShape,
-    containerColor: Color = UiUtils.proContainerColor,
-    contentColor: Color = UiUtils.proContentColor
+    shape: Shape = UiUtils.plusShape,
+    containerColor: Color = UiUtils.plusContainerColor,
+    contentColor: Color = UiUtils.plusContentColor
 ) {
     Surface(
         shape = shape,
@@ -37,8 +37,8 @@ fun ProBadge(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(UiUtils.PRO_ICON_RES),
-                contentDescription = "Pro",
+                painter = painterResource(UiUtils.PLUS_ICON_RES),
+                contentDescription = "Plus",
                 modifier = Modifier.size(iconSize),
                 tint = contentColor
             )
@@ -48,12 +48,12 @@ fun ProBadge(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ProLeadingIconContainer(
+fun PlusLeadingIconContainer(
     modifier: Modifier = Modifier,
     size: Dp = 36.dp,
-    shape: Shape = UiUtils.proShape,
-    containerColor: Color = UiUtils.proContainerColor,
-    contentColor: Color = UiUtils.proContentColor,
+    shape: Shape = UiUtils.plusShape,
+    containerColor: Color = UiUtils.plusContainerColor,
+    contentColor: Color = UiUtils.plusContentColor,
     content: @Composable () -> Unit
 ) {
     Surface(
@@ -70,4 +70,3 @@ fun ProLeadingIconContainer(
         }
     }
 }
-

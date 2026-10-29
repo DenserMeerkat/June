@@ -26,7 +26,7 @@ data class SettingsState(
     val pinHash: String? = null,
     val passwordHash: String? = null,
     val patternHash: String? = null,
-    val isPro: Boolean = false,
+    val isPlus: Boolean = false,
     val securityQuestion: String? = null,
     val securityAnswerHash: String? = null,
     val isScreenPrivacyEnabled: Boolean = false,

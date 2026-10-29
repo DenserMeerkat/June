@@ -1,4 +1,4 @@
-package com.denser.june.presentation.components.pro
+package com.denser.june.presentation.components.plus
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.ColumnScope
@@ -12,12 +12,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.plus.LocalIsPlus
 import com.denser.june.presentation.screens.settings.components.SettingsItem
 import com.denser.june.presentation.utils.UiUtils
 
 @Composable
-fun ProSettingsItem(
+fun PlusSettingsItem(
     title: String,
     @DrawableRes iconRes: Int,
     modifier: Modifier = Modifier,
@@ -29,8 +29,8 @@ fun ProSettingsItem(
     onClick: (() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null
 ) {
-    val isPro = LocalIsPro.current
-    val resolvedPadding = if (!isPro) {
+    val isPlus = LocalIsPlus.current
+    val resolvedPadding = if (!isPlus) {
         PaddingValues(
             start = (contentPadding.calculateLeftPadding(LayoutDirection.Ltr) - 6.dp).coerceAtLeast(0.dp),
             top = contentPadding.calculateTopPadding(),
@@ -50,12 +50,12 @@ fun ProSettingsItem(
         contentPadding = resolvedPadding,
         trailingContent = trailingContent,
         leadingContent = {
-            if (!isPro) {
-                ProLeadingIconContainer {
+            if (!isPlus) {
+                PlusLeadingIconContainer {
                     Icon(
                         painter = painterResource(iconRes),
                         contentDescription = null,
-                        tint = UiUtils.proContentColor,
+                        tint = UiUtils.plusContentColor,
                         modifier = Modifier.size(20.dp)
                     )
                 }

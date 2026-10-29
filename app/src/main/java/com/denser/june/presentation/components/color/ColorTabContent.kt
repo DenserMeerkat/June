@@ -26,8 +26,8 @@ import com.denser.june.presentation.components.JuneConnectedItem
 import com.denser.june.presentation.components.JuneSliderTile
 import com.denser.june.core.media.color.ExtractedMediaColor
 import com.denser.june.core.media.color.ExtractedMediaTheme
-import com.denser.june.presentation.components.pro.ProLeadingIconContainer
-import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.components.plus.PlusLeadingIconContainer
+import com.denser.june.presentation.plus.LocalIsPlus
 import com.denser.june.presentation.utils.UiUtils
 import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
@@ -111,8 +111,8 @@ fun ColorTabContent(
             .padding(bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        val isPro = LocalIsPro.current
-        val showProLeading = toggleTitle == null && !isPro
+        val isPlus = LocalIsPlus.current
+        val showProLeading = toggleTitle == null && !isPlus
         JuneConnectedItem(
             title = toggleTitle ?: if (isCustomActive) {
                 stringResource(R.string.custom_theme)
@@ -130,11 +130,11 @@ fun ColorTabContent(
             modifier = Modifier.padding(horizontal = 20.dp),
             leadingContent = if (showProLeading) {
                 {
-                    ProLeadingIconContainer {
+                    PlusLeadingIconContainer {
                         Icon(
-                            painter = painterResource(UiUtils.PRO_ICON_RES),
+                            painter = painterResource(UiUtils.PLUS_ICON_RES),
                             contentDescription = null,
-                            tint = UiUtils.proContentColor,
+                            tint = UiUtils.plusContentColor,
                             modifier = Modifier.size(20.dp)
                         )
                     }

@@ -78,7 +78,7 @@ class SettingsVM(
             journalPrefs.getVideoCompressionQuality(),
             privacyPrefs.getPasswordHashFlow(),
             privacyPrefs.getPatternHashFlow(),
-            billingHandler.isPro
+            billingHandler.isPlus
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -89,7 +89,7 @@ class SettingsVM(
             pinHash = array[8] as String?,
             passwordHash = array[29] as String?,
             patternHash = array[30] as String?,
-            isPro = array[31] as Boolean,
+            isPlus = array[31] as Boolean,
             isScreenPrivacyEnabled = array[9] as Boolean,
             isAutoTimeEnabled = array[10] as Boolean,
             startOfWeek = array[11] as DayOfWeek,

@@ -29,7 +29,7 @@ import com.denser.june.presentation.screens.settings.components.*
 import com.denser.june.presentation.screens.settings.components.sheets.*
 import com.denser.june.core.domain.billing.BillingHandler
 import com.denser.june.presentation.components.color.ColorTab
-import com.denser.june.presentation.components.pro.ProLeadingIconContainer
+import com.denser.june.presentation.components.plus.PlusLeadingIconContainer
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.utils.InternetDisabledException
 import com.denser.june.presentation.utils.UiUtils
@@ -45,7 +45,7 @@ fun SettingsScreen() {
     val onAction = settingsVM::onAction
     val navigator = koinInject<AppNavigator>()
     val billingHandler = koinInject<BillingHandler>()
-    val isPro by billingHandler.isPro.collectAsStateWithLifecycle()
+    val isPlus by billingHandler.isPlus.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -86,7 +86,7 @@ fun SettingsScreen() {
         }
     }
 
-    val proSheetController = com.denser.june.presentation.pro.LocalProSheetController.current
+    val plusSheetController = com.denser.june.presentation.plus.LocalPlusSheetController.current
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -103,7 +103,7 @@ fun SettingsScreen() {
                         onClick = {
                             focusManager.clearFocus()
                             keyboardController?.hide()
-                            proSheetController.show()
+                            plusSheetController.show()
                         },
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                         modifier = Modifier
@@ -111,7 +111,7 @@ fun SettingsScreen() {
                             .padding(end = 8.dp)
                     ) {
                         Text(
-                            text = if (isPro) "Pro" else "Get Pro",
+                            text = if (isPlus) "Pro" else "Get Pro",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -315,12 +315,12 @@ fun SettingsScreen() {
                                 SettingsItem(
                                     title = stringResource(R.string.vault),
                                     leadingContent = {
-                                        if (!isPro) {
-                                            ProLeadingIconContainer {
+                                        if (!isPlus) {
+                                            PlusLeadingIconContainer {
                                                 Icon(
                                                     painter = painterResource(R.drawable.lock_24px),
                                                     contentDescription = null,
-                                                    tint = UiUtils.proContentColor,
+                                                    tint = UiUtils.plusContentColor,
                                                     modifier = Modifier.size(20.dp)
                                                 )
                                             }

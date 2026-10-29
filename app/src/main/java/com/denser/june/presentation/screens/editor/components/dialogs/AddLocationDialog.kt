@@ -76,7 +76,7 @@ import com.denser.june.presentation.utils.MapAccentColorizer.getMapLibreMap
 import java.util.Locale
 
 import com.denser.june.core.domain.model.JournalTheme
-import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.plus.LocalIsPlus
 import com.denser.june.presentation.theme.JuneThemeWrapper
 
 @Composable
@@ -98,8 +98,8 @@ fun AddLocationDialog(
         .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
     val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
         .collectAsStateWithLifecycle(initialValue = true)
-    val isPro = LocalIsPro.current
-    val shouldApplyAccents = isPro && isMapThemeAccentEnabled
+    val isPlus = LocalIsPlus.current
+    val shouldApplyAccents = isPlus && isMapThemeAccentEnabled
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()

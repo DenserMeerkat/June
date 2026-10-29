@@ -10,34 +10,34 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
-import com.denser.june.presentation.components.pro.ProBadge
+import com.denser.june.presentation.components.plus.PlusBadge
 import com.denser.june.presentation.utils.UiUtils
 
 @Composable
-fun JuneProSaveDialog(
+fun JunePlusSaveDialog(
     onDismissRequest: () -> Unit,
-    onUnlockPro: () -> Unit,
-    onSaveWithoutProStyling: () -> Unit
+    onUnlockPlus: () -> Unit,
+    onSaveWithoutPlusStyling: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
         shape = RoundedCornerShape(28.dp),
         icon = {
-            ProBadge(
+            PlusBadge(
                 size = 40.dp,
                 iconSize = 28.dp
             )
         },
         title = {
             Text(
-                text = stringResource(R.string.pro_styling_detected_title),
+                text = stringResource(R.string.plus_styling_detected_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
             Text(
-                text = stringResource(R.string.pro_styling_detected_desc),
+                text = stringResource(R.string.plus_styling_detected_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -48,19 +48,19 @@ fun JuneProSaveDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
-                    onClick = onUnlockPro,
+                    onClick = onUnlockPlus,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
-                        painter = painterResource(UiUtils.PRO_ICON_RES),
+                        painter = painterResource(UiUtils.PLUS_ICON_RES),
                         contentDescription = null,
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    Text(stringResource(R.string.unlock_pro))
+                    Text(stringResource(R.string.unlock_plus))
                 }
                 FilledTonalButton(
-                    onClick = onSaveWithoutProStyling,
+                    onClick = onSaveWithoutPlusStyling,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 ) {

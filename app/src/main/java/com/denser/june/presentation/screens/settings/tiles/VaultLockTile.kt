@@ -6,7 +6,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.core.domain.preferences.PrivacyPreferences
-import com.denser.june.presentation.components.pro.ProSettingsItem
+import com.denser.june.presentation.components.plus.PlusSettingsItem
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import org.koin.compose.koinInject
@@ -30,7 +30,7 @@ fun VaultLockTile() {
         stringResource(R.string.app_lock)
     }
 
-    ProSettingsItem(
+    PlusSettingsItem(
         title = stringResource(R.string.vault),
         subtitle = subtitle,
         iconRes = R.drawable.lock_open_circle_24px,

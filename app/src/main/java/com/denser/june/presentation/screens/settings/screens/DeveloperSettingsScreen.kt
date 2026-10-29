@@ -36,7 +36,7 @@ fun DeveloperSettingsScreen() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     val devOptionsDisabledMsg = stringResource(R.string.developer_options_disabled)
-    val proStatusResetMsg = stringResource(R.string.pro_status_reset)
+    val plusStatusResetMsg = stringResource(R.string.plus_status_reset)
 
     val isSyncLoggingEnabled by syncPrefs.getSyncLoggingEnabled().collectAsState(initial = false)
     val isBackupLoggingEnabled by syncPrefs.getBackupLoggingEnabled().collectAsState(initial = false)
@@ -190,10 +190,10 @@ fun DeveloperSettingsScreen() {
                 SettingSection(stringResource(R.string.options)) {
                     val billingHandler = koinInject<BillingHandler>()
                     SettingsItem(
-                        title = stringResource(R.string.reset_pro_status),
+                        title = stringResource(R.string.reset_plus_status),
                         onClick = {
-                            billingHandler.resetProForTesting()
-                            Toast.makeText(context, proStatusResetMsg, Toast.LENGTH_SHORT).show()
+                            billingHandler.resetPlusForTesting()
+                            Toast.makeText(context, plusStatusResetMsg, Toast.LENGTH_SHORT).show()
                         },
                         leadingContent = {
                             Icon(

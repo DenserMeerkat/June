@@ -14,8 +14,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 
-import com.denser.june.presentation.components.pro.ProLeadingIconContainer
-import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.components.plus.PlusLeadingIconContainer
+import com.denser.june.presentation.plus.LocalIsPlus
 import com.denser.june.presentation.utils.UiUtils
 
 @Composable
@@ -24,7 +24,7 @@ fun JournalLockActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isPro = LocalIsPro.current
+    val isPlus = LocalIsPlus.current
     val containerColor = if (isLocked) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
@@ -45,12 +45,12 @@ fun JournalLockActionButton(
             contentColor = contentColor
         )
     ) {
-        if (!isPro && !isLocked) {
-            ProLeadingIconContainer(size = 36.dp) {
+        if (!isPlus && !isLocked) {
+            PlusLeadingIconContainer(size = 36.dp) {
                 Icon(
                     painter = painterResource(R.drawable.lock_open_right_24px),
                     contentDescription = stringResource(R.string.lock),
-                    tint = UiUtils.proContentColor,
+                    tint = UiUtils.plusContentColor,
                     modifier = Modifier.size(20.dp)
                 )
             }

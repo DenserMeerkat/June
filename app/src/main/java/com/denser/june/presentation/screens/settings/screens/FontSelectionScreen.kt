@@ -21,9 +21,9 @@ import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.components.font.FontPanel
 import com.denser.june.presentation.components.font.TypographyPreview
-import com.denser.june.presentation.components.pro.ProBadge
-import com.denser.june.presentation.pro.LocalIsPro
-import com.denser.june.presentation.pro.LocalProSheetController
+import com.denser.june.presentation.components.plus.PlusBadge
+import com.denser.june.presentation.plus.LocalIsPlus
+import com.denser.june.presentation.plus.LocalPlusSheetController
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -54,8 +54,8 @@ fun FontSelectionScreen(
         viewModel.onAction(SettingsAction.SetFontType(type))
     }
 
-    val isPro = LocalIsPro.current
-    val proSheetController = LocalProSheetController.current
+    val isPlus = LocalIsPlus.current
+    val plusSheetController = LocalPlusSheetController.current
 
     val isProFontSelected = remember(draftFontName) {
         draftFontName == Fonts.RECURSIVE.fullName || draftFontName == Fonts.SHANTELL_SANS.fullName
@@ -93,8 +93,8 @@ fun FontSelectionScreen(
                     if (isDirty) {
                         Button(
                             onClick = {
-                                if (isProSelection && !isPro) {
-                                    proSheetController.show {
+                                if (isProSelection && !isPlus) {
+                                    plusSheetController.show {
                                         saveFontsAction()
                                     }
                                 } else {
@@ -103,8 +103,8 @@ fun FontSelectionScreen(
                             },
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
                         ) {
-                            if (isProSelection && !isPro) {
-                                ProBadge(
+                            if (isProSelection && !isPlus) {
+                                PlusBadge(
                                     modifier = Modifier.padding(end = 6.dp)
                                 )
                             }

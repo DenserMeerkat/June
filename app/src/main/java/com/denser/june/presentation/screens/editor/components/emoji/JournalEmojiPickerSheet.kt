@@ -64,7 +64,7 @@ fun JournalEmojiPickerSheet(
 
     LaunchedEffect(Unit) {
         if (emojiAssets == null) {
-            emojiAssets = loadEmojiAssets(context.resources)
+            emojiAssets = loadEmojiAssets(context.applicationContext.resources)
         }
     }
 

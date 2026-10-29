@@ -38,7 +38,7 @@ import com.denser.june.core.domain.preferences.JournalPreferences
 import org.koin.compose.koinInject
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.domain.model.enums.MapStyleProvider
-import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.plus.LocalIsPlus
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.map.GestureOptions
@@ -70,8 +70,8 @@ fun JournalMapItem(
         .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
     val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
         .collectAsStateWithLifecycle(initialValue = true)
-    val isPro = LocalIsPro.current
-    val shouldApplyAccents = isPro && isMapThemeAccentEnabled
+    val isPlus = LocalIsPlus.current
+    val shouldApplyAccents = isPlus && isMapThemeAccentEnabled
     val colorScheme = MaterialTheme.colorScheme
 
     MapLibreInitializer(isInternetAllowed)

@@ -7,13 +7,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class BillingHandlerImpl : BillingHandler {
-    private val _isPro = MutableStateFlow(true)
-    override val isPro: StateFlow<Boolean> = _isPro.asStateFlow()
+    private val _isPlus = MutableStateFlow(true)
+    override val isPlus: StateFlow<Boolean> = _isPlus.asStateFlow()
 
-    private val _proPrice = MutableStateFlow<String?>(null)
-    override val proPrice: StateFlow<String?> = _proPrice.asStateFlow()
+    private val _plusPrice = MutableStateFlow<String?>(null)
+    override val plusPrice: StateFlow<String?> = _plusPrice.asStateFlow()
 
-    override suspend fun purchasePro(activity: Activity): Result<Boolean> {
+    override suspend fun purchasePlus(activity: Activity): Result<Boolean> {
         return Result.success(true)
     }
 
@@ -21,7 +21,7 @@ class BillingHandlerImpl : BillingHandler {
         return Result.success(true)
     }
 
-    override fun resetProForTesting() {
-        _isPro.value = false
+    override fun resetPlusForTesting() {
+        _isPlus.value = false
     }
 }

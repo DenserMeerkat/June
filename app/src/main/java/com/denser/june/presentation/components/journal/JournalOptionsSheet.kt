@@ -24,8 +24,8 @@ import com.denser.june.core.domain.model.enums.TagCategory
 import com.denser.june.core.utils.toDayOfMonth
 import com.denser.june.core.utils.toFullDateTime
 import com.denser.june.core.utils.toShortMonth
-import com.denser.june.presentation.pro.LocalIsPro
-import com.denser.june.presentation.pro.LocalProSheetController
+import com.denser.june.presentation.plus.LocalIsPlus
+import com.denser.june.presentation.plus.LocalPlusSheetController
 import com.denser.june.presentation.theme.LocalSyncEnabled
 import com.denser.june.presentation.utils.TagUtils
 import java.util.Date
@@ -52,8 +52,8 @@ fun JournalOptionsSheet(
     onExportMarkdown: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
-    val isPro = LocalIsPro.current
-    val proSheetController = LocalProSheetController.current
+    val isPlus = LocalIsPlus.current
+    val plusSheetController = LocalPlusSheetController.current
     val isSyncEnabled = LocalSyncEnabled.current
     var currentMode by remember { mutableStateOf(JournalOptionsSheetMode.OPTIONS) }
 
@@ -96,8 +96,8 @@ fun JournalOptionsSheet(
                             onToggleBookmark = onToggleBookmark,
                             onToggleLock = onToggleLock?.let {
                                 {
-                                    if (!journal.isLocked && !isPro) {
-                                        proSheetController.show {
+                                    if (!journal.isLocked && !isPlus) {
+                                        plusSheetController.show {
                                             currentMode = JournalOptionsSheetMode.CONFIRM_LOCK
                                         }
                                     } else {

@@ -13,7 +13,7 @@ import com.denser.june.core.R
 import com.denser.june.presentation.components.JuneCloseButton
 import com.denser.june.presentation.components.JuneMoreOptionsButton
 import com.denser.june.presentation.components.JuneTopAppBar
-import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.plus.LocalIsPlus
 import com.denser.june.presentation.utils.UiUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,9 +35,9 @@ fun EditorTopAppBar(
     onResetFont: () -> Unit = {},
     isThemeDirty: Boolean = false,
     onResetTheme: () -> Unit = {},
-    isProStylingActive: Boolean = false,
+    isPlusStylingActive: Boolean = false,
 ) {
-    val isPro = LocalIsPro.current
+    val isPlus = LocalIsPlus.current
 
     JuneTopAppBar(
         modifier = modifier,
@@ -156,10 +156,10 @@ fun EditorTopAppBar(
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                         modifier = Modifier.height(38.dp)
                     ) {
-                        if (isProStylingActive && !isPro) {
+                        if (isPlusStylingActive && !isPlus) {
                             Icon(
-                                painter = painterResource(UiUtils.PRO_ICON_RES),
-                                contentDescription = "Pro",
+                                painter = painterResource(UiUtils.PLUS_ICON_RES),
+                                contentDescription = "Plus",
                                 modifier = Modifier
                                     .size(20.dp)
                                     .padding(end = 4.dp)

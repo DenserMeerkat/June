@@ -23,7 +23,7 @@ import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneDialog
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.components.JuneBackButton
-import com.denser.june.presentation.components.pro.ProSettingsItem
+import com.denser.june.presentation.components.plus.PlusSettingsItem
 import com.denser.june.presentation.screens.settings.screens.lock.PasswordLockContent
 import com.denser.june.presentation.screens.settings.screens.lock.PatternLockContent
 import com.denser.june.presentation.screens.settings.screens.lock.PinLockContent
@@ -273,7 +273,7 @@ fun LockMethodContent(
                     )
 
                     val isPasswordSelected = activeLockType == LockType.PASSWORD
-                    ProSettingsItem(
+                    PlusSettingsItem(
                         title = stringResource(R.string.custom_password),
                         iconRes = R.drawable.password_24px,
                         contentPadding = waysToLockPadding,
@@ -291,7 +291,7 @@ fun LockMethodContent(
                     )
 
                     val isPatternSelected = activeLockType == LockType.PATTERN
-                    ProSettingsItem(
+                    PlusSettingsItem(
                         title = stringResource(R.string.custom_pattern),
                         iconRes = R.drawable.pattern_24px,
                         contentPadding = waysToLockPadding,

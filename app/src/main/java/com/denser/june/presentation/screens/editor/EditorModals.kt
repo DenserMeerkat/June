@@ -27,9 +27,9 @@ import com.denser.june.presentation.screens.editor.components.emoji.JournalEmoji
 import com.denser.june.presentation.screens.editor.components.emoji.loadEmojiAssets
 import com.denser.june.presentation.screens.editor.components.dialogs.JournalTagsDialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.denser.june.core.domain.billing.BillingHandler
-import com.denser.june.presentation.screens.editor.components.dialogs.JuneProSaveDialog
-import java.io.File
+import com.denser.june.presentation.plus.LocalIsPlus
+import com.denser.june.presentation.plus.LocalPlusSheetController
+import com.denser.june.presentation.screens.editor.components.dialogs.JunePlusSaveDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,8 +44,8 @@ class EditorDialogState {
     var showCameraSelectionDialog by mutableStateOf(false)
     var showLocationDialog by mutableStateOf(false)
     var showTagsDialog by mutableStateOf(false)
-    var showProSaveDialog by mutableStateOf(false)
-    var onProSaveExitAfter by mutableStateOf(false)
+    var showPlusSaveDialog by mutableStateOf(false)
+    var onPlusSaveExitAfter by mutableStateOf(false)
 }
 
 @Composable
@@ -61,17 +61,19 @@ fun EditorModals(
     val context = LocalContext.current
     val navigator = koinInject<AppNavigator>()
     val journalPrefs = koinInject<JournalPreferences>()
-    val billingHandler = koinInject<BillingHandler>()
-    val isPro = com.denser.june.presentation.pro.LocalIsPro.current
-    val proSheetController = com.denser.june.presentation.pro.LocalProSheetController.current
+    val isPlus = LocalIsPlus.current
+    val plusSheetController = LocalPlusSheetController.current
     val isCompressPhotosEnabled by journalPrefs.isCompressPhotosEnabled().collectAsStateWithLifecycle(initialValue = false)
     val photoQuality by journalPrefs.getPhotoCompressionQuality().collectAsStateWithLifecycle(initialValue = 80)
     val isCompressVideosEnabled by journalPrefs.isCompressVideosEnabled().collectAsStateWithLifecycle(initialValue = false)
     val videoQuality by journalPrefs.getVideoCompressionQuality().collectAsStateWithLifecycle(initialValue = 1080)
     val coroutineScope = rememberCoroutineScope()
 
+    val appResources = remember(context) { context.applicationContext.resources }
+    val entrySavedMessage = stringResource(R.string.entry_saved_default_theme)
+
     LaunchedEffect(Unit) {
-        loadEmojiAssets(context.resources)
+        loadEmojiAssets(appResources)
     }
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
@@ -178,10 +180,10 @@ fun EditorModals(
             confirmButton = {
                 Button(onClick = {
                     dialogState.showExitDialog = false
-                    val hasProStyling = (editorState.font != null || editorState.fontVariation != null || editorState.theme != null)
-                    if (!isPro && hasProStyling) {
-                        dialogState.onProSaveExitAfter = true
-                        dialogState.showProSaveDialog = true
+                    val hasPlusStyling = (editorState.font != null || editorState.fontVariation != null || editorState.theme != null)
+                    if (!isPlus && hasPlusStyling) {
+                        dialogState.onPlusSaveExitAfter = true
+                        dialogState.showPlusSaveDialog = true
                     } else {
                         editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
                         onAction(EditorAction.SaveJournal)
@@ -200,31 +202,31 @@ fun EditorModals(
         )
     }
 
-    if (dialogState.showProSaveDialog) {
-        JuneProSaveDialog(
-            onDismissRequest = { dialogState.showProSaveDialog = false },
-            onUnlockPro = {
-                dialogState.showProSaveDialog = false
-                proSheetController.show {
+    if (dialogState.showPlusSaveDialog) {
+        JunePlusSaveDialog(
+            onDismissRequest = { dialogState.showPlusSaveDialog = false },
+            onUnlockPlus = {
+                dialogState.showPlusSaveDialog = false
+                plusSheetController.show {
                     editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
                     onAction(EditorAction.SaveJournal)
-                    if (dialogState.onProSaveExitAfter) {
+                    if (dialogState.onPlusSaveExitAfter) {
                         onAction(EditorAction.NavigateBack)
                     }
                 }
             },
-            onSaveWithoutProStyling = {
-                dialogState.showProSaveDialog = false
+            onSaveWithoutPlusStyling = {
+                dialogState.showPlusSaveDialog = false
                 onAction(EditorAction.SetJournalFont(fontName = null, variation = null))
                 onAction(EditorAction.SetJournalTheme(theme = null))
                 editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
                 onAction(EditorAction.SaveJournal)
                 Toast.makeText(
                     context,
-                    context.getString(R.string.entry_saved_default_theme),
+                    entrySavedMessage,
                     Toast.LENGTH_SHORT
                 ).show()
-                if (dialogState.onProSaveExitAfter) {
+                if (dialogState.onPlusSaveExitAfter) {
                     onAction(EditorAction.NavigateBack)
                 }
             }

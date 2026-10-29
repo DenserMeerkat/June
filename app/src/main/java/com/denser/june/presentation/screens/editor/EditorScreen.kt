@@ -200,8 +200,8 @@ fun EditorScreen() {
         )
     }
 
-    val isPro = com.denser.june.presentation.pro.LocalIsPro.current
-    val isProStylingActive = (state.font != null || state.fontVariation != null || state.theme != null)
+    val isPlus = com.denser.june.presentation.plus.LocalIsPlus.current
+    val isPlusStylingActive = (state.font != null || state.fontVariation != null || state.theme != null)
 
     JuneThemeWrapper(
         theme = state.theme,
@@ -216,7 +216,7 @@ fun EditorScreen() {
                     showAddItemSheet = dialogState.showAddItemSheet,
                     showSaveButton = showSaveButton,
                     isLoading = state.isLoading,
-                    isProStylingActive = isProStylingActive,
+                    isPlusStylingActive = isPlusStylingActive,
                     onCloseClick = {
                         if (isFontMode) isFontMode = false
                         else if (isColorMode) isColorMode = false
@@ -251,9 +251,9 @@ fun EditorScreen() {
                         keyboardController?.hide()
                         focusManager.clearFocus(force = true)
                         if (!state.isLoading) {
-                            if (!isPro && isProStylingActive) {
-                                dialogState.onProSaveExitAfter = false
-                                dialogState.showProSaveDialog = true
+                            if (!isPlus && isPlusStylingActive) {
+                                dialogState.onPlusSaveExitAfter = false
+                                dialogState.showPlusSaveDialog = true
                             } else {
                                 state.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
                                 viewModel.onAction(EditorAction.SaveJournal)

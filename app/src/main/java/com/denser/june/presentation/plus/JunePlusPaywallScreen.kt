@@ -1,4 +1,4 @@
-package com.denser.june.presentation.pro
+package com.denser.june.presentation.plus
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
@@ -33,13 +33,13 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.billing.BillingHandler
 import com.denser.june.presentation.components.InternetRestrictedBanner
 import com.denser.june.presentation.components.JuneCloseButton
-import com.denser.june.presentation.components.pro.ProBadge
+import com.denser.june.presentation.components.plus.PlusBadge
 import com.denser.june.presentation.theme.LocalInternetAllowed
 import kotlinx.coroutines.launch
 import com.denser.june.presentation.components.JuneFullScreenDialog
 import org.koin.compose.koinInject
 
-data class ProSection(
+data class PlusSection(
     val title: String,
     val description: String,
     val iconRes: Int,
@@ -49,10 +49,10 @@ data class ProSection(
 )
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-val juneProSections: List<ProSection>
+val junePlusSections: List<PlusSection>
     @Composable
     get() = listOf(
-        ProSection(
+        PlusSection(
             title = "Unlock all Features",
             description = "Keep your most personal journals tucked away in a private vault, and secure your app with pattern gesture or password locks.",
             iconRes = R.drawable.lock_24px_fill,
@@ -60,7 +60,7 @@ val juneProSections: List<ProSection>
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
-        ProSection(
+        PlusSection(
             title = "More customization options",
             description = "Make journaling personal with live variable font controls, handpicked typefaces, per-entry custom color palettes, and styled map accents.",
             iconRes = R.drawable.palette_24px_fill,
@@ -68,7 +68,7 @@ val juneProSections: List<ProSection>
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
         ),
-        ProSection(
+        PlusSection(
             title = "Support Development",
             description = "Born out of love and handcrafted by a solo indie developer. Your one-time purchase directly funds continuous improvements and future updates.",
             iconRes = R.drawable.favorite_24px_fill,
@@ -80,19 +80,19 @@ val juneProSections: List<ProSection>
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun JuneProPaywallScreen(
-    controller: ProSheetController,
+fun JunePlusPaywallScreen(
+    controller: PlusSheetController,
     modifier: Modifier = Modifier
 ) {
     val billingHandler = koinInject<BillingHandler>()
-    val isPro by billingHandler.isPro.collectAsStateWithLifecycle()
+    val isPlus by billingHandler.isPlus.collectAsStateWithLifecycle()
 
     if (controller.isVisible) {
         JuneFullScreenDialog(
-            onDismissRequest = { controller.dismiss(isPro) }
+            onDismissRequest = { controller.dismiss(isPlus) }
         ) {
             BackHandler(enabled = true) {
-                controller.dismiss(isPro)
+                controller.dismiss(isPlus)
             }
 
             AnimatedVisibility(
@@ -107,9 +107,9 @@ fun JuneProPaywallScreen(
                 ) + fadeOut(animationSpec = tween(durationMillis = 200)),
                 modifier = modifier
             ) {
-                JuneProPaywallContent(
-                    onDismiss = { controller.dismiss(isPro) },
-                    onUnlocked = { controller.onProUnlockedSuccess() }
+                JunePlusPaywallContent(
+                    onDismiss = { controller.dismiss(isPlus) },
+                    onUnlocked = { controller.onPlusUnlockedSuccess() }
                 )
             }
         }
@@ -118,14 +118,14 @@ fun JuneProPaywallScreen(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun JuneProPaywallContent(
+private fun JunePlusPaywallContent(
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit,
     onUnlocked: () -> Unit = onDismiss,
 ) {
     val billingHandler = koinInject<BillingHandler>()
-    val isPro by billingHandler.isPro.collectAsStateWithLifecycle()
-    val proPrice by billingHandler.proPrice.collectAsStateWithLifecycle()
+    val isPlus by billingHandler.isPlus.collectAsStateWithLifecycle()
+    val plusPrice by billingHandler.plusPrice.collectAsStateWithLifecycle()
     val isInternetAllowed = LocalInternetAllowed.current
 
     val context = LocalContext.current
@@ -154,12 +154,12 @@ private fun JuneProPaywallContent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     val buttonText = when {
-                        isPurchasing -> "Unlocking Pro…"
-                        proPrice != null -> "Unlock Pro — $proPrice"
-                        else -> "Unlock Pro"
+                        isPurchasing -> "Unlocking Plus…"
+                        plusPrice != null -> "Unlock Plus — $plusPrice"
+                        else -> "Unlock Plus"
                     }
 
-                    if (isPro) {
+                    if (isPlus) {
                         Surface(
                             color = MaterialTheme.colorScheme.primaryContainer,
                             shape = RoundedCornerShape(16.dp),
@@ -173,7 +173,7 @@ private fun JuneProPaywallContent(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = "June Pro is Active",
+                                    text = "June Plus is Active",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -194,7 +194,7 @@ private fun JuneProPaywallContent(
                                     coroutineScope.launch {
                                         isPurchasing = true
                                         errorMessage = null
-                                        val result = billingHandler.purchasePro(activity)
+                                        val result = billingHandler.purchasePlus(activity)
                                         isPurchasing = false
                                         if (result.isSuccess && result.getOrNull() == true) {
                                             onUnlocked()
@@ -236,7 +236,7 @@ private fun JuneProPaywallContent(
                                     val result = billingHandler.restorePurchases()
                                     isRestoring = false
                                     if (!result.isSuccess || result.getOrNull() != true) {
-                                        errorMessage = "No active Pro purchase found to restore."
+                                        errorMessage = "No active Plus purchase found to restore."
                                     }
                                 }
                             },
@@ -280,7 +280,7 @@ private fun JuneProPaywallContent(
                 ) {
                     if (!isInternetAllowed) {
                         InternetRestrictedBanner(
-                                                        modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
 
@@ -294,8 +294,8 @@ private fun JuneProPaywallContent(
                         )
                     }
 
-                    juneProSections.forEach { section ->
-                        ProSectionView(section = section)
+                    junePlusSections.forEach { section ->
+                        PlusSectionView(section = section)
                     }
 
                     Spacer(Modifier.height(12.dp))
@@ -453,13 +453,13 @@ private fun HeroTopSection() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            ProBadge(
+            PlusBadge(
                 size = 48.dp,
                 iconSize = 36.dp
             )
             Spacer(modifier = Modifier.height(14.dp))
             Text(
-                text = "June Pro",
+                text = "June Plus",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
                     fontFeatureSettings = "'GRAD' 150",
@@ -472,8 +472,8 @@ private fun HeroTopSection() {
 }
 
 @Composable
-private fun ProSectionView(
-    section: ProSection,
+private fun PlusSectionView(
+    section: PlusSection,
     modifier: Modifier = Modifier
 ) {
     Column(

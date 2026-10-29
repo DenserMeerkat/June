@@ -13,18 +13,18 @@ object UiUtils {
     val BOTTOM_BAR_PADDING = 100.dp
 
     @DrawableRes
-    val PRO_ICON_RES = R.drawable.flower_24px_fill
+    val PLUS_ICON_RES = R.drawable.flower_24px_fill
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-    val proShape: Shape
+    val plusShape: Shape
         @Composable
         get() = MaterialShapes.Clover4Leaf.toShape()
 
-    val proContainerColor: Color
+    val plusContainerColor: Color
         @Composable
         get() = MaterialTheme.colorScheme.tertiaryContainer
 
-    val proContentColor: Color
+    val plusContentColor: Color
         @Composable
         get() = MaterialTheme.colorScheme.onTertiaryContainer
 

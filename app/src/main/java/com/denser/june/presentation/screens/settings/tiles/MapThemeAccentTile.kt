@@ -8,8 +8,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.preferences.JournalPreferences
-import com.denser.june.presentation.components.pro.ProSettingsItem
-import com.denser.june.presentation.pro.LocalIsPro
+import com.denser.june.presentation.components.plus.PlusSettingsItem
+import com.denser.june.presentation.plus.LocalIsPlus
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -20,7 +20,7 @@ fun MapThemeAccentTile(
 ) {
     val journalPreferences = koinInject<JournalPreferences>()
     val scope = rememberCoroutineScope()
-    val isPro = LocalIsPro.current
+    val isPlus = LocalIsPlus.current
     val prefEnabled by journalPreferences.isMapThemeAccentEnabled()
         .collectAsStateWithLifecycle(initialValue = true)
 
@@ -29,14 +29,14 @@ fun MapThemeAccentTile(
     val handleToggle: (Boolean) -> Unit = { newValue ->
         if (onCheckedChange != null) {
             onCheckedChange(newValue)
-        } else if (isPro) {
+        } else if (isPlus) {
             scope.launch {
                 journalPreferences.setMapThemeAccentEnabled(newValue)
             }
         }
     }
 
-    ProSettingsItem(
+    PlusSettingsItem(
         title = stringResource(R.string.map_theme_accents),
         subtitle = stringResource(R.string.map_theme_accents_desc),
         iconRes = R.drawable.palette_24px,

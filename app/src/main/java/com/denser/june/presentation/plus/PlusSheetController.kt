@@ -1,4 +1,4 @@
-package com.denser.june.presentation.pro
+package com.denser.june.presentation.plus
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -8,20 +8,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
-val LocalIsPro = compositionLocalOf { false }
-val LocalProSheetController = compositionLocalOf<ProSheetController> {
-    error("No ProSheetController provided")
+val LocalIsPlus = compositionLocalOf { false }
+val LocalPlusSheetController = compositionLocalOf<PlusSheetController> {
+    error("No PlusSheetController provided")
 }
 
 @Stable
-class ProSheetController {
+class PlusSheetController {
     var isVisible by mutableStateOf(false)
         private set
 
     private var pendingUnlockCallback: (() -> Unit)? = null
 
-    fun show(onProUnlocked: (() -> Unit)? = null) {
-        pendingUnlockCallback = onProUnlocked
+    fun show(onPlusUnlocked: (() -> Unit)? = null) {
+        pendingUnlockCallback = onPlusUnlocked
         isVisible = true
     }
 
@@ -34,12 +34,12 @@ class ProSheetController {
         }
     }
 
-    fun onProUnlockedSuccess() {
+    fun onPlusUnlockedSuccess() {
         dismiss(isUnlocked = true)
     }
 }
 
 @Composable
-fun rememberProSheetController(): ProSheetController {
-    return remember { ProSheetController() }
+fun rememberPlusSheetController(): PlusSheetController {
+    return remember { PlusSheetController() }
 }

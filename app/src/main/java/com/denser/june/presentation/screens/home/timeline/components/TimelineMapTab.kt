@@ -94,7 +94,7 @@ fun TimelineMapTab(
         .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
     val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
         .collectAsStateWithLifecycle(initialValue = true)
-    val isPro = com.denser.june.presentation.pro.LocalIsPro.current
+    val isPlus = com.denser.june.presentation.plus.LocalIsPlus.current
     val colorScheme = MaterialTheme.colorScheme
 
     MapLibreInitializer(isInternetAllowed)
@@ -165,7 +165,7 @@ fun TimelineMapTab(
     }
 
     fun renderMapContent(mapboxMap: MapLibreMap, style: Style) {
-        if (isPro && isMapThemeAccentEnabled) {
+        if (isPlus && isMapThemeAccentEnabled) {
             MapAccentColorizer.applyThemeAccents(
                 style = style,
                 colorScheme = colorScheme,
