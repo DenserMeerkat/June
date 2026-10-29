@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.presentation.components.pro.ProBadge
+import com.denser.june.presentation.utils.UiUtils
 
 @Composable
 fun JuneProSaveDialog(
@@ -24,7 +25,7 @@ fun JuneProSaveDialog(
         icon = {
             ProBadge(
                 size = 40.dp,
-                iconSize = 22.dp
+                iconSize = 28.dp
             )
         },
         title = {
@@ -52,7 +53,7 @@ fun JuneProSaveDialog(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.diamond_24px_fill),
+                        painter = painterResource(UiUtils.PRO_ICON_RES),
                         contentDescription = null,
                         modifier = Modifier.padding(end = 8.dp)
                     )

@@ -524,6 +524,23 @@ class EditorVM(
             val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
             val currentMarkdown = if (isMarkdownEnabled && hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
 
+            val existing = existingJournal
+            if (existing != null && !existing.isDraft) {
+                val stateWithMarkdown = currentState.copy(content = currentMarkdown)
+                if (!isDirtyCheck(stateWithMarkdown)) {
+                    _state.update {
+                        it.copy(
+                            isDirty = false,
+                            isDraft = false,
+                            initialFont = it.font,
+                            initialFontVariation = it.fontVariation,
+                            initialTheme = it.theme
+                        )
+                    }
+                    return@launch
+                }
+            }
+
             if (currentState.images.any { it.startsWith("content://") }) return@launch
 
             if (currentState.title.isBlank() &&
@@ -583,6 +600,23 @@ class EditorVM(
             val currentTime = System.currentTimeMillis()
             val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
             val currentMarkdown = if (isMarkdownEnabled && hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
+
+            val existing = existingJournal
+            if (existing != null && !existing.isDraft) {
+                val stateWithMarkdown = currentState.copy(content = currentMarkdown)
+                if (!isDirtyCheck(stateWithMarkdown)) {
+                    _state.update {
+                        it.copy(
+                            isDirty = false,
+                            isDraft = false,
+                            initialFont = it.font,
+                            initialFontVariation = it.fontVariation,
+                            initialTheme = it.theme
+                        )
+                    }
+                    return@launch
+                }
+            }
 
             val journalToSave = Journal(
                 id = existingJournal?.id ?: "",
