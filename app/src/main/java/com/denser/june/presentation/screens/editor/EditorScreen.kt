@@ -7,31 +7,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -42,7 +27,6 @@ import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.media.compress.CompressUtils
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.TimeFormat
-import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.utils.toDateWithDay
 import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
@@ -53,14 +37,11 @@ import com.denser.june.presentation.components.color.ThemePanel
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.editor.components.*
-import com.denser.june.presentation.screens.editor.components.audio.*
-import com.denser.june.presentation.screens.editor.components.dialogs.*
 import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import com.denser.june.presentation.theme.JuneThemeWrapper
 import com.denser.june.core.media.color.ExtractedMediaColor
 import com.denser.june.core.media.color.ExtractedMediaTheme
 import com.denser.june.presentation.components.color.MediaColorExtractor
-import com.denser.june.presentation.theme.LocalAppTheme
 import androidx.compose.animation.*
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -68,7 +49,6 @@ import com.denser.june.presentation.theme.FontPresets
 import com.denser.june.presentation.components.color.ColorTab
 import com.denser.june.presentation.theme.getJournalFontFamily
 import com.denser.june.presentation.utils.UiUtils
-import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import java.time.LocalTime
@@ -82,16 +62,11 @@ import java.time.LocalTime
 fun EditorScreen() {
     val viewModel: EditorVM = koinViewModel()
     val navigator = koinInject<AppNavigator>()
-    val journalPreferences = koinInject<JournalPreferences>()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val isMarkdownEnabled by journalPreferences.isMarkdownEnabled()
-        .collectAsStateWithLifecycle(initialValue = true)
-    val isKeyboardAutocorrectEnabled by journalPreferences.isKeyboardAutocorrectEnabled()
-        .collectAsStateWithLifecycle(initialValue = true)
-    val isKeyboardCapitalizationEnabled by journalPreferences.isKeyboardCapitalizationEnabled()
-        .collectAsStateWithLifecycle(initialValue = true)
-    val editorLayoutDirection by journalPreferences.editorLayoutDirection()
-        .collectAsStateWithLifecycle(initialValue = EditorLayoutDirection.AUTO)
+    val isMarkdownEnabled = state.isMarkdownEnabled
+    val isKeyboardAutocorrectEnabled = state.isKeyboardAutocorrectEnabled
+    val isKeyboardCapitalizationEnabled = state.isKeyboardCapitalizationEnabled
+    val editorLayoutDirection = state.editorLayoutDirection
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
@@ -462,6 +437,9 @@ fun EditorScreen() {
                             rawContent = state.content,
                             onMarkdownChange = { newContent ->
                                 if (newContent != state.content) {
+                                    if (newContent.isEmpty() && state.content.isNotEmpty() && !isEditorFocused) {
+                                        return@JournalContentEditor
+                                    }
                                     viewModel.onAction(EditorAction.ChangeContent(newContent))
                                 }
                             },

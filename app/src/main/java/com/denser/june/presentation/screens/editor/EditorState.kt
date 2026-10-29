@@ -5,6 +5,7 @@ import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.JournalTheme
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongFetchProgress
+import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.getTodayAtMidnight
 import java.time.DayOfWeek
@@ -35,6 +36,10 @@ data class EditorState(
     val cloudId: String? = null,
     val startOfWeek: DayOfWeek = DayOfWeek.SUNDAY,
     val timeFormat: TimeFormat = TimeFormat.TWELVE_HOUR,
+    val isMarkdownEnabled: Boolean = true,
+    val isKeyboardAutocorrectEnabled: Boolean = true,
+    val isKeyboardCapitalizationEnabled: Boolean = true,
+    val editorLayoutDirection: EditorLayoutDirection = EditorLayoutDirection.AUTO,
     val librarySongs: List<SongDetails> = emptyList(),
     val unimportedJournalSongs: List<SongDetails> = emptyList(),
     val importingSongKeys: Set<String> = emptySet(),

@@ -102,6 +102,30 @@ class EditorVM(
         }
 
         viewModelScope.launch {
+            journalPrefs.isMarkdownEnabled().collect { enabled ->
+                _state.update { it.copy(isMarkdownEnabled = enabled) }
+            }
+        }
+
+        viewModelScope.launch {
+            journalPrefs.isKeyboardAutocorrectEnabled().collect { enabled ->
+                _state.update { it.copy(isKeyboardAutocorrectEnabled = enabled) }
+            }
+        }
+
+        viewModelScope.launch {
+            journalPrefs.isKeyboardCapitalizationEnabled().collect { enabled ->
+                _state.update { it.copy(isKeyboardCapitalizationEnabled = enabled) }
+            }
+        }
+
+        viewModelScope.launch {
+            journalPrefs.editorLayoutDirection().collect { direction ->
+                _state.update { it.copy(editorLayoutDirection = direction) }
+            }
+        }
+
+        viewModelScope.launch {
             combine(
                 songRepo.getLibrarySongs(),
                 journalRepo.getJournals()
@@ -162,7 +186,12 @@ class EditorVM(
     fun onAction(action: EditorAction) {
         when (action) {
             is EditorAction.ChangeTitle -> updateState { it.copy(title = action.title) }
-            is EditorAction.ChangeContent -> updateState { it.copy(content = action.content) }
+            is EditorAction.ChangeContent -> {
+                if (!_state.value.isMarkdownEnabled) {
+                    hyphenState.setMarkdown(action.content)
+                }
+                updateState { it.copy(content = action.content) }
+            }
             is EditorAction.SnapContentBaseline -> {
                 _state.update { it.copy(content = action.content) }
                 existingJournal = existingJournal?.copy(content = action.content)
@@ -463,13 +492,10 @@ class EditorVM(
                     }
                 }
                 existingJournal = journal.copy(songDetails = details)
-                val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
-                val parsedContent = if (isMarkdownEnabled && journal.content.isNotBlank()) {
-                    hyphenState.setMarkdownAsync(journal.content)
-                    hyphenState.toMarkdown()
-                } else {
-                    journal.content
+                if (journal.content.isNotBlank()) {
+                    hyphenState.setMarkdown(journal.content)
                 }
+                val parsedContent = journal.content
                 val isPro = billingHandler.isPro.value
                 val loadedFont = if (isPro) journal.font else null
                 val loadedFontVariation = if (isPro) journal.fontVariation else null
@@ -521,8 +547,20 @@ class EditorVM(
         viewModelScope.launch {
             if (existingJournal != null && !existingJournal!!.isDraft) return@launch
 
-            val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
-            val currentMarkdown = if (isMarkdownEnabled && hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
+            val isMarkdownEnabled = currentState.isMarkdownEnabled
+            val currentMarkdown = if (isMarkdownEnabled) {
+                if (hyphenState.text.isEmpty() && currentState.content.isNotEmpty()) {
+                    currentState.content
+                } else {
+                    hyphenState.toMarkdown()
+                }
+            } else {
+                currentState.content
+            }
+
+            if (currentMarkdown.isBlank() && existingJournal?.content?.isNotBlank() == true) {
+                return@launch
+            }
 
             val existing = existingJournal
             if (existing != null && !existing.isDraft) {
@@ -598,8 +636,16 @@ class EditorVM(
             }
             val currentState = _state.value
             val currentTime = System.currentTimeMillis()
-            val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
-            val currentMarkdown = if (isMarkdownEnabled && hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
+            val isMarkdownEnabled = currentState.isMarkdownEnabled
+            val currentMarkdown = if (isMarkdownEnabled) {
+                if (hyphenState.text.isEmpty() && currentState.content.isNotEmpty()) {
+                    currentState.content
+                } else {
+                    hyphenState.toMarkdown()
+                }
+            } else {
+                currentState.content
+            }
 
             val existing = existingJournal
             if (existing != null && !existing.isDraft) {
