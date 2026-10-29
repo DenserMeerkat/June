@@ -13,7 +13,7 @@ object UiUtils {
     val BOTTOM_BAR_PADDING = 100.dp
 
     @DrawableRes
-    val PRO_ICON_RES = R.drawable.diamond_24px_fill
+    val PRO_ICON_RES = R.drawable.flower_24px_fill
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     val proShape: Shape
