@@ -41,11 +41,9 @@ fun StartOfWeekTile() {
             onSelect = { viewModel.onAction(SettingsAction.OnStartOfWeekChange(it)) },
             label = { it.getDisplayName(TextStyle.NARROW, LocalLocale.current.platformLocale) },
             equalWeight = true,
-            contentPadding = PaddingValues(4.dp),
+            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 6.dp),
             textStyle = MaterialTheme.typography.labelMedium,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp)
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

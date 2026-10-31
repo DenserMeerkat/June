@@ -21,38 +21,31 @@ fun DefaultMapThemeTile() {
     val viewModel: SettingsVM = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    val leadingIcon = when (state.mapTheme) {
+        MapTheme.APP -> R.drawable.devices_24px
+        MapTheme.LIGHT -> R.drawable.light_mode_24px
+        MapTheme.DARK -> R.drawable.dark_mode_24px
+    }
+
     SettingsItem(
         title = stringResource(R.string.default_map_theme),
         leadingContent = {
             Icon(
-                painter = painterResource(R.drawable.routine_24px),
+                painter = painterResource(leadingIcon),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.secondary
             )
         }
     ) {
+        Spacer(modifier = Modifier.height(8.dp))
         JuneConnectedButtonGroup(
             options = MapTheme.entries,
             selected = { state.mapTheme == it },
             onSelect = { viewModel.onAction(SettingsAction.OnMapThemeChange(it)) },
+            label = { stringResource(it.stringRes) },
+            equalWeight = true,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
             modifier = Modifier.fillMaxWidth()
-        ) { mode, _ ->
-            val iconRes = when (mode) {
-                MapTheme.APP -> R.drawable.devices_24px
-                MapTheme.LIGHT -> R.drawable.light_mode_24px
-                MapTheme.DARK -> R.drawable.dark_mode_24px
-            }
-            Icon(
-                painter = painterResource(iconRes),
-                contentDescription = stringResource(mode.stringRes),
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = stringResource(mode.stringRes),
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(horizontal = 4.dp)
-            )
-        }
+        )
     }
 }

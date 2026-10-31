@@ -4,6 +4,7 @@ import android.content.Intent
 import android.icu.text.SimpleDateFormat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -254,6 +255,7 @@ fun JournalOptionsHeader(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun JournalOptionsActionRow(
     journal: Journal,
@@ -265,101 +267,148 @@ fun JournalOptionsActionRow(
     onPermanentDelete: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    val interactionSources = remember { List(6) { MutableInteractionSource() } }
+
+    ButtonGroup(
+        overflowIndicator = {},
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FilledTonalIconButton(
-            onClick = onToggleBookmark,
-            modifier = Modifier
-                .weight(1f)
-                .height(52.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = if (journal.isBookmarked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
-                contentColor = if (journal.isBookmarked) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        ) {
-            Icon(
-                painter = painterResource(if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px),
-                contentDescription = stringResource(if (journal.isBookmarked) R.string.remove_bookmark else R.string.bookmark),
-                modifier = Modifier.size(24.dp)
-            )
-        }
+        customItem(
+            buttonGroupContent = {
+                FilledTonalIconButton(
+                    onClick = onToggleBookmark,
+                    interactionSource = interactionSources[0],
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                        .animateWidth(interactionSources[0]),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = if (journal.isBookmarked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = if (journal.isBookmarked) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(if (journal.isBookmarked) R.drawable.bookmark_added_24px_fill else R.drawable.bookmark_24px),
+                        contentDescription = stringResource(if (journal.isBookmarked) R.string.remove_bookmark else R.string.bookmark),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            menuContent = {}
+        )
 
         if (!journal.isDeleted && onToggleLock != null) {
-            JournalLockActionButton(
-                isLocked = journal.isLocked,
-                onClick = onToggleLock,
-                modifier = Modifier.weight(1f)
+            customItem(
+                buttonGroupContent = {
+                    JournalLockActionButton(
+                        isLocked = journal.isLocked,
+                        onClick = onToggleLock,
+                        interactionSource = interactionSources[1],
+                        modifier = Modifier
+                            .weight(1f)
+                            .animateWidth(interactionSources[1])
+                    )
+                },
+                menuContent = {}
             )
         }
 
-        FilledTonalIconButton(
-            onClick = onShare,
-            modifier = Modifier
-                .weight(1f)
-                .height(52.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.share_24px),
-                contentDescription = stringResource(R.string.share),
-                modifier = Modifier.size(24.dp)
-            )
-        }
+        customItem(
+            buttonGroupContent = {
+                FilledTonalIconButton(
+                    onClick = onShare,
+                    interactionSource = interactionSources[2],
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                        .animateWidth(interactionSources[2]),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.share_24px),
+                        contentDescription = stringResource(R.string.share),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            menuContent = {}
+        )
 
         if (onExportMarkdown != null) {
-            FilledTonalIconButton(
-                onClick = onExportMarkdown,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.file_save_24px),
-                    contentDescription = stringResource(R.string.export_as_markdown),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            customItem(
+                buttonGroupContent = {
+                    FilledTonalIconButton(
+                        onClick = onExportMarkdown,
+                        interactionSource = interactionSources[3],
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp)
+                            .animateWidth(interactionSources[3]),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.file_save_24px),
+                            contentDescription = stringResource(R.string.export_as_markdown),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                menuContent = {}
+            )
         }
 
-        JournalDeleteActionButton(
-            isDeleted = journal.isDeleted,
-            onClick = onDelete,
-            modifier = Modifier.weight(1f)
+        customItem(
+            buttonGroupContent = {
+                JournalDeleteActionButton(
+                    isDeleted = journal.isDeleted,
+                    onClick = onDelete,
+                    interactionSource = interactionSources[4],
+                    modifier = Modifier
+                        .weight(1f)
+                        .animateWidth(interactionSources[4])
+                )
+            },
+            menuContent = {}
         )
 
         if (onPermanentDelete != null) {
-            FilledTonalIconButton(
-                onClick = onPermanentDelete,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.delete_24px),
-                    contentDescription = stringResource(R.string.permanently_delete),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            val permInteractionSource = interactionSources[5]
+            customItem(
+                buttonGroupContent = {
+                    FilledTonalIconButton(
+                        onClick = onPermanentDelete,
+                        interactionSource = permInteractionSource,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp)
+                            .animateWidth(permInteractionSource),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.delete_24px),
+                            contentDescription = stringResource(R.string.permanently_delete),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                menuContent = {}
+            )
         }
     }
 }

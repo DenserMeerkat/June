@@ -21,7 +21,7 @@ import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.components.font.FontPanel
 import com.denser.june.presentation.components.font.TypographyPreview
-import com.denser.june.presentation.components.plus.PlusBadge
+import com.denser.june.presentation.utils.UiUtils
 import com.denser.june.presentation.plus.LocalIsPlus
 import com.denser.june.presentation.plus.LocalPlusSheetController
 import org.koin.compose.koinInject
@@ -104,8 +104,12 @@ fun FontSelectionScreen(
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
                         ) {
                             if (isProSelection && !isPlus) {
-                                PlusBadge(
-                                    modifier = Modifier.padding(end = 6.dp)
+                                Icon(
+                                    painter = painterResource(UiUtils.PLUS_ICON_RES),
+                                    contentDescription = "Plus",
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .padding(end = 4.dp)
                                 )
                             }
                             Text(stringResource(R.string.save))

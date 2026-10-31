@@ -1,5 +1,6 @@
 package com.denser.june.presentation.components.journal
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,7 +14,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
-
 import com.denser.june.presentation.components.plus.PlusLeadingIconContainer
 import com.denser.june.presentation.plus.LocalIsPlus
 import com.denser.june.presentation.utils.UiUtils
@@ -22,7 +22,8 @@ import com.denser.june.presentation.utils.UiUtils
 fun JournalLockActionButton(
     isLocked: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    interactionSource: MutableInteractionSource? = null
 ) {
     val isPlus = LocalIsPlus.current
     val containerColor = if (isLocked) {
@@ -40,6 +41,7 @@ fun JournalLockActionButton(
         onClick = onClick,
         modifier = modifier.height(52.dp),
         shape = RoundedCornerShape(16.dp),
+        interactionSource = interactionSource,
         colors = IconButtonDefaults.filledTonalIconButtonColors(
             containerColor = containerColor,
             contentColor = contentColor
@@ -68,12 +70,14 @@ fun JournalLockActionButton(
 fun JournalDeleteActionButton(
     isDeleted: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    interactionSource: MutableInteractionSource? = null
 ) {
     FilledTonalIconButton(
         onClick = onClick,
         modifier = modifier.height(52.dp),
         shape = RoundedCornerShape(16.dp),
+        interactionSource = interactionSource,
         colors = IconButtonDefaults.filledTonalIconButtonColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             contentColor = if (isDeleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error

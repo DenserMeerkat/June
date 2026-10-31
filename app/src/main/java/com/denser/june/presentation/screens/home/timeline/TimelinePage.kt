@@ -9,6 +9,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -179,6 +181,7 @@ fun TimelinePage(
         pageCount = { Int.MAX_VALUE }
     )
 
+    val haptic = LocalHapticFeedback.current
     var isProgrammaticScroll by remember { mutableStateOf(false) }
 
     LaunchedEffect(pagerState) {
@@ -186,6 +189,7 @@ fun TimelinePage(
             if (!isProgrammaticScroll) {
                 val newMonth = viewModel.getMonthForPage(page)
                 if (newMonth != currentMonth) {
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                     viewModel.onMonthChange(newMonth)
                 }
             }

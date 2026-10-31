@@ -9,10 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
@@ -23,11 +20,26 @@ fun rememberJournalDisplayTitle(journal: Journal): String {
     val defaultTitle = stringResource(R.string.untitled)
     return remember(journal.title, journal.content, journal.emoji, defaultTitle) {
         val rawTitle = journal.title.ifBlank {
-            journal.content.lineSequence().firstOrNull { it.isNotBlank() }?.take(100)
-                ?: defaultTitle
+            journal.content.lineSequence().firstOrNull { it.isNotBlank() } ?: defaultTitle
         }
-        val emoji = journal.emoji
-        if (!emoji.isNullOrBlank()) "$emoji $rawTitle" else rawTitle
+        val cleanTitle = rawTitle.replace("#", "").trim()
+        val emojiPrefix = journal.emoji?.let { "$it " } ?: ""
+        emojiPrefix + cleanTitle
+    }
+}
+
+@Composable
+fun rememberCleanJournalContent(journal: Journal): String {
+    return remember(journal.title, journal.content) {
+        if (journal.title.isBlank()) {
+            val lines = journal.content.lines()
+            val firstNonBlankIndex = lines.indexOfFirst { it.isNotBlank() }
+            if (firstNonBlankIndex != -1) {
+                lines.drop(firstNonBlankIndex + 1).joinToString("\n").trim()
+            } else ""
+        } else {
+            journal.content.trim()
+        }
     }
 }
 
@@ -76,52 +88,6 @@ fun JuneMetadataRow(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun SearchFilterChip(
-    selected: Boolean,
-    onClick: () -> Unit,
-    prefix: String,
-    label: String,
-    modifier: Modifier = Modifier,
-    shapes: ToggleButtonShapes = ToggleButtonDefaults.shapes()
-) {
-    ToggleButton(
-        checked = selected,
-        onCheckedChange = { onClick() },
-        modifier = modifier,
-        shapes = shapes,
-        colors = ToggleButtonDefaults.toggleButtonColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            checkedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
-            checkedContentColor = MaterialTheme.colorScheme.onTertiaryContainer
-        ),
-        contentPadding = PaddingValues(horizontal = 16.dp)
-    ) {
-        Text(
-            text = buildAnnotatedString {
-                withStyle(
-                    style = SpanStyle(
-                        fontWeight = FontWeight.Normal,
-                        color = LocalContentColor.current.copy(alpha = 0.6f)
-                    )
-                ) {
-                    append(prefix)
-                }
-                withStyle(
-                    style = SpanStyle(
-                        fontWeight = FontWeight.Medium
-                    )
-                ) {
-                    append(label)
-                }
-            },
-            style = MaterialTheme.typography.labelLarge
         )
     }
 }

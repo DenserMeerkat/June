@@ -1,11 +1,10 @@
 package com.denser.june.presentation.screens.settings.components.sheets
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.*
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -16,7 +15,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -28,7 +26,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LanguageBottomSheet(
     onDismiss: () -> Unit,
@@ -70,17 +68,30 @@ fun LanguageBottomSheet(
             ) {
                 item {
                     val isSystemSelected = selectedCode.isEmpty()
-                    val shape = RoundedCornerShape(16.dp)
-                    ListItem(
-                        headlineContent = {
+                    SegmentedListItem(
+                        onClick = {
+                            selectedCode = ""
+                            scope.launch {
+                                delay(150.milliseconds)
+                                onLanguageSelected("")
+                                sheetState.hide()
+                                onDismiss()
+                            }
+                        },
+                        selected = isSystemSelected,
+                        shapes = ListItemDefaults.segmentedShapes(0, 1),
+                        colors = ListItemDefaults.colors(
+                            containerColor = if (isSystemSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.surfaceContainerHigh
+                        ),
+                        content = {
                             Text(
                                 text = systemDefault.nativeName,
                                 fontWeight = if (isSystemSelected) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isSystemSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                             )
                         },
-                        trailingContent = {
-                            if (isSystemSelected) {
+                        trailingContent = if (isSystemSelected) {
+                            {
                                 Icon(
                                     painter = painterResource(R.drawable.check_24px),
                                     contentDescription = "Selected",
@@ -88,22 +99,8 @@ fun LanguageBottomSheet(
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = if (isSystemSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.surfaceContainerHigh
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(shape)
-                            .clickable {
-                                selectedCode = ""
-                                scope.launch {
-                                    delay(150.milliseconds)
-                                    onLanguageSelected("")
-                                    sheetState.hide()
-                                    onDismiss()
-                                }
-                            }
+                        } else null,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
@@ -113,23 +110,31 @@ fun LanguageBottomSheet(
 
                 itemsIndexed(otherLanguages, key = { _, item -> item.code }) { index, language ->
                     val isSelected = language.code.equals(selectedCode, ignoreCase = true)
-                    val shape = when {
-                        otherLanguages.size == 1 -> RoundedCornerShape(16.dp)
-                        index == 0 -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
-                        index == otherLanguages.lastIndex -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 16.dp, bottomEnd = 16.dp)
-                        else -> RoundedCornerShape(4.dp)
-                    }
 
-                    ListItem(
-                        headlineContent = {
+                    SegmentedListItem(
+                        onClick = {
+                            selectedCode = language.code
+                            scope.launch {
+                                delay(150.milliseconds)
+                                onLanguageSelected(language.code)
+                                sheetState.hide()
+                                onDismiss()
+                            }
+                        },
+                        selected = isSelected,
+                        shapes = ListItemDefaults.segmentedShapes(index, otherLanguages.size),
+                        colors = ListItemDefaults.colors(
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.surfaceContainerHigh
+                        ),
+                        content = {
                             Text(
                                 text = language.displayName,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                             )
                         },
-                        trailingContent = {
-                            if (isSelected) {
+                        trailingContent = if (isSelected) {
+                            {
                                 Icon(
                                     painter = painterResource(R.drawable.check_24px),
                                     contentDescription = "Selected",
@@ -137,22 +142,8 @@ fun LanguageBottomSheet(
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.surfaceContainerHigh
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(shape)
-                            .clickable {
-                                selectedCode = language.code
-                                scope.launch {
-                                    delay(150.milliseconds)
-                                    onLanguageSelected(language.code)
-                                    sheetState.hide()
-                                    onDismiss()
-                                }
-                            }
+                        } else null,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }

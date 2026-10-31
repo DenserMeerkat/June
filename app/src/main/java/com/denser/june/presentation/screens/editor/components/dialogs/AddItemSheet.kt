@@ -1,11 +1,9 @@
 package com.denser.june.presentation.screens.editor.components.dialogs
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,13 +20,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
 import com.denser.june.core.R
+import com.denser.june.presentation.components.JuneConnectedItem
+import com.denser.june.presentation.components.JuneConnectedList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +37,6 @@ fun AddItemSheet(
     onAddSongClick: () -> Unit,
     onAddLocationClick: () -> Unit
 ) {
-
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -71,31 +68,39 @@ fun AddItemSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Column(
+            JuneConnectedList(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(24.dp)),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(28.dp),
+                spacing = 4.dp
             ) {
                 AddItem(
                     icon = R.drawable.add_a_photo_24px,
                     text = stringResource(R.string.take_photo_or_video),
+                    index = 0,
+                    count = 4,
                     onClick = { onTakePhotoClick(); onDismiss() }
                 )
                 AddItem(
                     icon = R.drawable.add_photo_alternate_24px,
                     text = stringResource(R.string.add_photo_or_video),
+                    index = 1,
+                    count = 4,
                     onClick = { onAddPhotoClick(); onDismiss() }
                 )
                 AddItem(
                     icon = R.drawable.music_note_add_24px,
                     text = stringResource(R.string.add_song),
+                    index = 2,
+                    count = 4,
                     onClick = { onAddSongClick(); onDismiss() }
                 )
                 AddItem(
                     icon = R.drawable.add_location_24px,
                     text = stringResource(R.string.add_location_and_map),
+                    index = 3,
+                    count = 4,
                     onClick = { onAddLocationClick(); onDismiss() }
                 )
             }
@@ -107,31 +112,24 @@ fun AddItemSheet(
 fun AddItem(
     icon: Int,
     text: String,
+    index: Int = 0,
+    count: Int = 1,
     onClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 20.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.secondaryFixed,
-            modifier = Modifier.size(24.dp)
-        )
-
-        Spacer(modifier = Modifier.width(24.dp))
-
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
+    JuneConnectedItem(
+        title = text,
+        leadingContent = {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondaryFixed,
+                modifier = Modifier.size(24.dp)
+            )
+        },
+        index = index,
+        count = count,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 20.dp),
+        onClick = onClick
+    )
 }

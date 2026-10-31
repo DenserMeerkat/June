@@ -163,6 +163,7 @@ fun FontAxesTab(
                         },
                         enabled = true,
                         label = { it.label },
+                        animateWidthOnPress = false,
                         colors = ToggleButtonDefaults.toggleButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,

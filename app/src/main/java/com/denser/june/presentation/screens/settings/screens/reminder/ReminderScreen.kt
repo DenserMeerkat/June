@@ -162,9 +162,7 @@ fun ReminderScreen() {
                         equalWeight = true,
                         contentPadding = PaddingValues(4.dp),
                         textStyle = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
