@@ -1,6 +1,8 @@
 package com.denser.june.presentation.plus
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -23,6 +25,9 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import com.denser.june.BuildConfig
+import com.denser.june.core.utils.Constants
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -129,7 +134,8 @@ private fun JunePlusPaywallContent(
     val isInternetAllowed = LocalInternetAllowed.current
 
     val context = LocalContext.current
-    val activity = context as? Activity
+    val uriHandler = LocalUriHandler.current
+    val activity = remember(context) { context.findActivity() }
     val coroutineScope = rememberCoroutineScope()
     var isPurchasing by remember { mutableStateOf(false) }
     var isRestoring by remember { mutableStateOf(false) }
@@ -159,7 +165,34 @@ private fun JunePlusPaywallContent(
                         else -> "Unlock Plus"
                     }
 
-                    if (isPlus) {
+                    if (BuildConfig.FLAVOR == "foss") {
+                        Text(
+                            text = "All features are unlocked in FOSS",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            textAlign = TextAlign.Center
+                        )
+
+                        Button(
+                            onClick = { uriHandler.openUri(Constants.BUY_ME_A_COFFEE_URL) },
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.buy_me_a_coffee),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Buy Me a Coffee",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    } else if (isPlus) {
                         Surface(
                             color = MaterialTheme.colorScheme.primaryContainer,
                             shape = RoundedCornerShape(16.dp),
@@ -181,6 +214,18 @@ private fun JunePlusPaywallContent(
                             }
                         }
                     } else {
+                        errorMessage?.let { error ->
+                            Text(
+                                text = error,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp)
+                            )
+                        }
+
                         Text(
                             text = "Pay once, own forever",
                             style = MaterialTheme.typography.labelMedium,
@@ -190,11 +235,12 @@ private fun JunePlusPaywallContent(
 
                         Button(
                             onClick = {
-                                if (activity != null) {
+                                val currentActivity = activity ?: context.findActivity()
+                                if (currentActivity != null) {
                                     coroutineScope.launch {
                                         isPurchasing = true
                                         errorMessage = null
-                                        val result = billingHandler.purchasePlus(activity)
+                                        val result = billingHandler.purchasePlus(currentActivity)
                                         isPurchasing = false
                                         if (result.isSuccess && result.getOrNull() == true) {
                                             onUnlocked()
@@ -205,6 +251,8 @@ private fun JunePlusPaywallContent(
                                             }
                                         }
                                     }
+                                } else {
+                                    errorMessage = "Cannot find hosting Activity"
                                 }
                             },
                             enabled = isInternetAllowed && !isPurchasing && !isRestoring,
@@ -284,15 +332,7 @@ private fun JunePlusPaywallContent(
                         )
                     }
 
-                    errorMessage?.let { error ->
-                        Text(
-                            text = error,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
+
 
                     junePlusSections.forEach { section ->
                         PlusSectionView(section = section)
@@ -517,4 +557,13 @@ private fun PlusSectionView(
                 .padding(start = 54.dp)
         )
     }
+}
+
+private fun Context.findActivity(): Activity? {
+    var currentContext = this
+    while (currentContext is ContextWrapper) {
+        if (currentContext is Activity) return currentContext
+        currentContext = currentContext.baseContext
+    }
+    return null
 }

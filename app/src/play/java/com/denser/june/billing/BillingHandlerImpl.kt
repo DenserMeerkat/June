@@ -90,7 +90,13 @@ class BillingHandlerImpl(
 
     private fun updatePlusStatus(customerInfo: CustomerInfo) {
         val plusEntitlement = customerInfo.entitlements[ENTITLEMENT_ID]
-        _isPlus.value = plusEntitlement?.isActive == true
+        val active = plusEntitlement?.isActive == true
+        AppLogger.d(
+            AppLogger.Category.BILLING,
+            TAG,
+            "Updating plus status: $active (Entitlements: ${customerInfo.entitlements.all.keys})"
+        )
+        _isPlus.value = active
     }
 
     override suspend fun purchasePlus(activity: Activity): Result<Boolean> {
