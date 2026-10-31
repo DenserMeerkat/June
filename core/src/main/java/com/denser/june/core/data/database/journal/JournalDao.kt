@@ -111,13 +111,16 @@ interface JournalDao {
     suspend fun getJournalsByTagNameSync(tagName: String): List<JournalEntity>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertTag(tag: TagEntity)
+    suspend fun insertTags(tags: List<TagEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertJournalTagCrossRef(crossRef: JournalTagCrossRef)
+    suspend fun insertJournalTagCrossRefs(crossRefs: List<JournalTagCrossRef>)
 
     @Query("DELETE FROM journal_tag_cross_ref WHERE id = :journalId")
     suspend fun deleteTagsForJournal(journalId: String)
+
+    @Query("DELETE FROM journal_tag_cross_ref WHERE id NOT IN (SELECT id FROM journals)")
+    suspend fun deleteOrphanedCrossRefs()
 
     @Query("DELETE FROM journal_tag_cross_ref")
     suspend fun deleteAllCrossRefs()

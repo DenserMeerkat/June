@@ -13,13 +13,14 @@ object FileUtils {
         if (!file.exists() || file.length() == 0L) return ""
         val digest = java.security.MessageDigest.getInstance("SHA-256")
         file.inputStream().use { stream ->
-            val buffer = ByteArray(8192)
+            // Larger buffer: this runs over full media files (photos/videos) during sync.
+            val buffer = ByteArray(64 * 1024)
             var read: Int
             while (stream.read(buffer).also { read = it } > 0) {
                 digest.update(buffer, 0, read)
             }
         }
-        return digest.digest().joinToString("") { "%02x".format(it) }
+        return digest.digest().toHexString()
     }
 
     fun getDisplayName(context: Context, uri: Uri): String? {
