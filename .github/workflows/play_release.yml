@@ -98,6 +98,7 @@ jobs:
           PLAY_RELEASE_STORE_PASSWORD: ${{ secrets.PLAY_RELEASE_STORE_PASSWORD || secrets.RELEASE_STORE_PASSWORD }}
           PLAY_RELEASE_KEY_ALIAS: ${{ secrets.PLAY_RELEASE_KEY_ALIAS || secrets.RELEASE_KEY_ALIAS }}
           PLAY_RELEASE_KEY_PASSWORD: ${{ secrets.PLAY_RELEASE_KEY_PASSWORD || secrets.RELEASE_KEY_PASSWORD }}
+          REVENUECAT_API_KEY: ${{ secrets.REVENUECAT_API_KEY }}
         run: ./gradlew :app:bundlePlayRelease
 
       - name: Locate AAB
