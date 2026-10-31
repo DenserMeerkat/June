@@ -283,7 +283,6 @@
     <string name="create_pin">إنشاء رمز PIN</string>
     <string name="custom_question_label">سؤال مخصص</string>
     <string name="custom_question_placeholder">كمثال. ما هو اسمك السري؟</string>
-    <string name="developer_options_desc">قم بتهيئة خيارات تسجيل المطور وعرض سجلات وحدة تحكم النظام.</string>
     <string name="developer_options_disabled">خيارات المطوّر معطلة</string>
     <string name="does_not_match">غير متطابق، حاول مرة أخرى</string>
     <string name="forgot_lock">نسيت؟</string>
@@ -333,12 +332,10 @@
     <string name="automatic_sync_desc">قم بمزامنة التغييرات فور حدوثها</string>
     <string name="backup_format_too_old">تنسيق النسخ الاحتياطي قديم جدًا</string>
     <string name="backup_logging">تسجيل النسخ الاحتياطي</string>
-    <string name="backup_logging_desc">تفعيل التشخيص أثناء التصدير/الاستعادة</string>
     <string name="backup_saved_successfully">تم حفظ النسخة الاحتياطية بنجاح</string>
     <string name="cloud_sync">المزامنة السحابية</string>
     <string name="cloud_sync_desc">مزامنة البيانات عبر الأجهزة من خلال السحابة</string>
     <string name="database_logging">تسجيل قاعدة البيانات</string>
-    <string name="database_logging_desc">تسجيل استعلامات Room SQL الخام (بدون الوسائط)</string>
     <string name="enable_cloud_sync">تفعيل المزامنة السحابية</string>
     <string name="export_data">تصدير البيانات</string>
     <string name="export_data_desc">احفظ يومياتك وملفات الوسائط الخاصة بك في ملف آمن.</string>
@@ -364,7 +361,6 @@
     <string name="sync_header_desc">حافظ على مزامنة يومياتك عبر جميع أجهزتك باستخدام مزود تخزين سحابي.</string>
     <string name="sync_internet_required_desc">قم بتفعيل صلاحية الوصول إلى الإنترنت لاستخدام المزامنة السحابية.</string>
     <string name="sync_logging">تسجيل المزامنة</string>
-    <string name="sync_logging_desc">تفعيل سجلات مفصلة لعمليات المزامنة السحابية</string>
     <string name="wifi_only_sync">المزامنة التلقائية عبر شبكة Wi-Fi فقط</string>
     <string name="wifi_only_sync_desc">تجنب المزامنة عبر بيانات الهاتف المحمول</string>
     <string name="password_app_token_label">كلمة المرور / رمز التطبيق</string>

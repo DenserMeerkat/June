@@ -29,15 +29,10 @@ class DatabaseFactory(
             setQueryCallback({ sqlQuery, _ ->
                 if (AppLogger.isCategoryEnabled(AppLogger.Category.DATABASE)) {
                     val cleanedQuery = sqlQuery.replace(Regex("\\s+"), " ").trim()
-                    val formattedQuery = if (cleanedQuery.length > 200) {
-                        cleanedQuery.take(200) + "..."
-                    } else {
-                        cleanedQuery
-                    }
                     AppLogger.d(
                         AppLogger.Category.DATABASE,
                         "RoomDatabase",
-                        "Query: $formattedQuery"
+                        "Query: $cleanedQuery"
                     )
                 }
             }, java.util.concurrent.Executor { it.run() })

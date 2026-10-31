@@ -248,7 +248,6 @@
     <string name="create_pin">创建 PIN 码</string>
     <string name="custom_question_label">自定义问题</string>
     <string name="custom_question_placeholder">例如：你的私密昵称是什么？</string>
-    <string name="developer_options_desc">配置开发者日志记录选项并查看系统控制台日志。</string>
     <string name="developer_options_disabled">开发者选项已关闭</string>
     <string name="does_not_match">不匹配，请重试</string>
     <string name="forgot_lock">忘记了？</string>
@@ -298,12 +297,10 @@
     <string name="automatic_sync_desc">实时同步更改</string>
     <string name="backup_format_too_old">备份格式过时</string>
     <string name="backup_logging">备份记录</string>
-    <string name="backup_logging_desc">在导出/还原过程中启用诊断功能</string>
     <string name="backup_saved_successfully">备份已成功保存</string>
     <string name="cloud_sync">云同步</string>
     <string name="cloud_sync_desc">通过云端实现跨设备同步</string>
     <string name="database_logging">数据库日志记录</string>
-    <string name="database_logging_desc">记录原始的 Room SQL 查询（不包括参数）</string>
     <string name="enable_cloud_sync">启用云同步</string>
     <string name="export_data">导出数据</string>
     <string name="export_data_desc">将您的日记和媒体文件保存到一个安全的文件中。</string>
@@ -329,7 +326,6 @@
     <string name="sync_header_desc">使用云存储服务，让您的日记在所有设备上保持同步。</string>
     <string name="sync_internet_required_desc">请开启互联网连接以使用云同步功能。</string>
     <string name="sync_logging">同步日志记录</string>
-    <string name="sync_logging_desc">为云同步操作启用详细日志</string>
     <string name="wifi_only_sync">仅在 Wi-Fi 环境下自动同步</string>
     <string name="wifi_only_sync_desc">避免通过移动数据进行同步</string>
     <string name="password_app_token_label">密码 / 应用令牌</string>

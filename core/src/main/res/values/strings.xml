@@ -8,6 +8,12 @@
 
     <string name="github" translatable="false">GitHub</string>
 
+    <string name="buy_me_a_coffee" translatable="false">Buy Me a Coffee</string>
+
+    <string name="play_store" translatable="false">Play Store</string>
+
+    <string name="translate">Translate</string>
+
 
 
     <!-- Actions -->
@@ -704,8 +710,6 @@
 
     <string name="custom_question_placeholder">e.g. What is your secret nickname?</string>
 
-    <string name="developer_options_desc">Configure developer logging options and view system console logs.</string>
-
     <string name="developer_options_disabled">Developer options disabled</string>
 
     <string name="important">Important</string>
@@ -828,8 +832,6 @@
 
     <string name="backup_logging">Backup Logging</string>
 
-    <string name="backup_logging_desc">Enable diagnostics during export/restore</string>
-
     <string name="backup_saved_successfully">Backup saved successfully</string>
 
     <string name="cloud_sync">Cloud Sync</string>
@@ -837,8 +839,6 @@
     <string name="cloud_sync_desc">Sync across devices via Cloud</string>
 
     <string name="database_logging">Database Logging</string>
-
-    <string name="database_logging_desc">Log raw Room SQL queries (excluding arguments)</string>
 
     <string name="enable_cloud_sync">Enable Cloud Sync</string>
 
@@ -945,8 +945,6 @@
     <string name="sync_internet_required_desc">Enable internet access to use cloud sync.</string>
 
     <string name="sync_logging">Sync Logging</string>
-
-    <string name="sync_logging_desc">Enable verbose logs for cloud sync operations</string>
 
     <string name="wifi_only_sync">Auto-sync on Wi-Fi only</string>
 

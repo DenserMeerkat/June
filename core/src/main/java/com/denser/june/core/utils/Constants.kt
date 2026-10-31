@@ -4,10 +4,12 @@ package com.denser.june.core.utils
 object Constants {
     const val GITHUB_URL = "https://github.com/DenserMeerkat/June"
     const val GITHUB_RELEASES_LATEST_URL = "https://api.github.com/repos/DenserMeerkat/June/releases/latest"
+    const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.denser.june.play"
     const val WEBLATE_URL = "https://hosted.weblate.org/engage/june/"
     const val ODESIL_URL = "https://api.song.link/"
     const val DEVELOPER_GITHUB_URL = "https://github.com/DenserMeerkat"
     const val DEVELOPER_EMAIL = "mailto:densermeerkat11@gmail.com"
+    const val BUY_ME_A_COFFEE_URL = "https://buymeacoffee.com/densermeerkat"
     const val DEVELOPER_IMAGE = "https://github.com/DenserMeerkat.png"
     const val DEVELOPER_NAME = "Denser Meerkat"
 

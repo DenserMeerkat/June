@@ -35,6 +35,7 @@ import com.denser.june.presentation.screens.settings.screens.PrivacySecuritySett
 import com.denser.june.presentation.screens.settings.screens.DataSyncSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.AboutSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.DeveloperSettingsScreen
+import com.denser.june.presentation.screens.settings.screens.ConsoleLogsScreen
 import com.denser.june.presentation.screens.settings.screens.EditorSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.reminder.ReminderScreen
 import com.denser.june.presentation.screens.settings.screens.sync.SyncScreen
@@ -232,6 +233,10 @@ fun JuneNavHost(
 
         composable<Route.DeveloperSettings> {
             DeveloperSettingsScreen()
+        }
+
+        composable<Route.ConsoleLogs> {
+            ConsoleLogsScreen()
         }
     }
 }

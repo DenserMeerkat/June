@@ -239,12 +239,10 @@
     <string name="automatic_sync_desc">Echtzeit-Synchronisierung</string>
     <string name="backup_format_too_old">Sicherungsformat ist zu alt</string>
     <string name="backup_logging">Sicherungsprotokollierung</string>
-    <string name="backup_logging_desc">Diagnose beim Exportieren/Wiederherstellen aktivieren</string>
     <string name="backup_saved_successfully">Sicherung erfolgreich gespeichert</string>
     <string name="cloud_sync">Online-Speicher Synchronisation</string>
     <string name="cloud_sync_desc">Geräteübergreifend über Online-Speicher synchronisieren</string>
     <string name="database_logging">Datenbank-Protokollierung</string>
-    <string name="database_logging_desc">Rohe Room-SQL-Abfragen protokollieren (ohne Parameter)</string>
     <string name="enable_cloud_sync">Aktiviere Online-Speicher-Synchronisation</string>
     <string name="export_data">Daten exportieren</string>
     <string name="export_data_desc">Speichere deine Tagebücher und Medien in einer Sicherungsdatei.</string>
@@ -270,7 +268,6 @@
     <string name="sync_header_desc">Halte deine Tagebücher über einen Online-Speicheranbieter auf all deinen Geräten synchron.</string>
     <string name="sync_internet_required_desc">Aktiviere Internetzugriff, um Online-Speicher Synchronisation zu nutzen.</string>
     <string name="sync_logging">Synchronisationsprotokollierung</string>
-    <string name="sync_logging_desc">Ausführliche Protokolle für Online-Speicher-Synchronisationsvorgänge aktivieren</string>
     <string name="wifi_only_sync">Automatisches synchronisieren nur über Wi-Fi</string>
     <string name="wifi_only_sync_desc">Vermeide Synchronisierung über mobile Daten</string>
     <string name="password_app_token_label">Passwort / Anwendungsschlüssel</string>
@@ -420,7 +417,6 @@
     <string name="change_recovery">Ändere Wiederherstellung</string>
     <string name="confirm_pin">Bestätige PIN</string>
     <string name="create_pin">Erstelle PIN</string>
-    <string name="developer_options_desc">Konfiguriere Entwickleroptionen und schaue Systemkonsonlen-Protokoll an.</string>
     <string name="developer_options_disabled">Entwickleroptionen deaktiviert</string>
     <string name="important">Wichtig</string>
     <string name="setup_recovery">Wiederherstellung der Konfiguration</string>

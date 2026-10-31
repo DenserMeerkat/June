@@ -26,6 +26,8 @@ import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.settings.components.*
+import com.denser.june.presentation.screens.settings.components.sheets.UpdateBottomSheet
+import com.denser.june.presentation.screens.settings.components.sheets.UpdateSheetState
 import com.denser.june.presentation.screens.settings.components.sheets.*
 import com.denser.june.core.domain.billing.BillingHandler
 import com.denser.june.presentation.components.color.ColorTab
@@ -111,7 +113,7 @@ fun SettingsScreen() {
                             .padding(end = 8.dp)
                     ) {
                         Text(
-                            text = if (isPlus) "Pro" else "Get Pro",
+                            text = if (isPlus) "Plus" else "Get Plus",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -469,8 +471,8 @@ fun SettingsScreen() {
         )
     }
 
-    UpdateDialogs(
-        state = UpdateDialogState(
+    UpdateBottomSheet(
+        state = UpdateSheetState(
             showChecking = showCheckingUpdatesDialog,
             updateInfo = updateInfo,
             showNoUpdate = showNoUpdateDialog,
