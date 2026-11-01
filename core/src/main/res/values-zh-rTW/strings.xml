@@ -242,4 +242,10 @@
     <string name="permissions_desc_long">管理 June 如何與你的裝置功能進行互動</string>
     <string name="same_as_screen_lock">與螢幕鎖定相同</string>
     <string name="screen_privacy">螢幕隱私性</string>
+    <string name="answer_cannot_be_empty">答案不能為空</string>
+    <string name="answer_label">答案</string>
+    <string name="answer_placeholder">輸入你恢復問題的答案</string>
+    <string name="change_recovery">變更恢復</string>
+    <string name="confirm_pin">確認密碼</string>
+    <string name="create_pin">創建密碼</string>
 </resources>
