@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import com.denser.june.presentation.components.JuneConnectedItem
 import com.denser.june.presentation.components.JuneConnectedList
@@ -44,7 +45,11 @@ fun SettingsItem(
     leadingContent: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
+    shape: Shape? = null,
+    index: Int? = null,
+    count: Int? = null,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    contentPadding: PaddingValues = PaddingValues(16.dp),
     onClick: (() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null
 ) {
@@ -55,7 +60,11 @@ fun SettingsItem(
         leadingContent = leadingContent,
         trailingContent = trailingContent,
         enabled = enabled,
+        shape = shape,
+        index = index,
+        count = count,
         containerColor = containerColor,
+        contentPadding = contentPadding,
         onClick = onClick,
         content = content
     )

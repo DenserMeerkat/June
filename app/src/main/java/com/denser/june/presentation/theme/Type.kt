@@ -1,72 +1,60 @@
 package com.denser.june.presentation.theme
 
 import androidx.compose.material3.Typography
-import androidx.compose.runtime.*
-import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontVariation
-import androidx.compose.ui.text.googlefonts.Font
-import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.sp
+import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.core.domain.model.enums.Fonts
+import com.denser.june.core.utils.FontUtils
 
-@OptIn(ExperimentalTextApi::class)
+val SYSTEM_FONT_NAME = FontUtils.SYSTEM_FONT_NAME
+
+fun isSystemFont(fontName: String?): Boolean = FontUtils.isSystemFont(fontName)
+
 @Composable
-fun getAppFontFamily(fontName: String): FontFamily {
+fun getAppFontFamily(
+    fontName: String,
+    variation: FontVariationConfig? = null
+): FontFamily {
+    if (isSystemFont(fontName)) return FontFamily.Default
+
     val isInternetAllowed = LocalInternetAllowed.current
-    return remember(fontName, isInternetAllowed) {
+    return remember(fontName, variation, isInternetAllowed) {
         val bundled = Fonts.entries.find { it.fullName == fontName }
         if (bundled != null || !isInternetAllowed) {
             val activeFont = bundled ?: Fonts.GOOGLE_SANS_FLEX
-            FontFamily(
-                Font(
-                    resId = activeFont.font,
-                    weight = FontWeight.Normal,
-                    variationSettings = FontVariation.Settings(FontVariation.weight(400))
-                ),
-                Font(
-                    resId = activeFont.font,
-                    weight = FontWeight.Medium,
-                    variationSettings = FontVariation.Settings(FontVariation.weight(500))
-                ),
-                Font(
-                    resId = activeFont.font,
-                    weight = FontWeight.SemiBold,
-                    variationSettings = FontVariation.Settings(FontVariation.weight(600))
-                ),
-                Font(
-                    resId = activeFont.font,
-                    weight = FontWeight.Bold,
-                    variationSettings = FontVariation.Settings(FontVariation.weight(700))
-                )
+            createBundledFontFamily(
+                activeFont = activeFont,
+                variation = variation
             )
         } else {
-            val googleFont = GoogleFont(fontName.trim())
-            FontFamily(
-                Font(
-                    googleFont = googleFont,
-                    fontProvider = provider,
-                    weight = FontWeight.Normal
-                ),
-                Font(
-                    googleFont = googleFont,
-                    fontProvider = provider,
-                    weight = FontWeight.Bold
-                ),
-                Font(
-                    googleFont = googleFont,
-                    fontProvider = provider,
-                    weight = FontWeight.Medium
-                ),
-                Font(
-                    googleFont = googleFont,
-                    fontProvider = provider,
-                    weight = FontWeight.SemiBold
-                )
+            createGoogleFontFamily(fontName)
+        }
+    }
+}
+
+@Composable
+fun getJournalFontFamily(
+    fontName: String?,
+    variation: FontVariationConfig? = null
+): FontFamily? {
+    if (fontName.isNullOrBlank()) return null
+    if (isSystemFont(fontName)) return FontFamily.Default
+
+    val isInternetAllowed = LocalInternetAllowed.current
+    return remember(fontName, variation, isInternetAllowed) {
+        val bundled = Fonts.entries.find { it.fullName == fontName }
+        when {
+            bundled != null -> createBundledFontFamily(
+                activeFont = bundled,
+                variation = variation
             )
+            isInternetAllowed -> createGoogleFontFamily(fontName)
+            else -> null
         }
     }
 }
@@ -75,120 +63,44 @@ fun getAppFontFamily(fontName: String): FontFamily {
 fun provideTypography(
     scale: Float = 1f,
     font: String = "Google Sans Flex",
+    variation: FontVariationConfig? = null,
 ): Typography {
+    val displayFont = getAppFontFamily(font, variation)
+    val bodyFont = getAppFontFamily(font, variation)
 
-    val displayFont = getAppFontFamily(font)
-    val bodyFont = getAppFontFamily(font)
+    fun style(
+        family: FontFamily,
+        sizeSp: Double,
+        lineHeightSp: Double,
+        weight: FontWeight,
+        letterSpacingSp: Double = 0.0
+    ) = TextStyle(
+        fontFamily = family,
+        fontWeight = weight,
+        fontSize = (sizeSp * scale).sp,
+        lineHeight = (lineHeightSp * scale).sp,
+        letterSpacing = letterSpacingSp.sp
+    )
 
     return Typography(
-        displayLarge = TextStyle(
-            fontFamily = displayFont,
-            fontWeight = FontWeight.Bold,
-            fontSize = 57.sp * scale,
-            lineHeight = 64.sp * scale,
-            letterSpacing = (-0.25).sp,
-        ),
-        displayMedium = TextStyle(
-            fontFamily = displayFont,
-            fontWeight = FontWeight.Bold,
-            fontSize = 45.sp * scale,
-            lineHeight = 52.sp * scale,
-            letterSpacing = 0.sp
-        ),
-        displaySmall = TextStyle(
-            fontFamily = displayFont,
-            fontWeight = FontWeight.Bold,
-            fontSize = 36.sp * scale,
-            lineHeight = 44.sp * scale,
-            letterSpacing = 0.sp
-        ),
+        displayLarge = style(displayFont, 57.0, 64.0, FontWeight.Bold, -0.25),
+        displayMedium = style(displayFont, 45.0, 52.0, FontWeight.Bold),
+        displaySmall = style(displayFont, 36.0, 44.0, FontWeight.Bold),
 
-        headlineLarge = TextStyle(
-            fontFamily = displayFont,
-            fontWeight = FontWeight.Bold,
-            fontSize = 32.sp * scale,
-            lineHeight = 40.sp * scale,
-            letterSpacing = 0.sp
-        ),
-        headlineMedium = TextStyle(
-            fontFamily = displayFont,
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp * scale,
-            lineHeight = 36.sp * scale,
-            letterSpacing = 0.sp
-        ),
-        headlineSmall = TextStyle(
-            fontFamily = displayFont,
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp * scale,
-            lineHeight = 32.sp * scale,
-            letterSpacing = 0.sp
-        ),
+        headlineLarge = style(displayFont, 32.0, 40.0, FontWeight.Bold),
+        headlineMedium = style(displayFont, 28.0, 36.0, FontWeight.Bold),
+        headlineSmall = style(displayFont, 24.0, 32.0, FontWeight.Bold),
 
-        titleLarge = TextStyle(
-            fontFamily = bodyFont,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 22.sp * scale,
-            lineHeight = 28.sp * scale,
-            letterSpacing = 0.sp
-        ),
-        titleMedium = TextStyle(
-            fontFamily = bodyFont,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp * scale,
-            lineHeight = 24.sp * scale,
-            letterSpacing = 0.15.sp
-        ),
-        titleSmall = TextStyle(
-            fontFamily = bodyFont,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp * scale,
-            lineHeight = 20.sp * scale,
-            letterSpacing = 0.1.sp
-        ),
+        titleLarge = style(bodyFont, 22.0, 28.0, FontWeight.SemiBold),
+        titleMedium = style(bodyFont, 16.0, 24.0, FontWeight.SemiBold, 0.15),
+        titleSmall = style(bodyFont, 14.0, 20.0, FontWeight.Medium, 0.1),
 
-        bodyLarge = TextStyle(
-            fontFamily = bodyFont,
-            fontWeight = FontWeight.Normal,
-            fontSize = 16.sp * scale,
-            lineHeight = 24.sp * scale,
-            letterSpacing = 0.5.sp
-        ),
-        bodyMedium = TextStyle(
-            fontFamily = bodyFont,
-            fontWeight = FontWeight.Normal,
-            fontSize = 14.sp * scale,
-            lineHeight = 20.sp * scale,
-            letterSpacing = 0.25.sp
-        ),
-        bodySmall = TextStyle(
-            fontFamily = bodyFont,
-            fontWeight = FontWeight.Normal,
-            fontSize = 12.sp * scale,
-            lineHeight = 16.sp * scale,
-            letterSpacing = 0.4.sp
-        ),
+        bodyLarge = style(bodyFont, 16.0, 24.0, FontWeight.Normal, 0.5),
+        bodyMedium = style(bodyFont, 14.0, 20.0, FontWeight.Normal, 0.25),
+        bodySmall = style(bodyFont, 12.0, 16.0, FontWeight.Normal, 0.4),
 
-        labelLarge = TextStyle(
-            fontFamily = bodyFont,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp * scale,
-            lineHeight = 20.sp * scale,
-            letterSpacing = 0.1.sp
-        ),
-        labelMedium = TextStyle(
-            fontFamily = bodyFont,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp * scale,
-            lineHeight = 16.sp * scale,
-            letterSpacing = 0.5.sp
-        ),
-        labelSmall = TextStyle(
-            fontFamily = bodyFont,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 11.sp * scale,
-            lineHeight = 16.sp * scale,
-            letterSpacing = 0.5.sp
-        )
+        labelLarge = style(bodyFont, 14.0, 20.0, FontWeight.SemiBold, 0.1),
+        labelMedium = style(bodyFont, 12.0, 16.0, FontWeight.SemiBold, 0.5),
+        labelSmall = style(bodyFont, 11.0, 16.0, FontWeight.SemiBold, 0.5)
     )
 }

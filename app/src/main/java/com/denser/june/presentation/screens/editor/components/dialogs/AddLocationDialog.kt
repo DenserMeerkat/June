@@ -1,0 +1,841 @@
+package com.denser.june.presentation.screens.editor.components.dialogs
+
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import kotlinx.coroutines.Job
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import com.denser.june.core.R
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.denser.june.presentation.components.JuneFullScreenDialog
+import androidx.core.content.ContextCompat
+import androidx.compose.ui.graphics.Color
+import com.denser.june.core.domain.model.JournalLocation
+import com.denser.june.core.domain.model.enums.MapTheme
+import com.denser.june.presentation.components.MapControlColumn
+import com.denser.june.presentation.components.MapLocationPin
+import com.denser.june.presentation.components.MapAttributions
+import com.denser.june.presentation.components.InternetRestrictedBanner
+import com.denser.june.presentation.components.MapLibreInitializer
+import com.denser.june.presentation.components.rememberMapDarkMode
+import com.denser.june.core.domain.preferences.JournalPreferences
+import com.denser.june.core.domain.preferences.PrivacyPreferences
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.koinInject
+import com.denser.june.presentation.utils.MapProviderUtils
+import com.denser.june.presentation.utils.MapSearchResult
+import com.denser.june.core.domain.model.enums.MapStyleProvider
+import com.denser.june.presentation.utils.UiUtils
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import org.maplibre.compose.camera.CameraPosition
+import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.map.MaplibreMap
+import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.map.RenderOptions
+import org.maplibre.compose.map.OrnamentOptions
+import org.maplibre.compose.map.GestureOptions
+import org.maplibre.spatialk.geojson.Position
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.compose.style.BaseStyle
+import com.denser.june.presentation.utils.MapAccentColorizer
+import com.denser.june.presentation.utils.MapAccentColorizer.getMapLibreMap
+import java.util.Locale
+
+import com.denser.june.core.domain.model.JournalTheme
+import com.denser.june.presentation.plus.LocalIsPlus
+import com.denser.june.presentation.theme.JuneThemeWrapper
+
+@Composable
+fun AddLocationDialog(
+    existingLocation: JournalLocation? = null,
+    journalTheme: JournalTheme? = null,
+    onLocationSelected: (JournalLocation) -> Unit = {},
+    onRemoveLocation: (() -> Unit)? = null,
+    onDismiss: () -> Unit
+) {
+    val privacyPreferences = koinInject<PrivacyPreferences>()
+    val journalPreferences = koinInject<JournalPreferences>()
+    val isInternetAllowed by privacyPreferences.getIsInternetAllowedFlow()
+        .collectAsStateWithLifecycle(initialValue = true)
+    val savedMapTheme by journalPreferences.mapTheme()
+        .collectAsStateWithLifecycle(initialValue = MapTheme.APP)
+
+    val mapStyleProvider by journalPreferences.mapStyleProvider()
+        .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
+    val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
+        .collectAsStateWithLifecycle(initialValue = true)
+    val isPlus = LocalIsPlus.current
+    val shouldApplyAccents = isPlus && isMapThemeAccentEnabled
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    MapLibreInitializer(isInternetAllowed)
+
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearching by remember { mutableStateOf(false) }
+    var isFetchingLocation by remember { mutableStateOf(false) }
+    var isAddressLoading by remember { mutableStateOf(false) }
+    var searchResults by remember { mutableStateOf<List<MapSearchResult>>(emptyList()) }
+    var isSearchFocused by remember { mutableStateOf(false) }
+    var showSearchResults by remember { mutableStateOf(false) }
+    var hasSearched by remember { mutableStateOf(false) }
+
+    val dummyFocusRequester = remember { FocusRequester() }
+
+    fun dismissSearchAndKeyboard() {
+        dummyFocusRequester.requestFocus()
+        focusManager.clearFocus(force = true)
+        keyboardController?.hide()
+        showSearchResults = false
+    }
+
+    val searchCache = remember { mutableMapOf<String, List<MapSearchResult>>() }
+    var searchJob by remember { mutableStateOf<Job?>(null) }
+
+    fun executeSearch(query: String, immediate: Boolean = false) {
+        val trimmed = query.trim()
+        val minChars = if (immediate) 1 else 3
+        if (trimmed.length < minChars) {
+            searchJob?.cancel()
+            isSearching = false
+            hasSearched = false
+            searchResults = emptyList()
+            showSearchResults = false
+            return
+        }
+
+        val cached = searchCache[trimmed.lowercase()]
+        if (cached != null) {
+            searchJob?.cancel()
+            isSearching = false
+            hasSearched = true
+            searchResults = cached
+            showSearchResults = true
+            return
+        }
+
+        searchJob?.cancel()
+        searchJob = scope.launch {
+            if (!immediate) {
+                delay(500)
+            }
+            if (!isInternetAllowed) return@launch
+            isSearching = true
+            hasSearched = true
+            val results = MapProviderUtils.searchLocation(context, trimmed)
+            searchCache[trimmed.lowercase()] = results
+            searchResults = results
+            isSearching = false
+            showSearchResults = true
+        }
+    }
+
+    val defaultLocationName = stringResource(R.string.move_map_to_select)
+    val networkRestrictedText = stringResource(R.string.network_restricted)
+
+    var currentLocation by remember {
+        mutableStateOf(existingLocation ?: JournalLocation(0.0, 0.0, name = defaultLocationName))
+    }
+
+    val startPosition = remember {
+        if (existingLocation != null && existingLocation.latitude != 0.0) {
+            CameraPosition(
+                target = Position(
+                    longitude = existingLocation.longitude,
+                    latitude = existingLocation.latitude
+                ),
+                zoom = 15.0
+            )
+        } else {
+            CameraPosition(target = Position(longitude = 0.0, latitude = 0.0), zoom = 1.0)
+        }
+    }
+    val cameraState = rememberCameraState(firstPosition = startPosition)
+
+    val isAtSelectedLocation by remember(cameraState.position.target, existingLocation) {
+        derivedStateOf {
+            existingLocation?.let { existing ->
+                val target = cameraState.position.target
+                MapProviderUtils.isSameCoordinates(target.latitude, target.longitude, existing.latitude, existing.longitude)
+            } ?: false
+        }
+    }
+
+    var isMapDarkMode by rememberMapDarkMode(savedMapTheme)
+    val mapStyleUrl by produceState("", mapStyleProvider, isMapDarkMode) {
+        value = MapProviderUtils.getStyleUrl(
+            provider = mapStyleProvider,
+            isDark = isMapDarkMode
+        )
+    }
+
+    val lastFetchedLatLng = remember { mutableStateOf<LatLng?>(null) }
+
+    LaunchedEffect(cameraState.position.target, isInternetAllowed) {
+        val target = cameraState.position.target
+        if (target.latitude == 0.0 && target.longitude == 0.0) return@LaunchedEffect
+
+        val newLatLng = LatLng(target.latitude, target.longitude)
+        val lastFetched = lastFetchedLatLng.value
+
+        if (lastFetched != null && MapProviderUtils.isSameCoordinates(newLatLng.latitude, newLatLng.longitude, lastFetched.latitude, lastFetched.longitude)) {
+            return@LaunchedEffect
+        }
+
+        isAddressLoading = true
+        delay(800)
+        currentLocation = MapProviderUtils.updateLocationFromCenter(context, newLatLng)
+        lastFetchedLatLng.value = newLatLng
+        isAddressLoading = false
+    }
+
+    fun animateToLocation(latLng: LatLng, zoom: Double = 15.0) {
+        scope.launch {
+            cameraState.animateTo(
+                finalPosition = CameraPosition(
+                    target = Position(longitude = latLng.longitude, latitude = latLng.latitude),
+                    zoom = zoom
+                ),
+                duration = 1.5.seconds
+            )
+        }
+    }
+
+    fun performLocationFetch() {
+        isFetchingLocation = true
+        scope.launch {
+            val location = MapProviderUtils.fetchCurrentLocation(context)
+            if (location != null && (location.latitude != 0.0 || location.longitude != 0.0)) {
+                animateToLocation(LatLng(location.latitude, location.longitude))
+            }
+            isFetchingLocation = false
+        }
+    }
+
+    val locationSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        performLocationFetch()
+    }
+
+    fun checkSettingsAndFetch() {
+        if (MapProviderUtils.isLocationServiceEnabled(context)) {
+            performLocationFetch()
+        } else {
+            val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            locationSettingsLauncher.launch(intent)
+        }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) checkSettingsAndFetch() else isFetchingLocation = false
+    }
+
+    val onMyLocationClick = {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            checkSettingsAndFetch()
+        } else {
+            isFetchingLocation = true
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (existingLocation == null && isInternetAllowed) {
+            onMyLocationClick()
+        }
+    }
+
+    val dialogBgColor = if (isMapDarkMode) Color(0xFF121212) else Color(0xFFFFFFFF)
+    JuneFullScreenDialog(
+        onDismissRequest = {
+            if (showSearchResults || isSearchFocused) {
+                dismissSearchAndKeyboard()
+            } else {
+                onDismiss()
+            }
+        },
+        isDarkTheme = isMapDarkMode,
+        windowBackgroundColor = dialogBgColor
+    ) {
+        JuneThemeWrapper(theme = journalTheme) {
+            val colorScheme = MaterialTheme.colorScheme
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = dialogBgColor
+            ) {
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(0.dp)
+                        .focusRequester(dummyFocusRequester)
+                        .focusable()
+                )
+            if (isInternetAllowed && mapStyleUrl.isNotBlank()) {
+                MaplibreMap(
+                    modifier = Modifier.fillMaxSize(),
+                    baseStyle = BaseStyle.Uri(mapStyleUrl),
+                    cameraState = cameraState,
+                    onMapLoadFinished = {
+                        if (shouldApplyAccents) {
+                            cameraState.getMapLibreMap()?.getStyle { style ->
+                                MapAccentColorizer.applyThemeAccents(
+                                    style = style,
+                                    colorScheme = colorScheme,
+                                    provider = mapStyleProvider,
+                                    isDark = isMapDarkMode
+                                )
+                            }
+                        }
+                    },
+                    options = MapOptions(
+                        renderOptions = RenderOptions(
+                            renderMode = RenderOptions.RenderMode.TextureView
+                        ),
+                        ornamentOptions = OrnamentOptions(
+                            isLogoEnabled = false,
+                            isAttributionEnabled = false,
+                            isCompassEnabled = false,
+                            isScaleBarEnabled = false
+                        ),
+                        gestureOptions = GestureOptions(
+                            isTiltEnabled = true,
+                            isZoomEnabled = true,
+                            isRotateEnabled = true,
+                            isScrollEnabled = true
+                        )
+                    )
+                )
+
+                LaunchedEffect(mapStyleUrl, shouldApplyAccents, colorScheme, isMapDarkMode) {
+                    if (!shouldApplyAccents || mapStyleUrl.isBlank()) return@LaunchedEffect
+                    cameraState.getMapLibreMap()?.getStyle { style ->
+                        MapAccentColorizer.applyThemeAccents(
+                            style = style,
+                            colorScheme = colorScheme,
+                            provider = mapStyleProvider,
+                            isDark = isMapDarkMode
+                        )
+                    }
+                }
+            }
+
+            if (isInternetAllowed) {
+                Box(modifier = Modifier.align(Alignment.Center)) {
+                    MapLocationPin(
+                        isMoving = isAddressLoading
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                if (isInternetAllowed) {
+                    MapControlColumn(
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .padding(end = 16.dp),
+                        isDarkMode = isMapDarkMode,
+                        onToggleDarkMode = { isMapDarkMode = !isMapDarkMode },
+                        isFetchingLocation = isFetchingLocation,
+                        onMyLocationClick = onMyLocationClick,
+                        onZoomIn = {
+                            scope.launch {
+                                val currentPos = cameraState.position
+                                cameraState.animateTo(
+                                    currentPos.copy(zoom = currentPos.zoom + 1),
+                                    300.milliseconds
+                                )
+                            }
+                        },
+                        onZoomOut = {
+                            scope.launch {
+                                val currentPos = cameraState.position
+                                cameraState.animateTo(
+                                    currentPos.copy(zoom = currentPos.zoom - 1),
+                                    300.milliseconds
+                                )
+                            }
+                        }
+                    )
+                    MapAttributions(
+                        provider = mapStyleProvider,
+                        modifier = Modifier.padding(start = 8.dp),
+                        isDarkMode = isMapDarkMode
+                    )
+                }
+
+                MapBottomBar(
+                    location = if (!isInternetAllowed && (currentLocation.name == defaultLocationName || currentLocation.name == networkRestrictedText || currentLocation.name == "Move map to select")) {
+                        currentLocation.copy(name = networkRestrictedText)
+                    } else currentLocation,
+                    isLoading = isAddressLoading,
+                    isAtTarget = isAtSelectedLocation,
+                    onLocationIconClick = if (isInternetAllowed) {
+                        {
+                            existingLocation?.let {
+                                animateToLocation(LatLng(it.latitude, it.longitude))
+                            }
+                        }
+                    } else null,
+                    onConfirm = {
+                        onLocationSelected(currentLocation)
+                        onDismiss()
+                    },
+                    onRemove = if (existingLocation != null) {
+                        {
+                            onRemoveLocation?.invoke()
+                            onDismiss()
+                        }
+                    } else null,
+                    enabled = isInternetAllowed
+                )
+            }
+
+            if (showSearchResults && isSearchFocused) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            dismissSearchAndKeyboard()
+                        }
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                MapSearchBar(
+                    query = searchQuery,
+                    onQueryChange = {
+                        searchQuery = it
+                        executeSearch(it, immediate = false)
+                    },
+                    onSearch = {
+                        keyboardController?.hide()
+                        executeSearch(searchQuery, immediate = true)
+                    },
+                    onClear = {
+                        searchJob?.cancel()
+                        searchQuery = ""
+                        searchResults = emptyList()
+                        hasSearched = false
+                        showSearchResults = false
+                    },
+                    isSearching = isSearching,
+                    onBack = onDismiss,
+                    enabled = isInternetAllowed,
+                    onFocusChanged = { isFocused ->
+                        isSearchFocused = isFocused
+                        if (isFocused) {
+                            val trimmed = searchQuery.trim()
+                            if (trimmed.length >= 3) {
+                                val cached = searchCache[trimmed.lowercase()]
+                                if (cached != null) {
+                                    searchResults = cached
+                                    hasSearched = true
+                                }
+                                showSearchResults = true
+                            }
+                        }
+                    }
+                )
+
+                if (showSearchResults && isSearchFocused && (searchResults.isNotEmpty() || (hasSearched && !isSearching))) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                    ) {
+                        if (searchResults.isNotEmpty()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(max = 280.dp)
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(vertical = 4.dp)
+                            ) {
+                                searchResults.forEachIndexed { index, result ->
+                                    if (index > 0) {
+                                        HorizontalDivider(
+                                            modifier = Modifier.padding(horizontal = 16.dp),
+                                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                        )
+                                    }
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                dismissSearchAndKeyboard()
+                                                animateToLocation(LatLng(result.latitude, result.longitude))
+                                                val prevQuery = searchQuery
+                                                searchQuery = result.name
+                                                searchCache[result.name.trim().lowercase()] = searchResults
+                                                if (prevQuery.isNotBlank()) {
+                                                    searchCache[prevQuery.trim().lowercase()] = searchResults
+                                                }
+                                            }
+                                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.location_on_24px),
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = result.name,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = result.address,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (hasSearched && !isSearching) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.search_off_24px),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = stringResource(R.string.no_locations_found),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (!isInternetAllowed) {
+                    InternetRestrictedBanner(
+                        description = stringResource(R.string.maps_search_require_internet)
+                    )
+                }
+            }
+        }
+    }
+}
+}
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun MapBottomBar(
+    location: JournalLocation,
+    isLoading: Boolean,
+    isAtTarget: Boolean,
+    onLocationIconClick: (() -> Unit)? = null,
+    onConfirm: () -> Unit,
+    onRemove: (() -> Unit)? = null,
+    enabled: Boolean = true
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shadowElevation = 8.dp,
+    ) {
+        Column(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .padding(24.dp, 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (isLoading) stringResource(R.string.locating) else (location.name ?: stringResource(R.string.unknown_place)),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Text(
+                        text = if (isLoading) stringResource(R.string.fetching_address) else (location.address ?: stringResource(R.string.no_address_available)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isLoading) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        minLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = if (isAtTarget) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+                    modifier = Modifier.size(48.dp),
+                    onClick = { onLocationIconClick?.invoke() },
+                    enabled = onLocationIconClick != null
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (isLoading) {
+                            ContainedLoadingIndicator(
+                                modifier = Modifier.size(32.dp)
+                            )
+                        } else {
+                            val icon = when {
+                                isAtTarget -> R.drawable.location_on_24px_fill
+                                else -> R.drawable.explore_24px
+                            }
+                            Icon(
+                                painter = painterResource(icon),
+                                contentDescription = null,
+                                tint = if (isAtTarget) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.explore_24px),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = if (isLoading) stringResource(R.string.locating) else MapProviderUtils.formatCoordinates(location.latitude, location.longitude),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (onRemove != null) {
+                    FilledIconButton(
+                        onClick = onRemove,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .fillMaxHeight(),
+                        shape = RoundedCornerShape(20.dp),
+                        enabled = !isLoading && enabled,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.delete_24px),
+                            contentDescription = stringResource(R.string.remove_location),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    shape = RoundedCornerShape(20.dp),
+                    enabled = !isLoading && enabled
+                ) {
+                    Text(
+                        stringResource(R.string.confirm_location),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun MapSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onClear: () -> Unit = {},
+    isSearching: Boolean,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onFocusChanged: (Boolean) -> Unit = {}
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shadowElevation = 4.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 6.dp)
+                .height(56.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    painterResource(R.drawable.arrow_back_24px),
+                    contentDescription = stringResource(R.string.back),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            TextField(
+                value = query,
+                onValueChange = onQueryChange,
+                placeholder = {
+                    Text(
+                        stringResource(R.string.search_location_placeholder),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                trailingIcon = if (query.isNotEmpty()) {
+                    {
+                        IconButton(
+                            onClick = onClear,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.close_24px),
+                                contentDescription = stringResource(R.string.clear),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                } else null,
+                modifier = Modifier
+                    .weight(1f)
+                    .onFocusChanged { focusState ->
+                        onFocusChanged(focusState.isFocused)
+                    },
+                singleLine = true,
+                enabled = enabled,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+                colors = UiUtils.getTransparentTextFieldColors(),
+                textStyle = MaterialTheme.typography.bodyLarge
+            )
+            IconButton(
+                onClick = onSearch,
+                enabled = !isSearching && enabled,
+                modifier = Modifier.size(40.dp)
+            ) {
+                if (isSearching) {
+                    CircularWavyProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Icon(
+                        painterResource(R.drawable.search_24px),
+                        contentDescription = stringResource(R.string.search),
+                        tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+    }
+}

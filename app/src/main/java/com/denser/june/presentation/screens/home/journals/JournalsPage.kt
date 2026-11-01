@@ -23,22 +23,34 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.toLocalDate
-import com.denser.june.presentation.components.DayJournalGroupData
-import com.denser.june.presentation.components.ExportJournalBottomSheet
+import com.denser.june.presentation.components.journal.DayJournalGroupData
+import com.denser.june.presentation.components.journal.ExportJournalSheet
 import com.denser.june.presentation.components.JunePlaceholderPage
-import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
 import com.denser.june.presentation.screens.home.components.DayJournalGroup
-import com.denser.june.presentation.screens.home.components.JournalCard
-import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
-import com.denser.june.presentation.components.SearchFilterChip
+import com.denser.june.presentation.components.journal.JournalCard
+import com.denser.june.presentation.components.journal.JournalOptionsSheet
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import com.denser.june.presentation.components.JuneConnectedButtonGroup
 import com.denser.june.presentation.utils.UiUtils
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.home.components.RecentJournalCard
+import com.denser.june.presentation.components.journal.HighlightJournalCard
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class,
+private data class SearchFilter(
+    val prefix: String,
+    val label: String,
+    val isSelected: Boolean,
+    val onToggle: () -> Unit
+)
+
+@OptIn(
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterial3ExpressiveApi::class,
     ExperimentalMaterial3Api::class
 )
 @Composable
@@ -76,14 +88,12 @@ fun JournalsPage(
     }
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val deleteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
     var journalToExport by remember { mutableStateOf<Journal?>(null) }
 
-    ExportJournalBottomSheet(
+    ExportJournalSheet(
         journal = journalToExport,
         onDismiss = { journalToExport = null }
     )
@@ -102,8 +112,12 @@ fun JournalsPage(
             JournalOptionsSheet(
                 journal = currentJournalForOptions,
                 is24Hour = is24Hour,
+                onDismiss = { selectedJournalForOptions = null },
                 onToggleBookmark = {
                     viewModel.toggleBookmark(currentJournalForOptions.id)
+                },
+                onToggleLock = {
+                    viewModel.toggleLock(currentJournalForOptions.id)
                 },
                 onExportMarkdown = {
                     journalToExport = currentJournalForOptions
@@ -111,36 +125,13 @@ fun JournalsPage(
                 },
                 onDeleteOrRestore = {
                     if (currentJournalForOptions.isDeleted) {
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            selectedJournalForOptions = null
-                            viewModel.restoreJournal(currentJournalForOptions.id)
-                        }
+                        viewModel.restoreJournal(currentJournalForOptions.id)
                     } else {
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            showDeleteConfirmation = true
-                        }
+                        viewModel.deleteJournal(currentJournalForOptions.id)
                     }
                 }
             )
         }
-    }
-
-    if (showDeleteConfirmation && selectedJournalForOptions != null) {
-        DeleteConfirmationSheet(
-            sheetState = deleteSheetState,
-            onDismissRequest = {
-                showDeleteConfirmation = false
-                selectedJournalForOptions = null
-            },
-            onConfirm = {
-                val id = selectedJournalForOptions?.id
-                scope.launch { deleteSheetState.hide() }.invokeOnCompletion {
-                    showDeleteConfirmation = false
-                    if (id != null) viewModel.deleteJournal(id)
-                    selectedJournalForOptions = null
-                }
-            }
-        )
     }
 
     val journals = feedState.journals
@@ -158,48 +149,81 @@ fun JournalsPage(
                 enter = expandVertically() + fadeIn(),
                 exit = shrinkVertically() + fadeOut()
             ) {
-                Row(
+                val filters = listOf(
+                    SearchFilter(
+                        prefix = "is:",
+                        label = stringResource(R.string.bookmarked),
+                        isSelected = isBookmarked,
+                        onToggle = viewModel::toggleBookmarkFilter
+                    ),
+                    SearchFilter(
+                        prefix = "is:",
+                        label = stringResource(R.string.draft),
+                        isSelected = isDraft,
+                        onToggle = viewModel::toggleDraftFilter
+                    ),
+                    SearchFilter(
+                        prefix = "has:",
+                        label = stringResource(R.string.media),
+                        isSelected = hasMedia,
+                        onToggle = viewModel::toggleMediaFilter
+                    ),
+                    SearchFilter(
+                        prefix = "has:",
+                        label = stringResource(R.string.music),
+                        isSelected = hasSong,
+                        onToggle = viewModel::toggleSongFilter
+                    ),
+                    SearchFilter(
+                        prefix = "has:",
+                        label = stringResource(R.string.location),
+                        isSelected = hasLocation,
+                        onToggle = viewModel::toggleLocationFilter
+                    )
+                )
+
+                JuneConnectedButtonGroup(
+                    options = filters,
+                    selected = { it.isSelected },
+                    onSelect = { it.onToggle() },
+                    animateWidthOnPress = false,
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SearchFilterChip(
-                        selected = isBookmarked,
-                        onClick = viewModel::toggleBookmarkFilter,
-                        prefix = "is:",
-                        label = stringResource(R.string.bookmarked),
-                        shapes = ButtonGroupDefaults.connectedLeadingButtonShapes()
-                    )
-                    SearchFilterChip(
-                        selected = isDraft,
-                        onClick = viewModel::toggleDraftFilter,
-                        prefix = "is:",
-                        label = stringResource(R.string.draft),
-                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    )
-                    SearchFilterChip(
-                        selected = hasMedia,
-                        onClick = viewModel::toggleMediaFilter,
-                        prefix = "has:",
-                        label = stringResource(R.string.media),
-                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    )
-                    SearchFilterChip(
-                        selected = hasSong,
-                        onClick = viewModel::toggleSongFilter,
-                        prefix = "has:",
-                        label = stringResource(R.string.music),
-                        shapes = ButtonGroupDefaults.connectedMiddleButtonShapes()
-                    )
-                    SearchFilterChip(
-                        selected = hasLocation,
-                        onClick = viewModel::toggleLocationFilter,
-                        prefix = "has:",
-                        label = stringResource(R.string.location),
-                        shapes = ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    horizontalArrangement = Arrangement.spacedBy(
+                        ButtonGroupDefaults.ConnectedSpaceBetween,
+                        Alignment.Start
+                    ),
+                    colors = ToggleButtonDefaults.toggleButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        checkedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        checkedContentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    ),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+                ) { filter, _ ->
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    fontWeight = FontWeight.Normal,
+                                    color = LocalContentColor.current.copy(alpha = 0.6f)
+                                )
+                            ) {
+                                append(filter.prefix)
+                            }
+                            withStyle(
+                                style = SpanStyle(
+                                    fontWeight = FontWeight.Medium
+                                )
+                            ) {
+                                append(filter.label)
+                            }
+                        },
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }
@@ -282,7 +306,7 @@ fun JournalsPage(
                             val singleJournal = dayGroup.journals.first()
                             item(key = "single_journal_${singleJournal.id}") {
                                 if (singleJournal.id == recentJournalId) {
-                                    RecentJournalCard(
+                                    HighlightJournalCard(
                                         journal = singleJournal,
                                         is24Hour = is24Hour,
                                         onToggleBookmark = { viewModel.toggleBookmark(singleJournal.id) },

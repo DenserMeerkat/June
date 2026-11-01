@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens
+import com.denser.june.presentation.components.JuneBackButton
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,18 +39,7 @@ fun GeneralSettingsScreen() {
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(R.string.general)) },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 }
             )
         }

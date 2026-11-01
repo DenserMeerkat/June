@@ -22,9 +22,11 @@ import com.denser.june.presentation.screens.home.HomeScreen
 import com.denser.june.presentation.screens.settings.screens.FontSelectionScreen
 import com.denser.june.presentation.screens.settings.SettingsScreen
 
-import com.denser.june.presentation.screens.settings.screens.LockMethodScreen
-import com.denser.june.presentation.screens.settings.screens.PermissionsScreen
+import com.denser.june.presentation.screens.settings.screens.AppLockSettingsScreen
+import com.denser.june.presentation.screens.settings.screens.VaultLockSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.PinSetupScreen
+import com.denser.june.presentation.screens.settings.screens.PasswordSetupScreen
+import com.denser.june.presentation.screens.settings.screens.PatternSetupScreen
 import com.denser.june.presentation.screens.settings.screens.RecoverySetupScreen
 import com.denser.june.presentation.screens.settings.screens.GeneralSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.MapSettingsScreen
@@ -33,10 +35,13 @@ import com.denser.june.presentation.screens.settings.screens.PrivacySecuritySett
 import com.denser.june.presentation.screens.settings.screens.DataSyncSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.AboutSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.DeveloperSettingsScreen
+import com.denser.june.presentation.screens.settings.screens.ConsoleLogsScreen
 import com.denser.june.presentation.screens.settings.screens.EditorSettingsScreen
 import com.denser.june.presentation.screens.settings.screens.reminder.ReminderScreen
 import com.denser.june.presentation.screens.settings.screens.sync.SyncScreen
 import com.denser.june.presentation.screens.settings.screens.trash.BinScreen
+import com.denser.june.presentation.screens.settings.screens.vault.VaultScreen
+import com.denser.june.presentation.theme.JuneThemeWrapper
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -73,7 +78,14 @@ fun JuneNavHost(
                 navController.getBackStackEntry<Route.Editor>()
             }
             val viewModel: EditorVM = koinViewModel(viewModelStoreOwner = parentEntry)
-            ItemGalleryScreen(viewModel = viewModel)
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            JuneThemeWrapper(
+                theme = state.theme,
+                font = state.font,
+                fontVariation = state.fontVariation
+            ) {
+                ItemGalleryScreen(viewModel = viewModel)
+            }
         }
 
         composable<Route.AddSong> { backStackEntry ->
@@ -81,10 +93,17 @@ fun JuneNavHost(
                 navController.getBackStackEntry<Route.Editor>()
             }
             val viewModel: EditorVM = koinViewModel(viewModelStoreOwner = parentEntry)
-            AddSongScreen(
-                viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() }
-            )
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            JuneThemeWrapper(
+                theme = state.theme,
+                font = state.font,
+                fontVariation = state.fontVariation
+            ) {
+                AddSongScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
 
         composable<Route.MediaViewerRoute>(
@@ -112,16 +131,22 @@ fun JuneNavHost(
             val state by viewModel.state.collectAsStateWithLifecycle()
             val editorImages = remember(state.images) { state.images.reversed() }
 
-            JuneMediaLightbox(
-                mediaPaths = editorImages,
-                initialIndex = args.initialIndex,
-                dateTime = args.dateTime ?: state.dateTime,
-                journalId = args.journalId,
-                allowCompression = true,
-                onDeleteMedia = { path ->
-                    viewModel.onAction(EditorAction.RemoveImage(path))
-                }
-            )
+            JuneThemeWrapper(
+                theme = state.theme,
+                font = state.font,
+                fontVariation = state.fontVariation
+            ) {
+                JuneMediaLightbox(
+                    mediaPaths = editorImages,
+                    initialIndex = args.initialIndex,
+                    dateTime = args.dateTime ?: state.dateTime,
+                    journalId = args.journalId,
+                    allowCompression = true,
+                    onDeleteMedia = { path ->
+                        viewModel.onAction(EditorAction.RemoveImage(path))
+                    }
+                )
+            }
         }
 
         composable<Route.Settings> {
@@ -157,20 +182,36 @@ fun JuneNavHost(
         }
 
 
-        composable<Route.Permissions> {
-            PermissionsScreen()
+        composable<Route.AppLockSettings> {
+            AppLockSettingsScreen()
         }
 
-        composable<Route.LockMethod> {
-            LockMethodScreen()
+        composable<Route.VaultLockSettings> {
+            VaultLockSettingsScreen()
         }
 
-        composable<Route.PinSetup> {
-            PinSetupScreen()
+        composable<Route.PinSetup> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.PinSetup>()
+            PinSetupScreen(forVault = args.forVault)
         }
 
-        composable<Route.RecoverySetup> {
-            RecoverySetupScreen()
+        composable<Route.PasswordSetup> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.PasswordSetup>()
+            PasswordSetupScreen(forVault = args.forVault)
+        }
+
+        composable<Route.PatternSetup> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.PatternSetup>()
+            PatternSetupScreen(forVault = args.forVault)
+        }
+
+        composable<Route.RecoverySetup> { backStackEntry ->
+            val args = backStackEntry.toRoute<Route.RecoverySetup>()
+            RecoverySetupScreen(lockType = args.lockType, forVault = args.forVault)
+        }
+
+        composable<Route.Vault> {
+            VaultScreen()
         }
 
         composable<Route.Bin> {
@@ -192,6 +233,10 @@ fun JuneNavHost(
 
         composable<Route.DeveloperSettings> {
             DeveloperSettingsScreen()
+        }
+
+        composable<Route.ConsoleLogs> {
+            ConsoleLogsScreen()
         }
     }
 }

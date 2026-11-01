@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens.reminder
+import com.denser.june.presentation.components.JuneBackButton
 
 import android.Manifest
 import android.os.Build
@@ -67,18 +68,7 @@ fun ReminderScreen() {
                 title = { Text(stringResource(R.string.reminders)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 }
             )
         }
@@ -172,9 +162,7 @@ fun ReminderScreen() {
                         equalWeight = true,
                         contentPadding = PaddingValues(4.dp),
                         textStyle = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }

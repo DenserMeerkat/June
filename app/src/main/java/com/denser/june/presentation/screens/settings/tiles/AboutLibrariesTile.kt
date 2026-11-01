@@ -17,7 +17,7 @@ fun AboutLibrariesTile() {
         subtitle = stringResource(R.string.about_libraries_desc),
         leadingContent = {
             Icon(
-                painter = painterResource(R.drawable.license_24px),
+                painter = painterResource(R.drawable.bookmark_stacks_24px),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.secondary
             )

@@ -302,9 +302,6 @@ fun JuneMediaLightbox(
                     {
                         if (currentPath != null) {
                             CompressUtils.cleanUncompressedOriginalFile(context, currentPath)
-                            if (mediaPaths.size <= 1) {
-                                navigator.navigateBack()
-                            }
                             callback(currentPath)
                         }
                     }

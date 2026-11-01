@@ -9,11 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,24 +17,24 @@ import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.components.JuneBackButton
 import com.denser.june.presentation.screens.settings.SettingsVM
-import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.screens.settings.components.*
-import com.denser.june.presentation.theme.LocalAppTheme
+import com.denser.june.presentation.screens.settings.components.sheets.*
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import com.denser.june.core.R
+import com.denser.june.presentation.components.color.ColorTab
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppearanceSettingsScreen() {
     val settingsVM: SettingsVM = koinViewModel()
     val state by settingsVM.state.collectAsStateWithLifecycle()
-    val onAction = settingsVM::onAction
     val navigator = koinInject<AppNavigator>()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    var showColorPickerSheet by remember { mutableStateOf(false) }
+    var themeSheetTab by remember { mutableStateOf<ColorTab?>(null) }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -48,25 +44,14 @@ fun AppearanceSettingsScreen() {
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(R.string.appearance)) },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back",
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 }
             )
         }
     ) { innerPadding ->
         val triggers = remember {
             SettingsTriggers(
-                onColorPickerClick = { showColorPickerSheet = true }
+                onThemeSheetClick = { themeSheetTab = it }
             )
         }
 
@@ -119,8 +104,7 @@ fun AppearanceSettingsScreen() {
                         }
                     }
                 }
-
-                val fontAndLangGroup = listOfNotNull(appearanceTiles["LANGUAGE"], appearanceTiles["FORCE_LTR_APP_LAYOUT"], appearanceTiles["APP_FONT"])
+                val fontAndLangGroup = listOfNotNull(appearanceTiles["APP_FONT"], appearanceTiles["LANGUAGE"], appearanceTiles["FORCE_LTR_APP_LAYOUT"])
                 if (fontAndLangGroup.isNotEmpty()) {
                     item {
                         SettingSection {
@@ -136,11 +120,10 @@ fun AppearanceSettingsScreen() {
         }
     }
 
-    if (showColorPickerSheet) {
-        ColorPickerSheet(
-            initialColor = Color(state.appTheme.seedColor),
-            onSelect = { onAction(SettingsAction.OnSeedColorChange(it.toArgb())) },
-            onDismiss = { showColorPickerSheet = false }
+    themeSheetTab?.let { tab ->
+        ThemeCustomizationSheet(
+            initialTab = tab,
+            onDismiss = { themeSheetTab = null }
         )
     }
 }

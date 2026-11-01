@@ -1,6 +1,7 @@
 package com.denser.june.presentation.screens.editor
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,14 +21,15 @@ import com.denser.june.presentation.components.JuneDateTimePicker
 import com.denser.june.presentation.components.JuneDateTimePickerMode
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.editor.components.AddItemSheet
-import com.denser.june.presentation.screens.editor.components.AddLocationDialog
+import com.denser.june.presentation.screens.editor.components.dialogs.AddItemSheet
+import com.denser.june.presentation.screens.editor.components.dialogs.AddLocationDialog
 import com.denser.june.presentation.screens.editor.components.emoji.JournalEmojiPickerSheet
 import com.denser.june.presentation.screens.editor.components.emoji.loadEmojiAssets
-import com.denser.june.presentation.screens.editor.components.JournalTagsDialog
-import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
+import com.denser.june.presentation.screens.editor.components.dialogs.JournalTagsDialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import java.io.File
+import com.denser.june.presentation.plus.LocalIsPlus
+import com.denser.june.presentation.plus.LocalPlusSheetController
+import com.denser.june.presentation.screens.editor.components.dialogs.JunePlusSaveDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,7 +37,6 @@ import org.koin.compose.koinInject
 
 class EditorDialogState {
     var showExitDialog by mutableStateOf(false)
-    var showDeleteConfirmation by mutableStateOf(false)
     var showDatePicker by mutableStateOf(false)
     var datePickerInitialTab by mutableIntStateOf(0)
     var showAddItemSheet by mutableStateOf(false)
@@ -43,6 +44,8 @@ class EditorDialogState {
     var showCameraSelectionDialog by mutableStateOf(false)
     var showLocationDialog by mutableStateOf(false)
     var showTagsDialog by mutableStateOf(false)
+    var showPlusSaveDialog by mutableStateOf(false)
+    var onPlusSaveExitAfter by mutableStateOf(false)
 }
 
 @Composable
@@ -58,14 +61,19 @@ fun EditorModals(
     val context = LocalContext.current
     val navigator = koinInject<AppNavigator>()
     val journalPrefs = koinInject<JournalPreferences>()
+    val isPlus = LocalIsPlus.current
+    val plusSheetController = LocalPlusSheetController.current
     val isCompressPhotosEnabled by journalPrefs.isCompressPhotosEnabled().collectAsStateWithLifecycle(initialValue = false)
     val photoQuality by journalPrefs.getPhotoCompressionQuality().collectAsStateWithLifecycle(initialValue = 80)
     val isCompressVideosEnabled by journalPrefs.isCompressVideosEnabled().collectAsStateWithLifecycle(initialValue = false)
     val videoQuality by journalPrefs.getVideoCompressionQuality().collectAsStateWithLifecycle(initialValue = 1080)
     val coroutineScope = rememberCoroutineScope()
 
+    val appResources = remember(context) { context.applicationContext.resources }
+    val entrySavedMessage = stringResource(R.string.entry_saved_default_theme)
+
     LaunchedEffect(Unit) {
-        loadEmojiAssets(context.resources)
+        loadEmojiAssets(appResources)
     }
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
@@ -172,9 +180,15 @@ fun EditorModals(
             confirmButton = {
                 Button(onClick = {
                     dialogState.showExitDialog = false
-                    editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
-                    onAction(EditorAction.SaveJournal)
-                    onAction(EditorAction.NavigateBack)
+                    val hasPlusStyling = (editorState.font != null || editorState.fontVariation != null || editorState.theme != null)
+                    if (!isPlus && hasPlusStyling) {
+                        dialogState.onPlusSaveExitAfter = true
+                        dialogState.showPlusSaveDialog = true
+                    } else {
+                        editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                        onAction(EditorAction.SaveJournal)
+                        onAction(EditorAction.NavigateBack)
+                    }
                 }) { Text(stringResource(R.string.save)) }
             },
             dismissButton = {
@@ -188,12 +202,33 @@ fun EditorModals(
         )
     }
 
-    if (dialogState.showDeleteConfirmation) {
-        DeleteConfirmationSheet(
-            onDismissRequest = { dialogState.showDeleteConfirmation = false },
-            onConfirm = {
-                dialogState.showDeleteConfirmation = false
-                onAction(EditorAction.DeleteJournal)
+    if (dialogState.showPlusSaveDialog) {
+        JunePlusSaveDialog(
+            onDismissRequest = { dialogState.showPlusSaveDialog = false },
+            onUnlockPlus = {
+                dialogState.showPlusSaveDialog = false
+                plusSheetController.show {
+                    editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                    onAction(EditorAction.SaveJournal)
+                    if (dialogState.onPlusSaveExitAfter) {
+                        onAction(EditorAction.NavigateBack)
+                    }
+                }
+            },
+            onSaveWithoutPlusStyling = {
+                dialogState.showPlusSaveDialog = false
+                onAction(EditorAction.SetJournalFont(fontName = null, variation = null))
+                onAction(EditorAction.SetJournalTheme(theme = null))
+                editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                onAction(EditorAction.SaveJournal)
+                Toast.makeText(
+                    context,
+                    entrySavedMessage,
+                    Toast.LENGTH_SHORT
+                ).show()
+                if (dialogState.onPlusSaveExitAfter) {
+                    onAction(EditorAction.NavigateBack)
+                }
             }
         )
     }
@@ -216,6 +251,7 @@ fun EditorModals(
     if (dialogState.showLocationDialog) {
         AddLocationDialog(
             existingLocation = editorState.location,
+            journalTheme = editorState.theme,
             onLocationSelected = { loc -> onAction(EditorAction.SetLocation(loc)) },
             onRemoveLocation = { onAction(EditorAction.RemoveLocation) },
             onDismiss = { dialogState.showLocationDialog = false }

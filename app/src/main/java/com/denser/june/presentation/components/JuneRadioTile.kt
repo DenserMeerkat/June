@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 enum class JuneRadioTilePosition {
@@ -28,6 +27,8 @@ fun JuneRadioTile(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     badge: String? = null,
+    badgeContent: (@Composable () -> Unit)? = null,
+    prefixContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     radioPosition: JuneRadioTilePosition = JuneRadioTilePosition.Leading,
     shape: Shape = RoundedCornerShape(12.dp),
@@ -41,7 +42,7 @@ fun JuneRadioTile(
     val resolvedTitleColor = titleColor ?: if (selected) {
         MaterialTheme.colorScheme.primary
     } else {
-        MaterialTheme.colorScheme.onSurface
+        MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f)
     }
 
     Surface(
@@ -92,12 +93,15 @@ fun JuneRadioTile(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    prefixContent?.invoke()
                     Text(
                         text = title,
                         style = titleTextStyle,
                         color = resolvedTitleColor
                     )
-                    if (badge != null) {
+                    if (badgeContent != null) {
+                        badgeContent()
+                    } else if (badge != null) {
                         Surface(
                             color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,

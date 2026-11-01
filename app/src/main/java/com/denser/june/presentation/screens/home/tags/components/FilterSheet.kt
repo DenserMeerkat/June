@@ -151,8 +151,8 @@ fun FilterBottomSheet(
                         onClick = onClearAll,
                         label = "${selectedFilters.size}",
                         icon = { Icon(painterResource(R.drawable.close_24px), contentDescription = null) },
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 JuneFloatingAction(

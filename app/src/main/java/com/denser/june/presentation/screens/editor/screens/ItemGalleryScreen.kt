@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.editor.screens
+import com.denser.june.presentation.components.JuneBackButton
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +20,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,11 +39,11 @@ import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.screens.editor.EditorAction
-import com.denser.june.presentation.screens.editor.components.AddLocationDialog
+import com.denser.june.presentation.screens.editor.components.dialogs.AddLocationDialog
 import com.denser.june.presentation.screens.editor.components.JournalMapItem
-import com.denser.june.presentation.screens.editor.components.JournalMediaItem
+import com.denser.june.presentation.components.journal.JournalMediaItem
 import com.denser.june.presentation.screens.editor.components.JournalSongItem
-import com.denser.june.presentation.screens.editor.components.MediaOperations
+import com.denser.june.presentation.components.journal.MediaOperations
 import com.denser.june.presentation.screens.editor.EditorVM
 import android.widget.Toast
 import androidx.compose.runtime.LaunchedEffect
@@ -95,23 +98,16 @@ fun ItemGalleryScreen(
         )
     }
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             JuneTopAppBar(
+                scrollBehavior = scrollBehavior,
                 title = { Text(stringResource(R.string.journal_media)) },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back",
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 }
             )
         }
@@ -147,7 +143,8 @@ fun ItemGalleryScreen(
                         onOpenLibrary = { mediaOperations.onSongSheetToggle(true) },
                         onTrim = mediaOperations.onTrimSong,
                         isInLibrary = isInLibrary,
-                        onAddToLibrary = { viewModel.onAction(EditorAction.AddSongToLibrary(currentSong)) }
+                        onAddToLibrary = { viewModel.onAction(EditorAction.AddSongToLibrary(currentSong)) },
+                        theme = state.theme
                     )
                 }
             }
@@ -179,6 +176,7 @@ fun ItemGalleryScreen(
     if (showLocationDialog) {
         AddLocationDialog(
             existingLocation = state.location,
+            journalTheme = state.theme,
             onLocationSelected = { loc ->
                 viewModel.onAction(EditorAction.SetLocation(loc))
             },

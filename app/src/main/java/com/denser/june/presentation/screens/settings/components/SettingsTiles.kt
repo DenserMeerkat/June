@@ -15,10 +15,11 @@ import com.denser.june.core.R
 
 data class SettingsTriggers(
     val onDeleteAllJournals: () -> Unit = {},
-    val onColorPickerClick: () -> Unit = {},
+    val onThemeSheetClick: (com.denser.june.presentation.components.color.ColorTab) -> Unit = {},
     val onLicenseClick: () -> Unit = {},
     val onMapAttributionsClick: () -> Unit = {},
     val onAboutLibrariesClick: () -> Unit = {},
+    val onFontCreditsClick: () -> Unit = {},
     val onChangelogClick: () -> Unit = {},
     val onCheckForUpdatesClick: () -> Unit = {},
     val onAboutHeaderClick: () -> Unit = {}
@@ -246,14 +247,19 @@ object SettingsTileRegistry {
                 subtitle = { context, _ -> context.getString(R.string.palette_selection_desc) },
                 category = "Appearance",
                 keywords = listOf("palette", "style", "theme", "tonal", "scheme"),
-                content = { PaletteSelectionSettingsItem() }
+                content = { PaletteSettingsItem() }
             ),
             SettingTile(
                 key = "APP_LOCK",
-                title = stringResource(R.string.app_lock),
+                title = stringResource(R.string.lock_method),
                 subtitle = { context, state ->
                     if (state.isAppLockEnabled) {
-                        if (state.lockType == LockType.PIN) context.getString(R.string.custom_pin) else context.getString(R.string.same_as_screen_lock)
+                        when (state.lockType) {
+                            LockType.BIOMETRIC -> context.getString(R.string.same_as_screen_lock)
+                            LockType.PIN -> context.getString(R.string.custom_pin)
+                            LockType.PASSWORD -> context.getString(R.string.custom_password)
+                            LockType.PATTERN -> context.getString(R.string.custom_pattern)
+                        }
                     } else {
                         context.getString(R.string.no_lock)
                     }
@@ -261,6 +267,14 @@ object SettingsTileRegistry {
                 category = "Privacy & Security",
                 keywords = listOf("lock", "security", "pin", "biometric", "password", "privacy"),
                 content = { AppLockTile() }
+            ),
+            SettingTile(
+                key = "VAULT_LOCK",
+                title = stringResource(R.string.vault),
+                subtitle = { context, _ -> context.getString(R.string.vault_desc) },
+                category = "Privacy & Security",
+                keywords = listOf("vault", "lock", "security", "pin", "password", "pattern", "protect"),
+                content = { VaultLockTile() }
             ),
             SettingTile(
                 key = "SCREEN_PRIVACY",
@@ -271,13 +285,30 @@ object SettingsTileRegistry {
                 content = { ScreenPrivacyTile() }
             ),
             SettingTile(
-                key = "PERMISSIONS",
-                title = stringResource(R.string.permissions),
-                subtitle = { context, _ -> context.getString(R.string.permissions_desc) },
+                key = "INTERNET_ACCESS",
+                title = stringResource(R.string.internet_access),
+                subtitle = { context, _ -> context.getString(R.string.internet_access_desc) },
                 category = "Privacy & Security",
-                keywords = listOf("permission", "location", "notification", "internet", "gps"),
-                content = { PermissionsTile() }
+                keywords = listOf("internet", "network", "wifi", "offline", "data"),
+                content = { InternetAccessTile() }
             ),
+            SettingTile(
+                key = "LOCATION_PERMISSION",
+                title = stringResource(R.string.location),
+                subtitle = { context, _ -> context.getString(R.string.location_permission_needed) },
+                category = "Privacy & Security",
+                keywords = listOf("location", "permission", "gps", "map", "place"),
+                content = { LocationPermissionTile() }
+            ),
+            SettingTile(
+                key = "NOTIFICATION_PERMISSION",
+                title = stringResource(R.string.notification),
+                subtitle = { context, _ -> context.getString(R.string.notification_permission_needed) },
+                category = "Privacy & Security",
+                keywords = listOf("notification", "permission", "alert", "reminder"),
+                content = { NotificationPermissionTile() }
+            ),
+
             SettingTile(
                 key = "CLOUD_SYNC",
                 title = stringResource(R.string.cloud_sync),
@@ -325,6 +356,14 @@ object SettingsTileRegistry {
                 category = "About",
                 keywords = listOf("map", "attributions", "licenses", "credits", "osm", "maptiler", "mapbox", "stadia", "carto"),
                 content = { MapCreditsTile() }
+            ),
+            SettingTile(
+                key = "FONT_CREDITS",
+                title = stringResource(R.string.font_credits),
+                subtitle = { context, _ -> context.getString(R.string.font_credits_desc) },
+                category = "About",
+                keywords = listOf("font", "typography", "licenses", "credits", "google", "roboto", "recursive", "shantell"),
+                content = { FontCreditsTile() }
             ),
             SettingTile(
                 key = "CHANGELOG",

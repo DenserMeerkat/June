@@ -29,7 +29,7 @@ import com.denser.june.presentation.components.ListenDropdownMenu
 import com.denser.june.presentation.components.RestrictedAsyncImage
 import com.denser.june.presentation.components.SmallPlayPauseButton
 import com.denser.june.presentation.components.toAvailableLinks
-import com.denser.june.presentation.utils.rememberDynamicThemeColors
+import com.denser.june.presentation.theme.rememberDynamicThemeColors
 import com.denser.june.presentation.screens.home.timeline.TimelineVM
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -38,8 +38,8 @@ import com.denser.june.presentation.theme.LocalInternetAllowed
 
 import androidx.compose.ui.graphics.Shape
 import com.denser.june.core.utils.toLocalDate
-import com.denser.june.presentation.components.DayJournalGroupData
-import com.denser.june.presentation.components.rememberJournalGroupShape
+import com.denser.june.presentation.components.journal.DayJournalGroupData
+import com.denser.june.presentation.components.journal.rememberJournalGroupShape
 import java.time.LocalDate
 
 @Composable

@@ -10,6 +10,21 @@ object SecurityUtils {
         return digest.fold("") { str, it -> str + "%02x".format(it) }
     }
 
+    fun hashPassword(password: String): String {
+        val bytes = password.toByteArray()
+        val md = MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(bytes)
+        return digest.fold("") { str, it -> str + "%02x".format(it) }
+    }
+
+    fun hashPattern(cells: List<Int>): String {
+        val patternString = cells.joinToString(separator = ",")
+        val bytes = patternString.toByteArray()
+        val md = MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(bytes)
+        return digest.fold("") { str, it -> str + "%02x".format(it) }
+    }
+
     fun hashAnswer(answer: String): String {
         val normalized = answer.trim().lowercase()
         val bytes = normalized.toByteArray()

@@ -136,6 +136,10 @@ class TagsVM(
         viewModelScope.launch { repository.toggleBookmark(id) }
     }
 
+    fun toggleLock(id: String) {
+        viewModelScope.launch { repository.toggleLock(id) }
+    }
+
     fun softDelete(id: String) {
         viewModelScope.launch { repository.softDeleteJournal(id) }
     }

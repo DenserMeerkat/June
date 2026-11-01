@@ -32,7 +32,7 @@ import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongSourceType
 import com.denser.june.core.media.storage.SongMediaStorage
 import com.denser.june.presentation.theme.LocalInternetAllowed
-import com.denser.june.presentation.utils.rememberDynamicThemeColors
+import com.denser.june.presentation.theme.rememberDynamicThemeColors
 import ir.mahozad.multiplatform.wavyslider.material3.WavySlider
 import kotlinx.coroutines.launch
 
@@ -48,6 +48,7 @@ fun JuneSongPlayerCard(
     onSeek: (Float) -> Unit,
     onSeekFinished: () -> Unit,
     onToggleRepeat: () -> Unit,
+    theme: com.denser.june.core.domain.model.JournalTheme? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -58,7 +59,7 @@ fun JuneSongPlayerCard(
     val artModel = remember(localArtFile, details.thumbnailUrl, isInternetAllowed) {
         localArtFile ?: if (isInternetAllowed) details.thumbnailUrl else null
     }
-    val themeColors = rememberDynamicThemeColors(artModel)
+    val themeColors = rememberDynamicThemeColors(artModel, theme)
     val hasAudio = remember(details.previewUrl, details.localPreviewPath, isInternetAllowed) {
         val hasLocal = SongMediaStorage.resolveSongMedia(context, details.localPreviewPath, "library") != null
         hasLocal || (isInternetAllowed && details.previewUrl != null)
@@ -111,6 +112,7 @@ fun JuneSongPlayerCard(
                 imageUrl = details.thumbnailUrl,
                 localPath = details.localThumbnailPath,
                 contentDescription = null,
+                iconTint = themeColors.onSurfaceVariant.copy(alpha = 0.5f),
                 modifier = Modifier
                     .fillMaxSize()
                     .alpha(0.25f)

@@ -1,6 +1,6 @@
 package com.denser.june.presentation.screens.settings.tiles
 
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
@@ -32,6 +33,7 @@ fun EditorDirectionTile() {
             )
         }
     ) {
+        Spacer(modifier = Modifier.height(8.dp))
         JuneConnectedButtonGroup(
             options = EditorLayoutDirection.entries,
             selected = { state.editorLayoutDirection == it },
@@ -43,6 +45,8 @@ fun EditorDirectionTile() {
                     EditorLayoutDirection.RTL -> "RTL"
                 }
             },
+            equalWeight = true,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
             modifier = Modifier.fillMaxWidth()
         )
     }

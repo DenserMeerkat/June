@@ -111,6 +111,11 @@ class SyncManager(
                 AppLogger.setCategoryEnabled(AppLogger.Category.DATABASE, enabled)
             }
         }
+        applicationScope.launch {
+            syncPrefs.getBillingLoggingEnabled().collect { enabled ->
+                AppLogger.setCategoryEnabled(AppLogger.Category.BILLING, enabled)
+            }
+        }
 
         applicationScope.launch(Dispatchers.IO) {
             val lastVersion = syncPrefs.getLastCompletedDataRepairVersion().first()
@@ -368,7 +373,7 @@ class SyncManager(
             val localMediaFiles = allReferencedMediaNames.toSet()
 
             // For display (BUG-02): count only active journals' media that physically exist on disk.
-            val activeLocalJournals = allLocalJournals.filter { it.deletedAt == null }
+            val activeLocalJournals = allLocalJournals.filter { it.deletedAt == null && !it.isLocked }
             val localMediaOnDisk = activeLocalJournals.flatMap { it.images }
                 .map { File(it).name }.distinct()
                 .count { name -> File(mediaDir, name).let { it.exists() && it.length() > 0L } }
@@ -727,7 +732,7 @@ class SyncManager(
 
             val preFetchedSongs = songLibraryDao.getAll()
 
-            val activeJournalsForPreScan = allLocalJournals.filter { it.deletedAt == null }
+            val activeJournalsForPreScan = allLocalJournals.filter { it.deletedAt == null && !it.isLocked }
             val estimatedMediaUploadsList = mutableSetOf<String>()
             val estimatedMediaUploads = activeJournalsForPreScan
                 .flatMap { it.images }.map { File(it).name }.distinct()
@@ -1454,6 +1459,8 @@ class SyncManager(
             val (_, remoteTime) = remoteInfo
             val local = localJournalsMap[id]
 
+            if (local != null && local.isLocked) return@forEach
+
             if (local == null) {
                 toDownload.add(id to remoteTime)
             } else {
@@ -1494,6 +1501,7 @@ class SyncManager(
         // so the else-branch here was redundant and could cause duplicate queue entries.
         val alreadyQueuedIds = toUpload.map { it.id }.toSet()
         allLocalJournals.forEach { local ->
+            if (local.isLocked) return@forEach
             if (remoteStates[local.id] == null && local.id !in alreadyQueuedIds) {
                 toUpload.add(local)
             }

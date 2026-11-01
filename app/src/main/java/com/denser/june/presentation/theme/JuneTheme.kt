@@ -65,6 +65,7 @@ fun JuneTheme(
         style = appTheme.style,
         typography = provideTypography(
             font = appTheme.appFont,
+            variation = appTheme.appFontVariation,
             scale = fontScale
         ),
         content = content

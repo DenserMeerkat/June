@@ -46,6 +46,7 @@ import com.denser.june.presentation.components.InternetRestrictedIndicator
 import com.denser.june.presentation.components.MapAttributions
 import com.denser.june.presentation.components.MapControlColumn
 import com.denser.june.presentation.components.MapLibreInitializer
+import com.denser.june.presentation.utils.MapAccentColorizer
 import com.denser.june.presentation.components.rememberMapDarkMode
 import com.denser.june.presentation.components.MapViewLifecycleEffect
 import com.denser.june.presentation.screens.home.timeline.TimelineVM
@@ -91,6 +92,10 @@ fun TimelineMapTab(
         .collectAsStateWithLifecycle(initialValue = MapTheme.APP)
     val mapStyleProvider by journalPreferences.mapStyleProvider()
         .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
+    val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
+        .collectAsStateWithLifecycle(initialValue = true)
+    val isPlus = com.denser.june.presentation.plus.LocalIsPlus.current
+    val colorScheme = MaterialTheme.colorScheme
 
     MapLibreInitializer(isInternetAllowed)
 
@@ -116,7 +121,9 @@ fun TimelineMapTab(
 
     val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
     val onPrimaryColor = MaterialTheme.colorScheme.onPrimary.toArgb()
-    val mutedLineColor = if (isDarkMap) {
+    val mutedLineColor = if (isMapThemeAccentEnabled) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.65f).toArgb()
+    } else if (isDarkMap) {
         Color.White.copy(alpha = 0.3f).toArgb()
     } else {
         Color.Black.copy(alpha = 0.3f).toArgb()
@@ -158,6 +165,14 @@ fun TimelineMapTab(
     }
 
     fun renderMapContent(mapboxMap: MapLibreMap, style: Style) {
+        if (isPlus && isMapThemeAccentEnabled) {
+            MapAccentColorizer.applyThemeAccents(
+                style = style,
+                colorScheme = colorScheme,
+                provider = mapStyleProvider,
+                isDark = isDarkMap
+            )
+        }
         val pathPoints = locationGroups.map { LatLng(it.location.latitude, it.location.longitude) }
 
         val lines = if (pathPoints.size > 1) {
@@ -271,7 +286,7 @@ fun TimelineMapTab(
         if (isInternetAllowed && mapView != null) {
             MapViewLifecycleEffect(mapView)
 
-            LaunchedEffect(styleUrl, sortedPoints, mapView) {
+            LaunchedEffect(styleUrl, sortedPoints, mapView, isMapThemeAccentEnabled, colorScheme) {
                 if (styleUrl.isBlank()) return@LaunchedEffect
                 mapView.getMapAsync { mapboxMap ->
                     mapboxMap.uiSettings.isAttributionEnabled = false

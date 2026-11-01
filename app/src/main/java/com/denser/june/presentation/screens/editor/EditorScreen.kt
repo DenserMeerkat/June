@@ -4,86 +4,74 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
-import com.denser.june.presentation.components.ConnectedBarAction
-import com.denser.june.presentation.components.JuneConnectedActionBar
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.media.compress.CompressUtils
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.TimeFormat
-import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.utils.toDateWithDay
 import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
 import com.denser.june.core.utils.LanguageHelper
-import com.denser.june.presentation.components.ExportJournalBottomSheet
-import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.components.journal.ExportJournalSheet
+import com.denser.june.presentation.components.font.FontPanel
+import com.denser.june.presentation.components.color.ThemePanel
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.editor.components.*
-import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
+import com.denser.june.presentation.components.journal.JournalOptionsSheet
+import com.denser.june.presentation.theme.JuneThemeWrapper
+import com.denser.june.core.media.color.ExtractedMediaColor
+import com.denser.june.core.media.color.ExtractedMediaTheme
+import com.denser.june.presentation.components.color.MediaColorExtractor
+import androidx.compose.animation.*
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import com.denser.june.presentation.theme.FontPresets
+import com.denser.june.presentation.components.color.ColorTab
+import com.denser.june.presentation.theme.getJournalFontFamily
 import com.denser.june.presentation.utils.UiUtils
-import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import java.time.LocalTime
 
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalLayoutApi::class
+)
 @Composable
 fun EditorScreen() {
     val viewModel: EditorVM = koinViewModel()
     val navigator = koinInject<AppNavigator>()
-    val journalPreferences = koinInject<JournalPreferences>()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val isMarkdownEnabled by journalPreferences.isMarkdownEnabled()
-        .collectAsStateWithLifecycle(initialValue = true)
-    val isKeyboardAutocorrectEnabled by journalPreferences.isKeyboardAutocorrectEnabled()
-        .collectAsStateWithLifecycle(initialValue = true)
-    val isKeyboardCapitalizationEnabled by journalPreferences.isKeyboardCapitalizationEnabled()
-        .collectAsStateWithLifecycle(initialValue = true)
-    val editorLayoutDirection by journalPreferences.editorLayoutDirection()
-        .collectAsStateWithLifecycle(initialValue = EditorLayoutDirection.AUTO)
+    val isMarkdownEnabled = state.isMarkdownEnabled
+    val isKeyboardAutocorrectEnabled = state.isKeyboardAutocorrectEnabled
+    val isKeyboardCapitalizationEnabled = state.isKeyboardCapitalizationEnabled
+    val editorLayoutDirection = state.editorLayoutDirection
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
     val dialogState = rememberEditorDialogState()
     var showOptionsSheet by remember { mutableStateOf(false) }
-    val isEditorReady = !state.isLoading
     val hyphenState = viewModel.hyphenState
 
     val activeTrigger = hyphenState.activeTrigger
@@ -108,6 +96,28 @@ fun EditorScreen() {
 
     var isEditorFocused by remember { mutableStateOf(false) }
     val showSaveButton = if (state.isDraft) state.hasContent else state.isDirty
+
+    var isFontMode by remember { mutableStateOf(false) }
+    var isColorMode by remember { mutableStateOf(false) }
+    var editorColorTab by rememberSaveable { mutableStateOf(ColorTab.COLOR) }
+    var previewSlideIndex by rememberSaveable { mutableIntStateOf(0) }
+
+    var extractedMediaColors by remember { mutableStateOf<List<ExtractedMediaColor>>(emptyList()) }
+    var extractedMediaThemes by remember { mutableStateOf<List<ExtractedMediaTheme>>(emptyList()) }
+
+    LaunchedEffect(state.images, state.songDetails?.localThumbnailPath) {
+        val songThumbnail = state.songDetails?.localThumbnailPath
+        extractedMediaColors = MediaColorExtractor.extractColors(
+            context = context,
+            imagePaths = state.images,
+            songThumbnailPath = songThumbnail
+        )
+        extractedMediaThemes = MediaColorExtractor.extractThemes(
+            context = context,
+            imagePaths = state.images,
+            songThumbnailPath = songThumbnail
+        )
+    }
 
     val formattedDate = remember(state.dateTime) { state.dateTime.toDateWithDay() }
     val formattedTime = remember(state.dateTime, state.timeFormat) {
@@ -135,429 +145,457 @@ fun EditorScreen() {
         viewModel.onAction(EditorAction.Refresh)
     }
 
-    BackHandler { onBack() }
+    BackHandler {
+        if (isFontMode) {
+            isFontMode = false
+        } else if (isColorMode) {
+            isColorMode = false
+        } else {
+            onBack()
+        }
+    }
 
-    val mediaOperations = remember(state.images) {
+    val isCustomizing = isFontMode || isColorMode
+
+    val mediaOperations = remember(state.images, isCustomizing) {
         MediaOperations(
-            onItemSheetToggle = { dialogState.showAddItemSheet = it },
+            onItemSheetToggle = { if (!isCustomizing) dialogState.showAddItemSheet = it },
             onRemoveMedia = {
-                CompressUtils.cleanUncompressedOriginalFile(context, it)
-                viewModel.onAction(EditorAction.RemoveImage(it))
+                if (!isCustomizing) {
+                    CompressUtils.cleanUncompressedOriginalFile(context, it)
+                    viewModel.onAction(EditorAction.RemoveImage(it))
+                }
             },
-            onMoveToFront = { viewModel.onAction(EditorAction.MoveImageToFront(it)) },
+            onMoveToFront = { if (!isCustomizing) viewModel.onAction(EditorAction.MoveImageToFront(it)) },
             onMediaClick = { path ->
-                navigator.navigateTo(
-                    Route.JournalMediaDetail(
-                        journalId = state.journalId ?: "",
-                        initialIndex = state.images.reversed().indexOf(path),
-                        dateTime = state.dateTime
-                    ),
-                    isSingleTop = true
-                )
+                if (!isCustomizing) {
+                    navigator.navigateTo(
+                        Route.JournalMediaDetail(
+                            journalId = state.journalId ?: "",
+                            initialIndex = state.images.reversed().indexOf(path),
+                            dateTime = state.dateTime
+                        ),
+                        isSingleTop = true
+                    )
+                }
             },
             frontMediaPath = state.images.lastOrNull(),
-            onRemoveSong = { viewModel.onAction(EditorAction.RemoveSong) },
-            onSongSheetToggle = { navigator.navigateTo(Route.AddSong, isSingleTop = true) },
+            onRemoveSong = { if (!isCustomizing) viewModel.onAction(EditorAction.RemoveSong) },
+            onSongSheetToggle = { if (!isCustomizing) navigator.navigateTo(Route.AddSong, isSingleTop = true) },
             onTrimSong = {
-                val song = state.songDetails ?: return@MediaOperations
-                viewModel.onAction(EditorAction.OpenClipTrimmer(song))
-                navigator.navigateTo(Route.AddSong, isSingleTop = true)
+                if (!isCustomizing) {
+                    val song = state.songDetails ?: return@MediaOperations
+                    viewModel.onAction(EditorAction.OpenClipTrimmer(song))
+                    navigator.navigateTo(Route.AddSong, isSingleTop = true)
+                }
             },
             onEditJournalSong = {
-                viewModel.onAction(EditorAction.OpenJournalSongEdit)
-                navigator.navigateTo(Route.AddSong, isSingleTop = true)
+                if (!isCustomizing) {
+                    viewModel.onAction(EditorAction.OpenJournalSongEdit)
+                    navigator.navigateTo(Route.AddSong, isSingleTop = true)
+                }
             },
-            onRemoveLocation = { viewModel.onAction(EditorAction.RemoveLocation) },
-            onLocationDialogToggle = { dialogState.showLocationDialog = true },
+            onRemoveLocation = { if (!isCustomizing) viewModel.onAction(EditorAction.RemoveLocation) },
+            onLocationDialogToggle = { if (!isCustomizing) dialogState.showLocationDialog = true },
         )
     }
 
+    val isPlus = com.denser.june.presentation.plus.LocalIsPlus.current
+    val isPlusStylingActive = (state.font != null || state.fontVariation != null || state.theme != null)
 
-    Scaffold(
-        topBar = {
-            JuneTopAppBar(
-                title = {},
-                navigationIcon = {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FilledIconButton(
-                            onClick = { onBack() },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.75f
-                                )
-                            )
-                        ) {
-                            Icon(
-                                painterResource(R.drawable.close_24px),
-                                stringResource(R.string.close)
-                            )
+    JuneThemeWrapper(
+        theme = state.theme,
+        font = state.font,
+        fontVariation = state.fontVariation
+    ) {
+        Scaffold(
+            topBar = {
+                EditorTopAppBar(
+                    isFontMode = isFontMode,
+                    isColorMode = isColorMode,
+                    showAddItemSheet = dialogState.showAddItemSheet,
+                    showSaveButton = showSaveButton,
+                    isLoading = state.isLoading,
+                    isPlusStylingActive = isPlusStylingActive,
+                    onCloseClick = {
+                        if (isFontMode) isFontMode = false
+                        else if (isColorMode) isColorMode = false
+                        else onBack()
+                    },
+                    isFontDirty = state.isFontDirty,
+                    onResetFont = {
+                        viewModel.onAction(EditorAction.SetJournalFont(state.initialFont, state.initialFontVariation))
+                    },
+                    isThemeDirty = state.isThemeDirty,
+                    onResetTheme = {
+                        viewModel.onAction(EditorAction.SetJournalTheme(state.initialTheme))
+                    },
+                    onFontModeToggle = {
+                        keyboardController?.hide()
+                        focusManager.clearFocus(force = true)
+                        isColorMode = false
+                        isFontMode = !isFontMode
+                    },
+                    onColorModeToggle = {
+                        keyboardController?.hide()
+                        focusManager.clearFocus(force = true)
+                        isFontMode = false
+                        isColorMode = !isColorMode
+                    },
+                    onAddItemClick = {
+                        keyboardController?.hide()
+                        focusManager.clearFocus(force = true)
+                        dialogState.showAddItemSheet = true
+                    },
+                    onSaveClick = {
+                        keyboardController?.hide()
+                        focusManager.clearFocus(force = true)
+                        if (!state.isLoading) {
+                            if (!isPlus && isPlusStylingActive) {
+                                dialogState.onPlusSaveExitAfter = false
+                                dialogState.showPlusSaveDialog = true
+                            } else {
+                                state.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                                viewModel.onAction(EditorAction.SaveJournal)
+                            }
                         }
-
-                        FilledIconButton(
-                            onClick = { dialogState.showEmojiPicker = true },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = if (state.emoji != null) {
-                                    MaterialTheme.colorScheme.secondaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceContainerLow
-                                },
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.75F
-                                )
-                            )
-                        ) {
-                            if (state.emoji != null) Text(state.emoji!!, fontSize = 22.sp)
-                            else Icon(
-                                painterResource(if (dialogState.showEmojiPicker) R.drawable.sentiment_very_satisfied_24px_fill else R.drawable.sentiment_very_satisfied_24px),
-                                stringResource(R.string.add_emoji)
-                            )
-                        }
-
-                        FilledIconButton(
-                            onClick = {
-                                keyboardController?.hide()
-                                focusManager.clearFocus(force = true)
-                                dialogState.showAddItemSheet = true
-                            },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.75F
-                                )
-                            )
-                        ) {
-                            Icon(
-                                painterResource(if (dialogState.showAddItemSheet) R.drawable.add_circle_24px_fill else R.drawable.add_circle_24px),
-                                stringResource(R.string.add_attachment)
-                            )
-                        }
-
-
+                    },
+                    onOptionsClick = {
+                        keyboardController?.hide()
+                        focusManager.clearFocus(force = true)
+                        showOptionsSheet = true
                     }
-                },
-                actions = {
-                    if (showSaveButton) {
-                        Button(
-                            enabled = !state.isLoading,
-                            onClick = {
-                                keyboardController?.hide()
-                                focusManager.clearFocus(force = true)
-                                if (!state.isLoading) {
-                                    state.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
-                                    viewModel.onAction(EditorAction.SaveJournal)
-                                }
-                            },
-                        ) {
-                            Text(stringResource(R.string.save))
-                        }
-                    }
-
-                    Box {
-                        IconButton(
-                            onClick = {
-                                keyboardController?.hide()
-                                focusManager.clearFocus(force = true)
-                                showOptionsSheet = true
-                            },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                    alpha = 0.75f
-                                )
-                            ),
-                        ) {
-                            Icon(
-                                painterResource(R.drawable.more_vert_24px),
-                                stringResource(R.string.options)
-                            )
-                        }
-                    }
-                }
-            )
-        },
-        bottomBar = {},
-        containerColor = MaterialTheme.colorScheme.surface
-    ) { innerPadding ->
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
-                .imePadding()
-        ) {
+                )
+            },
+            bottomBar = {},
+            containerColor = MaterialTheme.colorScheme.surface
+        ) { innerPadding ->
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = innerPadding.calculateTopPadding())
+                    .imePadding()
+            ) {
             val availableHeight = maxHeight
             var fixedContentHeight by remember { mutableStateOf(0.dp) }
             var toolbarHeight by remember { mutableStateOf(0.dp) }
             val density = LocalDensity.current
 
-            Column(modifier = Modifier.fillMaxSize()) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .verticalScroll(scrollState)
-                ) {
+            val journalFontFamily = getJournalFontFamily(
+                fontName = state.font,
+                variation = state.fontVariation
+            )
+
+            val fontAnimDuration = 300
+            val fontEasing = FastOutSlowInEasing
+            val fontEnterTransition = remember {
+                slideInVertically(
+                    animationSpec = tween(fontAnimDuration, easing = fontEasing),
+                    initialOffsetY = { it }
+                ) + fadeIn(animationSpec = tween(fontAnimDuration, easing = fontEasing))
+            }
+            val fontExitTransition = remember {
+                slideOutVertically(
+                    animationSpec = tween(fontAnimDuration, easing = fontEasing),
+                    targetOffsetY = { it }
+                ) + fadeOut(animationSpec = tween(fontAnimDuration, easing = fontEasing))
+            }
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(modifier = Modifier.fillMaxSize()) {
                     Column(
                         modifier = Modifier
+                            .weight(1f)
                             .fillMaxWidth()
-                            .onSizeChanged { size ->
-                                fixedContentHeight = with(density) { size.height.toDp() }
-                            }
+                            .verticalScroll(scrollState)
                     ) {
-                        if (state.images.isNotEmpty() || state.songDetails != null || state.location != null) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            JournalItemsPreview(
-                                mediaPaths = state.images,
-                                mediaOperations = mediaOperations,
-                                songDetails = state.songDetails,
-                                location = state.location,
-                                processingMediaPaths = state.processingMediaPaths,
-                                onShowAllClick = {
-                                    navigator.navigateTo(
-                                        Route.JournalMedia(journalId = state.journalId ?: ""),
-                                        isSingleTop = true
-                                    )
-                                }
-                            )
-                        }
-
-                        val editorDirection = when (editorLayoutDirection) {
-                            EditorLayoutDirection.AUTO -> if (LanguageHelper.isCurrentLocaleRtl()) LayoutDirection.Rtl else LayoutDirection.Ltr
-                            EditorLayoutDirection.LTR -> LayoutDirection.Ltr
-                            EditorLayoutDirection.RTL -> LayoutDirection.Rtl
-                        }
-
-                        CompositionLocalProvider(LocalLayoutDirection provides editorDirection) {
-                            TextField(
-                                value = state.title,
-                                onValueChange = { viewModel.onAction(EditorAction.ChangeTitle(it)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = {
-                                    Text(
-                                        stringResource(R.string.add_title),
-                                        style = MaterialTheme.typography.headlineMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                            alpha = 0.5f
-                                        )
-                                    )
-                                },
-                                keyboardOptions = KeyboardOptions(
-                                    capitalization = if (isKeyboardCapitalizationEnabled) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
-                                    autoCorrectEnabled = isKeyboardAutocorrectEnabled
-                                ),
-                                textStyle = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.SemiBold
-                                ),
-                                colors = UiUtils.getTransparentTextFieldColors()
-                            )
-                        }
-
-                        Row(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 0.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .onSizeChanged { size ->
+                                    fixedContentHeight = with(density) { size.height.toDp() }
+                                }
                         ) {
-                        JuneConnectedActionBar(
-                            actions = listOf(
-                                ConnectedBarAction(
-                                    iconRes = R.drawable.today_24px,
-                                    contentDescriptionRes = R.string.date_time_picker,
-                                    onClick = {
-                                        keyboardController?.hide()
-                                        focusManager.clearFocus()
-                                        dialogState.datePickerInitialTab = 0
-                                        dialogState.showDatePicker = true
-                                    }
-                                ),
-                                ConnectedBarAction(
-                                    label = formattedDate,
-                                    onClick = {
-                                        keyboardController?.hide()
-                                        focusManager.clearFocus()
-                                        dialogState.datePickerInitialTab = 0
-                                        dialogState.showDatePicker = true
-                                    }
-                                ),
-                                ConnectedBarAction(
-                                    iconRes = if (formattedTime == null) R.drawable.schedule_24px else null,
-                                    label = formattedTime,
-                                    contentDescriptionRes = R.string.time_format,
-                                    onClick = {
-                                        keyboardController?.hide()
-                                        focusManager.clearFocus()
-                                        dialogState.datePickerInitialTab = 1
-                                        dialogState.showDatePicker = true
-                                    }
-                                )
-                            ),
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                            checkedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            buttonHeight = 32.dp,
-                            iconOnlyWidth = 38.dp
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                            Button(
-                                onClick = {
-                                    keyboardController?.hide()
-                                    focusManager.clearFocus()
-                                    dialogState.showTagsDialog = true
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (state.tags.isNotEmpty()) {
-                                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-                                    } else {
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                                    },
-                                    contentColor = if (state.tags.isNotEmpty()) {
-                                        MaterialTheme.colorScheme.secondary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    }
-                                ),
-                                shape = RoundedCornerShape(50),
-                                contentPadding = PaddingValues(
-                                    horizontal = if (state.tags.isNotEmpty()) 12.dp else 0.dp,
-                                    vertical = 0.dp
-                                ),
-                                modifier = Modifier
-                                    .height(32.dp)
-                                    .then(if (state.tags.isEmpty()) Modifier.width(38.dp) else Modifier)
+                            AnimatedVisibility(
+                                visible = !isFontMode,
+                                enter = expandVertically(
+                                    animationSpec = tween(fontAnimDuration, easing = fontEasing)
+                                ) + fadeIn(animationSpec = tween(fontAnimDuration, easing = fontEasing)),
+                                exit = shrinkVertically(
+                                    animationSpec = tween(fontAnimDuration, easing = fontEasing)
+                                ) + fadeOut(animationSpec = tween(fontAnimDuration, easing = fontEasing))
                             ) {
-                                Icon(
-                                    painter = painterResource(
-                                        if (state.tags.isNotEmpty()) R.drawable.sell_24px_fill else R.drawable.sell_24px
-                                    ),
-                                    contentDescription = stringResource(R.string.tags),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                if (state.tags.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = state.tags.size.toString(),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        maxLines = 1,
-                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                        softWrap = false
+                                if (state.images.isNotEmpty() || state.songDetails != null || state.location != null) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    JournalItemsPreview(
+                                        mediaPaths = state.images,
+                                        mediaOperations = mediaOperations,
+                                        songDetails = state.songDetails,
+                                        location = state.location,
+                                        processingMediaPaths = state.processingMediaPaths,
+                                        readOnly = isCustomizing,
+                                        selectedSlideIndex = previewSlideIndex,
+                                        onSlideIndexChange = { previewSlideIndex = it },
+                                        theme = state.theme,
+                                        onShowAllClick = {
+                                            if (!isCustomizing) {
+                                                navigator.navigateTo(
+                                                    Route.JournalMedia(journalId = state.journalId ?: ""),
+                                                    isSingleTop = true
+                                                )
+                                            }
+                                        }
                                     )
                                 }
                             }
+
+                            val editorDirection = when (editorLayoutDirection) {
+                                EditorLayoutDirection.AUTO -> if (LanguageHelper.isCurrentLocaleRtl()) LayoutDirection.Rtl else LayoutDirection.Ltr
+                                EditorLayoutDirection.LTR -> LayoutDirection.Ltr
+                                EditorLayoutDirection.RTL -> LayoutDirection.Rtl
+                            }
+
+                            val titleTextStyle = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = journalFontFamily ?: MaterialTheme.typography.headlineMedium.fontFamily
+                            )
+
+                            CompositionLocalProvider(LocalLayoutDirection provides editorDirection) {
+                                TextField(
+                                    value = state.title,
+                                    onValueChange = { viewModel.onAction(EditorAction.ChangeTitle(it)) },
+                                    readOnly = isCustomizing,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = {
+                                        Text(
+                                            stringResource(R.string.add_title),
+                                            style = titleTextStyle,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                                alpha = 0.5f
+                                            )
+                                        )
+                                    },
+                                    keyboardOptions = KeyboardOptions(
+                                        capitalization = if (isKeyboardCapitalizationEnabled) KeyboardCapitalization.Sentences else KeyboardCapitalization.None,
+                                        autoCorrectEnabled = isKeyboardAutocorrectEnabled
+                                    ),
+                                    textStyle = titleTextStyle,
+                                    colors = UiUtils.getTransparentTextFieldColors()
+                                )
+                            }
+
+                            AnimatedVisibility(
+                                visible = !isFontMode,
+                                enter = expandVertically(
+                                    animationSpec = tween(fontAnimDuration, easing = fontEasing)
+                                ) + fadeIn(animationSpec = tween(fontAnimDuration, easing = fontEasing)),
+                                exit = shrinkVertically(
+                                    animationSpec = tween(fontAnimDuration, easing = fontEasing)
+                                ) + fadeOut(animationSpec = tween(fontAnimDuration, easing = fontEasing))
+                            ) {
+                                EditorMetadataBar(
+                                    emoji = state.emoji,
+                                    formattedDate = formattedDate,
+                                    formattedTime = formattedTime,
+                                    tagCount = state.tags.size,
+                                    onEmojiClick = {
+                                        if (!isCustomizing) {
+                                            keyboardController?.hide()
+                                            focusManager.clearFocus()
+                                            dialogState.showEmojiPicker = true
+                                        }
+                                    },
+                                    onDatePickerOpen = {
+                                        if (!isCustomizing) {
+                                            keyboardController?.hide()
+                                            focusManager.clearFocus()
+                                            dialogState.datePickerInitialTab = 0
+                                            dialogState.showDatePicker = true
+                                        }
+                                    },
+                                    onTimePickerOpen = {
+                                        if (!isCustomizing) {
+                                            keyboardController?.hide()
+                                            focusManager.clearFocus()
+                                            dialogState.datePickerInitialTab = 1
+                                            dialogState.showDatePicker = true
+                                        }
+                                    },
+                                    onTagsClick = {
+                                        if (!isCustomizing) {
+                                            keyboardController?.hide()
+                                            focusManager.clearFocus()
+                                            dialogState.showTagsDialog = true
+                                        }
+                                    }
+                                )
+                            }
                         }
+
+                        JournalContentEditor(
+                            state = hyphenState,
+                            rawContent = state.content,
+                            onMarkdownChange = { newContent ->
+                                if (newContent != state.content) {
+                                    if (newContent.isEmpty() && state.content.isNotEmpty() && !isEditorFocused) {
+                                        return@JournalContentEditor
+                                    }
+                                    viewModel.onAction(EditorAction.ChangeContent(newContent))
+                                }
+                            },
+                            onFocusChanged = { isEditorFocused = it },
+                            focusRequester = contentFocusRequester,
+                            isLoading = state.isLoading,
+                            isMarkdownEnabled = isMarkdownEnabled,
+                            isKeyboardAutocorrectEnabled = isKeyboardAutocorrectEnabled,
+                            isKeyboardCapitalizationEnabled = isKeyboardCapitalizationEnabled,
+                            editorLayoutDirection = editorLayoutDirection,
+                            fontFamily = journalFontFamily,
+                            readOnly = isFontMode || isColorMode,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .defaultMinSize(
+                                    minHeight = (availableHeight - fixedContentHeight - toolbarHeight).coerceAtLeast(
+                                        84.dp
+                                    )
+                                )
+                                .padding(
+                                    bottom = with(density) {
+                                        val halfLineOffset = (MaterialTheme.typography.bodyLarge.lineHeight / 2).toDp()
+                                        val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                                        when {
+                                            isFontMode || isColorMode -> 380.dp + navBarBottom + halfLineOffset
+                                            WindowInsets.isImeVisible -> 16.dp + halfLineOffset
+                                            else -> 16.dp + navBarBottom
+                                        }
+                                    }
+                                )
+                        )
                     }
 
-                    JournalContentEditor(
-                        state = hyphenState,
-                        rawContent = state.content,
-                        onMarkdownChange = { newContent ->
-                            if (newContent != state.content) {
-                                viewModel.onAction(EditorAction.ChangeContent(newContent))
-                            }
+                    if (!isFontMode && !isColorMode && isEditorFocused && isMarkdownEnabled) {
+                        EditorToolbar(
+                            state = hyphenState,
+                            activeTrigger = activeTrigger,
+                            tagSuggestions = state.tagSuggestions,
+                            currentTags = state.tags,
+                            onTagSelect = onTagSelect,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onSizeChanged { size ->
+                                    toolbarHeight = with(density) { size.height.toDp() }
+                                }
+                        )
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = isFontMode,
+                    enter = fontEnterTransition,
+                    exit = fontExitTransition,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    FontPanel(
+                        selectedFontName = state.font,
+                        currentVariation = state.fontVariation,
+                        onFontSelect = { newFont ->
+                            val defaultVar = newFont?.let { FontPresets.getDefaultVariation(it) }
+                            viewModel.onAction(EditorAction.SetJournalFont(newFont, defaultVar))
                         },
-                        onFocusChanged = { isEditorFocused = it },
-                        focusRequester = contentFocusRequester,
-                        isLoading = state.isLoading,
-                        isMarkdownEnabled = isMarkdownEnabled,
-                        isKeyboardAutocorrectEnabled = isKeyboardAutocorrectEnabled,
-                        isKeyboardCapitalizationEnabled = isKeyboardCapitalizationEnabled,
-                        editorLayoutDirection = editorLayoutDirection,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .defaultMinSize(
-                                minHeight = (availableHeight - fixedContentHeight - toolbarHeight).coerceAtLeast(
-                                    84.dp
-                                )
-                            )
-                            .padding(bottom = 16.dp)
+                        onVariationChange = { newVariation ->
+                            viewModel.onAction(EditorAction.SetJournalFont(state.font, newVariation))
+                        },
+                        showAppDefault = true,
+                        contentHeight = 360.dp
                     )
                 }
-                if (isEditorFocused && isMarkdownEnabled) {
-                    EditorToolbar(
-                        state = hyphenState,
-                        activeTrigger = activeTrigger,
-                        tagSuggestions = state.tagSuggestions,
-                        currentTags = state.tags,
-                        onTagSelect = onTagSelect,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .navigationBarsPadding()
-                            .onSizeChanged { size ->
-                                toolbarHeight = with(density) { size.height.toDp() }
-                            }
+
+                AnimatedVisibility(
+                    visible = isColorMode,
+                    enter = fontEnterTransition,
+                    exit = fontExitTransition,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    ThemePanel(
+                        journalTheme = state.theme,
+                        extractedMediaColors = extractedMediaColors,
+                        extractedMediaThemes = extractedMediaThemes,
+                        onThemeChange = { newTheme ->
+                            viewModel.onAction(EditorAction.SetJournalTheme(newTheme))
+                        },
+                        showAppDefault = true,
+                        contentHeight = 360.dp,
+                        selectedTab = editorColorTab,
+                        onTabSelect = { editorColorTab = it }
                     )
                 }
             }
         }
-    }
-
-    EditorModals(
-        dialogState = dialogState,
-        editorState = state,
-        onAction = viewModel::onAction
-    )
-
-    var journalToExport by remember { mutableStateOf<Journal?>(null) }
-
-    ExportJournalBottomSheet(
-        journal = journalToExport,
-        onDismiss = { journalToExport = null }
-    )
-
-    if (showOptionsSheet) {
-        val journalPreview = remember(state) {
-            Journal(
-                id = state.journalId ?: "",
-                title = state.title,
-                content = state.content,
-                emoji = state.emoji,
-                images = state.images,
-                location = state.location,
-                songDetails = state.songDetails,
-                tags = state.tags,
-                createdAt = state.createdAt,
-                updatedAt = state.updatedAt,
-                dateTime = state.dateTime,
-                isBookmarked = state.isBookmarked,
-                isArchived = state.isArchived,
-                isDraft = state.isDraft,
-                deletedAt = state.deletedAt,
-                syncedAt = state.syncedAt,
-                cloudId = state.cloudId
-            )
         }
-        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        val scope = rememberCoroutineScope()
 
-        ModalBottomSheet(
-            onDismissRequest = { showOptionsSheet = false },
-            sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        ) {
-            JournalOptionsSheet(
-                journal = journalPreview,
-                is24Hour = state.timeFormat == TimeFormat.TWENTY_FOUR_HOUR,
-                onToggleBookmark = { viewModel.onAction(EditorAction.ToggleBookmark) },
-                onExportMarkdown = {
-                    showOptionsSheet = false
-                    journalToExport = journalPreview
-                },
-                onDeleteOrRestore = {
-                    if (state.isDeleted) {
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            showOptionsSheet = false
+        EditorModals(
+            dialogState = dialogState,
+            editorState = state,
+            onAction = viewModel::onAction
+        )
+
+        var journalToExport by remember { mutableStateOf<Journal?>(null) }
+
+        ExportJournalSheet(
+            journal = journalToExport,
+            onDismiss = { journalToExport = null }
+        )
+
+        if (showOptionsSheet) {
+            val journalPreview = remember(state) {
+                Journal(
+                    id = state.journalId ?: "",
+                    title = state.title,
+                    content = state.content,
+                    emoji = state.emoji,
+                    images = state.images,
+                    location = state.location,
+                    songDetails = state.songDetails,
+                    tags = state.tags,
+                    createdAt = state.createdAt,
+                    updatedAt = state.updatedAt,
+                    dateTime = state.dateTime,
+                    isBookmarked = state.isBookmarked,
+                    isArchived = state.isArchived,
+                    isDraft = state.isDraft,
+                    isLocked = state.isLocked,
+                    deletedAt = state.deletedAt,
+                    syncedAt = state.syncedAt,
+                    cloudId = state.cloudId
+                )
+            }
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            val scope = rememberCoroutineScope()
+
+            ModalBottomSheet(
+                onDismissRequest = { showOptionsSheet = false },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            ) {
+                JournalOptionsSheet(
+                    journal = journalPreview,
+                    is24Hour = state.timeFormat == TimeFormat.TWENTY_FOUR_HOUR,
+                    onDismiss = { showOptionsSheet = false },
+                    onToggleBookmark = { viewModel.onAction(EditorAction.ToggleBookmark) },
+                    onToggleLock = { viewModel.onAction(EditorAction.ToggleLock) },
+                    onExportMarkdown = {
+                        showOptionsSheet = false
+                        journalToExport = journalPreview
+                    },
+                    onDeleteOrRestore = {
+                        if (state.isDeleted) {
                             viewModel.onAction(EditorAction.RestoreJournal)
-                        }
-                    } else {
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            showOptionsSheet = false
-                            dialogState.showDeleteConfirmation = true
+                        } else {
+                            viewModel.onAction(EditorAction.DeleteJournal)
                         }
                     }
-                }
-            )
+                )
+            }
         }
     }
 }

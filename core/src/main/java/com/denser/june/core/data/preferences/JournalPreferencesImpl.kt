@@ -32,10 +32,8 @@ class JournalPreferencesImpl(
         val MAP_STYLE_PROVIDER = stringPreferencesKey("map_style_provider")
         val MAPTILER_KEY = stringPreferencesKey("maptiler_key")
         val STADIA_KEY = stringPreferencesKey("stadia_key")
-        val MAPBOX_KEY = stringPreferencesKey("mapbox_key")
         val MAPTILER_KEY_VERIFIED = booleanPreferencesKey("maptiler_key_verified")
         val STADIA_KEY_VERIFIED = booleanPreferencesKey("stadia_key_verified")
-        val MAPBOX_KEY_VERIFIED = booleanPreferencesKey("mapbox_key_verified")
         val ALWAYS_OPEN_NEW_NOTE = booleanPreferencesKey("always_open_new_note")
         val KEYBOARD_AUTOCORRECT_ENABLED = booleanPreferencesKey("keyboard_autocorrect_enabled")
         val KEYBOARD_CAPITALIZATION_ENABLED = booleanPreferencesKey("keyboard_capitalization_enabled")
@@ -45,6 +43,7 @@ class JournalPreferencesImpl(
         val PHOTO_COMPRESSION_QUALITY = intPreferencesKey("photo_compression_quality")
         val COMPRESS_VIDEOS_ENABLED = booleanPreferencesKey("compress_videos_enabled")
         val VIDEO_COMPRESSION_QUALITY = intPreferencesKey("video_compression_quality")
+        val MAP_THEME_ACCENT_ENABLED = booleanPreferencesKey("map_theme_accent_enabled")
         const val DEFAULT_REMINDER_TIME = "21:14"
     }
 
@@ -146,7 +145,8 @@ class JournalPreferencesImpl(
         .map { preferences ->
             val value = preferences[MAP_STYLE_PROVIDER] ?: MapStyleProvider.CARTO.name
             try {
-                MapStyleProvider.valueOf(value)
+                if (value == "MAPBOX") MapStyleProvider.OPENMAP
+                else MapStyleProvider.valueOf(value)
             } catch (e: Exception) {
                 MapStyleProvider.CARTO
             }
@@ -176,32 +176,23 @@ class JournalPreferencesImpl(
         }
     }
 
-    override fun mapboxkey(): Flow<String> = dataStore.data
-        .map { preferences -> preferences[MAPBOX_KEY] ?: "" }
-
-    override suspend fun setMapboxkey(key: String) {
-        dataStore.edit { preferences ->
-            preferences[MAPBOX_KEY] = key
-        }
-    }
-
     override fun isMapProviderVerified(provider: MapStyleProvider): Flow<Boolean> = dataStore.data
         .map { preferences ->
             when (provider) {
-                MapStyleProvider.CARTO -> true
+                MapStyleProvider.CARTO,
+                MapStyleProvider.OPENMAP -> true
                 MapStyleProvider.MAPTILER -> preferences[MAPTILER_KEY_VERIFIED] ?: false
                 MapStyleProvider.STADIA -> preferences[STADIA_KEY_VERIFIED] ?: false
-                MapStyleProvider.MAPBOX -> preferences[MAPBOX_KEY_VERIFIED] ?: false
             }
         }
 
     override suspend fun setMapProviderVerified(provider: MapStyleProvider, verified: Boolean) {
         dataStore.edit { preferences ->
             when (provider) {
-                MapStyleProvider.CARTO -> {}
+                MapStyleProvider.CARTO,
+                MapStyleProvider.OPENMAP -> {}
                 MapStyleProvider.MAPTILER -> preferences[MAPTILER_KEY_VERIFIED] = verified
                 MapStyleProvider.STADIA -> preferences[STADIA_KEY_VERIFIED] = verified
-                MapStyleProvider.MAPBOX -> preferences[MAPBOX_KEY_VERIFIED] = verified
             }
         }
     }
@@ -291,6 +282,15 @@ class JournalPreferencesImpl(
     override suspend fun setVideoCompressionQuality(quality: Int) {
         dataStore.edit { preferences ->
             preferences[VIDEO_COMPRESSION_QUALITY] = quality
+        }
+    }
+
+    override fun isMapThemeAccentEnabled(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[MAP_THEME_ACCENT_ENABLED] ?: true }
+
+    override suspend fun setMapThemeAccentEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[MAP_THEME_ACCENT_ENABLED] = enabled
         }
     }
 }

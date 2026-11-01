@@ -50,6 +50,9 @@ interface SyncPreferences {
     fun getDatabaseLoggingEnabled(): Flow<Boolean>
     suspend fun setDatabaseLoggingEnabled(enabled: Boolean)
 
+    fun getBillingLoggingEnabled(): Flow<Boolean>
+    suspend fun setBillingLoggingEnabled(enabled: Boolean)
+
     fun isDeveloperModeEnabled(): Flow<Boolean>
     suspend fun setDeveloperModeEnabled(enabled: Boolean)
 

@@ -185,4 +185,24 @@ object DatabaseMigrations {
             )
         }
     }
+
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            AppLogger.d(
+                AppLogger.Category.DATABASE,
+                "DatabaseMigrations",
+                "Running database migration from version 5 to 6..."
+            )
+            db.execSQL("ALTER TABLE `journals` ADD COLUMN `isLocked` INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE `journals` ADD COLUMN `theme` TEXT DEFAULT NULL")
+            db.execSQL("ALTER TABLE `journals` ADD COLUMN `font` TEXT DEFAULT NULL")
+            db.execSQL("ALTER TABLE `journals` ADD COLUMN `fontVariation` TEXT DEFAULT NULL")
+            AppLogger.d(
+                AppLogger.Category.DATABASE,
+                "DatabaseMigrations",
+                "Successfully completed database migration from version 5 to 6."
+            )
+        }
+    }
 }
+

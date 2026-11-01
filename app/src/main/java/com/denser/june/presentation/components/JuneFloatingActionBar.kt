@@ -18,24 +18,17 @@ fun JuneFloatingActionBar(
 ) {
     Surface(
         modifier = modifier,
-        color = Color.Transparent,
-        shadowElevation = 0.dp
+        shape = CircleShape,
+        color = containerColor,
+        shadowElevation = 8.dp,
+        tonalElevation = 6.dp
     ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    color = containerColor,
-                    shape = CircleShape
-                )
-                .padding(6.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                content = content
-            )
-        }
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            content = content
+        )
     }
 }
 
@@ -43,19 +36,28 @@ fun JuneFloatingActionBar(
 fun JuneFloatingAction(
     onClick: () -> Unit,
     label: String,
-    icon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    icon: (@Composable () -> Unit)? = null,
+    selected: Boolean? = null,
     enabled: Boolean = true,
-    containerColor: Color = MaterialTheme.colorScheme.primary,
-    contentColor: Color = MaterialTheme.colorScheme.onPrimary,
-    disabledContainerColor: Color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-    disabledContentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+    containerColor: Color = when (selected) {
+        true -> MaterialTheme.colorScheme.surfaceBright
+        false -> Color.Transparent
+        else -> MaterialTheme.colorScheme.primary
+    },
+    contentColor: Color = when (selected) {
+        true -> MaterialTheme.colorScheme.onSurface
+        false -> MaterialTheme.colorScheme.onSurfaceVariant
+        else -> MaterialTheme.colorScheme.onPrimary
+    },
+    disabledContainerColor: Color = Color.Transparent,
+    disabledContentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
 ) {
     ExtendedFloatingActionButton(
         onClick = { if (enabled) onClick() },
         expanded = true,
-        icon = icon,
-        text = { Text(label) },
+        icon = { icon?.invoke() },
+        text = { Text(label, style = MaterialTheme.typography.labelLarge) },
         containerColor = if (enabled) containerColor else disabledContainerColor,
         contentColor = if (enabled) contentColor else disabledContentColor,
         shape = CircleShape,

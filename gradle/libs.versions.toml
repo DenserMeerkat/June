@@ -24,7 +24,6 @@ datastore = "1.2.1"
 retrofit = "3.0.0"
 okhttp = "5.3.2"
 materialKolor = "4.1.1"
-colorpicker = "1.1.4"
 wavySlider = "2.2.0"
 composeIcons = "1.1.1"
 datetime = "0.8.0"
@@ -53,6 +52,7 @@ appcompat = "1.7.0"
 kaml = "0.104.0"
 exifinterface = "1.4.1"
 telephoto = "0.19.0"
+purchases = "10.28.1"
 
 [libraries]
 # Core
@@ -93,7 +93,6 @@ retrofit-kotlin-serialization = { group = "com.squareup.retrofit2", name = "conv
 okhttp-core = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 materialKolor = { group = "com.materialkolor", name = "material-kolor", version.ref = "materialKolor" }
-colorpicker-compose = { group = "com.github.skydoves", name = "colorpicker-compose", version.ref = "colorpicker" }
 wavy-slider = { group = "ir.mahozad.multiplatform", name = "wavy-slider", version.ref = "wavySlider" }
 composeIcons-fontAwesome = { group = "br.com.devsrsouza.compose.icons", name = "font-awesome", version.ref = "composeIcons" }
 datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "datetime" }
@@ -126,6 +125,8 @@ play-app-update = { group = "com.google.android.play", name = "app-update-ktx", 
 kaml = { group = "com.charleskorn.kaml", name = "kaml", version.ref = "kaml" }
 exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
 telephoto-zoomable-coil = { group = "me.saket.telephoto", name = "zoomable-image-coil", version.ref = "telephoto" }
+revenuecat-purchases = { group = "com.revenuecat.purchases", name = "purchases", version.ref = "purchases" }
+revenuecat-purchases-ui = { group = "com.revenuecat.purchases", name = "purchases-ui", version.ref = "purchases" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

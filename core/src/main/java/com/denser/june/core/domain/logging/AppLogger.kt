@@ -10,7 +10,8 @@ object AppLogger {
     enum class Category {
         SYNC,
         BACKUP,
-        DATABASE
+        DATABASE,
+        BILLING
     }
 
     private val enabledCategories = ConcurrentHashMap<Category, Boolean>()

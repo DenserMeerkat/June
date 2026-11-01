@@ -18,6 +18,7 @@
     <string name="discard">丢弃</string>
     <string name="done">完成</string>
     <string name="edit">编辑</string>
+    <string name="next">下一步</string>
     <string name="edit_link">编辑链接</string>
     <string name="edit_song">编辑歌曲</string>
     <string name="enable">启用</string>
@@ -52,6 +53,7 @@
     <string name="save">保存</string>
     <string name="save_and_enable_lock">保存并启用锁定</string>
     <string name="skip">跳过</string>
+    <string name="skip_and_enable_lock">跳过并启用锁定</string>
     <string name="stop_sync">停止同步</string>
     <string name="sync_now">立即同步</string>
     <string name="take_photo">拍照</string>
@@ -225,8 +227,7 @@
     <string name="translate_dialog_desc">6月份的翻译内容由各位用户完成，并托管在 Hosted Weblate 上——这是一个基于网页的开源翻译平台。\n\n您无需任何编程知识，即可直接在浏览器中轻松添加您所在语言的翻译或提出改进建议。</string>
     <string name="app_lock">应用锁</string>
     <string name="app_lock_desc">使用生物识别或设备凭证锁定应用</string>
-    <string name="custom_pin">自定义 PIN 码</string>
-    <string name="enter_pin_to_verify">请输入 PIN 码进行验证</string>
+    <string name="custom_pin">PIN 码</string>
     <string name="lock_journal_desc">通过增加额外的安全措施，确保日记的私密性</string>
     <string name="lock_your_journal">锁定你的日记</string>
     <string name="no_lock">不锁定</string>
@@ -237,7 +238,7 @@
     <string name="screen_privacy">屏幕隐私</string>
     <string name="screen_privacy_desc">阻止截图并在“最近使用”中隐藏应用内容</string>
     <string name="security_question">安全问题</string>
-    <string name="switch_lock_warning">您即将停用“自定义 PIN 码”功能。当前 PIN 码将被删除，若日后重新启用该功能，您需要重新设置 PIN 码。</string>
+    <string name="switch_lock_warning">更换锁定方式将重置您当前的凭据。</string>
     <string name="ways_to_lock">锁定方式</string>
     <string name="answer_cannot_be_empty">答案不能为空</string>
     <string name="answer_label">回答</string>
@@ -247,12 +248,12 @@
     <string name="create_pin">创建 PIN 码</string>
     <string name="custom_question_label">自定义问题</string>
     <string name="custom_question_placeholder">例如：你的私密昵称是什么？</string>
-    <string name="developer_options_desc">配置开发者日志记录选项并查看系统控制台日志。</string>
     <string name="developer_options_disabled">开发者选项已关闭</string>
-    <string name="forgot_pin">忘记 PIN 码</string>
+    <string name="does_not_match">不匹配，请重试</string>
+    <string name="forgot_lock">忘记了？</string>
+    <string name="lock_set_successfully">锁定方式设置成功</string>
+    <string name="lock_disabled_successfully">已停用应用锁定</string>
     <string name="important">注意</string>
-    <string name="pin_no_recovery_warning_desc">如果您忘记了自定义 PIN 码将无法访问您的日记。该 PIN 码无法恢复。请设置一个安全问题。</string>
-    <string name="pin_recovery_configured_desc">如果您忘记了自定义 PIN 码，可以使用您设置的安全问题进行找回或重置。</string>
     <string name="setup_recovery">重置设置</string>
     <string name="placeholder_artist">例如：Coldplay、Taylor Swift</string>
     <string name="placeholder_book">例如：Alchemist, 1984</string>
@@ -261,7 +262,6 @@
     <string name="placeholder_motto">例如：及时行乐，坚持下去</string>
     <string name="placeholder_perfect_day">例如：宁静、富有创意、温馨</string>
     <string name="placeholder_writing_place">例如：卧室、当地咖啡馆</string>
-    <string name="pin_recovery_desc">要重置您的自定义 PIN 码，请回答下面的安全问题。</string>
     <string name="question_artist">你最喜欢的音乐人或乐队是谁？</string>
     <string name="question_book">哪本书曾给你带来过深刻的启发？</string>
     <string name="question_cannot_be_empty">问题不能为空</string>
@@ -297,12 +297,10 @@
     <string name="automatic_sync_desc">实时同步更改</string>
     <string name="backup_format_too_old">备份格式过时</string>
     <string name="backup_logging">备份记录</string>
-    <string name="backup_logging_desc">在导出/还原过程中启用诊断功能</string>
     <string name="backup_saved_successfully">备份已成功保存</string>
     <string name="cloud_sync">云同步</string>
     <string name="cloud_sync_desc">通过云端实现跨设备同步</string>
     <string name="database_logging">数据库日志记录</string>
-    <string name="database_logging_desc">记录原始的 Room SQL 查询（不包括参数）</string>
     <string name="enable_cloud_sync">启用云同步</string>
     <string name="export_data">导出数据</string>
     <string name="export_data_desc">将您的日记和媒体文件保存到一个安全的文件中。</string>
@@ -328,7 +326,6 @@
     <string name="sync_header_desc">使用云存储服务，让您的日记在所有设备上保持同步。</string>
     <string name="sync_internet_required_desc">请开启互联网连接以使用云同步功能。</string>
     <string name="sync_logging">同步日志记录</string>
-    <string name="sync_logging_desc">为云同步操作启用详细日志</string>
     <string name="wifi_only_sync">仅在 Wi-Fi 环境下自动同步</string>
     <string name="wifi_only_sync_desc">避免通过移动数据进行同步</string>
     <string name="password_app_token_label">密码 / 应用令牌</string>
@@ -383,7 +380,8 @@
     <string name="reminder_title_6">备忘录</string>
     <string name="reminder_title_7">放松一下，提笔写写</string>
     <string name="api_credentials">API 访问凭证</string>
-    <string name="carto_auto_notice">CARTO Voyager（浅色）和 Dark Matter 矢量样式将自动解析，无需 API 密钥。</string>
+    <string name="carto_auto_notice">CARTO 无需 API 密钥，已自动配置。</string>
+    <string name="openmap_auto_notice">OpenMap 无需 API 密钥，已自动配置。</string>
     <string name="check_api_key_or_internet">请检查您的 API 密钥或网络连接</string>
     <string name="configure_api_key_for_preview">请在下方配置并测试 API 密钥以启用预览功能</string>
     <string name="connect_internet_for_map">请连接互联网以加载地图预览</string>
@@ -392,7 +390,6 @@
     <string name="get_api_key_or_token">获取 API 密钥或访问令牌</string>
     <string name="internet_connection_required">需要互联网连接</string>
     <string name="map_credits_body">June 使用来自多个开放数据和地图服务提供商的矢量瓦片与地理编码服务。</string>
-    <string name="mapbox_access_token_placeholder">Mapbox 访问令牌</string>
     <string name="maptiler_api_key_placeholder">MapTiler API 密钥</string>
     <string name="maps_require_internet">使用地图需要连接互联网。</string>
     <string name="maps_require_internet_locations">地图需要连接互联网才能加载并显示位置。</string>
@@ -442,4 +439,5 @@
     <string name="link_url_label">链接地址</string>
     <string name="take_photo_or_video">拍摄照片/视频</string>
     <string name="whats_on_your_mind">脑海中回荡着什么呢？</string>
+    <string name="locked">已锁定</string>
 </resources>

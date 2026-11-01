@@ -4,31 +4,37 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneConfirmationDialog
 import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.components.JuneBackButton
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.settings.components.ColorPickerSheet
 import com.denser.june.presentation.screens.settings.components.*
+import com.denser.june.presentation.screens.settings.components.sheets.UpdateBottomSheet
+import com.denser.june.presentation.screens.settings.components.sheets.UpdateSheetState
+import com.denser.june.presentation.screens.settings.components.sheets.*
+import com.denser.june.core.domain.billing.BillingHandler
+import com.denser.june.presentation.components.color.ColorTab
+import com.denser.june.presentation.components.plus.PlusLeadingIconContainer
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.utils.InternetDisabledException
+import com.denser.june.presentation.utils.UiUtils
 import com.denser.june.presentation.utils.UpdateChecker
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -40,6 +46,8 @@ fun SettingsScreen() {
     val state by settingsVM.state.collectAsStateWithLifecycle()
     val onAction = settingsVM::onAction
     val navigator = koinInject<AppNavigator>()
+    val billingHandler = koinInject<BillingHandler>()
+    val isPlus by billingHandler.isPlus.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -47,9 +55,10 @@ fun SettingsScreen() {
 
     var searchQuery by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var showColorPickerSheet by remember { mutableStateOf(false) }
+    var themeSheetTab by remember { mutableStateOf<ColorTab?>(null) }
     var showLicenseSheet by remember { mutableStateOf(false) }
     var showMapCreditsSheet by remember { mutableStateOf(false) }
+    var showFontCreditsSheet by remember { mutableStateOf(false) }
     var showAboutLibrariesSheet by remember { mutableStateOf(false) }
     var showChangelogSheet by remember { mutableStateOf(false) }
     var showCheckingUpdatesDialog by remember { mutableStateOf(false) }
@@ -79,6 +88,8 @@ fun SettingsScreen() {
         }
     }
 
+    val plusSheetController = com.denser.june.presentation.plus.LocalPlusSheetController.current
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -87,16 +98,24 @@ fun SettingsScreen() {
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = "Settings") },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
+                    JuneBackButton(onClick = { navigator.navigateBack() })
+                },
+                actions = {
+                    Button(
+                        onClick = {
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                            plusSheetController.show()
+                        },
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                        modifier = Modifier
+                            .height(36.dp)
+                            .padding(end = 8.dp)
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back",
+                        Text(
+                            text = if (isPlus) "Plus" else "Get Plus",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -110,10 +129,10 @@ fun SettingsScreen() {
                     keyboardController?.hide()
                     showDeleteDialog = true
                 },
-                onColorPickerClick = {
+                onThemeSheetClick = { tab ->
                     focusManager.clearFocus()
                     keyboardController?.hide()
-                    showColorPickerSheet = true
+                    themeSheetTab = tab
                 },
                 onLicenseClick = {
                     focusManager.clearFocus()
@@ -124,6 +143,11 @@ fun SettingsScreen() {
                     focusManager.clearFocus()
                     keyboardController?.hide()
                     showMapCreditsSheet = true
+                },
+                onFontCreditsClick = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    showFontCreditsSheet = true
                 },
                 onAboutLibrariesClick = {
                     focusManager.clearFocus()
@@ -262,7 +286,7 @@ fun SettingsScreen() {
                                     title = stringResource(R.string.privacy_and_security),
                                     leadingContent = {
                                         Icon(
-                                            painter = painterResource(R.drawable.lock_24px),
+                                            painter = painterResource(R.drawable.shield_lock_24px),
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.secondary,
                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
@@ -288,6 +312,33 @@ fun SettingsScreen() {
                                         focusManager.clearFocus()
                                         keyboardController?.hide()
                                         navigator.navigateTo(Route.SyncBackupSettings)
+                                    }
+                                )
+                                SettingsItem(
+                                    title = stringResource(R.string.vault),
+                                    leadingContent = {
+                                        if (!isPlus) {
+                                            PlusLeadingIconContainer {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.lock_24px),
+                                                    contentDescription = null,
+                                                    tint = UiUtils.plusContentColor,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        } else {
+                                            Icon(
+                                                painter = painterResource(R.drawable.lock_24px),
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.secondary,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        keyboardController?.hide()
+                                        navigator.navigateTo(Route.Vault)
                                     }
                                 )
                                 SettingsItem(
@@ -383,11 +434,10 @@ fun SettingsScreen() {
         )
     }
 
-    if (showColorPickerSheet) {
-        ColorPickerSheet(
-            initialColor = Color(state.appTheme.seedColor),
-            onSelect = { onAction(SettingsAction.OnSeedColorChange(it.toArgb())) },
-            onDismiss = { showColorPickerSheet = false }
+    themeSheetTab?.let { tab ->
+        com.denser.june.presentation.screens.settings.components.sheets.ThemeCustomizationSheet(
+            initialTab = tab,
+            onDismiss = { themeSheetTab = null }
         )
     }
 
@@ -403,6 +453,12 @@ fun SettingsScreen() {
         )
     }
 
+    if (showFontCreditsSheet) {
+        FontCreditsBottomSheet(
+            setShowSheet = { showFontCreditsSheet = it }
+        )
+    }
+
     if (showAboutLibrariesSheet) {
         AboutLibrariesBottomSheet(
             setShowSheet = { showAboutLibrariesSheet = it }
@@ -415,8 +471,8 @@ fun SettingsScreen() {
         )
     }
 
-    UpdateDialogs(
-        state = UpdateDialogState(
+    UpdateBottomSheet(
+        state = UpdateSheetState(
             showChecking = showCheckingUpdatesDialog,
             updateInfo = updateInfo,
             showNoUpdate = showNoUpdateDialog,

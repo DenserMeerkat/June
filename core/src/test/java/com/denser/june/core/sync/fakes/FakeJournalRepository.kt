@@ -113,6 +113,7 @@ class FakeJournalRepository : JournalRepository {
     override fun getUniqueTags(): Flow<List<String>> = flowOf(emptyList())
     override fun getTagCounts(): Flow<Map<String, Int>> = flowOf(emptyMap())
     override suspend fun toggleBookmark(id: String) { db[id]?.let { db[id] = it.copy(isBookmarked = !it.isBookmarked) } }
+    override suspend fun toggleLock(id: String) { db[id]?.let { db[id] = it.copy(isLocked = !it.isLocked) } }
     override suspend fun renameTag(oldName: String, newName: String) {}
     override suspend fun deleteTag(tagName: String) {}
     override fun observeHasUnsyncedJournals(threshold: Long): Flow<Boolean> =
@@ -121,4 +122,10 @@ class FakeJournalRepository : JournalRepository {
         db.values.any { j -> (j.updatedAt ?: 0L) > ((j.syncedAt ?: 0L) + threshold) || j.syncedAt == null }
     override fun observeHasTombstones(): Flow<Boolean> = flowOf(tombstones.isNotEmpty())
     override suspend fun hasTombstones(): Boolean = tombstones.isNotEmpty()
+
+    override fun getLockedJournals(): Flow<List<Journal>> =
+        _journalFlow.map { _ -> db.values.filter { it.deletedAt == null && it.isLocked } }
+
+    override fun getLockedJournalsCount(): Flow<Int> =
+        _journalFlow.map { _ -> db.values.count { it.deletedAt == null && it.isLocked } }
 }

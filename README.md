@@ -48,26 +48,30 @@ June is more than just text; it is a multimedia capsule of your life.
 
 ### Capture Every Detail
 
-- **Multimedia Capsules:** Go beyond words by attaching **photos**, **videos**, and **precise locations** to any entry.
-- **Smart Organization:** Intelligently categorize your entries using three distinct tag groups: **Spaces**, **People**, and **Topics**.
-- **Soundtrack Support:** Paste a link from any major streaming platform (Spotify, Apple Music, etc.), and June automatically fetches the cover art and song details.
-- **Mood Tracking:** Tag entries with emojis to log your emotional journey and personal growth over time.
-- **Rich Text Editing:** Style your entries with full support for bold, italics, underline, highlight, and **tag autocompletion**.
+- **Multimedia Capsules:** Go beyond words by attaching **photos**, **videos**, and **precise locations** to any entry. Includes a full-screen media viewer with pinch-to-zoom, pan, EXIF metadata inspection, and built-in photo/video compression.
+- **Smart Organization:** Intelligently categorize your entries using three distinct tag groups: **Spaces**, **People** (`@`), and **Topics** (`#`).
+- **Soundtracks & Song Library:** Paste links from major streaming platforms (Spotify, Apple Music, etc.) to fetch album art and metadata, or import **local audio files** with built-in audio trimming and waveform scrubbing.
+- **Mood Tracking:** Tag entries with emojis using the built-in emoji picker with search to log your emotional journey over time.
+- **Rich Text & Markdown:** Style your entries with bold, italics, underline, highlight, blockquotes, checklists, and tag autocompletion. Full support for opening, importing, and exporting **Markdown** files.
+- **Per-Journal Styling:** Customize fonts, theme accents, and card appearance on individual entries, or extract dynamic color palettes directly from attached media.
 
 ### Relive Your History
 
 - **Unified Timeline:** Navigate your past through a Month View calendar. See your **media, songs, and locations** all in one place within a seamless flow.
 - **Visual Habits:** Keep your momentum going with calendar **streaks** and writing indicators that visualize your consistency.
 - **Journal Reminders:** Personalized notification manager with flexible timing and frequency to keep your journaling habit on track.
-- **Smart Search & Filtering:** Instantly locate memories by searching through content and dates, or use the advanced filter menu to combine multiple tags (such as `@John` and `#Travel`) to retrieve highly specific entries.
+- **Recycle Bin:** Soft-delete entries with one-tap restore and permanent disposal options.
+- **Smart Search & Filtering:** Instantly locate memories by searching through content and dates, or use advanced multi-tag filtering to retrieve specific entries.
 
 ### Secure & Styled
 
-- **Privacy Vault:** Secure your entries with Biometric Unlock or a custom PIN. Includes screen capture and recents menu protection.
-- **Expressive Theming:** Enjoy a personalized look with **Dynamic Wallpaper Colors (Material You)** and custom **Font Selection**.
+- **Private Vault & Advanced Lock:** Keep your most sensitive entries hidden in an isolated Vault. Protect the entire app or the Vault individually using **Biometrics, PIN, Password, or Pattern**, complete with security recovery questions, screenshot prevention, and recents switcher obfuscation.
+- **Variable Fonts & Typography Engine:** Fine-tune bundled variable fonts (Google Sans Flex, Roboto Flex, Recursive, Shantell Sans) with real-time sliders for weight, optical size, and slant.
+- **Flexible Map Providers & Theming:** Vector-based map rendering powered by **MapLibre** with out-of-the-box support for **CARTO** and **OpenMap** (free, no API key required), as well as **Stadia Maps** and **MapTiler** (custom API keys supported). Features Light, Dark, and Follow App modes, plus **Dynamic Map Accents** that dynamically tint vector map layers to match your Material You theme.
+- **Expressive Theming:** Personalize your experience with **Dynamic Wallpaper Colors (Material You)**, custom palette selection, and monochrome mode.
 - **Total Ownership:** 100% offline architecture with full Backup & Restore capabilities. Your data never leaves your device unless you choose to sync it.
 - **Network Toggle:** Full control over your connectivity. Turn off all external network access if you prefer not to fetch song metadata or use online map services.
-- **Cloud Sync:** Keep your journal in sync across devices using **WebDAV**. Maintain 100% privacy by using your own Nextcloud, ownCloud, or any WebDAV provider.
+- **Cloud Sync:** Keep your journal in sync across devices using **WebDAV** (Nextcloud, ownCloud, etc.) or **Google Drive** (Google Play build).
 
 ## Tech Stack
 
@@ -92,7 +96,7 @@ June is built with modern Android development practices, leveraging **Jetpack Co
 
 - **Image Loading:** [Coil](https://coil-kt.github.io/coil/)
 - **Video/Audio:** [Media3 (ExoPlayer)](https://developer.android.com/media/media3)
-- **Maps:** Vector-based rendering with custom style providers support (Carto, MapTiler, Mapbox, Stadia, OSM) via [MapLibre](https://maplibre.org/)
+- **Maps:** Vector-based map rendering with multiple style providers (CARTO, OpenMap, Stadia Maps, MapTiler) and dynamic theme colorization via [MapLibre](https://maplibre.org/)
 - **Theming:** [MaterialKolor](https://github.com/jordond/MaterialKolor) (Dynamic Material You colors)
 
 ## Building Locally

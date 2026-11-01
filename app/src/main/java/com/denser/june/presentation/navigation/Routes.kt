@@ -1,6 +1,7 @@
 package com.denser.june.presentation.navigation
 
 import com.denser.june.core.domain.model.enums.FontType
+import com.denser.june.core.domain.model.enums.LockType
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -42,6 +43,12 @@ sealed interface Route {
     data object Bin : Route
 
     @Serializable
+    data object Vault : Route
+
+    @Serializable
+    data object VaultSettings : Route
+
+    @Serializable
     data object SyncSettings : Route
 
     @Serializable
@@ -69,17 +76,24 @@ sealed interface Route {
     data object AboutSettings : Route
 
 
-    @Serializable
-    data object Permissions : Route
 
     @Serializable
-    data object LockMethod : Route
+    data object AppLockSettings : Route
 
     @Serializable
-    data object PinSetup : Route
+    data object VaultLockSettings : Route
 
     @Serializable
-    data object RecoverySetup : Route
+    data class PinSetup(val forVault: Boolean = false) : Route
+
+    @Serializable
+    data class PasswordSetup(val forVault: Boolean = false) : Route
+
+    @Serializable
+    data class PatternSetup(val forVault: Boolean = false) : Route
+
+    @Serializable
+    data class RecoverySetup(val lockType: LockType = LockType.PIN, val forVault: Boolean = false) : Route
 
     @Serializable
     data class Fonts(val type: FontType = FontType.APP) : Route
@@ -89,4 +103,7 @@ sealed interface Route {
 
     @Serializable
     data object DeveloperSettings : Route
+
+    @Serializable
+    data object ConsoleLogs : Route
 }

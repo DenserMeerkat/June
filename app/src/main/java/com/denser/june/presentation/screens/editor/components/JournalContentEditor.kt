@@ -69,6 +69,8 @@ fun JournalContentEditor(
     isKeyboardAutocorrectEnabled: Boolean = true,
     isKeyboardCapitalizationEnabled: Boolean = true,
     editorLayoutDirection: EditorLayoutDirection = EditorLayoutDirection.AUTO,
+    fontFamily: FontFamily? = null,
+    readOnly: Boolean = false,
 ) {
     val layoutDirectionOverride = when (editorLayoutDirection) {
         EditorLayoutDirection.AUTO -> null
@@ -158,19 +160,30 @@ fun JournalContentEditor(
 
         val interactionSource = remember { MutableInteractionSource() }
 
-        Box(
-            modifier = modifier.clickable(
+        val boxModifier = if (!readOnly) {
+            modifier.clickable(
                 interactionSource = interactionSource,
                 indication = null
             ) {
                 focusRequester.requestFocus()
                 keyboardController?.show()
             }
+        } else {
+            modifier
+        }
+
+        Box(
+            modifier = boxModifier
         ) {
+            val resolvedTextStyle = MaterialTheme.typography.bodyLarge.copy(
+                fontFamily = fontFamily ?: MaterialTheme.typography.bodyLarge.fontFamily
+            )
+
             if (!isMarkdownEnabled) {
                 TextField(
                     value = rawContent,
                     onValueChange = onMarkdownChange,
+                    readOnly = readOnly,
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester)
@@ -180,7 +193,7 @@ fun JournalContentEditor(
                     placeholder = {
                         Text(
                             stringResource(R.string.whats_on_your_mind),
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = resolvedTextStyle,
                         )
                     },
                     keyboardOptions = keyboardOptions,
@@ -188,11 +201,12 @@ fun JournalContentEditor(
                         unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                         focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     ),
-                    textStyle = MaterialTheme.typography.bodyLarge,
+                    textStyle = resolvedTextStyle,
                 )
             } else {
                 HyphenTextField(
                     state = state,
+                    readOnly = readOnly,
                     layoutDirection = layoutDirectionOverride,
                     linkConfig = linkConfig,
                     showDefaultSuggestionsPopup = false,
@@ -204,10 +218,11 @@ fun JournalContentEditor(
                         .onFocusChanged { focusState ->
                             onFocusChanged(focusState.isFocused)
                         },
+                    textStyle = resolvedTextStyle,
                     placeholder = {
                         Text(
                             stringResource(R.string.whats_on_your_mind),
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = resolvedTextStyle,
                         )
                     },
                     keyboardOptions = keyboardOptions,
@@ -228,7 +243,7 @@ fun JournalContentEditor(
                         ),
                         strikethroughStyle = SpanStyle(
                             textDecoration = TextDecoration.LineThrough,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         ),
                         highlightStyle = SpanStyle(
                             background = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
@@ -242,11 +257,11 @@ fun JournalContentEditor(
                         ),
                         blockquoteSpanStyle = SpanStyle(
                             fontStyle = FontStyle.Italic,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
                         blockquoteStyle = BlockquoteStyle(
-                            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
-                            borderColor = MaterialTheme.colorScheme.tertiary,
+                            backgroundColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.6f),
+                            borderColor = MaterialTheme.colorScheme.primary,
                         ),
                         h1Style = SpanStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
                         h2Style = SpanStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface),
@@ -256,12 +271,12 @@ fun JournalContentEditor(
                         h6Style = SpanStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp),
                         bulletListStyle = ListItemStyle(
                             prefixStyle = SpanStyle(
-                                color = MaterialTheme.colorScheme.tertiary
+                                color = MaterialTheme.colorScheme.primary
                             )
                         ),
                         orderedListStyle = ListItemStyle(
                             prefixStyle = SpanStyle(
-                                color = MaterialTheme.colorScheme.tertiary
+                                color = MaterialTheme.colorScheme.primary
                             )
                         ),
                         linkStyle = SpanStyle(
@@ -295,9 +310,23 @@ fun JournalContentEditor(
                     contentAlignment = Alignment.Center
                 ) {
                     ContainedLoadingIndicator(
-                        modifier = Modifier.size(100.dp)
+                        modifier = Modifier.size(80.dp),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        indicatorColor = MaterialTheme.colorScheme.primary
                     )
                 }
+            }
+
+            if (readOnly) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {}
+                        )
+                )
             }
         }
     }

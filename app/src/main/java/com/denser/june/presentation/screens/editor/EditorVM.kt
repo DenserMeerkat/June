@@ -10,6 +10,7 @@ import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.repository.SongRepository
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.JournalTheme
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongFetchEvent
 import com.denser.june.core.domain.model.SongFetchProgress
@@ -21,6 +22,7 @@ import android.content.Context
 import com.denser.june.core.media.compress.CompressUtils
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
+import com.denser.june.core.domain.billing.BillingHandler
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -36,7 +38,8 @@ class EditorVM(
     private val journalRepo: JournalRepository,
     private val journalPrefs: JournalPreferences,
     private val songRepo: SongRepository,
-    private val navigator: AppNavigator
+    private val navigator: AppNavigator,
+    private val billingHandler: BillingHandler
 ) : ViewModel() {
     private val editorRoute = savedStateHandle.tryRoute<Route.Editor>()
     private val journalId = editorRoute?.journalId
@@ -95,6 +98,30 @@ class EditorVM(
         viewModelScope.launch {
             journalPrefs.timeFormat().collect { format ->
                 _state.update { it.copy(timeFormat = format) }
+            }
+        }
+
+        viewModelScope.launch {
+            journalPrefs.isMarkdownEnabled().collect { enabled ->
+                _state.update { it.copy(isMarkdownEnabled = enabled) }
+            }
+        }
+
+        viewModelScope.launch {
+            journalPrefs.isKeyboardAutocorrectEnabled().collect { enabled ->
+                _state.update { it.copy(isKeyboardAutocorrectEnabled = enabled) }
+            }
+        }
+
+        viewModelScope.launch {
+            journalPrefs.isKeyboardCapitalizationEnabled().collect { enabled ->
+                _state.update { it.copy(isKeyboardCapitalizationEnabled = enabled) }
+            }
+        }
+
+        viewModelScope.launch {
+            journalPrefs.editorLayoutDirection().collect { direction ->
+                _state.update { it.copy(editorLayoutDirection = direction) }
             }
         }
 
@@ -159,7 +186,12 @@ class EditorVM(
     fun onAction(action: EditorAction) {
         when (action) {
             is EditorAction.ChangeTitle -> updateState { it.copy(title = action.title) }
-            is EditorAction.ChangeContent -> updateState { it.copy(content = action.content) }
+            is EditorAction.ChangeContent -> {
+                if (!_state.value.isMarkdownEnabled) {
+                    hyphenState.setMarkdown(action.content)
+                }
+                updateState { it.copy(content = action.content) }
+            }
             is EditorAction.SnapContentBaseline -> {
                 _state.update { it.copy(content = action.content) }
                 existingJournal = existingJournal?.copy(content = action.content)
@@ -204,6 +236,12 @@ class EditorVM(
             is EditorAction.Refresh -> updateState { it }
 
             is EditorAction.UpdateTags -> updateState { it.copy(tags = action.tags) }
+            is EditorAction.SetJournalFont -> {
+                updateState { it.copy(font = action.fontName, fontVariation = action.variation) }
+            }
+            is EditorAction.SetJournalTheme -> {
+                updateState { it.copy(theme = action.theme) }
+            }
             is EditorAction.SearchTags -> {
                 searchTagsJob?.cancel()
                 searchTagsJob = viewModelScope.launch {
@@ -313,6 +351,7 @@ class EditorVM(
             is EditorAction.RemoveLocation -> updateState { it.copy(location = null) }
 
             is EditorAction.ToggleBookmark -> toggleBookmark()
+            is EditorAction.ToggleLock -> toggleLock()
             is EditorAction.ToggleArchive -> toggleArchive()
             is EditorAction.SaveJournal -> saveJournal()
             is EditorAction.NavigateBack -> {
@@ -349,7 +388,10 @@ class EditorVM(
                 currentState.emoji != null ||
                 currentState.tags.isNotEmpty() ||
                 currentState.songDetails != null ||
-                currentState.location != null
+                currentState.location != null ||
+                currentState.font != null ||
+                currentState.fontVariation != null ||
+                currentState.theme != null
 
         return original.title.trim() != currentState.title.trim() ||
                 original.content.trim() != currentState.content.trim() ||
@@ -358,7 +400,10 @@ class EditorVM(
                 original.images != currentState.images ||
                 original.location != currentState.location ||
                 original.dateTime != currentState.dateTime ||
-                original.songDetails != currentState.songDetails
+                original.songDetails != currentState.songDetails ||
+                currentState.isFontDirty ||
+                currentState.isThemeDirty ||
+                original.isLocked != currentState.isLocked
     }
 
     private fun toggleBookmark() {
@@ -372,6 +417,32 @@ class EditorVM(
                     isBookmarked = newBookmarkState,
                     updatedAt = System.currentTimeMillis()
                 )
+                journalRepo.updateJournal(updatedJournal)
+                existingJournal = updatedJournal
+            }
+        }
+    }
+
+    private fun toggleLock() {
+        viewModelScope.launch {
+            val currentState = _state.value
+            val newLockState = !currentState.isLocked
+            _state.update { it.copy(isLocked = newLockState) }
+
+            existingJournal?.let {
+                val updatedJournal = if (newLockState) {
+                    it.copy(
+                        isLocked = true,
+                        cloudId = null,
+                        syncedAt = null,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                } else {
+                    it.copy(
+                        isLocked = false,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                }
                 journalRepo.updateJournal(updatedJournal)
                 existingJournal = updatedJournal
             }
@@ -421,14 +492,21 @@ class EditorVM(
                     }
                 }
                 existingJournal = journal.copy(songDetails = details)
-                val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
-                val parsedContent = if (isMarkdownEnabled && journal.content.isNotBlank()) {
-                    hyphenState.setMarkdownAsync(journal.content)
-                    hyphenState.toMarkdown()
-                } else {
-                    journal.content
+                if (journal.content.isNotBlank()) {
+                    hyphenState.setMarkdown(journal.content)
                 }
-                existingJournal = existingJournal!!.copy(content = parsedContent)
+                val parsedContent = journal.content
+                val isPlus = billingHandler.isPlus.value
+                val loadedFont = if (isPlus) journal.font else null
+                val loadedFontVariation = if (isPlus) journal.fontVariation else null
+                val loadedTheme = if (isPlus) journal.theme else null
+
+                existingJournal = existingJournal!!.copy(
+                    content = parsedContent,
+                    font = loadedFont,
+                    fontVariation = loadedFontVariation,
+                    theme = loadedTheme
+                )
                 _state.update {
                     it.copy(
                         journalId = journal.id,
@@ -443,8 +521,15 @@ class EditorVM(
                         updatedAt = journal.updatedAt,
                         dateTime = journal.dateTime,
                         isBookmarked = journal.isBookmarked,
+                        isLocked = journal.isLocked,
                         isArchived = journal.isArchived,
                         isDraft = journal.isDraft,
+                        font = loadedFont,
+                        fontVariation = loadedFontVariation,
+                        initialFont = loadedFont,
+                        initialFontVariation = loadedFontVariation,
+                        theme = loadedTheme,
+                        initialTheme = loadedTheme,
                         deletedAt = journal.deletedAt,
                         syncedAt = journal.syncedAt,
                         cloudId = journal.cloudId,
@@ -462,8 +547,37 @@ class EditorVM(
         viewModelScope.launch {
             if (existingJournal != null && !existingJournal!!.isDraft) return@launch
 
-            val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
-            val currentMarkdown = if (isMarkdownEnabled && hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
+            val isMarkdownEnabled = currentState.isMarkdownEnabled
+            val currentMarkdown = if (isMarkdownEnabled) {
+                if (hyphenState.text.isEmpty() && currentState.content.isNotEmpty()) {
+                    currentState.content
+                } else {
+                    hyphenState.toMarkdown()
+                }
+            } else {
+                currentState.content
+            }
+
+            if (currentMarkdown.isBlank() && existingJournal?.content?.isNotBlank() == true) {
+                return@launch
+            }
+
+            val existing = existingJournal
+            if (existing != null && !existing.isDraft) {
+                val stateWithMarkdown = currentState.copy(content = currentMarkdown)
+                if (!isDirtyCheck(stateWithMarkdown)) {
+                    _state.update {
+                        it.copy(
+                            isDirty = false,
+                            isDraft = false,
+                            initialFont = it.font,
+                            initialFontVariation = it.fontVariation,
+                            initialTheme = it.theme
+                        )
+                    }
+                    return@launch
+                }
+            }
 
             if (currentState.images.any { it.startsWith("content://") }) return@launch
 
@@ -492,8 +606,12 @@ class EditorVM(
                 updatedAt = currentTime,
                 dateTime = currentState.dateTime,
                 isBookmarked = currentState.isBookmarked,
+                isLocked = currentState.isLocked,
                 isArchived = currentState.isArchived,
-                isDraft = true
+                isDraft = true,
+                theme = currentState.theme,
+                font = currentState.font,
+                fontVariation = currentState.fontVariation
             )
 
             if (isNewEntry) {
@@ -518,8 +636,33 @@ class EditorVM(
             }
             val currentState = _state.value
             val currentTime = System.currentTimeMillis()
-            val isMarkdownEnabled = journalPrefs.isMarkdownEnabled().first()
-            val currentMarkdown = if (isMarkdownEnabled && hyphenState.text.isNotEmpty()) hyphenState.toMarkdown() else currentState.content
+            val isMarkdownEnabled = currentState.isMarkdownEnabled
+            val currentMarkdown = if (isMarkdownEnabled) {
+                if (hyphenState.text.isEmpty() && currentState.content.isNotEmpty()) {
+                    currentState.content
+                } else {
+                    hyphenState.toMarkdown()
+                }
+            } else {
+                currentState.content
+            }
+
+            val existing = existingJournal
+            if (existing != null && !existing.isDraft) {
+                val stateWithMarkdown = currentState.copy(content = currentMarkdown)
+                if (!isDirtyCheck(stateWithMarkdown)) {
+                    _state.update {
+                        it.copy(
+                            isDirty = false,
+                            isDraft = false,
+                            initialFont = it.font,
+                            initialFontVariation = it.fontVariation,
+                            initialTheme = it.theme
+                        )
+                    }
+                    return@launch
+                }
+            }
 
             val journalToSave = Journal(
                 id = existingJournal?.id ?: "",
@@ -534,10 +677,14 @@ class EditorVM(
                 updatedAt = currentTime,
                 dateTime = currentState.dateTime,
                 isBookmarked = currentState.isBookmarked,
+                isLocked = currentState.isLocked,
                 isArchived = currentState.isArchived,
                 isDraft = false,
-                syncedAt = existingJournal?.syncedAt,
-                cloudId = existingJournal?.cloudId
+                theme = currentState.theme,
+                font = currentState.font,
+                fontVariation = currentState.fontVariation,
+                syncedAt = if (currentState.isLocked) null else existingJournal?.syncedAt,
+                cloudId = if (currentState.isLocked) null else existingJournal?.cloudId
             )
 
             if (existingJournal != null) {
@@ -549,7 +696,15 @@ class EditorVM(
                 _state.update { it.copy(journalId = newId) }
             }
 
-            _state.update { it.copy(isDirty = false, isDraft = false) }
+            _state.update {
+                it.copy(
+                    isDirty = false,
+                    isDraft = false,
+                    initialFont = it.font,
+                    initialFontVariation = it.fontVariation,
+                    initialTheme = it.theme
+                )
+            }
         }
     }
 

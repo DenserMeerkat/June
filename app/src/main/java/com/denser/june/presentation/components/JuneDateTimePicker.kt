@@ -18,11 +18,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.activity.compose.BackHandler
 import java.time.LocalDate
@@ -447,12 +450,13 @@ fun CalendarPage(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DialogDateMonthStrip(
     currentMonth: YearMonth,
     onMonthSelect: (YearMonth) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     InfiniteMonthStrip(
         currentMonth = currentMonth,
         modifier = Modifier.height(56.dp),
@@ -466,34 +470,35 @@ fun DialogDateMonthStrip(
         monthContent = { ym, isSelected ->
             val label = ym.month.getDisplayName(TextStyle.SHORT, LocalLocale.current.platformLocale)
 
-            val backgroundColor = if (isSelected) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceContainer
-            }
-
-            val textColor = if (isSelected) {
-                MaterialTheme.colorScheme.onPrimaryContainer
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            }
-            val shape = if (isSelected) CircleShape else RoundedCornerShape(8.dp)
-            Box(
-                modifier = Modifier
-                    .height(36.dp)
-                    .widthIn(min = 48.dp)
-                    .clip(shape)
-                    .background(backgroundColor)
-                    .clickable { onMonthSelect(ym) }
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = textColor
-                )
+            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                ToggleButton(
+                    checked = isSelected,
+                    onCheckedChange = {
+                        haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                        onMonthSelect(ym)
+                    },
+                    shapes = ToggleButtonDefaults.shapes(
+                        shape = RoundedCornerShape(10.dp),
+                        pressedShape = RoundedCornerShape(18.dp),
+                        checkedShape = CircleShape
+                    ),
+                    colors = ToggleButtonDefaults.toggleButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    modifier = Modifier
+                        .height(36.dp)
+                        .widthIn(min = 48.dp)
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                    )
+                }
             }
         }
     )

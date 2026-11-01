@@ -24,17 +24,22 @@ fun AppLockTile() {
     SettingsItem(
         title = stringResource(R.string.app_lock),
         subtitle = if (state.isAppLockEnabled) {
-            if (state.lockType == LockType.PIN) stringResource(R.string.custom_pin) else stringResource(R.string.same_as_screen_lock)
+            when (state.lockType) {
+                LockType.BIOMETRIC -> stringResource(R.string.same_as_screen_lock)
+                LockType.PIN -> stringResource(R.string.custom_pin)
+                LockType.PASSWORD -> stringResource(R.string.custom_password)
+                LockType.PATTERN -> stringResource(R.string.custom_pattern)
+            }
         } else {
             stringResource(R.string.no_lock)
         },
         leadingContent = {
             Icon(
-                painter = painterResource(R.drawable.lock_24px),
+                painter = painterResource(R.drawable.mobile_lock_portrait_24px),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.secondary
             )
         },
-        onClick = { navigator.navigateTo(Route.LockMethod) }
+        onClick = { navigator.navigateTo(Route.AppLockSettings) }
     )
 }

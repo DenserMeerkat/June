@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.screens.home.components.HomeBottomBar
@@ -61,9 +60,8 @@ fun HomeScreen() {
         koinViewModel()
     }
     val appState by mainVM.state.collectAsStateWithLifecycle()
-    val journalPrefs = koinInject<JournalPreferences>()
+    val journalPrefs = koinInject<com.denser.june.core.domain.preferences.JournalPreferences>()
     val isAutoTimeEnabled by journalPrefs.isAutoTimeEnabled().collectAsStateWithLifecycle(initialValue = false)
-    
     val pagerState = rememberPagerState(pageCount = { HomeTab.entries.size })
     val scope = rememberCoroutineScope()
 
@@ -173,12 +171,12 @@ fun HomeScreen() {
                             if (appState.isSyncEnabled && appState.isInternetAllowed) {
                                 SyncIndicator(
                                     status = appState.syncStatus,
-                                    onClick = { navigator.navigateTo(Route.SyncSettings) }
+                                    onClick = { navigator.navigateTo(Route.SyncSettings, isSingleTop = true) }
                                 )
                             }
                             Spacer(Modifier.width(4.dp))
                             FilledIconButton(
-                                onClick = { navigator.navigateTo(Route.Settings) },
+                                onClick = { navigator.navigateTo(Route.Settings, isSingleTop = true) },
                                 colors = IconButtonDefaults.filledIconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)

@@ -9,6 +9,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -16,17 +18,18 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.*
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.components.ExportJournalBottomSheet
-import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
-import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
+import com.denser.june.presentation.components.journal.ExportJournalSheet
+import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import com.denser.june.presentation.screens.home.timeline.components.TimelineCalendarPage
 import com.denser.june.presentation.screens.home.timeline.components.TimelineMonthStrip
 import com.denser.june.presentation.screens.home.timeline.components.TimelineTabs
@@ -57,20 +60,11 @@ fun TimelinePage(
     val scope = rememberCoroutineScope()
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val deleteSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    fun dismissSheet(action: () -> Unit) {
-        action()
-        scope.launch { sheetState.hide() }.invokeOnCompletion {
-            selectedJournalForOptions = null
-        }
-    }
 
     var journalToExport by remember { mutableStateOf<Journal?>(null) }
 
-    ExportJournalBottomSheet(
+    ExportJournalSheet(
         journal = journalToExport,
         onDismiss = { journalToExport = null }
     )
@@ -89,8 +83,12 @@ fun TimelinePage(
             JournalOptionsSheet(
                 journal = currentJournalForOptions,
                 is24Hour = is24Hour,
+                onDismiss = { selectedJournalForOptions = null },
                 onToggleBookmark = {
                     viewModel.toggleBookmark(currentJournalForOptions.id)
+                },
+                onToggleLock = {
+                    viewModel.toggleLock(currentJournalForOptions.id)
                 },
                 onExportMarkdown = {
                     journalToExport = currentJournalForOptions
@@ -98,33 +96,13 @@ fun TimelinePage(
                 },
                 onDeleteOrRestore = {
                     if (currentJournalForOptions.isDeleted) {
-                        dismissSheet { viewModel.restoreJournal(currentJournalForOptions.id) }
+                        viewModel.restoreJournal(currentJournalForOptions.id)
                     } else {
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            showDeleteConfirmation = true
-                        }
+                        viewModel.deleteJournal(currentJournalForOptions.id)
                     }
                 }
             )
         }
-    }
-
-    if (showDeleteConfirmation && selectedJournalForOptions != null) {
-        DeleteConfirmationSheet(
-            sheetState = deleteSheetState,
-            onDismissRequest = {
-                showDeleteConfirmation = false
-                selectedJournalForOptions = null
-            },
-            onConfirm = {
-                val id = selectedJournalForOptions?.id
-                scope.launch { deleteSheetState.hide() }.invokeOnCompletion {
-                    showDeleteConfirmation = false
-                    if (id != null) viewModel.deleteJournal(id)
-                    selectedJournalForOptions = null
-                }
-            }
-        )
     }
 
     val nonDraftJournalsInMonth = journalsInMonth.filter { !it.isDraft }
@@ -203,6 +181,7 @@ fun TimelinePage(
         pageCount = { Int.MAX_VALUE }
     )
 
+    val haptic = LocalHapticFeedback.current
     var isProgrammaticScroll by remember { mutableStateOf(false) }
 
     LaunchedEffect(pagerState) {
@@ -210,6 +189,7 @@ fun TimelinePage(
             if (!isProgrammaticScroll) {
                 val newMonth = viewModel.getMonthForPage(page)
                 if (newMonth != currentMonth) {
+                    haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                     viewModel.onMonthChange(newMonth)
                 }
             }

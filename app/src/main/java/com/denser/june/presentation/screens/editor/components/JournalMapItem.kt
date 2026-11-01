@@ -5,7 +5,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -33,10 +32,13 @@ import com.denser.june.presentation.components.MapAttributions
 import com.denser.june.presentation.components.MapLibreInitializer
 import com.denser.june.presentation.components.rememberMapDarkMode
 import com.denser.june.presentation.utils.MapProviderUtils
+import com.denser.june.presentation.utils.MapAccentColorizer
+import com.denser.june.presentation.utils.MapAccentColorizer.getMapLibreMap
 import com.denser.june.core.domain.preferences.JournalPreferences
 import org.koin.compose.koinInject
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.domain.model.enums.MapStyleProvider
+import com.denser.june.presentation.plus.LocalIsPlus
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.map.GestureOptions
@@ -50,8 +52,8 @@ import org.maplibre.spatialk.geojson.Position
 @Composable
 fun JournalMapItem(
     location: JournalLocation,
-    onMapClick: () -> Unit,
-    onRemove: () -> Unit,
+    onMapClick: (() -> Unit)? = null,
+    onRemove: (() -> Unit)? = null,
     modifier: Modifier = Modifier.fillMaxWidth().aspectRatio(1.7f)
 ) {
     val isInternetAllowed = LocalInternetAllowed.current
@@ -66,6 +68,11 @@ fun JournalMapItem(
 
     val mapStyleProvider by journalPreferences.mapStyleProvider()
         .collectAsStateWithLifecycle(initialValue = MapStyleProvider.MAPTILER)
+    val isMapThemeAccentEnabled by journalPreferences.isMapThemeAccentEnabled()
+        .collectAsStateWithLifecycle(initialValue = true)
+    val isPlus = LocalIsPlus.current
+    val shouldApplyAccents = isPlus && isMapThemeAccentEnabled
+    val colorScheme = MaterialTheme.colorScheme
 
     MapLibreInitializer(isInternetAllowed)
 
@@ -95,6 +102,18 @@ fun JournalMapItem(
                     modifier = Modifier.fillMaxSize(),
                     baseStyle = BaseStyle.Uri(mapStyleUrl),
                     cameraState = cameraState,
+                    onMapLoadFinished = {
+                        if (shouldApplyAccents) {
+                            cameraState.getMapLibreMap()?.getStyle { style ->
+                                MapAccentColorizer.applyThemeAccents(
+                                    style = style,
+                                    colorScheme = colorScheme,
+                                    provider = mapStyleProvider,
+                                    isDark = isMapDarkMode
+                                )
+                            }
+                        }
+                    },
                     options = MapOptions(
                         renderOptions = RenderOptions(
                             renderMode = RenderOptions.RenderMode.TextureView
@@ -113,6 +132,18 @@ fun JournalMapItem(
                         )
                     )
                 )
+
+                LaunchedEffect(mapStyleUrl, shouldApplyAccents, colorScheme, isMapDarkMode) {
+                    if (!shouldApplyAccents || mapStyleUrl.isBlank()) return@LaunchedEffect
+                    cameraState.getMapLibreMap()?.getStyle { style ->
+                        MapAccentColorizer.applyThemeAccents(
+                            style = style,
+                            colorScheme = colorScheme,
+                            provider = mapStyleProvider,
+                            isDark = isMapDarkMode
+                        )
+                    }
+                }
             }
             Box(
                 modifier = Modifier
@@ -123,8 +154,12 @@ fun JournalMapItem(
                     MapAttributions(provider = mapStyleProvider, isDarkMode = isMapDarkMode)
                 }
             }
+            val isClickable = onMapClick != null
+            val isMenuEnabled = onMapClick != null || onRemove != null
+
             Surface(
-                onClick = onMapClick,
+                onClick = { onMapClick?.invoke() },
+                enabled = isClickable,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(start = 16.dp, top = 8.dp),
@@ -157,12 +192,14 @@ fun JournalMapItem(
                     .fillMaxSize()
                     .clip(RoundedCornerShape(32.dp))
                     .indication(interactionSource, LocalIndication.current)
-                    .pointerInput(Unit) {
+                    .pointerInput(isClickable, isMenuEnabled) {
                         detectTapGestures(
-                            onTap = { onMapClick() },
+                            onTap = { onMapClick?.invoke() },
                             onLongPress = { offset ->
-                                showMenu = true
-                                pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                                if (isMenuEnabled) {
+                                    showMenu = true
+                                    pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                                }
                             },
                             onPress = { offset ->
                                 val press = PressInteraction.Press(offset)
@@ -186,7 +223,7 @@ fun JournalMapItem(
                     MapLocationPin()
                 }
             }
-            if (showMenu) {
+            if (showMenu && isMenuEnabled) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -200,22 +237,26 @@ fun JournalMapItem(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false },
                 ) {
-                    JuneDropdownMenuItem(
-                        text = { Text(stringResource(R.string.change_location)) },
-                        onClick = {
-                            showMenu = false
-                            onMapClick()
-                        },
-                        leadingIcon = { Icon(painterResource(R.drawable.edit_24px), null) }
-                    )
-                    JuneDropdownMenuItem(
-                        text = { Text(stringResource(R.string.remove)) },
-                        onClick = {
-                            showMenu = false
-                            onRemove()
-                        },
-                        leadingIcon = { Icon(painterResource(R.drawable.delete_24px), null) }
-                    )
+                    if (onMapClick != null) {
+                        JuneDropdownMenuItem(
+                            text = { Text(stringResource(R.string.change_location)) },
+                            onClick = {
+                                showMenu = false
+                                onMapClick()
+                            },
+                            leadingIcon = { Icon(painterResource(R.drawable.edit_24px), null) }
+                        )
+                    }
+                    if (onRemove != null) {
+                        JuneDropdownMenuItem(
+                            text = { Text(stringResource(R.string.remove)) },
+                            onClick = {
+                                showMenu = false
+                                onRemove()
+                            },
+                            leadingIcon = { Icon(painterResource(R.drawable.delete_24px), null) }
+                        )
+                    }
                 }
                 }
             }

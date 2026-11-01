@@ -32,7 +32,7 @@ import org.koin.core.parameter.parametersOf
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.LayoutDirection
-import com.denser.june.presentation.screens.settings.components.WhatsNewBottomSheet
+import com.denser.june.presentation.screens.settings.components.sheets.WhatsNewBottomSheet
 import com.denser.june.presentation.utils.handleAnnouncementAction
 
 @Composable
@@ -93,13 +93,19 @@ fun JuneApp(
         }
     }
 
+    val billingHandler = koinInject<com.denser.june.core.domain.billing.BillingHandler>()
+    val isPlus by billingHandler.isPlus.collectAsStateWithLifecycle()
+    val plusSheetController = com.denser.june.presentation.plus.rememberPlusSheetController()
+
     val uiDirection = if (appState.isForceLtrUi) LayoutDirection.Ltr else LocalLayoutDirection.current
 
     CompositionLocalProvider(
         LocalAppTheme provides appState.appTheme,
         LocalInternetAllowed provides appState.isInternetAllowed,
         LocalSyncEnabled provides appState.isSyncEnabled,
-        LocalLayoutDirection provides uiDirection
+        LocalLayoutDirection provides uiDirection,
+        com.denser.june.presentation.plus.LocalIsPlus provides isPlus,
+        com.denser.june.presentation.plus.LocalPlusSheetController provides plusSheetController
     ) {
         JuneTheme(appTheme = appState.appTheme) {
             Surface(modifier = Modifier.fillMaxSize()) {
@@ -108,6 +114,8 @@ fun JuneApp(
                     startDestination = Route.Home
                 )
             }
+
+            com.denser.june.presentation.plus.JunePlusPaywallScreen(controller = plusSheetController)
 
             val uriHandler = LocalUriHandler.current
 

@@ -64,9 +64,7 @@ fun CompressPhotosTile() {
                         },
                         label = { (name, _) -> name },
                         equalWeight = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -113,9 +111,7 @@ fun CompressVideosTile() {
                         },
                         label = { (name, _) -> name },
                         equalWeight = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
