@@ -33,6 +33,7 @@ class PrivacyPreferencesImpl(
         private val isInternetAllowed = booleanPreferencesKey("is_internet_allowed")
         private val lastChangelogShown = stringPreferencesKey("last_changelog_shown")
         private val lastAnnouncementDismissedId = stringPreferencesKey("last_announcement_dismissed_id")
+        private val isPlusPurchased = booleanPreferencesKey("is_plus_purchased")
     }
 
     override fun getAppLockFlow(): Flow<Boolean> = dataStore.data
@@ -243,5 +244,12 @@ class PrivacyPreferencesImpl(
 
     override suspend fun updateLastAnnouncementDismissedId(id: String) {
         dataStore.edit { it[lastAnnouncementDismissedId] = id }
+    }
+
+    override fun getIsPlusPurchasedFlow(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[isPlusPurchased] == true }
+
+    override suspend fun updateIsPlusPurchased(isPurchased: Boolean) {
+        dataStore.edit { it[isPlusPurchased] = isPurchased }
     }
 }

@@ -45,9 +45,14 @@ class BillingHandlerImpl(
 
     init {
         scope.launch {
-            try {
-                if (!privacyPreferences.getIsInternetAllowedFlow().first()) return@launch
+            if (privacyPreferences.getIsPlusPurchasedFlow().first()) {
+                _isPlus.value = true
+            }
 
+            if (!privacyPreferences.getIsInternetAllowedFlow().first()) {
+                return@launch
+            }
+            try {
                 if (Purchases.isConfigured) {
                     purchases.updatedCustomerInfoListener =
                         UpdatedCustomerInfoListener { customerInfo ->
@@ -97,6 +102,9 @@ class BillingHandlerImpl(
             "Updating plus status: $active (Entitlements: ${customerInfo.entitlements.all.keys})"
         )
         _isPlus.value = active
+        scope.launch {
+            privacyPreferences.updateIsPlusPurchased(active)
+        }
     }
 
     override suspend fun purchasePlus(activity: Activity): Result<Boolean> {
@@ -160,6 +168,9 @@ class BillingHandlerImpl(
 
     override fun resetPlusForTesting() {
         _isPlus.value = false
+        scope.launch {
+            privacyPreferences.updateIsPlusPurchased(false)
+        }
         try {
             if (Purchases.isConfigured) {
                 purchases.logOut()

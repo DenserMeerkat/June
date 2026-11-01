@@ -64,4 +64,7 @@ interface PrivacyPreferences {
 
     fun getLastAnnouncementDismissedIdFlow(): Flow<String?>
     suspend fun updateLastAnnouncementDismissedId(id: String)
+
+    fun getIsPlusPurchasedFlow(): Flow<Boolean>
+    suspend fun updateIsPlusPurchased(isPurchased: Boolean)
 }
