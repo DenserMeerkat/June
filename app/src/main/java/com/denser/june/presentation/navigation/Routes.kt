@@ -2,10 +2,11 @@ package com.denser.june.presentation.navigation
 
 import com.denser.june.core.domain.model.enums.FontType
 import com.denser.june.core.domain.model.enums.LockType
+import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface Route {
+sealed interface Route : NavKey {
     @Serializable
     data object Home : Route
 

@@ -96,6 +96,10 @@ val revenueCatApiKey = (localProperties["REVENUECAT_API_KEY"] ?: System.getenv("
     productFlavors {
         create("foss") {
             dimension = "distribution"
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules-foss.pro"
+            )
             signingConfigs.findByName("release")?.let {
                 if (it.storeFile?.exists() == true) {
                     signingConfig = it
@@ -107,6 +111,10 @@ val revenueCatApiKey = (localProperties["REVENUECAT_API_KEY"] ?: System.getenv("
             applicationIdSuffix = ".play"
             versionNameSuffix = "-play"
             isDefault = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules-play.pro"
+            )
             buildConfigField("String", "REVENUECAT_API_KEY", "\"$revenueCatApiKey\"")
             signingConfigs.findByName("playRelease")?.let {
                 if (it.storeFile?.exists() == true) {
@@ -132,10 +140,6 @@ val revenueCatApiKey = (localProperties["REVENUECAT_API_KEY"] ?: System.getenv("
             resValue("string", "app_name", appName)
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
         }
 
         debug {
@@ -198,7 +202,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.window.size)
-    implementation(libs.androidx.navigation.compose)
+
+
+    implementation(libs.androidx.navigation3.ui)
+
+
     implementation(libs.androidx.material3.adaptive)
     implementation(libs.androidx.material3.adaptive.layout)
     implementation(libs.androidx.material3.adaptive.navigation)

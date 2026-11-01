@@ -59,8 +59,10 @@ import java.time.LocalTime
     ExperimentalLayoutApi::class
 )
 @Composable
-fun EditorScreen() {
-    val viewModel: EditorVM = koinViewModel()
+fun EditorScreen(
+    viewModel: EditorVM = koinViewModel()
+) {
+
     val navigator = koinInject<AppNavigator>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isMarkdownEnabled = state.isMarkdownEnabled
