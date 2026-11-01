@@ -1,18 +1,19 @@
 package com.denser.june.presentation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.compose.rememberNavController
 import com.denser.june.MainVM
 import com.denser.june.core.domain.model.AppTheme
 import com.denser.june.presentation.navigation.AppNavigator
@@ -26,8 +27,12 @@ import com.denser.june.presentation.theme.LocalSyncEnabled
 import com.denser.june.presentation.utils.StartupManager
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import com.denser.june.core.domain.billing.BillingHandler
+import com.denser.june.presentation.plus.JunePlusPaywallScreen
+import com.denser.june.presentation.plus.LocalIsPlus
+import com.denser.june.presentation.plus.LocalPlusSheetController
+import com.denser.june.presentation.plus.rememberPlusSheetController
 import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.parameter.parametersOf
 
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
@@ -44,7 +49,7 @@ fun JuneApp(
     val appState by mainVM.state.collectAsStateWithLifecycle()
 
     val navigator = koinInject<AppNavigator>()
-    val navController = rememberNavController()
+    val backStack = remember { mutableStateListOf<Route>(Route.Home) }
 
     val startupManager = koinInject<StartupManager>()
     val pendingWhatsChanged by startupManager.pendingWhatsChanged.collectAsStateWithLifecycle(initialValue = null)
@@ -53,9 +58,14 @@ fun JuneApp(
 
     LaunchedEffect(pendingRoute) {
         pendingRoute?.let { route ->
-            navController.navigate(route) {
-                popUpTo(Route.Home) { inclusive = false }
-                launchSingleTop = true
+            while (backStack.size > 1) {
+                backStack.removeAt(backStack.lastIndex)
+            }
+            if (backStack.isEmpty()) {
+                backStack.add(Route.Home)
+            }
+            if (route != Route.Home) {
+                backStack.add(route)
             }
             onRouteConsumed()
         }
@@ -67,35 +77,41 @@ fun JuneApp(
 
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             navigator.navigationActions.collect { intent ->
                 when (intent) {
                     is NavigationIntent.NavigateBack -> {
-                        if (navController.previousBackStackEntry != null) {
-                            navController.popBackStack()
-                        } else {
-                            navController.navigate(Route.Home) {
-                                popUpTo(Route.Home) { inclusive = false }
-                                launchSingleTop = true
-                            }
+                        if (backStack.size > 1) {
+                            backStack.removeAt(backStack.lastIndex)
+                        } else if (backStack.firstOrNull() != Route.Home) {
+                            backStack.clear()
+                            backStack.add(Route.Home)
                         }
                     }
                     is NavigationIntent.NavigateTo -> {
-                        navController.navigate(intent.route) {
-                            intent.popUpToRoute?.let { popUpRoute ->
-                                popUpTo(popUpRoute) { inclusive = intent.inclusive }
+                        if (intent.popUpToRoute != null) {
+                            val targetClass = intent.popUpToRoute::class
+                            val index = backStack.indexOfLast { it::class == targetClass }
+                            if (index != -1) {
+                                val fromIndex = if (intent.inclusive) index else index + 1
+                                while (backStack.size > fromIndex) {
+                                    backStack.removeAt(backStack.lastIndex)
+                                }
                             }
-                            launchSingleTop = intent.isSingleTop
                         }
+                        if (intent.isSingleTop && backStack.lastOrNull() == intent.route) {
+                            return@collect
+                        }
+                        backStack.add(intent.route)
                     }
                 }
             }
         }
     }
 
-    val billingHandler = koinInject<com.denser.june.core.domain.billing.BillingHandler>()
+    val billingHandler = koinInject<BillingHandler>()
     val isPlus by billingHandler.isPlus.collectAsStateWithLifecycle()
-    val plusSheetController = com.denser.june.presentation.plus.rememberPlusSheetController()
+    val plusSheetController = rememberPlusSheetController()
 
     val uiDirection = if (appState.isForceLtrUi) LayoutDirection.Ltr else LocalLayoutDirection.current
 
@@ -104,18 +120,27 @@ fun JuneApp(
         LocalInternetAllowed provides appState.isInternetAllowed,
         LocalSyncEnabled provides appState.isSyncEnabled,
         LocalLayoutDirection provides uiDirection,
-        com.denser.june.presentation.plus.LocalIsPlus provides isPlus,
-        com.denser.june.presentation.plus.LocalPlusSheetController provides plusSheetController
+        LocalIsPlus provides isPlus,
+        LocalPlusSheetController provides plusSheetController
     ) {
         JuneTheme(appTheme = appState.appTheme) {
-            Surface(modifier = Modifier.fillMaxSize()) {
-                JuneNavHost(
-                    navController = navController,
-                    startDestination = Route.Home
-                )
-            }
+            Box(modifier = Modifier.fillMaxSize()) {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    JuneNavHost(
+                        backStack = backStack,
+                        onBack = {
+                            if (backStack.size > 1) {
+                                backStack.removeAt(backStack.lastIndex)
+                            } else if (backStack.firstOrNull() != Route.Home) {
+                                backStack.clear()
+                                backStack.add(Route.Home)
+                            }
+                        }
+                    )
+                }
 
-            com.denser.june.presentation.plus.JunePlusPaywallScreen(controller = plusSheetController)
+                JunePlusPaywallScreen(controller = plusSheetController)
+            }
 
             val uriHandler = LocalUriHandler.current
 

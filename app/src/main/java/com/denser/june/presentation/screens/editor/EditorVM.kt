@@ -5,7 +5,7 @@ import android.util.Patterns
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
+
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.repository.SongRepository
 import com.denser.june.core.domain.preferences.JournalPreferences
@@ -33,7 +33,8 @@ import java.io.File
 
 @OptIn(FlowPreview::class)
 class EditorVM(
-    savedStateHandle: SavedStateHandle,
+    initialRoute: Route.Editor? = null,
+    savedStateHandle: SavedStateHandle = SavedStateHandle(),
     private val context: Context,
     private val journalRepo: JournalRepository,
     private val journalPrefs: JournalPreferences,
@@ -41,10 +42,10 @@ class EditorVM(
     private val navigator: AppNavigator,
     private val billingHandler: BillingHandler
 ) : ViewModel() {
-    private val editorRoute = savedStateHandle.tryRoute<Route.Editor>()
+    private val editorRoute = initialRoute
     private val journalId = editorRoute?.journalId
-        ?: savedStateHandle.tryRoute<Route.JournalMedia>()?.journalId
-        ?: savedStateHandle.tryRoute<Route.JournalMediaDetail>()?.journalId
+
+
 
     val hyphenState = HyphenTextState(
         initialText = editorRoute?.initialContent ?: "",
@@ -171,15 +172,6 @@ class EditorVM(
 
         if (journalId != null) {
             loadJournal(journalId)
-        }
-    }
-
-
-    private inline fun <reified T : Any> SavedStateHandle.tryRoute(): T? {
-        return try {
-            toRoute<T>()
-        } catch (e: Exception) {
-            null
         }
     }
 

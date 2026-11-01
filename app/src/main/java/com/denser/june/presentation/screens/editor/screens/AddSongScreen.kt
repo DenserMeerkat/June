@@ -112,14 +112,14 @@ fun AddSongScreen(
         currentStep = AddSongStep.Library
     }
 
-    BackHandler {
+    BackHandler(enabled = currentStep != AddSongStep.Library) {
         when (currentStep) {
             AddSongStep.Trimmer -> trimmerDismiss()
             AddSongStep.Edit, AddSongStep.EditJournal -> {
                 activeEditingSong = null
                 currentStep = AddSongStep.Library
             }
-            AddSongStep.Library -> onNavigateBack()
+            AddSongStep.Library -> Unit
         }
     }
 

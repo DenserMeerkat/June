@@ -63,7 +63,18 @@ val juneModules = module {
     singleOf(::ExternalIntentProcessor)
     singleOf(::LockSessionVM)
     viewModelOf(::SettingsVM)
-    viewModelOf(::EditorVM)
+    viewModel { params ->
+        EditorVM(
+            initialRoute = params.getOrNull(),
+            savedStateHandle = getOrNull() ?: androidx.lifecycle.SavedStateHandle(),
+            context = get(),
+            journalRepo = get(),
+            journalPrefs = get(),
+            songRepo = get(),
+            navigator = get(),
+            billingHandler = get()
+        )
+    }
     viewModelOf(::JournalsVM)
     viewModelOf(::TagsVM)
     viewModelOf(::TimelineVM)

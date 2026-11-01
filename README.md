@@ -83,7 +83,7 @@ June is built with modern Android development practices, leveraging **Jetpack Co
 - **UI Toolkit:** [Jetpack Compose](https://developer.android.com/jetpack/compose) (Material 3)
 - **Architecture:** MVVM (Model-View-ViewModel) with Clean Architecture principles.
 - **Dependency Injection:** [Koin](https://insert-koin.io/)
-- **Navigation:** [Jetpack Navigation Compose](https://developer.android.com/guide/navigation/navigation-compose)
+- **Navigation:** [Navigation 3](https://developer.android.com/guide/navigation/navigation-3)
 - **Asynchronous:** Coroutines & Flows
 
 ### Data & Networking

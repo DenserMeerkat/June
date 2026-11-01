@@ -92,32 +92,26 @@ fun JunePlusPaywallScreen(
     val billingHandler = koinInject<BillingHandler>()
     val isPlus by billingHandler.isPlus.collectAsStateWithLifecycle()
 
-    if (controller.isVisible) {
-        JuneFullScreenDialog(
-            onDismissRequest = { controller.dismiss(isPlus) }
-        ) {
-            BackHandler(enabled = true) {
-                controller.dismiss(isPlus)
-            }
-
-            AnimatedVisibility(
-                visible = controller.isVisible,
-                enter = slideInVertically(
-                    initialOffsetY = { it },
-                    animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing)
-                ) + fadeIn(animationSpec = tween(durationMillis = 200)),
-                exit = slideOutVertically(
-                    targetOffsetY = { it },
-                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
-                ) + fadeOut(animationSpec = tween(durationMillis = 200)),
-                modifier = modifier
-            ) {
-                JunePlusPaywallContent(
-                    onDismiss = { controller.dismiss(isPlus) },
-                    onUnlocked = { controller.onPlusUnlockedSuccess() }
-                )
-            }
+    AnimatedVisibility(
+        visible = controller.isVisible,
+        enter = slideInVertically(
+            initialOffsetY = { it },
+            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing)
+        ),
+        exit = slideOutVertically(
+            targetOffsetY = { it },
+            animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+        ),
+        modifier = modifier.fillMaxSize()
+    ) {
+        BackHandler(enabled = true) {
+            controller.dismiss(isPlus)
         }
+
+        JunePlusPaywallContent(
+            onDismiss = { controller.dismiss(isPlus) },
+            onUnlocked = { controller.onPlusUnlockedSuccess() }
+        )
     }
 }
 
