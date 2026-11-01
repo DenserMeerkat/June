@@ -24,6 +24,9 @@ data class SettingsState(
     val isAppLockEnabled: Boolean = false,
     val lockType: LockType = LockType.BIOMETRIC,
     val pinHash: String? = null,
+    val passwordHash: String? = null,
+    val patternHash: String? = null,
+    val isPlus: Boolean = false,
     val securityQuestion: String? = null,
     val securityAnswerHash: String? = null,
     val isScreenPrivacyEnabled: Boolean = false,
@@ -40,4 +43,8 @@ data class SettingsState(
     val isKeyboardCapitalizationEnabled: Boolean = true,
     val editorLayoutDirection: EditorLayoutDirection = EditorLayoutDirection.AUTO,
     val isForceLtrUi: Boolean = true,
+    val isCompressPhotosEnabled: Boolean = false,
+    val photoCompressionQuality: Int = 80,
+    val isCompressVideosEnabled: Boolean = false,
+    val videoCompressionQuality: Int = 1080,
 )

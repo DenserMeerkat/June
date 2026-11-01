@@ -36,3 +36,6 @@ proguard-project.txt
 *.iml
 .idea
 .kotlin/
+
+# Emoji build script cache
+tools/emojis/cache/

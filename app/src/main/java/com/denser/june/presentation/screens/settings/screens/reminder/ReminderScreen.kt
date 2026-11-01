@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens.reminder
+import com.denser.june.presentation.components.JuneBackButton
 
 import android.Manifest
 import android.os.Build
@@ -22,6 +23,7 @@ import com.denser.june.core.R
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.components.JuneConnectedButtonGroup
 import com.denser.june.presentation.components.JuneDateTimePicker
 import com.denser.june.presentation.components.JuneDateTimePickerMode
 import com.denser.june.core.utils.combineDateAndTime
@@ -66,18 +68,7 @@ fun ReminderScreen() {
                 title = { Text(stringResource(R.string.reminders)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 }
             )
         }
@@ -162,43 +153,17 @@ fun ReminderScreen() {
                     }
                 ) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween, Alignment.End)
-                    ) {
-                        Spacer(Modifier.width(16.dp))
-                        val days = DayOfWeek.entries
-                        days.forEachIndexed { index, day ->
-                            val isSelected = state.days.contains(day)
-                            val shape = when (index) {
-                                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                days.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                            }
-
-                            ToggleButton(
-                                checked = isSelected,
-                                onCheckedChange = { viewModel.toggleDay(day) },
-                                enabled = state.isEnabled,
-                                shapes = shape,
-                                modifier = Modifier.weight(1f),
-                                contentPadding = PaddingValues(4.dp),
-                                colors = ToggleButtonDefaults.toggleButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                                )
-                            ) {
-                                Text(
-                                    text = day.getDisplayName(TextStyle.NARROW, LocalLocale.current.platformLocale),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }
-                        }
-                    }
+                    JuneConnectedButtonGroup(
+                        options = DayOfWeek.entries,
+                        selected = { state.days.contains(it) },
+                        onSelect = { viewModel.toggleDay(it) },
+                        label = { it.getDisplayName(TextStyle.NARROW, LocalLocale.current.platformLocale) },
+                        enabled = state.isEnabled,
+                        equalWeight = true,
+                        contentPadding = PaddingValues(4.dp),
+                        textStyle = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(32.dp + padding.calculateBottomPadding()))

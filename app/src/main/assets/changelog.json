@@ -1,11 +1,73 @@
 [
   {
+    "version": "v2.0.0",
+    "changes": [
+      {
+        "text": "June Plus: Support development and unlock premium features.",
+        "flavors": [
+          "play"
+        ]
+      },
+      "Private Vault to protect sensitive journal entries.",
+      "Typography customization with bundled variable fonts.",
+      "Per-journal styling with custom fonts and palettes.",
+      "New Pattern and Password lock methods.",
+      "Dynamic map theming matching theme colors.",
+      "Performance and sync fixes.",
+      "UI polish and refinements."
+    ]
+  },
+  {
+    "version": "v1.3.1",
+    "changes": [
+      "Fixed map rendering and blank flicker on app resume.",
+      "Refined location picker search bar and controls.",
+      "Fixed cloud sync analysis and progress tracking.",
+      "Misc UI refinements and translations."
+    ]
+  },
+  {
+    "version": "v1.3.0",
+    "changes": [
+      "Revamped media viewer with smooth pinch-to-zoom and pan.",
+      "Media info sheet showing camera details and file metadata.",
+      "Photo and video compression with live size previews.",
+      "Automatic compression for newly attached media.",
+      "Misc UI improvements and refinements."
+    ]
+  },
+  {
+    "version": "v1.2.1",
+    "changes": [
+      "Fixed whitespace and saving issues in default editor.",
+      "Fixed syllable separation during typing in languages like Korean.",
+      "Fixed keyboard spell-check and autocomplete misreading typed words.",
+      "General sync improvements and analysis count fixes.",
+      {
+        "text": "G-Drive sync improvements and fixed 100-file sync limit.",
+        "flavors": [
+          "play"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "v1.2.0",
+    "changes": [
+      "Added support for local music files.",
+      "Song library with audio trimming, waveform scrubbing, and metadata editing.",
+      "Added emoji picker with search and recent history.",
+      "Cloud sync support for songs and general fixes.",
+      "Misc UI improvements and refinements."
+    ]
+  },
+  {
     "version": "v1.1.0",
     "changes": [
       "Integrated search into home screen.",
       "Open markdown files into June.",
       "Markdown export & import for notes.",
-      "Palette selection preview bug resolved."
+      "Misc UI improvements and refinements."
     ]
   },
   {

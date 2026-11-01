@@ -69,11 +69,15 @@ dependencies {
     implementation(libs.jsoup)
     implementation(libs.json.path)
     implementation(libs.materialKolor)
+    implementation(libs.androidx.palette)
 
     // Media
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.media3.common)
+    implementation(libs.media3.transformer)
+    implementation(libs.media3.effect)
+    implementation(libs.exifinterface)
 
     // Testing
     testImplementation(libs.junit)

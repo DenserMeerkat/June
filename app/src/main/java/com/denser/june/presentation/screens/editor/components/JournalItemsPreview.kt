@@ -26,17 +26,23 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.SongDetails
+import com.denser.june.presentation.components.JuneConnectedButtonGroup
+import com.denser.june.presentation.components.journal.JournalMosaicCard
 import kotlinx.coroutines.launch
 
 sealed interface JournalPreviewItem {
@@ -45,19 +51,7 @@ sealed interface JournalPreviewItem {
     data class Map(val location: JournalLocation) : JournalPreviewItem
 }
 
-data class MediaOperations(
-    val onItemSheetToggle: (Boolean) -> Unit = {},
-    val onRemoveMedia: (String) -> Unit = {},
-    val onMoveToFront: (String) -> Unit = {},
-    val onMediaClick: ((String) -> Unit)? = {},
-    val frontMediaPath: String? = null,
-    val onRemoveSong: () -> Unit = {},
-    val onSongSheetToggle: (Boolean) -> Unit = {},
-    val onTrimSong: () -> Unit = {},
-    val onEditJournalSong: () -> Unit = {},
-    val onRemoveLocation: () -> Unit = {},
-    val onLocationDialogToggle: (Boolean) -> Unit = {},
-)
+typealias MediaOperations = com.denser.june.presentation.components.journal.MediaOperations
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -66,7 +60,12 @@ fun JournalItemsPreview(
     songDetails: SongDetails?,
     location: JournalLocation?,
     mediaOperations: MediaOperations,
-    onShowAllClick: () -> Unit = {}
+    processingMediaPaths: Set<String> = emptySet(),
+    readOnly: Boolean = false,
+    selectedSlideIndex: Int? = null,
+    onSlideIndexChange: ((Int) -> Unit)? = null,
+    onShowAllClick: () -> Unit = {},
+    theme: com.denser.june.core.domain.model.JournalTheme? = null
 ) {
     val scope = rememberCoroutineScope()
 
@@ -78,7 +77,21 @@ fun JournalItemsPreview(
         list
     }
 
-    val pagerState = rememberPagerState(pageCount = { verticalSlides.size })
+    var localSlideIndex by rememberSaveable { mutableIntStateOf(0) }
+    val currentTargetIndex = (selectedSlideIndex ?: localSlideIndex).coerceIn(0, (verticalSlides.size - 1).coerceAtLeast(0))
+    val pagerState = rememberPagerState(initialPage = currentTargetIndex, pageCount = { verticalSlides.size })
+
+    LaunchedEffect(currentTargetIndex, verticalSlides.size) {
+        if (verticalSlides.isNotEmpty() && pagerState.currentPage != currentTargetIndex) {
+            pagerState.scrollToPage(currentTargetIndex)
+        }
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        localSlideIndex = pagerState.currentPage
+        onSlideIndexChange?.invoke(pagerState.currentPage)
+    }
+
     val currentSlide = if (verticalSlides.isNotEmpty()) verticalSlides.getOrNull(pagerState.currentPage) else null
 
     data class ButtonConfig(
@@ -100,7 +113,7 @@ fun JournalItemsPreview(
             onClick = {
                 val idx = verticalSlides.indexOfFirst { it is JournalPreviewItem.Images }
                 if (idx != -1) scope.launch { pagerState.animateScrollToPage(idx) }
-                else mediaOperations.onItemSheetToggle(true)
+                else if (!readOnly) mediaOperations.onItemSheetToggle(true)
             }
         ),
         ButtonConfig(
@@ -112,7 +125,7 @@ fun JournalItemsPreview(
             onClick = {
                 val idx = verticalSlides.indexOfFirst { it is JournalPreviewItem.Song }
                 if (idx != -1) scope.launch { pagerState.animateScrollToPage(idx) }
-                else mediaOperations.onSongSheetToggle(true)
+                else if (!readOnly) mediaOperations.onSongSheetToggle(true)
             }
         ),
         ButtonConfig(
@@ -124,7 +137,7 @@ fun JournalItemsPreview(
             onClick = {
                 val idx = verticalSlides.indexOfFirst { it is JournalPreviewItem.Map }
                 if (idx != -1) scope.launch { pagerState.animateScrollToPage(idx) }
-                else mediaOperations.onLocationDialogToggle(true)
+                else if (!readOnly) mediaOperations.onLocationDialogToggle(true)
             }
         )
     )
@@ -138,7 +151,15 @@ fun JournalItemsPreview(
                     .fillMaxWidth()
                     .height(pagerHeight),
                 pageSpacing = 8.dp,
-                beyondViewportPageCount = 2
+                beyondViewportPageCount = 2,
+                key = { pageIndex ->
+                    when (val slide = verticalSlides.getOrNull(pageIndex)) {
+                        is JournalPreviewItem.Song -> "song_${slide.details.title}_${slide.details.artistName}"
+                        is JournalPreviewItem.Map -> "map_${slide.location.latitude}_${slide.location.longitude}"
+                        is JournalPreviewItem.Images -> "images_${slide.paths.hashCode()}"
+                        null -> pageIndex
+                    }
+                }
             ) { pageIndex ->
                 Box(
                     modifier = Modifier.fillMaxSize()
@@ -154,10 +175,11 @@ fun JournalItemsPreview(
                                 JournalSongItem(
                                     details = slide.details,
                                     isFetching = false,
-                                    onRemove = mediaOperations.onRemoveSong,
-                                    onEditJournal = mediaOperations.onEditJournalSong,
-                                    onOpenLibrary = { mediaOperations.onSongSheetToggle(true) },
-                                    onTrim = mediaOperations.onTrimSong,
+                                    onRemove = if (!readOnly) mediaOperations.onRemoveSong else null,
+                                    onEditJournal = if (!readOnly) mediaOperations.onEditJournalSong else null,
+                                    onOpenLibrary = if (!readOnly) { { mediaOperations.onSongSheetToggle(true) } } else null,
+                                    onTrim = if (!readOnly) mediaOperations.onTrimSong else null,
+                                    theme = theme,
                                     modifier = Modifier.fillMaxSize()
                                 )
                             }
@@ -171,8 +193,8 @@ fun JournalItemsPreview(
                             ) {
                                 JournalMapItem(
                                     location = slide.location,
-                                    onMapClick = { mediaOperations.onLocationDialogToggle(true) },
-                                    onRemove = mediaOperations.onRemoveLocation,
+                                    onMapClick = if (!readOnly) { { mediaOperations.onLocationDialogToggle(true) } } else null,
+                                    onRemove = if (!readOnly) mediaOperations.onRemoveLocation else null,
                                     modifier = Modifier.fillMaxSize()
                                 )
                             }
@@ -182,6 +204,18 @@ fun JournalItemsPreview(
                                 slide.paths.reversed().chunked(3)
                             }
                             val widthFraction = if (chunks.size > 1) 0.95f else 1f
+                            val effectiveOperations = remember(mediaOperations, readOnly) {
+                                if (readOnly) {
+                                    mediaOperations.copy(
+                                        onMediaClick = null,
+                                        onItemSheetToggle = {},
+                                        onRemoveMedia = {},
+                                        onMoveToFront = {}
+                                    )
+                                } else {
+                                    mediaOperations
+                                }
+                            }
 
                             LazyRow(
                                 modifier = Modifier
@@ -201,7 +235,9 @@ fun JournalItemsPreview(
                                         JournalMosaicCard(
                                             modifier = Modifier.fillMaxSize(),
                                             mediaList = chunk,
-                                            operations = mediaOperations,
+                                            operations = effectiveOperations,
+                                            processingMediaPaths = processingMediaPaths,
+                                            enableContextMenu = !readOnly,
                                         )
                                     }
                                 }
@@ -223,38 +259,30 @@ fun JournalItemsPreview(
                     .padding(horizontal = 16.dp),
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-                ) {
-                    buttons.forEachIndexed { index, config ->
-                        val shape = when (index) {
-                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            buttons.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                        }
-
-                        ToggleButton(
-                            checked = config.isSelected,
-                            onCheckedChange = { config.onClick() },
-                            enabled = config.exists,
-                            shapes = shape,
-                            colors = ToggleButtonDefaults.toggleButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                checkedContainerColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                checkedContentColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            ),
-                            contentPadding = PaddingValues(6.dp),
-                            modifier = Modifier.height(32.dp).width(48 .dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(if (config.isSelected) config.filledIconRes else config.iconRes),
-                                contentDescription = config.type,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                    }
+                JuneConnectedButtonGroup(
+                    options = buttons,
+                    selected = { it.isSelected },
+                    onSelect = { it.onClick() },
+                    itemEnabled = { it.exists || !readOnly },
+                    buttonModifier = Modifier
+                        .height(32.dp)
+                        .width(48.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                    colors = ToggleButtonDefaults.toggleButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        checkedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                    )
+                ) { config, isSelected ->
+                    Icon(
+                        painter = painterResource(if (isSelected) config.filledIconRes else config.iconRes),
+                        contentDescription = config.type,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.weight(1f))

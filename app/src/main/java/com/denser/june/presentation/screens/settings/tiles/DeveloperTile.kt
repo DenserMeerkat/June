@@ -69,43 +69,59 @@ fun DeveloperTile() {
             }
             Spacer(modifier = Modifier.height(16.dp))
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 64.dp)
             ) {
                 FilledTonalButton(
                     onClick = { uriHandler.openUri(Constants.DEVELOPER_GITHUB_URL) },
+                    shape = RoundedCornerShape(50),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     colors = ButtonDefaults.filledTonalButtonColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(vertical = 10.dp)
+                    modifier = Modifier.height(36.dp)
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.github),
-                        contentDescription = "GitHub",
-                        modifier = Modifier.size(20.dp)
+                        contentDescription = stringResource(R.string.brand_github),
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.github))
                 }
                 FilledTonalButton(
-                    onClick = { uriHandler.openUri(Constants.DEVELOPER_EMAIL) },
+                    onClick = { uriHandler.openUri(Constants.BUY_ME_A_COFFEE_URL) },
+                    shape = RoundedCornerShape(50),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     colors = ButtonDefaults.filledTonalButtonColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(vertical = 10.dp)
+                    modifier = Modifier.height(36.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.buy_me_a_coffee),
+                        contentDescription = stringResource(R.string.brand_buy_me_a_coffee),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                FilledTonalButton(
+                    onClick = { uriHandler.openUri(Constants.DEVELOPER_EMAIL) },
+                    shape = RoundedCornerShape(50),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    modifier = Modifier.height(36.dp)
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.alternate_email_24px),
-                        contentDescription = "Email",
-                        modifier = Modifier.size(20.dp)
+                        contentDescription = stringResource(R.string.brand_email),
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.email))
                 }
             }
         }

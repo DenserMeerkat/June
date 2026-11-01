@@ -12,7 +12,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.core.utils.LanguageHelper
-import com.denser.june.presentation.screens.settings.components.LanguageBottomSheet
+import com.denser.june.presentation.screens.settings.components.sheets.LanguageBottomSheet
 import com.denser.june.presentation.screens.settings.components.SettingsItem
 
 @Composable

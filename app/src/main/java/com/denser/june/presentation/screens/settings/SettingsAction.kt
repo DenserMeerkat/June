@@ -1,6 +1,7 @@
 package com.denser.june.presentation.screens.settings
 
 import android.net.Uri
+import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.ThemeMode
@@ -19,6 +20,8 @@ sealed interface SettingsAction {
     data class OnPendingFontChange(val fontName: String): SettingsAction
     data class SetFontType(val type: FontType): SettingsAction
     data class OnFontSelect(val fontName: String): SettingsAction
+    data class OnAppFontVariationChange(val variation: FontVariationConfig?): SettingsAction
+    data object OnResetAppFontVariation: SettingsAction
     data object OnResetFonts: SettingsAction
     data object OnDeleteJournals: SettingsAction
     data object ResetBackup: SettingsAction
@@ -31,6 +34,8 @@ sealed interface SettingsAction {
     data class OnAppLockToggle(val enabled: Boolean) : SettingsAction
     data class UpdateLockType(val type: LockType) : SettingsAction
     data class UpdatePinHash(val hash: String?) : SettingsAction
+    data class UpdatePasswordHash(val hash: String?) : SettingsAction
+    data class UpdatePatternHash(val hash: String?) : SettingsAction
     data class UpdateSecurityQuestionAndAnswer(val question: String?, val answerHash: String?) : SettingsAction
     data class OnScreenPrivacyToggle(val enabled: Boolean) : SettingsAction
     data class OnAutoTimeToggle(val enabled: Boolean) : SettingsAction
@@ -43,4 +48,8 @@ sealed interface SettingsAction {
     data class OnKeyboardCapitalizationToggle(val enabled: Boolean) : SettingsAction
     data class OnEditorLayoutDirectionChange(val direction: EditorLayoutDirection) : SettingsAction
     data class OnForceLtrUiToggle(val enabled: Boolean) : SettingsAction
+    data class OnCompressPhotosToggle(val enabled: Boolean) : SettingsAction
+    data class OnPhotoQualityChange(val quality: Int) : SettingsAction
+    data class OnCompressVideosToggle(val enabled: Boolean) : SettingsAction
+    data class OnVideoQualityChange(val quality: Int) : SettingsAction
 }

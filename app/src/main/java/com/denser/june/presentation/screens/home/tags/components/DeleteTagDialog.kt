@@ -61,11 +61,11 @@ fun DeleteTagDialog(
                     contentColor = MaterialTheme.colorScheme.onError
                 )
             ) {
-                Text(stringResource(R.string.delete))
+                Text(stringResource(R.string.action_delete))
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+            OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }

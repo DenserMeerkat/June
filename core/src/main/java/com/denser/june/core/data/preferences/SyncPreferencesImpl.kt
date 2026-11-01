@@ -28,9 +28,11 @@ class SyncPreferencesImpl(
         private val gdMediaFolderId = stringPreferencesKey("gd_media_folder_id")
         private val gdSongMediaFolderId = stringPreferencesKey("gd_song_media_folder_id")
         private val completedDataRepairVersion = intPreferencesKey("completed_data_repair_version")
+        private val lastPurgeTime = longPreferencesKey("last_purge_time")
         private val syncLoggingEnabled = booleanPreferencesKey("sync_logging_enabled")
         private val backupLoggingEnabled = booleanPreferencesKey("backup_logging_enabled")
         private val databaseLoggingEnabled = booleanPreferencesKey("database_logging_enabled")
+        private val billingLoggingEnabled = booleanPreferencesKey("billing_logging_enabled")
         private val developerModeEnabled = booleanPreferencesKey("developer_mode_enabled")
     }
 
@@ -152,6 +154,15 @@ class SyncPreferencesImpl(
         }
     }
 
+    override fun getBillingLoggingEnabled(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[billingLoggingEnabled] ?: false }
+
+    override suspend fun setBillingLoggingEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[billingLoggingEnabled] = enabled
+        }
+    }
+
     override fun isDeveloperModeEnabled(): Flow<Boolean> = dataStore.data
         .map { preferences -> preferences[developerModeEnabled] ?: false }
 
@@ -164,6 +175,11 @@ class SyncPreferencesImpl(
     override fun getLastCompletedDataRepairVersion(): Flow<Int> = dataStore.data.map { it[completedDataRepairVersion] ?: 0 }
     override suspend fun setLastCompletedDataRepairVersion(version: Int) {
         dataStore.edit { it[completedDataRepairVersion] = version }
+    }
+
+    override fun getLastPurgeTime(): Flow<Long> = dataStore.data.map { it[lastPurgeTime] ?: 0L }
+    override suspend fun setLastPurgeTime(time: Long) {
+        dataStore.edit { it[lastPurgeTime] = time }
     }
 
     private fun <T> MutablePreferences.updateOrRemove(key: Preferences.Key<T>, value: T?) {

@@ -1,12 +1,13 @@
-# June
+<picture>
+  <source srcset="fastlane/metadata/android/en-US/images/banner.jpg">
+  <img alt="June: Capture, Express and Own your Memories!" src="fastlane/metadata/android/en-US/images/banner.jpg">
+</picture>
+
+<br>
 
 <p align="center">
-  <img src="fastlane/metadata/android/en-US/images/icon.png" alt="App Icon" width="128"/>
-</p>
-
-<p align="center">
-  <strong>An open-source alternative to Pixel Journal</strong><br>
-  Built with Jetpack Compose and Material Design 3
+  <strong>June is an open-source alternative to Pixel Journal</strong><br>
+  Built with Jetpack Compose and Material 3 Expressive 
 </p>
 
 <p align="center">
@@ -34,110 +35,72 @@
 </p>
 
 <p align="center">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="32%" style="border-radius:12px; margin: 1px;">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="32%" style="border-radius:12px; margin: 1px;">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="32%" style="border-radius:12px; margin: 1px;">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.png" width="32%" style="border-radius:12px; margin: 1px;">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.png" width="32%" style="border-radius:12px; margin: 1px;">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" width="32%" style="border-radius:12px; margin: 1px;">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="24%" style="border-radius:12px;">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="24%" style="border-radius:12px;">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" width="24%" style="border-radius:12px;">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg" width="24%" style="border-radius:12px;">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.jpg" width="24%" style="border-radius:12px;">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.jpg" width="24%" style="border-radius:12px;">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/7.jpg" width="24%" style="border-radius:12px;">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/8.jpg" width="24%" style="border-radius:12px;">
 </p>
 
-## Core Features
+## Features
 
-June is more than just text; it is a multimedia capsule of your life.
-
-### Capture Every Detail
-
-- **Multimedia Capsules:** Go beyond words by attaching **photos**, **videos**, and **precise locations** to any entry.
-- **Smart Organization:** Intelligently categorize your entries using three distinct tag groups: **Spaces**, **People**, and **Topics**.
-- **Soundtrack Support:** Paste a link from any major streaming platform (Spotify, Apple Music, etc.), and June automatically fetches the cover art and song details.
-- **Mood Tracking:** Tag entries with emojis to log your emotional journey and personal growth over time.
-- **Rich Text Editing:** Style your entries with full support for bold, italics, underline, highlight, and **tag autocompletion**.
-
-### Relive Your History
-
-- **Unified Timeline:** Navigate your past through a Month View calendar. See your **media, songs, and locations** all in one place within a seamless flow.
-- **Visual Habits:** Keep your momentum going with calendar **streaks** and writing indicators that visualize your consistency.
-- **Journal Reminders:** Personalized notification manager with flexible timing and frequency to keep your journaling habit on track.
-- **Smart Search & Filtering:** Instantly locate memories by searching through content and dates, or use the advanced filter menu to combine multiple tags (such as `@John` and `#Travel`) to retrieve highly specific entries.
-
-### Secure & Styled
-
-- **Privacy Vault:** Secure your entries with Biometric Unlock or a custom PIN. Includes screen capture and recents menu protection.
-- **Expressive Theming:** Enjoy a personalized look with **Dynamic Wallpaper Colors (Material You)** and custom **Font Selection**.
-- **Total Ownership:** 100% offline architecture with full Backup & Restore capabilities. Your data never leaves your device unless you choose to sync it.
-- **Network Toggle:** Full control over your connectivity. Turn off all external network access if you prefer not to fetch song metadata or use online map services.
-- **Cloud Sync:** Keep your journal in sync across devices using **WebDAV**. Maintain 100% privacy by using your own Nextcloud, ownCloud, or any WebDAV provider.
-
-## Tech Stack
-
-June is built with modern Android development practices, leveraging **Jetpack Compose** and **Kotlin**.
-
-### Architecture & Core
-
-- **Language:** [Kotlin](https://kotlinlang.org/) (100%)
-- **UI Toolkit:** [Jetpack Compose](https://developer.android.com/jetpack/compose) (Material 3)
-- **Architecture:** MVVM (Model-View-ViewModel) with Clean Architecture principles.
-- **Dependency Injection:** [Koin](https://insert-koin.io/)
-- **Navigation:** [Jetpack Navigation Compose](https://developer.android.com/guide/navigation/navigation-compose)
-- **Asynchronous:** Coroutines & Flows
-
-### Data & Networking
-
-- **Local Database:** [Room](https://developer.android.com/training/data-storage/room) (SQLite abstraction)
-- **Preferences:** [Jetpack DataStore](https://developer.android.com/topic/libraries/architecture/datastore)
-- **Networking:** [Retrofit](https://square.github.io/retrofit/) & [OkHttp](https://square.github.io/okhttp/)
-
-### UI & Media
-
-- **Image Loading:** [Coil](https://coil-kt.github.io/coil/)
-- **Video/Audio:** [Media3 (ExoPlayer)](https://developer.android.com/media/media3)
-- **Maps:** Vector-based rendering with custom style providers support (Carto, MapTiler, Mapbox, Stadia, OSM) via [MapLibre](https://maplibre.org/)
-- **Theming:** [MaterialKolor](https://github.com/jordond/MaterialKolor) (Dynamic Material You colors)
-
-## Building Locally
-
-To build June locally:
-1. Clone the repository: `git clone https://github.com/DenserMeerkat/June.git`
-2. Open the project in **Android Studio** (configured with **JDK 17**).
-3. Select the `debug` build variant and run it on your device or emulator.
+- **Multimedia Capsules:** Attach photos, videos, and precise locations, complete with full-screen media viewer, EXIF inspection, and built-in compression.
+- **Smart Organization:** Categorize entries using three distinct tag groups: Spaces, People (`@`), and Topics (`#`).
+- **Soundtracks & Song Library:** Attach streaming music links or import local audio files with built-in waveform scrubbing and trimming.
+- **Variable Typography:** Fine-tune bundled variable fonts (Google Sans Flex, Roboto Flex, Recursive, Shantell Sans) with real-time sliders for weight, optical size, and slant.
+- **Per-Journal Styling:** Customize individual entry cards with bespoke fonts and extract dynamic color palettes directly from attached photos.
+- **Dynamic Map Theming:** Vector map rendering with layer accents that automatically adapt to your Material You theme.
+- **Unified Timeline & Streaks:** Navigate past memories through a month-view calendar with writing indicators and consistency streaks.
+- **Rich Text & Markdown:** Format text with bold, italics, highlights, blockquotes, checklists, and full Markdown import/export.
+- **Mood Tracking:** Log emotional journeys using a built-in searchable emoji picker.
+- **Cloud Sync & Privacy:** 100% offline-first architecture with optional end-to-end sync via WebDAV or Google Drive.
+- **Private Vault & App Lock:** Keep sensitive entries hidden in an isolated vault protected by Biometrics, PIN, Password, or Pattern.
 
 ## Translations
 
-June is localized by community contributors through [Hosted Weblate](https://hosted.weblate.org/engage/june/).
+June is localized by community contributors on [Hosted Weblate](https://hosted.weblate.org/engage/june/). Contributions and language additions are always welcome.
 
 <p align="center">
   <a href="https://hosted.weblate.org/engage/june/">
-    <img src="https://hosted.weblate.org/widgets/june/-/app/multi-auto.svg" alt="Translation status graph" />
+    <img src="https://hosted.weblate.org/widgets/june/-/app/multi-auto.svg" alt="Translation status" />
   </a>
 </p>
-
-### Help Translate June
-You can help translate June into your language or refine existing translations directly from your browser.
 
 <p align="center">
   <a href="https://hosted.weblate.org/engage/june/">
-    <img src="https://hosted.weblate.org/widget/june/287x66-white.png" alt="Contribute on Weblate" />
+    <img src="https://hosted.weblate.org/widget/june/287x66-black.png" alt="Contribute on Weblate" />
   </a>
 </p>
 
+## Credits
 
-## Security & Verifiability
+- Kotlin and Jetpack Compose 🖤
+- [MaterialKolor](https://github.com/jordond/MaterialKolor)
+- [MapLibre SDK](https://maplibre.org/)
+- [Telephoto](https://github.com/saket/telephoto)
+- [Coil](https://coil-kt.github.io/coil/)
+- [Media3 (ExoPlayer)](https://developer.android.com/media/media3)
+- [Wavy Slider](https://github.com/mahozad/wavy-slider)
+- [Koin](https://insert-koin.io/)
+- Maps & Tiles: [OpenStreetMap](https://www.openstreetmap.org/), [OpenFreeMap](https://openfreemap.org/), [CARTO](https://carto.com/), [MapTiler](https://www.maptiler.com/), [Stadia Maps](https://stadiamaps.com/)
+- Fonts: [Google Sans Flex](https://github.com/google/fonts), [Roboto Flex](https://github.com/googlefonts/roboto-flex), [Recursive](https://www.recursive.design/), [Shantell Sans](https://shantellsans.com/)
 
-### Signing Certificate
-SHA-256 fingerprint for the signing certificate used for GitHub releases:
+## Security & Verification
 
-```
-E8:21:01:FC:C2:20:98:61:AF:DF:81:1C:03:12:F6:2A:A5:BA:8B:E3:10:E1:D2:74:C6:91:CE:6E:B5:D1:B7:BB
-```
-
-### Artifact Attestations
-Official APK releases are cryptographically signed to prove they were built unmodified directly from our source code.
-
-* **Via Browser:** Download APKs from [Releases](https://github.com/DenserMeerkat/June/releases) and verify the signed build logs on the [Attestations Dashboard](https://github.com/DenserMeerkat/June/attestations).
-* **Via GitHub CLI (Developers):**
+- **Signing Certificate (GitHub Releases):**
+  ```
+  E8:21:01:FC:C2:20:98:61:AF:DF:81:1C:03:12:F6:2A:A5:BA:8B:E3:10:E1:D2:74:C6:91:CE:6E:B5:D1:B7:BB
+  ```
+- **Artifact Attestations:** Official GitHub releases are cryptographically signed and verifiable via the [Attestations Dashboard](https://github.com/DenserMeerkat/June/attestations) or the GitHub CLI:
   ```bash
-  gh attestation verify name-of-apk.apk --repo DenserMeerkat/June
+  gh attestation verify <apk-filename>.apk --repo DenserMeerkat/June
   ```
 
-[Privacy Policy](https://densermeerkat.github.io/June/PRIVACY)
+---
+
+<p align="center">
+  <a href="https://densermeerkat.github.io/June/PRIVACY">Privacy Policy</a> • <a href="LICENSE">License</a>
+</p>

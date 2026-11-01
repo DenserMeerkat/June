@@ -1,5 +1,9 @@
+@file:Suppress("DEPRECATION")
+
 package com.denser.june.presentation.screens.settings.screens.sync.sections
 
+import com.denser.june.presentation.components.JuneDropdownMenu
+import com.denser.june.presentation.components.JuneDropdownMenuItem
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -246,18 +250,14 @@ fun GoogleDriveConfigSection(
                                      )
                                  }
 
-                                 DropdownMenu(
+                                 JuneDropdownMenu(
                                      expanded = showMenu,
                                      onDismissRequest = { showMenu = false },
-                                     shape = RoundedCornerShape(24.dp),
-                                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                                      tonalElevation = 6.dp,
-                                     modifier = Modifier.padding(horizontal = 8.dp)
                                  ) {
                                      if (folderUrl != null) {
                                          val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-                                         DropdownMenuItem(
-                                             modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                                         JuneDropdownMenuItem(
                                              text = { Text(stringResource(R.string.open_folder), style = MaterialTheme.typography.labelLarge) },
                                              onClick = {
                                                  showMenu = false
@@ -272,8 +272,7 @@ fun GoogleDriveConfigSection(
                                              }
                                          )
                                      }
-                                     DropdownMenuItem(
-                                         modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                                     JuneDropdownMenuItem(
                                          text = { Text(stringResource(R.string.disconnect), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.error) },
                                          onClick = {
                                              showMenu = false

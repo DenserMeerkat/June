@@ -36,16 +36,10 @@ import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.components.JuneBackButton
 import com.denser.june.presentation.screens.editor.EditorAction
 import com.denser.june.presentation.screens.editor.EditorVM
-import com.denser.june.presentation.screens.editor.components.ActiveJournalSongBar
-import com.denser.june.presentation.screens.editor.components.EditSongScope
-import com.denser.june.presentation.screens.editor.components.EditSongView
-import com.denser.june.presentation.screens.editor.components.LibrarySongRow
-import com.denser.june.presentation.screens.editor.components.SongInputCard
-import com.denser.june.presentation.screens.editor.components.TrimmerStepView
-import com.denser.june.presentation.screens.editor.components.UnimportedSongRow
-import com.denser.june.presentation.screens.editor.components.UnimportedSongsHeader
+import com.denser.june.presentation.screens.editor.components.audio.*
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -118,14 +112,14 @@ fun AddSongScreen(
         currentStep = AddSongStep.Library
     }
 
-    BackHandler {
+    BackHandler(enabled = currentStep != AddSongStep.Library) {
         when (currentStep) {
             AddSongStep.Trimmer -> trimmerDismiss()
             AddSongStep.Edit, AddSongStep.EditJournal -> {
                 activeEditingSong = null
                 currentStep = AddSongStep.Library
             }
-            AddSongStep.Library -> onNavigateBack()
+            AddSongStep.Library -> Unit
         }
     }
 
@@ -162,7 +156,7 @@ fun AddSongScreen(
                     )
                 },
                 navigationIcon = {
-                    FilledIconButton(
+                    JuneBackButton(
                         onClick = {
                             when (currentStep) {
                                 AddSongStep.Trimmer -> trimmerDismiss()
@@ -172,23 +166,13 @@ fun AddSongScreen(
                                 }
                                 AddSongStep.Library -> onNavigateBack()
                             }
-                        },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        )
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back"
-                        )
-                    }
+                        }
+                    )
                 },
                 actions = {
                     when (currentStep) {
                         AddSongStep.Library -> {
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 FilledTonalIconButton(
@@ -248,7 +232,7 @@ fun AddSongScreen(
                     JuneFloatingActionBar {
                         JuneFloatingAction(
                             onClick = { trimmerDismiss() },
-                            label = "Cancel",
+                            label = stringResource(R.string.action_cancel),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.close_24px),
@@ -260,7 +244,7 @@ fun AddSongScreen(
                         )
                         JuneFloatingAction(
                             onClick = { pendingTrimmerSave?.invoke() },
-                            label = "Done",
+                            label = stringResource(R.string.action_done),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.check_24px),
@@ -280,7 +264,7 @@ fun AddSongScreen(
                                 activeEditingSong = null
                                 currentStep = AddSongStep.Library
                             },
-                            label = "Cancel",
+                            label = stringResource(R.string.action_cancel),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.close_24px),
@@ -306,7 +290,7 @@ fun AddSongScreen(
                                 activeEditingSong = null
                                 currentStep = AddSongStep.Library
                             },
-                            label = "Save",
+                            label = stringResource(R.string.action_save),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.check_24px),
@@ -324,7 +308,7 @@ fun AddSongScreen(
                                 activeEditingSong = null
                                 currentStep = AddSongStep.Library
                             },
-                            label = "Cancel",
+                            label = stringResource(R.string.action_cancel),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.close_24px),
@@ -350,7 +334,7 @@ fun AddSongScreen(
                                 activeEditingSong = null
                                 currentStep = AddSongStep.Library
                             },
-                            label = "Save",
+                            label = stringResource(R.string.action_save),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.check_24px),
@@ -380,8 +364,9 @@ fun AddSongScreen(
                         currentStep = AddSongStep.EditJournal
                     },
                     onTrim = {
-                        activeTrimmerSong = attachedSong
-                        viewModel.onAction(EditorAction.OpenClipTrimmer(attachedSong))
+                        val songToTrim = state.songDetails ?: attachedSong
+                        activeTrimmerSong = songToTrim
+                        viewModel.onAction(EditorAction.OpenClipTrimmer(songToTrim))
                         currentStep = AddSongStep.Trimmer
                     },
                     onRemove = { viewModel.onAction(EditorAction.RemoveSong) }
@@ -405,12 +390,12 @@ fun AddSongScreen(
                             currentStep = AddSongStep.Library
                         }
                     ) {
-                        Text("Remove")
+                        Text(stringResource(R.string.action_remove))
                     }
                 },
                 dismissButton = {
                     OutlinedButton(onClick = { showDeleteConfirm = false }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.action_cancel))
                     }
                 }
             )
@@ -475,8 +460,9 @@ fun AddSongScreen(
                                         song = song,
                                         isCurrentlyAttached = isCurrentlyAttached,
                                         onClick = {
-                                            activeTrimmerSong = song
-                                            viewModel.onAction(EditorAction.OpenClipTrimmer(song))
+                                            val songToTrim = if (isCurrentlyAttached) state.songDetails ?: song else song
+                                            activeTrimmerSong = songToTrim
+                                            viewModel.onAction(EditorAction.OpenClipTrimmer(songToTrim))
                                             currentStep = AddSongStep.Trimmer
                                         },
                                         onEdit = {
@@ -565,14 +551,16 @@ fun AddSongScreen(
 
             AddSongStep.Trimmer -> {
                 activeTrimmerSong?.let { song ->
-                    TrimmerStepView(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        songDetails = song,
-                        onBindSaveAction = { pendingTrimmerSave = it },
-                        onSaveClip = trimmerSaveClip
-                    )
+                    key(song.title, song.artistName, song.clipStartMs, song.clipEndMs, song.localPreviewPath) {
+                        TrimmerStepView(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues),
+                            songDetails = song,
+                            onBindSaveAction = { pendingTrimmerSave = it },
+                            onSaveClip = trimmerSaveClip
+                        )
+                    }
                 }
             }
 

@@ -109,7 +109,7 @@ fun SyncDetailsDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     OutlinedButton(onClick = onDismiss) {
-                        Text(stringResource(R.string.close))
+                        Text(stringResource(R.string.action_close))
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Button(onClick = onDismiss) {

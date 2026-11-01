@@ -1,4 +1,6 @@
 package com.denser.june.presentation.screens.settings.screens.trash
+import com.denser.june.presentation.components.JuneBackButton
+import com.denser.june.presentation.components.JuneMoreOptionsButton
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -17,15 +20,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.TimeFormat
+import com.denser.june.core.utils.toLocalDate
 import com.denser.june.presentation.components.JuneAppBarType
+import com.denser.june.presentation.components.JuneDropdownMenu
+import com.denser.june.presentation.components.JuneDropdownMenuItem
 import com.denser.june.presentation.components.JunePlaceholderPage
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
-import com.denser.june.presentation.screens.home.components.JournalCard
-import com.denser.june.presentation.screens.home.components.RecentJournalCard
+import com.denser.june.presentation.components.journal.JournalCard
+import com.denser.june.presentation.components.journal.HighlightJournalCard
 import com.denser.june.presentation.components.JuneConfirmationDialog
-import com.denser.june.presentation.screens.home.components.JournalOptionsSheet
-import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
+import com.denser.june.presentation.components.journal.DayJournalGroupData
+import com.denser.june.presentation.components.journal.ExportJournalSheet
+import com.denser.june.presentation.screens.home.components.DayJournalGroup
+import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -40,11 +48,16 @@ fun BinScreen() {
     val isSyncEnabled by binVM.isSyncEnabled.collectAsStateWithLifecycle()
     val navigator = koinInject<AppNavigator>()
 
+    val dayGroups = remember(deletedJournals) {
+        deletedJournals
+            .groupBy { it.dateTime.toLocalDate() }
+            .map { (date, journalsOnDay) -> DayJournalGroupData(date, journalsOnDay) }
+    }
+
     var showMenu by remember { mutableStateOf(false) }
     var showEmptyBinDialog by remember { mutableStateOf(false) }
     var showRestoreAllDialog by remember { mutableStateOf(false) }
-    var showPermanentDeleteConfirmation by remember { mutableStateOf(false) }
-    var journalToDeletePermanently by remember { mutableStateOf<Journal?>(null) }
+    var journalToExport by remember { mutableStateOf<Journal?>(null) }
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
     val optionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -58,50 +71,30 @@ fun BinScreen() {
     }
 
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             JuneTopAppBar(
                 type = JuneAppBarType.CenterAligned,
+                scrollBehavior = scrollBehavior,
                 title = { Text(stringResource(R.string.bin), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Icon(
-                            painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back)
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 },
                 actions = {
                     if (deletedJournals.isNotEmpty()) {
                         Box {
-                            IconButton(
-                                onClick = { showMenu = true },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            ) {
-                                Icon(
-                                    painterResource(R.drawable.more_vert_24px),
-                                    contentDescription = stringResource(R.string.options)
-                                )
-                            }
-                            DropdownMenu(
+                            JuneMoreOptionsButton(
+                                onClick = { showMenu = true }
+                            )
+                            JuneDropdownMenu(
                                 expanded = showMenu,
                                 onDismissRequest = { showMenu = false },
-                                shape = RoundedCornerShape(24.dp),
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                tonalElevation = 3.dp,
-                                modifier = Modifier.padding(horizontal = 8.dp),
                                 offset = DpOffset(x = 0.dp, y = 4.dp)
                             ) {
-                                DropdownMenuItem(
-                                    modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                                JuneDropdownMenuItem(
                                     text = { Text(stringResource(R.string.restore_all)) },
                                     onClick = {
                                         showMenu = false
@@ -114,8 +107,7 @@ fun BinScreen() {
                                         )
                                     }
                                 )
-                                DropdownMenuItem(
-                                    modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                                JuneDropdownMenuItem(
                                     text = {
                                         Text(
                                             stringResource(R.string.empty_bin),
@@ -172,23 +164,33 @@ fun BinScreen() {
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
-                    items(deletedJournals, key = { it.id }) { journal ->
-                        if (journal.images.isNotEmpty()) {
-                            RecentJournalCard(
-                                journal = journal,
-                                modifier = Modifier,
-                                actionIcon = R.drawable.restore_from_trash_24px,
-                                onActionClick = { binVM.restoreJournal(journal.id) },
-                                onLongClick = { selectedJournalForOptions = journal }
-                            )
+                    dayGroups.forEach { dayGroup ->
+                        if (dayGroup.journals.size > 1) {
+                            item(key = "day_group_${dayGroup.date}") {
+                                DayJournalGroup(
+                                    date = dayGroup.date,
+                                    journals = dayGroup.journals,
+                                    is24Hour = is24Hour,
+                                    allowMediaHighlight = true,
+                                    actionIcon = R.drawable.restore_from_trash_24px,
+                                    onActionClick = { journal -> binVM.restoreJournal(journal.id) },
+                                    onJournalClick = null,
+                                    onLongClick = { journal -> selectedJournalForOptions = journal },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
                         } else {
-                            JournalCard(
-                                journal = journal,
-                                modifier = Modifier,
-                                actionIcon = R.drawable.restore_from_trash_24px,
-                                onActionClick = { binVM.restoreJournal(journal.id) },
-                                onLongClick = { selectedJournalForOptions = journal }
-                            )
+                            val singleJournal = dayGroup.journals.first()
+                            item(key = "single_journal_${singleJournal.id}") {
+                                HighlightJournalCard(
+                                    journal = singleJournal,
+                                    is24Hour = is24Hour,
+                                    actionIcon = R.drawable.restore_from_trash_24px,
+                                    onActionClick = { binVM.restoreJournal(singleJournal.id) },
+                                    onLongClick = { selectedJournalForOptions = singleJournal },
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
                         }
                     }
                 }
@@ -205,7 +207,7 @@ fun BinScreen() {
                 } else {
                     stringResource(R.string.empty_bin_local_desc)
                 },
-                confirmText = stringResource(R.string.delete),
+                confirmText = stringResource(R.string.action_delete),
                 confirmButtonText = stringResource(R.string.permanently_delete_all),
                 isDestructive = true,
                 icon = R.drawable.delete_24px
@@ -225,6 +227,11 @@ fun BinScreen() {
             )
         }
 
+        ExportJournalSheet(
+            journal = journalToExport,
+            onDismiss = { journalToExport = null }
+        )
+
         val currentJournalForOptions = remember(selectedJournalForOptions, deletedJournals) {
             val id = selectedJournalForOptions?.id ?: return@remember null
             deletedJournals.find { it.id == id }
@@ -239,36 +246,20 @@ fun BinScreen() {
                 JournalOptionsSheet(
                     journal = currentJournalForOptions,
                     is24Hour = is24Hour,
-                    onToggleBookmark = { dismissOptionsSheet { binVM.toggleBookmark(currentJournalForOptions.id) } },
-                    onDeleteOrRestore = { dismissOptionsSheet { binVM.restoreJournal(currentJournalForOptions.id) } },
+                    onDismiss = { selectedJournalForOptions = null },
+                    onToggleBookmark = { binVM.toggleBookmark(currentJournalForOptions.id) },
+                    onExportMarkdown = {
+                        journalToExport = currentJournalForOptions
+                        selectedJournalForOptions = null
+                    },
+                    onDeleteOrRestore = {
+                        binVM.restoreJournal(currentJournalForOptions.id)
+                    },
                     onPermanentDelete = {
-                        dismissOptionsSheet {
-                            journalToDeletePermanently = currentJournalForOptions
-                            showPermanentDeleteConfirmation = true
-                        }
+                        binVM.deletePermanently(currentJournalForOptions.id)
                     }
                 )
             }
-        }
-
-        if (showPermanentDeleteConfirmation && journalToDeletePermanently != null) {
-            DeleteConfirmationSheet(
-                onDismissRequest = {
-                    showPermanentDeleteConfirmation = false
-                    journalToDeletePermanently = null
-                },
-                onConfirm = {
-                    binVM.deletePermanently(journalToDeletePermanently!!.id)
-                    showPermanentDeleteConfirmation = false
-                    journalToDeletePermanently = null
-                },
-                message = if (isSyncEnabled) {
-                    stringResource(R.string.delete_journal_sync_desc)
-                } else {
-                    stringResource(R.string.delete_journal_local_desc)
-                },
-                confirmText = stringResource(R.string.permanently_delete)
-            )
         }
 
     }

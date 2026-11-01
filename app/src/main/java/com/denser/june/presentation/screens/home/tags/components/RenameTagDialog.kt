@@ -89,7 +89,7 @@ fun RenameTagDialog(
                         trailingIcon = {
                             if (newName.isNotEmpty()) {
                                 IconButton(onClick = { newName = "" }) {
-                                    Icon(painterResource(R.drawable.close_24px), stringResource(R.string.clear))
+                                    Icon(painterResource(R.drawable.close_24px), stringResource(R.string.action_clear))
                                 }
                             }
                         }
@@ -126,11 +126,11 @@ fun RenameTagDialog(
                     contentColor = MaterialTheme.colorScheme.onSecondary
                 ) else ButtonDefaults.buttonColors()
             ) {
-                Text(if (isConflict) stringResource(R.string.merge_and_save) else stringResource(R.string.save))
+                Text(if (isConflict) stringResource(R.string.merge_and_save) else stringResource(R.string.action_save))
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+            OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }

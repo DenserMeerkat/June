@@ -3,11 +3,18 @@ package com.denser.june.presentation.components
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.denser.june.core.R
 
 enum class JuneAppBarType {
     Small,
@@ -81,5 +88,75 @@ fun JuneTopAppBar(
                 modifier = modifier
             )
         }
+    }
+}
+
+@Composable
+fun JuneBackButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    colors: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+    ),
+    contentDescription: String = stringResource(R.string.action_back)
+) {
+    FilledIconButton(
+        onClick = onClick,
+        colors = colors,
+        modifier = modifier
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.arrow_back_24px),
+            contentDescription = contentDescription
+        )
+    }
+}
+
+@Composable
+fun JuneCloseButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    colors: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+    ),
+    contentDescription: String = stringResource(R.string.action_close)
+) {
+    FilledIconButton(
+        onClick = onClick,
+        colors = colors,
+        modifier = modifier
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.close_24px),
+            contentDescription = contentDescription
+        )
+    }
+}
+
+@Composable
+fun JuneMoreOptionsButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    colors: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+    ),
+    contentDescription: String = stringResource(R.string.options)
+) {
+    FilledIconButton(
+        onClick = onClick,
+        shape = RoundedCornerShape(percent = 50),
+        colors = colors,
+        modifier = modifier
+            .width(32.dp)
+            .height(40.dp)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.more_vert_24px),
+            contentDescription = contentDescription,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }

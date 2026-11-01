@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.screens.home.components.HomeBottomBar
@@ -61,14 +60,14 @@ fun HomeScreen() {
         koinViewModel()
     }
     val appState by mainVM.state.collectAsStateWithLifecycle()
-    val journalPrefs = koinInject<JournalPreferences>()
+    val journalPrefs = koinInject<com.denser.june.core.domain.preferences.JournalPreferences>()
     val isAutoTimeEnabled by journalPrefs.isAutoTimeEnabled().collectAsStateWithLifecycle(initialValue = false)
-    
     val pagerState = rememberPagerState(pageCount = { HomeTab.entries.size })
     val scope = rememberCoroutineScope()
 
     val tagsVM: TagsVM = koinViewModel()
     val activeTag by tagsVM.selectedPrimaryTag.collectAsStateWithLifecycle()
+    val selectedCategory by tagsVM.selectedCategory.collectAsStateWithLifecycle()
 
     val journalsVM: JournalsVM = koinViewModel()
     val searchQuery by journalsVM.searchQuery.collectAsStateWithLifecycle()
@@ -88,7 +87,7 @@ fun HomeScreen() {
         isSearchActive = false
         keyboardController?.hide()
         focusManager.clearFocus(force = true)
-        journalsVM.clearSearch()
+        journalsVM.resetAllFilters()
     }
 
     BackHandler(enabled = !isSearchActive && pagerState.currentPage != 0) {
@@ -122,7 +121,7 @@ fun HomeScreen() {
                                         IconButton(onClick = { journalsVM.clearSearch() }) {
                                             Icon(
                                                 painterResource(R.drawable.close_24px),
-                                                contentDescription = stringResource(R.string.clear)
+                                                contentDescription = stringResource(R.string.action_clear)
                                             )
                                         }
                                     }
@@ -130,7 +129,7 @@ fun HomeScreen() {
                             )
                         } else {
                             Text(
-                                text = stringResource(R.string.app_name),
+                                text = stringResource(R.string.brand_app_name),
                                 fontWeight = FontWeight.Bold,
                             )
                         }
@@ -142,7 +141,7 @@ fun HomeScreen() {
                                     isSearchActive = false
                                     keyboardController?.hide()
                                     focusManager.clearFocus(force = true)
-                                    journalsVM.clearSearch()
+                                    journalsVM.resetAllFilters()
                                 } else {
                                     scope.launch {
                                         if (pagerState.currentPage != 0) {
@@ -162,7 +161,7 @@ fun HomeScreen() {
                                     if (isSearchActive) R.drawable.arrow_back_24px else R.drawable.search_24px
                                 ),
                                 contentDescription = stringResource(
-                                    if (isSearchActive) R.string.back else R.string.search
+                                    if (isSearchActive) R.string.action_back else R.string.search
                                 )
                             )
                         }
@@ -172,12 +171,12 @@ fun HomeScreen() {
                             if (appState.isSyncEnabled && appState.isInternetAllowed) {
                                 SyncIndicator(
                                     status = appState.syncStatus,
-                                    onClick = { navigator.navigateTo(Route.SyncSettings) }
+                                    onClick = { navigator.navigateTo(Route.SyncSettings, isSingleTop = true) }
                                 )
                             }
                             Spacer(Modifier.width(4.dp))
                             FilledIconButton(
-                                onClick = { navigator.navigateTo(Route.Settings) },
+                                onClick = { navigator.navigateTo(Route.Settings, isSingleTop = true) },
                                 colors = IconButtonDefaults.filledIconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
@@ -185,7 +184,7 @@ fun HomeScreen() {
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.settings_24px),
-                                    contentDescription = stringResource(R.string.settings)
+                                    contentDescription = stringResource(R.string.label_settings)
                                 )
                             }
                         }
@@ -218,10 +217,11 @@ fun HomeScreen() {
         ) {
             HomeBottomBar(
                 pagerState = pagerState,
+                selectedCategory = selectedCategory,
+                activeTag = activeTag,
                 onFabClick = {
-                    val currentTab = HomeTab.entries[pagerState.currentPage]
                     handleFabClick(
-                        currentTab = currentTab,
+                        currentTab = HomeTab.entries[pagerState.currentPage],
                         activeTag = activeTag,
                         isAutoTimeEnabled = isAutoTimeEnabled,
                         navigator = navigator

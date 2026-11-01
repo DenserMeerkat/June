@@ -47,23 +47,19 @@ fun ListenDropdownMenu(
     Box {
         trigger()
 
-        DropdownMenu(
-            modifier = Modifier.padding(horizontal = 8.dp),
+        JuneDropdownMenu(
             expanded = expanded,
             onDismissRequest = onDismissRequest,
-            shape = RoundedCornerShape(24.dp),
             offset = DpOffset(x = 0.dp, y = 4.dp),
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ) {
             if (availableLinks.isEmpty()) {
-                DropdownMenuItem(
+                JuneDropdownMenuItem(
                     text = { Text(stringResource(R.string.no_links_available)) },
                     onClick = onDismissRequest
                 )
             } else {
                 availableLinks.forEach { (platform, url) ->
-                    DropdownMenuItem(
-                        modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                    JuneDropdownMenuItem(
                         text = {
                             Text(
                                 text = platform,

@@ -10,6 +10,7 @@ import com.denser.june.core.domain.preferences.FontPreferences
 import com.denser.june.core.domain.backup.ExportRepo
 import com.denser.june.core.domain.backup.MarkdownImportRepo
 import com.denser.june.core.domain.backup.RestoreRepo
+import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.presentation.utils.AsyncOp
 import com.denser.june.presentation.utils.toAsyncOp
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.denser.june.core.domain.billing.BillingHandler
 
 class SettingsVM(
     private val repo: JournalRepository,
@@ -37,7 +39,8 @@ class SettingsVM(
     private val fontPrefs: FontPreferences,
     private val exportRepo: ExportRepo,
     private val restoreRepo: RestoreRepo,
-    private val markdownImportRepo: MarkdownImportRepo
+    private val markdownImportRepo: MarkdownImportRepo,
+    private val billingHandler: BillingHandler
 ) : ViewModel() {
 
     private val _localState = MutableStateFlow(SettingsState())
@@ -58,6 +61,7 @@ class SettingsVM(
             journalPrefs.startOfWeek(),
             journalPrefs.timeFormat(),
             fontPrefs.getAppFont(),
+            fontPrefs.getAppFontVariation(),
             privacyPrefs.getIsInternetAllowedFlow(),
             journalPrefs.mapTheme(),
             journalPrefs.isMarkdownEnabled(),
@@ -67,7 +71,14 @@ class SettingsVM(
             journalPrefs.isKeyboardAutocorrectEnabled(),
             journalPrefs.isKeyboardCapitalizationEnabled(),
             journalPrefs.editorLayoutDirection(),
-            journalPrefs.isForceLtrUiEnabled()
+            journalPrefs.isForceLtrUiEnabled(),
+            journalPrefs.isCompressPhotosEnabled(),
+            journalPrefs.getPhotoCompressionQuality(),
+            journalPrefs.isCompressVideosEnabled(),
+            journalPrefs.getVideoCompressionQuality(),
+            privacyPrefs.getPasswordHashFlow(),
+            privacyPrefs.getPatternHashFlow(),
+            billingHandler.isPlus
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -76,20 +87,27 @@ class SettingsVM(
             isAppLockEnabled = array[6] as Boolean,
             lockType = array[7] as LockType,
             pinHash = array[8] as String?,
+            passwordHash = array[29] as String?,
+            patternHash = array[30] as String?,
+            isPlus = array[31] as Boolean,
             isScreenPrivacyEnabled = array[9] as Boolean,
             isAutoTimeEnabled = array[10] as Boolean,
             startOfWeek = array[11] as DayOfWeek,
             timeFormat = array[12] as TimeFormat,
-            isInternetAllowed = array[14] as Boolean,
-            mapTheme = array[15] as MapTheme,
-            isMarkdownEnabled = array[16] as Boolean,
-            securityQuestion = array[17] as String?,
-            securityAnswerHash = array[18] as String?,
-            alwaysOpenNewNote = array[19] as Boolean,
-            isKeyboardAutocorrectEnabled = array[20] as Boolean,
-            isKeyboardCapitalizationEnabled = array[21] as Boolean,
-            editorLayoutDirection = array[22] as EditorLayoutDirection,
-            isForceLtrUi = array[23] as Boolean,
+            isInternetAllowed = array[15] as Boolean,
+            mapTheme = array[16] as MapTheme,
+            isMarkdownEnabled = array[17] as Boolean,
+            securityQuestion = array[18] as String?,
+            securityAnswerHash = array[19] as String?,
+            alwaysOpenNewNote = array[20] as Boolean,
+            isKeyboardAutocorrectEnabled = array[21] as Boolean,
+            isKeyboardCapitalizationEnabled = array[22] as Boolean,
+            editorLayoutDirection = array[23] as EditorLayoutDirection,
+            isForceLtrUi = array[24] as Boolean,
+            isCompressPhotosEnabled = array[25] as Boolean,
+            photoCompressionQuality = array[26] as Int,
+            isCompressVideosEnabled = array[27] as Boolean,
+            videoCompressionQuality = array[28] as Int,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -98,6 +116,7 @@ class SettingsVM(
                 style = array[4] as PaletteStyle,
                 materialTheme = array[5] as Boolean,
                 appFont = array[13] as String,
+                appFontVariation = array[14] as? FontVariationConfig,
             )
         )
     }.stateIn(
@@ -164,15 +183,26 @@ class SettingsVM(
                         FontType.APP -> fontPrefs.updateAppFont(action.fontName)
                     }
                 }
+                is SettingsAction.OnAppFontVariationChange -> {
+                    fontPrefs.updateAppFontVariation(action.variation)
+                }
+                SettingsAction.OnResetAppFontVariation -> {
+                    fontPrefs.updateAppFontVariation(FontVariationConfig.DEFAULT)
+                }
                 SettingsAction.OnResetFonts -> {
                     when (_localState.value.selectedFontType) {
-                        FontType.APP -> fontPrefs.updateAppFont("Google Sans Flex")
+                        FontType.APP -> {
+                            fontPrefs.updateAppFont("Google Sans Flex")
+                            fontPrefs.updateAppFontVariation(FontVariationConfig.DEFAULT)
+                        }
                     }
                 }
                 is SettingsAction.OnMaterialThemeToggle -> themePrefs.updateMaterialTheme(action.pref)
                 is SettingsAction.OnAppLockToggle -> privacyPrefs.updateAppLock(action.enabled)
                 is SettingsAction.UpdateLockType -> privacyPrefs.updateLockType(action.type)
                 is SettingsAction.UpdatePinHash -> privacyPrefs.updatePinHash(action.hash)
+                is SettingsAction.UpdatePasswordHash -> privacyPrefs.updatePasswordHash(action.hash)
+                is SettingsAction.UpdatePatternHash -> privacyPrefs.updatePatternHash(action.hash)
                 is SettingsAction.UpdateSecurityQuestionAndAnswer -> privacyPrefs.updateSecurityQuestionAndAnswer(action.question, action.answerHash)
                 is SettingsAction.OnScreenPrivacyToggle -> privacyPrefs.updateScreenPrivacy(action.enabled)
                 is SettingsAction.OnAutoTimeToggle -> journalPrefs.setAutoTimeEnabled(action.enabled)
@@ -185,6 +215,10 @@ class SettingsVM(
                 is SettingsAction.OnKeyboardCapitalizationToggle -> journalPrefs.setKeyboardCapitalizationEnabled(action.enabled)
                 is SettingsAction.OnEditorLayoutDirectionChange -> journalPrefs.setEditorLayoutDirection(action.direction)
                 is SettingsAction.OnForceLtrUiToggle -> journalPrefs.setForceLtrUiEnabled(action.enabled)
+                is SettingsAction.OnCompressPhotosToggle -> journalPrefs.setCompressPhotosEnabled(action.enabled)
+                is SettingsAction.OnPhotoQualityChange -> journalPrefs.setPhotoCompressionQuality(action.quality)
+                is SettingsAction.OnCompressVideosToggle -> journalPrefs.setCompressVideosEnabled(action.enabled)
+                is SettingsAction.OnVideoQualityChange -> journalPrefs.setVideoCompressionQuality(action.quality)
             }
         }
     }

@@ -145,4 +145,16 @@ class SyncDownloadConflictTest : BaseSyncTest() {
         assertEquals("Local My Draft (Conflict Copy)", conflictCopy?.title)
         assertEquals("My Local Edits", conflictCopy?.content)
     }
+
+    @Test
+    fun `downloading journal from cloud preserves its tags`() = runTest {
+        harness.givenCloudOnlyJournal("j_cloud_tags", tags = listOf("ideas", "draft"), modifiedAt = T1)
+
+        val result = harness.sync()
+
+        assertTrue(result.isSuccess)
+        val local = harness.repo.db["j_cloud_tags"]
+        assertNotNull(local)
+        assertEquals(listOf("ideas", "draft"), local?.tags)
+    }
 }

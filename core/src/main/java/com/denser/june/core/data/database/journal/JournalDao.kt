@@ -16,16 +16,19 @@ interface JournalDao {
     @Update
     suspend fun updateJournal(journal: JournalEntity)
 
+    @Update
+    suspend fun updateJournals(journals: List<JournalEntity>)
+
     @Query("DELETE FROM journals WHERE id = :id")
     suspend fun deleteJournal(id: String)
 
     @Query("DELETE FROM journals")
     suspend fun deleteAllJournals()
 
-    @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC, createdAt DESC")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NULL AND isLocked = 0 ORDER BY dateTime DESC, createdAt DESC")
     fun getAllJournals(): Flow<List<JournalEntity>>
 
-    @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC, createdAt DESC")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NULL AND isLocked = 0 ORDER BY dateTime DESC, createdAt DESC")
     suspend fun getAllJournalsSync(): List<JournalEntity>
 
     @Query("SELECT * FROM journals ORDER BY dateTime DESC, createdAt DESC")
@@ -37,10 +40,10 @@ interface JournalDao {
     @Query("SELECT * FROM journals WHERE deletedAt IS NULL ORDER BY dateTime DESC, createdAt DESC LIMIT 1")
     suspend fun getLatestJournal(): JournalEntity?
 
-    @Query("SELECT * FROM journals WHERE deletedAt IS NULL AND title LIKE '%' || :query || '%' ")
+    @Query("SELECT * FROM journals WHERE deletedAt IS NULL AND isLocked = 0 AND title LIKE '%' || :query || '%' ")
     fun searchJournal(query: String): Flow<List<JournalEntity>>
 
-    @Query(""" SELECT * FROM journals WHERE deletedAt IS NULL AND dateTime >= :startDate AND dateTime <= :endDate ORDER BY dateTime DESC, createdAt DESC """)
+    @Query(""" SELECT * FROM journals WHERE deletedAt IS NULL AND isLocked = 0 AND dateTime >= :startDate AND dateTime <= :endDate ORDER BY dateTime DESC, createdAt DESC """)
     fun getJournalsByDateRange(startDate: Long, endDate: Long): Flow<List<JournalEntity>>
 
     @Query("""
@@ -82,6 +85,7 @@ interface JournalDao {
         
         AND (:hasSong IS NULL OR (:hasSong = 1 AND songDetails IS NOT NULL) OR (:hasSong = 0 AND songDetails IS NULL))
         AND deletedAt IS NULL
+        AND isLocked = 0
         ORDER BY dateTime DESC, createdAt DESC
     """)
     fun getJournals(
@@ -97,7 +101,7 @@ interface JournalDao {
     @Query("""
         SELECT j.* FROM journals j
         INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
-        WHERE ref.tagName = :tagName AND j.deletedAt IS NULL
+        WHERE ref.tagName = :tagName AND j.deletedAt IS NULL AND j.isLocked = 0
         ORDER BY j.dateTime DESC, j.createdAt DESC
     """)
     fun getJournalsByTagName(tagName: String): Flow<List<JournalEntity>>
@@ -106,18 +110,24 @@ interface JournalDao {
     @Query("""
         SELECT j.* FROM journals j
         INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
-        WHERE ref.tagName = :tagName AND j.deletedAt IS NULL
+        WHERE ref.tagName = :tagName AND j.deletedAt IS NULL AND j.isLocked = 0
     """)
     suspend fun getJournalsByTagNameSync(tagName: String): List<JournalEntity>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertTags(tags: List<TagEntity>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTag(tag: TagEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertJournalTagCrossRef(crossRef: JournalTagCrossRef)
+    suspend fun insertJournalTagCrossRefs(crossRefs: List<JournalTagCrossRef>)
 
     @Query("DELETE FROM journal_tag_cross_ref WHERE id = :journalId")
     suspend fun deleteTagsForJournal(journalId: String)
+
+    @Query("DELETE FROM journal_tag_cross_ref WHERE id NOT IN (SELECT id FROM journals)")
+    suspend fun deleteOrphanedCrossRefs()
 
     @Query("DELETE FROM journal_tag_cross_ref")
     suspend fun deleteAllCrossRefs()
@@ -133,7 +143,7 @@ interface JournalDao {
         FROM tags t
         INNER JOIN journal_tag_cross_ref ref ON t.name = ref.tagName
         INNER JOIN journals j ON ref.id = j.id
-        WHERE t.name LIKE :query || '%' AND j.deletedAt IS NULL
+        WHERE t.name LIKE :query || '%' AND j.deletedAt IS NULL AND j.isLocked = 0
         GROUP BY t.name
         ORDER BY MAX(j.dateTime) DESC, MAX(j.createdAt) DESC, t.name ASC
     """)
@@ -144,7 +154,7 @@ interface JournalDao {
         FROM tags t
         INNER JOIN journal_tag_cross_ref ref ON t.name = ref.tagName
         INNER JOIN journals j ON ref.id = j.id
-        WHERE j.deletedAt IS NULL
+        WHERE j.deletedAt IS NULL AND j.isLocked = 0
         GROUP BY t.name
         ORDER BY MAX(j.dateTime) DESC, MAX(j.createdAt) DESC, t.name ASC
     """)
@@ -155,7 +165,7 @@ interface JournalDao {
         FROM tags t
         INNER JOIN journal_tag_cross_ref ref ON t.name = ref.tagName
         INNER JOIN journals j ON ref.id = j.id
-        WHERE j.deletedAt IS NULL
+        WHERE j.deletedAt IS NULL AND j.isLocked = 0
         GROUP BY t.name
     """)
     fun getAllTagCounts(): Flow<List<TagCount>>
@@ -163,15 +173,38 @@ interface JournalDao {
     @Query("""
         SELECT j.* FROM journals j
         INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
-        WHERE ref.tagName IN (:tags) AND j.deletedAt IS NULL
+        WHERE ref.tagName IN (:tags) AND j.deletedAt IS NULL AND j.isLocked = 0
         GROUP BY j.id
         HAVING COUNT(DISTINCT ref.tagName) = :tagCount
         ORDER BY j.dateTime DESC, j.createdAt DESC
     """)
     fun getJournalsWithAllTags(tags: List<String>, tagCount: Int): Flow<List<JournalEntity>>
 
+    @Query("SELECT * FROM journals WHERE deletedAt IS NULL AND isLocked = 1 ORDER BY dateTime DESC, createdAt DESC")
+    fun getLockedJournals(): Flow<List<JournalEntity>>
+
+    @Query("SELECT COUNT(*) FROM journals WHERE deletedAt IS NULL AND isLocked = 1")
+    fun getLockedJournalsCount(): Flow<Int>
+
     @Query("UPDATE tags SET name = :newName WHERE name = :oldName")
     suspend fun updateTagName(oldName: String, newName: String)
+
+    @Transaction
+    @Query("""
+        SELECT j.* FROM journals j
+        INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
+        WHERE ref.tagName = :tagName
+    """)
+    suspend fun getAllJournalsByTagNameSync(tagName: String): List<JournalEntity>
+
+    @Query("""
+        INSERT OR IGNORE INTO journal_tag_cross_ref (id, tagName)
+        SELECT id, :newName FROM journal_tag_cross_ref WHERE tagName = :oldName
+    """)
+    suspend fun copyTagCrossRefs(oldName: String, newName: String)
+
+    @Query("DELETE FROM journal_tag_cross_ref WHERE tagName = :tagName")
+    suspend fun deleteTagCrossRefs(tagName: String)
 
     @Query("UPDATE journal_tag_cross_ref SET tagName = :newName WHERE tagName = :oldName")
     suspend fun updateTagCrossRefName(oldName: String, newName: String)

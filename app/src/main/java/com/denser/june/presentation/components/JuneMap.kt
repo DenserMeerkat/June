@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.MapStyleProvider
@@ -26,6 +27,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.denser.june.core.domain.model.enums.ThemeMode
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.presentation.theme.LocalAppTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.denser.june.core.domain.preferences.JournalPreferences
+import com.denser.june.presentation.utils.MapProviderUtils
+import org.koin.compose.koinInject
 import org.maplibre.android.MapLibre
 import org.maplibre.android.maps.MapView
 
@@ -59,7 +64,7 @@ fun MapControlColumn(
             ) {
                 Icon(
                     painter = painterResource(if (isMapExpanded) R.drawable.fullscreen_exit_24px else R.drawable.fullscreen_24px),
-                    contentDescription = if (isMapExpanded) "Collapse Map" else "Expand Map",
+                    contentDescription = stringResource(if (isMapExpanded) R.string.collapse_map else R.string.expand_map),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -76,7 +81,7 @@ fun MapControlColumn(
             ) {
                 Icon(
                     painter = painterResource(if (isDarkMode) R.drawable.light_mode_24px else R.drawable.dark_mode_24px),
-                    contentDescription = "Toggle Dark Mode",
+                    contentDescription = stringResource(R.string.toggle_dark_mode),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -94,7 +99,7 @@ fun MapControlColumn(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.add_24px),
-                    contentDescription = "Zoom In",
+                    contentDescription = stringResource(R.string.zoom_in),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -112,7 +117,7 @@ fun MapControlColumn(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.remove_24px),
-                    contentDescription = "Zoom Out",
+                    contentDescription = stringResource(R.string.zoom_out),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -125,7 +130,7 @@ fun MapControlColumn(
                 shape = RoundedCornerShape(20.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                     disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 ),
                 modifier = Modifier.size(56.dp)
@@ -133,12 +138,12 @@ fun MapControlColumn(
                 if (isFetchingLocation) {
                     CircularWavyProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 } else {
                     Icon(
                         painter = painterResource(R.drawable.my_location_24px_fill),
-                        contentDescription = "Current Location",
+                        contentDescription = stringResource(R.string.current_location),
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -230,9 +235,9 @@ fun MapAttributions(
                     style = MaterialTheme.typography.labelSmall
                 )
             }
-            MapStyleProvider.MAPBOX -> {
+            MapStyleProvider.OPENMAP -> {
                 Text(
-                    text = "© Mapbox © OpenStreetMap",
+                    text = "© OpenFreeMap © OpenStreetMap",
                     color = contentColor,
                     style = MaterialTheme.typography.labelSmall
                 )

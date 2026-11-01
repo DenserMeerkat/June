@@ -74,6 +74,26 @@ class SyncMediaTest : BaseSyncTest() {
     }
 
     @Test
+    fun `analysis pendingMediaUploads detects compressed or modified media`() = runTest {
+        val compressedFile = harness.givenMediaFileOnDisk("photo.jpg", byteArrayOf(1, 2))
+        val journal = SyncFixtures.syncedJournal("j1", updatedAt = T1, images = listOf(compressedFile.absolutePath))
+        harness.repo.seed(journal)
+        harness.cloud.putJournal(journal, modifiedAt = T1)
+        harness.cloud.putMedia("j1", "photo.jpg", byteArrayOf(1, 2, 3, 4, 5))
+        harness.cloud.manifest = SyncFixtures.manifest(
+            totalJournals = 1,
+            mediaMetadata = mapOf("photo.jpg" to MediaSyncMeta(size = 5L, hash = "old_uncompressed_hash"))
+        )
+
+        val analysis = harness.performAnalysis().getOrThrow()
+        assertEquals("Analysis should report 1 modified media file to upload", 1, analysis.pendingMediaUploadsCount)
+
+        val result = harness.sync()
+        assertTrue(result.isSuccess)
+        assertEquals("Sync must re-upload the modified media", 1, harness.cloud.uploadMediaCallCount)
+    }
+
+    @Test
     fun `analysis pendingMediaUploads matches actual sync uploads`() = runTest {
         val f1 = harness.givenMediaFileOnDisk("new1.jpg", byteArrayOf(1))
         val f2 = harness.givenMediaFileOnDisk("new2.jpg", byteArrayOf(2))
@@ -128,5 +148,38 @@ class SyncMediaTest : BaseSyncTest() {
         val result = harness.sync()
         assertTrue("Sync succeeds", result.isSuccess)
         harness.assertMediaExistsOnDisk("missing.jpg")
+    }
+
+    @Test
+    fun `media with case difference in manifest is not re-uploaded`() = runTest {
+        val mediaFile = harness.givenMediaFileOnDisk("Photo.JPG", byteArrayOf(1, 2, 3))
+        val journal = SyncFixtures.syncedJournal("j1", updatedAt = T1, images = listOf(mediaFile.absolutePath))
+        harness.repo.seed(journal)
+        harness.cloud.putJournal(journal, modifiedAt = T1)
+        harness.cloud.putMedia("j1", "photo.jpg", byteArrayOf(1, 2, 3))
+        harness.cloud.manifest = SyncFixtures.manifest(
+            totalJournals = 1,
+            mediaMetadata = mapOf("photo.jpg" to MediaSyncMeta(size = 3L, hash = com.denser.june.core.utils.FileUtils.computeSHA256(mediaFile)))
+        )
+
+        val result = harness.sync()
+
+        assertTrue(result.isSuccess)
+        assertEquals(0, harness.cloud.uploadMediaCallCount)
+    }
+
+    @Test
+    fun `batch of media files is uploaded successfully`() = runTest {
+        val imagePaths = (1..15).map { i ->
+            harness.givenMediaFileOnDisk("photo_$i.jpg", byteArrayOf(i.toByte())).absolutePath
+        }
+        val journal = SyncFixtures.newJournal("j_batch", updatedAt = T1, images = imagePaths)
+        harness.repo.seed(journal)
+
+        val result = harness.sync()
+
+        assertTrue(result.isSuccess)
+        assertEquals(15, harness.cloud.uploadMediaCallCount)
+        assertEquals(15, harness.cloud.manifest?.totalMedia)
     }
 }

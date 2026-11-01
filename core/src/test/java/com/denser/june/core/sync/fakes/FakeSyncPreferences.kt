@@ -27,6 +27,7 @@ class FakeSyncPreferences(
     var databaseLoggingEnabled = false
     var developerMode = false
     var lastCompletedDataRepairVersion = 0
+    var lastPurgeTime = 0L
     var googleDriveSyncFolderId: String? = null
     var googleDriveJournalsFolderId: String? = null
     var googleDriveMediaFolderId: String? = null
@@ -45,6 +46,7 @@ class FakeSyncPreferences(
     private val _dbLogging = MutableStateFlow(false)
     private val _devMode = MutableStateFlow(false)
     private val _dataRepairVersion = MutableStateFlow(0)
+    private val _lastPurgeTime = MutableStateFlow(0L)
     private val _gdriveSyncFolder = MutableStateFlow<String?>(null)
     private val _gdriveJournalsFolder = MutableStateFlow<String?>(null)
     private val _gdriveMediaFolder = MutableStateFlow<String?>(null)
@@ -85,4 +87,10 @@ class FakeSyncPreferences(
     override suspend fun setDeveloperModeEnabled(enabled: Boolean) { developerMode = enabled; _devMode.value = enabled }
     override fun getLastCompletedDataRepairVersion(): Flow<Int> = _dataRepairVersion
     override suspend fun setLastCompletedDataRepairVersion(version: Int) { lastCompletedDataRepairVersion = version; _dataRepairVersion.value = version }
+    override fun getLastPurgeTime(): Flow<Long> = _lastPurgeTime
+    override suspend fun setLastPurgeTime(time: Long) { lastPurgeTime = time; _lastPurgeTime.value = time }
+    private val _billingLogging = MutableStateFlow(false)
+    var billingLoggingEnabled = false
+    override fun getBillingLoggingEnabled(): Flow<Boolean> = _billingLogging
+    override suspend fun setBillingLoggingEnabled(enabled: Boolean) { billingLoggingEnabled = enabled; _billingLogging.value = enabled }
 }

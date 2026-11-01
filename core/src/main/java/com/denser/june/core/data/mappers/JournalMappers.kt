@@ -19,6 +19,10 @@ fun JournalEntity.asDomain(): Journal {
         isBookmarked = isBookmarked,
         isArchived = isArchived,
         isDraft = isDraft,
+        isLocked = isLocked,
+        theme = theme,
+        font = font,
+        fontVariation = fontVariation,
         deletedAt = deletedAt,
         syncedAt = syncedAt,
         cloudId = cloudId
@@ -41,6 +45,10 @@ fun Journal.asEntity(): JournalEntity {
         isBookmarked = isBookmarked,
         isArchived = isArchived,
         isDraft = isDraft,
+        isLocked = isLocked,
+        theme = theme,
+        font = font,
+        fontVariation = fontVariation,
         deletedAt = deletedAt,
         syncedAt = syncedAt,
         cloudId = cloudId

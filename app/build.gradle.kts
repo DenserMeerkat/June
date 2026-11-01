@@ -18,8 +18,8 @@ val appNamespace = "com.denser.june"
 val apkNamePrefix = "june"
 
 // Format: M mm pp b
-val appVersionCode = 101000
-val appVersionName = "1.1.0"
+val appVersionCode = 200000
+val appVersionName = "2.0.0"
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
@@ -89,12 +89,17 @@ android {
         }
     }
 
+val revenueCatApiKey = (localProperties["REVENUECAT_API_KEY"] ?: System.getenv("REVENUECAT_API_KEY") ?: "") as String
+
     flavorDimensions += "distribution"
 
     productFlavors {
         create("foss") {
             dimension = "distribution"
-            isDefault = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules-foss.pro"
+            )
             signingConfigs.findByName("release")?.let {
                 if (it.storeFile?.exists() == true) {
                     signingConfig = it
@@ -105,6 +110,12 @@ android {
             dimension = "distribution"
             applicationIdSuffix = ".play"
             versionNameSuffix = "-play"
+            isDefault = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules-play.pro"
+            )
+            buildConfigField("String", "REVENUECAT_API_KEY", "\"$revenueCatApiKey\"")
             signingConfigs.findByName("playRelease")?.let {
                 if (it.storeFile?.exists() == true) {
                     signingConfig = it
@@ -129,10 +140,16 @@ android {
             resValue("string", "app_name", appName)
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+        }
+
+        create("beta") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            applicationIdSuffix = ".beta"
+            resValue("string", "app_name", appName)
+            versionNameSuffix = "-beta"
+            isMinifyEnabled = true
+            isShrinkResources = true
         }
 
         debug {
@@ -159,6 +176,9 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+        jniLibs {
+            keepDebugSymbols.add("**/*.so")
         }
     }
 
@@ -192,7 +212,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.window.size)
-    implementation(libs.androidx.navigation.compose)
+
+
+    implementation(libs.androidx.navigation3.ui)
+
+
     implementation(libs.androidx.material3.adaptive)
     implementation(libs.androidx.material3.adaptive.layout)
     implementation(libs.androidx.material3.adaptive.navigation)
@@ -210,12 +234,12 @@ dependencies {
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.koin.compose.viewmodel.navigation)
     implementation(libs.materialKolor)           
-    implementation(libs.colorpicker.compose)     
     implementation(libs.wavy.slider)             
     implementation(libs.composeIcons.fontAwesome)
     implementation(libs.androidx.core.splashscreen) 
     implementation(libs.aboutLibraries)          
     implementation(libs.aboutLibraries.compose.m3)
+    implementation(libs.kotlinx.serialization.json)
 
 
     // June
@@ -223,11 +247,11 @@ dependencies {
     implementation(libs.osmdroid)
     implementation(libs.coil.compose)
     implementation(libs.coil.video)
+    implementation(libs.telephoto.zoomable.coil)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.media3.common)
     implementation(libs.androidx.palette)
-    implementation(libs.androidx.emoji2.emojipicker)
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.hyphen)
@@ -250,6 +274,8 @@ dependencies {
         exclude(group = "org.apache.httpcomponents", module = "httpclient")
         exclude(group = "org.apache.httpcomponents", module = "httpcore")
     }
+    "playImplementation"(libs.revenuecat.purchases)
+    "playImplementation"(libs.revenuecat.purchases.ui)
 
 }
 aboutLibraries {

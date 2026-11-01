@@ -2,6 +2,7 @@ package com.denser.june.presentation.utils
 
 import android.Manifest
 import android.content.Context
+import android.location.LocationManager
 import androidx.annotation.RequiresPermission
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.enums.MapStyleProvider
@@ -30,8 +31,7 @@ object MapProviderUtils : KoinComponent {
         provider: MapStyleProvider,
         isDark: Boolean,
         mapTilerKey: String,
-        stadiaKey: String,
-        mapboxKey: String
+        stadiaKey: String
     ): String {
         return when (provider) {
             MapStyleProvider.MAPTILER -> {
@@ -44,12 +44,12 @@ object MapProviderUtils : KoinComponent {
                 "${Constants.STADIA_MAPS_BASE_URL}$styleName.json$keyQuery"
             }
             MapStyleProvider.CARTO -> {
-                val styleName = if (isDark) "dark-matter-gl-style" else "voyager-gl-style"
+                val styleName = if (isDark) "dark-matter-gl-style" else "positron-gl-style"
                 "${Constants.CARTO_MAPS_BASE_URL}$styleName/style.json"
             }
-            MapStyleProvider.MAPBOX -> {
-                val styleName = if (isDark) "dark-v10" else "streets-v11"
-                "${Constants.MAPBOX_MAPS_BASE_URL}$styleName?access_token=$mapboxKey"
+            MapStyleProvider.OPENMAP -> {
+                val styleName = if (isDark) "fiord" else "bright"
+                "${Constants.OPENMAP_MAPS_BASE_URL}$styleName"
             }
         }
     }
@@ -60,8 +60,7 @@ object MapProviderUtils : KoinComponent {
     ): String {
         val mapTilerKey = journalPreferences.maptilerKey().first()
         val stadiaKey = journalPreferences.stadiaKey().first()
-        val mapboxKey = journalPreferences.mapboxkey().first()
-        return getStyleUrlWithKeys(provider, isDark, mapTilerKey, stadiaKey, mapboxKey)
+        return getStyleUrlWithKeys(provider, isDark, mapTilerKey, stadiaKey)
     }
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
@@ -227,6 +226,19 @@ object MapProviderUtils : KoinComponent {
         return "Lat: ${"%.4f".format(Locale.US, center.latitude)}, Lon: ${"%.4f".format(Locale.US, center.longitude)}"
     }
 
+    fun isLocationServiceEnabled(context: Context): Boolean {
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return false
+        return lm.isProviderEnabled(LocationManager.GPS_PROVIDER) || lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
+    fun isSameCoordinates(lat1: Double, lon1: Double, lat2: Double, lon2: Double, threshold: Double = 1e-5): Boolean {
+        return kotlin.math.abs(lat1 - lat2) < threshold && kotlin.math.abs(lon1 - lon2) < threshold
+    }
+
+    fun formatCoordinates(lat: Double, lon: Double): String {
+        return "${String.format(Locale.US, "%.5f", lat)}, ${String.format(Locale.US, "%.5f", lon)}"
+    }
+
     suspend fun testApiKey(provider: MapStyleProvider, key: String): Boolean {
         if (key.isBlank()) return false
         val url = when (provider) {
@@ -236,10 +248,8 @@ object MapProviderUtils : KoinComponent {
             MapStyleProvider.STADIA -> {
                 "${Constants.STADIA_MAPS_BASE_URL}alidade_smooth.json?api_key=$key"
             }
-            MapStyleProvider.MAPBOX -> {
-                "${Constants.MAPBOX_MAPS_BASE_URL}streets-v11?access_token=$key"
-            }
-            MapStyleProvider.CARTO -> return true
+            MapStyleProvider.CARTO,
+            MapStyleProvider.OPENMAP -> return true
         }
 
         return withContext(Dispatchers.IO) {

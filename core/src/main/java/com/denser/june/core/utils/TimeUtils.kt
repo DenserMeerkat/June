@@ -11,7 +11,6 @@ import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 import java.time.format.DateTimeFormatter
-import java.time.temporal.WeekFields
 
 fun Long.toYearMonth(): YearMonth {
     val localDate = Instant.ofEpochMilli(this)
@@ -45,6 +44,23 @@ fun Long.toMonthDay(): String {
     return sdf.format(Date(this))
 }
 
+fun Long.toMediumDate(): String {
+    val sdf = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+    return sdf.format(Date(this))
+}
+
+fun Long.toExifDateTimeDisplay(): String {
+    val timeSdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val timeStr = timeSdf.format(Date(this))
+    return if (timeStr == "00:00") {
+        val dateSdf = SimpleDateFormat("EEE, MMM d, yyyy", Locale.getDefault())
+        dateSdf.format(Date(this))
+    } else {
+        val sdf = SimpleDateFormat("EEE, MMM d, yyyy   •   HH:mm", Locale.getDefault())
+        sdf.format(Date(this))
+    }
+}
+
 fun Long.toMonthDayTime(is24Hour: Boolean = false): String {
     val pattern = if (is24Hour) "MMM dd '•' HH:mm" else "MMM dd '•' hh:mm a"
     val sdf = SimpleDateFormat(pattern, Locale.getDefault())
@@ -52,7 +68,7 @@ fun Long.toMonthDayTime(is24Hour: Boolean = false): String {
 }
 
 fun Long.toFullDateTime(is24Hour: Boolean = false): String {
-    val pattern = if (is24Hour) "MMMM dd, yyyy 'at' HH:mm" else "MMMM dd, yyyy 'at' hh:mm a"
+    val pattern = if (is24Hour) "MMM dd, yyyy 'at' HH:mm" else "MMM dd, yyyy 'at' hh:mm a"
     val sdf = SimpleDateFormat(pattern, Locale.getDefault())
     return sdf.format(Date(this))
 }
@@ -149,15 +165,7 @@ fun getTodayAtMidnight(): Long {
         .toEpochMilli()
 }
 
-fun getWeeksInMonth(yearMonth: YearMonth): Int {
-    val firstDay = yearMonth.atDay(1)
-    val lastDay = yearMonth.atEndOfMonth()
-    val weekFields = WeekFields.of(Locale.getDefault())
-    val weekOne = firstDay.get(weekFields.weekOfWeekBasedYear())
-    var weekLast = lastDay.get(weekFields.weekOfWeekBasedYear())
-    if (weekLast < weekOne) {
-        weekLast += 52
-    }
-    return (weekLast - weekOne) + 1
+fun getWeeksInMonth(yearMonth: YearMonth, startOfWeek: DayOfWeek = DayOfWeek.SUNDAY): Int {
+    return yearMonth.getDaysInMonthGrid(startOfWeek).chunked(7).size
 }
 

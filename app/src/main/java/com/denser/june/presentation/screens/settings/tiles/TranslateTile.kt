@@ -11,7 +11,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.presentation.screens.settings.components.SettingsItem
-import com.denser.june.presentation.screens.settings.components.TranslateBottomSheet
+import com.denser.june.presentation.screens.settings.components.sheets.TranslateBottomSheet
 
 @Composable
 fun TranslateTile() {

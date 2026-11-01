@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.denser.june.data.sync
 
 import android.content.Context
@@ -55,6 +57,8 @@ class GoogleDriveProvider(
     private var mediaFolderId: String? = null
     private var songMediaFolderId: String? = null
     private val journalFolderCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+    private val folderValidityCache = java.util.concurrent.ConcurrentHashMap<String, Long>()
+    private val folderFilesCache = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.ConcurrentHashMap<String, String>>()
     private val _folderUrl = MutableStateFlow<String?>(null)
     val folderUrl: Flow<String?> = _folderUrl.asStateFlow()
 
@@ -132,6 +136,8 @@ class GoogleDriveProvider(
             mediaFolderId = null
             songMediaFolderId = null
             journalFolderCache.clear()
+            folderValidityCache.clear()
+            folderFilesCache.clear()
             _folderUrl.value = null
             _isConnected.value = false
         } catch (e: Exception) {
@@ -140,11 +146,17 @@ class GoogleDriveProvider(
     }
 
     private suspend fun isFolderTrashed(id: String): Boolean {
+        val now = System.currentTimeMillis()
+        val validUntil = folderValidityCache[id]
+        if (validUntil != null && now < validUntil) return false
         val service = getDriveService() ?: return true
         return try {
             val file = service.files().get(id).setFields("trashed").execute()
-            file.trashed ?: false
+            val trashed = file.trashed ?: false
+            if (!trashed) folderValidityCache[id] = now + 60_000L
+            trashed
         } catch (e: Exception) {
+            folderValidityCache.remove(id)
             true
         }
     }
@@ -306,6 +318,10 @@ class GoogleDriveProvider(
     }
 
     private suspend fun findFileIdByName(name: String, parentFolderId: String): String? = withContext(Dispatchers.IO) {
+        val cachedMap = folderFilesCache[parentFolderId]
+        if (cachedMap != null && cachedMap.containsKey(name)) {
+            return@withContext cachedMap[name]
+        }
         val service = getDriveService() ?: return@withContext null
         try {
             val result = service.files().list()
@@ -321,9 +337,11 @@ class GoogleDriveProvider(
                     try {
                         service.files().delete(dup.id).execute()
                     } catch (e: Exception) {
-                        // ignore delete failures
                     }
                 }
+            }
+            if (newest.id != null) {
+                folderFilesCache.getOrPut(parentFolderId) { java.util.concurrent.ConcurrentHashMap() }[name] = newest.id
             }
             newest.id
         } catch (e: Exception) {
@@ -347,6 +365,9 @@ class GoogleDriveProvider(
             } else {
                 service.files().create(metadata, mediaContent).execute()
             }
+            executedFile.id?.let { id ->
+                folderFilesCache.getOrPut(parentFolderId) { java.util.concurrent.ConcurrentHashMap() }[name] = id
+            }
             Result.success(executedFile.id ?: "")
         } catch (e: Exception) {
             Result.failure(e)
@@ -369,7 +390,30 @@ class GoogleDriveProvider(
             } else {
                 service.files().create(metadata, mediaContent).execute()
             }
+            executedFile.id?.let { id ->
+                folderFilesCache.getOrPut(parentFolderId) { java.util.concurrent.ConcurrentHashMap() }[name] = id
+            }
             Result.success(executedFile.id ?: "")
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun downloadFileTo(name: String, parentFolderId: String, targetFile: File): Result<File> = withContext(Dispatchers.IO) {
+        val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
+        try {
+            val fileId = findFileIdByName(name, parentFolderId) ?: return@withContext Result.failure(Exception("File not found: $name"))
+            targetFile.parentFile?.mkdirs()
+            val tempFile = File(targetFile.parentFile, "${targetFile.name}.tmp")
+            tempFile.outputStream().use { os ->
+                service.files().get(fileId).executeMediaAndDownloadTo(os)
+            }
+            if (targetFile.exists()) targetFile.delete()
+            if (!tempFile.renameTo(targetFile)) {
+                tempFile.copyTo(targetFile, overwrite = true)
+                tempFile.delete()
+            }
+            Result.success(targetFile)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -393,6 +437,7 @@ class GoogleDriveProvider(
             val fileId = findFileIdByName(name, parentFolderId)
             if (fileId != null) {
                 service.files().delete(fileId).execute()
+                folderFilesCache[parentFolderId]?.remove(name)
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -453,23 +498,7 @@ class GoogleDriveProvider(
             AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve media root folder", it)
             return@withContext Result.failure(it)
         }
-        
-        val bytesResult = downloadFileContent(cloudId, mediaRootId)
-        if (bytesResult.isSuccess) {
-            val bytes = bytesResult.getOrThrow()
-            try {
-                targetFile.parentFile?.mkdirs()
-                targetFile.writeBytes(bytes)
-                AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Successfully downloaded media $cloudId.")
-                Result.success(targetFile)
-            } catch (e: Exception) {
-                AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to write downloaded media file $cloudId", e)
-                Result.failure(e)
-            }
-        } else {
-            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Media $cloudId not found in cloud.")
-            Result.failure(bytesResult.exceptionOrNull() ?: Exception("Media file not found in cloud"))
-        }
+        downloadFileTo(cloudId, mediaRootId, targetFile)
     }
 
     override suspend fun updateManifest(manifest: SyncManifest): Result<Unit> {
@@ -497,17 +526,25 @@ class GoogleDriveProvider(
         val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
         val folderId = getOrCreateSubfolder("journals").getOrElse { return@withContext Result.failure(it) }
         try {
-            val result = service.files().list()
-                .setQ("'$folderId' in parents and trashed = false")
-                .setFields("files(name, modifiedTime)")
-                .execute()
-
-            val list = result.files?.filter {
-                it.name != null && it.name.endsWith(".json")
-            }?.map { file ->
-                val lastModified = file.modifiedTime?.value ?: 0L
-                RemoteFileMeta(file.name, lastModified)
-            } ?: emptyList()
+            val list = mutableListOf<RemoteFileMeta>()
+            val cache = folderFilesCache.getOrPut(folderId) { java.util.concurrent.ConcurrentHashMap() }
+            var pageToken: String? = null
+            do {
+                val result = service.files().list()
+                    .setQ("'$folderId' in parents and trashed = false")
+                    .setFields("nextPageToken, files(id, name, modifiedTime)")
+                    .setPageSize(1000)
+                    .setPageToken(pageToken)
+                    .execute()
+                result.files?.forEach { file ->
+                    if (file.name != null && file.name.endsWith(".json")) {
+                        if (file.id != null) cache[file.name] = file.id
+                        val lastModified = file.modifiedTime?.value ?: 0L
+                        list.add(RemoteFileMeta(file.name, lastModified))
+                    }
+                }
+                pageToken = result.nextPageToken
+            } while (pageToken != null)
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)
@@ -518,14 +555,24 @@ class GoogleDriveProvider(
         val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
         val mediaRootId = getOrCreateSubfolder("media").getOrElse { return@withContext Result.failure(it) }
         try {
-            val result = service.files().list()
-                .setQ("'$mediaRootId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false")
-                .setFields("files(name)")
-                .execute()
-
-            val list = result.files?.filter {
-                it.name != null
-            }?.map { it.name } ?: emptyList()
+            val list = mutableListOf<String>()
+            val cache = folderFilesCache.getOrPut(mediaRootId) { java.util.concurrent.ConcurrentHashMap() }
+            var pageToken: String? = null
+            do {
+                val result = service.files().list()
+                    .setQ("'$mediaRootId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false")
+                    .setFields("nextPageToken, files(id, name)")
+                    .setPageSize(1000)
+                    .setPageToken(pageToken)
+                    .execute()
+                result.files?.forEach { file ->
+                    if (file.name != null) {
+                        if (file.id != null) cache[file.name] = file.id
+                        list.add(file.name)
+                    }
+                }
+                pageToken = result.nextPageToken
+            } while (pageToken != null)
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)
@@ -567,36 +614,31 @@ class GoogleDriveProvider(
             AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve song_media root folder", it)
             return@withContext Result.failure(it)
         }
-        val bytesResult = downloadFileContent(filename, folderId)
-        if (bytesResult.isSuccess) {
-            val bytes = bytesResult.getOrThrow()
-            try {
-                targetFile.parentFile?.mkdirs()
-                targetFile.writeBytes(bytes)
-                AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Successfully downloaded song media $filename.")
-                Result.success(targetFile)
-            } catch (e: Exception) {
-                AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to write downloaded song media file $filename", e)
-                Result.failure(e)
-            }
-        } else {
-            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Song media $filename not found in cloud.")
-            Result.failure(bytesResult.exceptionOrNull() ?: Exception("Song media file not found in cloud"))
-        }
+        downloadFileTo(filename, folderId, targetFile)
     }
 
     override suspend fun listSongMedia(): Result<List<String>> = withContext(Dispatchers.IO) {
         val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
         val folderId = getOrCreateSubfolder("song_media").getOrElse { return@withContext Result.failure(it) }
         try {
-            val result = service.files().list()
-                .setQ("'$folderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false")
-                .setFields("files(name)")
-                .execute()
-
-            val list = result.files?.filter {
-                it.name != null
-            }?.map { it.name } ?: emptyList()
+            val list = mutableListOf<String>()
+            val cache = folderFilesCache.getOrPut(folderId) { java.util.concurrent.ConcurrentHashMap() }
+            var pageToken: String? = null
+            do {
+                val result = service.files().list()
+                    .setQ("'$folderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false")
+                    .setFields("nextPageToken, files(id, name)")
+                    .setPageSize(1000)
+                    .setPageToken(pageToken)
+                    .execute()
+                result.files?.forEach { file ->
+                    if (file.name != null) {
+                        if (file.id != null) cache[file.name] = file.id
+                        list.add(file.name)
+                    }
+                }
+                pageToken = result.nextPageToken
+            } while (pageToken != null)
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)

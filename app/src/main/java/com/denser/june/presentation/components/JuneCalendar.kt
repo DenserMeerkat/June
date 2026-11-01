@@ -14,21 +14,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import java.time.DayOfWeek
 import java.time.YearMonth
-import java.util.Locale
-import androidx.compose.ui.platform.LocalLocale
 
 private val YearHeaderWidth = 60.dp
 
@@ -37,28 +34,55 @@ private val YearHeaderWidth = 60.dp
 fun InfiniteMonthStrip(
     currentMonth: YearMonth,
     modifier: Modifier = Modifier,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(4.dp),
     yearContent: @Composable (String) -> Unit = { year -> YearHeader(year) },
     monthContent: @Composable (YearMonth, Boolean) -> Unit
 ) {
     val listState = rememberLazyListState()
     val density = LocalDensity.current
+    val haptic = LocalHapticFeedback.current
 
     val startYear = remember(currentMonth) { currentMonth.year - 50 }
     val endYear = remember(currentMonth) { currentMonth.year + 50 }
     val yearRange = remember(startYear, endYear) { startYear..endYear }
 
+    var isProgrammaticScroll by remember { mutableStateOf(false) }
+    var lastHapticIndex by remember { mutableIntStateOf(-1) }
+    var lastHapticTime by remember { mutableLongStateOf(0L) }
+
     LaunchedEffect(currentMonth) {
         val yearDiff = currentMonth.year - startYear
         val index = (yearDiff * 13) + currentMonth.monthValue
         val offsetInPx = with(density) { -((YearHeaderWidth - 16.dp).toPx()).toInt() }
-        listState.animateScrollToItem(index.coerceAtLeast(0), scrollOffset = offsetInPx)
+        isProgrammaticScroll = true
+        try {
+            listState.animateScrollToItem(index.coerceAtLeast(0), scrollOffset = offsetInPx)
+        } finally {
+            isProgrammaticScroll = false
+        }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex to listState.isScrollInProgress }
+            .collect { (firstIndex, isScrolling) ->
+                if (isScrolling && !isProgrammaticScroll) {
+                    if (firstIndex != lastHapticIndex) {
+                        val now = System.currentTimeMillis()
+                        if (now - lastHapticTime >= 35L) {
+                            haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                            lastHapticTime = now
+                            lastHapticIndex = firstIndex
+                        }
+                    }
+                }
+            }
     }
 
     LazyRow(
         state = listState,
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = horizontalArrangement,
         verticalAlignment = Alignment.CenterVertically
     ) {
         yearRange.forEach { year ->

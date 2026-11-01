@@ -3,6 +3,8 @@ package com.denser.june.presentation.screens.editor
 import com.denser.june.core.domain.model.JournalLocation
 
 import android.net.Uri
+import com.denser.june.core.domain.model.FontVariationConfig
+import com.denser.june.core.domain.model.JournalTheme
 import com.denser.june.core.domain.model.SongDetails
 
 sealed interface EditorAction {
@@ -14,11 +16,23 @@ sealed interface EditorAction {
 
     data class AddImage(val uri: String) : EditorAction
     data class AddImages(val uris: List<String>) : EditorAction
+    data class ReplaceImage(val oldUri: String, val newPath: String) : EditorAction
+    data class SetMediaProcessing(val path: String, val isProcessing: Boolean) : EditorAction
     data class RemoveImage(val uri: String) : EditorAction
     data class MoveImageToFront(val uri: String) : EditorAction
+    data object Refresh : EditorAction
 
     data class UpdateTags(val tags: List<String>) : EditorAction
     data class SearchTags(val query: String) : EditorAction
+
+    data class SetJournalFont(
+        val fontName: String?,
+        val variation: FontVariationConfig? = null
+    ) : EditorAction
+
+    data class SetJournalTheme(
+        val theme: JournalTheme?
+    ) : EditorAction
 
     data class FetchSong(val url: String) : EditorAction
     data class AttachLocalSong(val uri: Uri) : EditorAction
@@ -40,6 +54,7 @@ sealed interface EditorAction {
     data object RemoveLocation : EditorAction
 
     data object ToggleBookmark : EditorAction
+    data object ToggleLock : EditorAction
     data object ToggleArchive : EditorAction
 
     data object SaveJournal : EditorAction

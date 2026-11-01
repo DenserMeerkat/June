@@ -1,5 +1,6 @@
 package com.denser.june.core.domain.model
 
+import com.denser.june.core.utils.toHexString
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.File
@@ -22,11 +23,16 @@ data class Journal(
     val isBookmarked: Boolean = false,
     val isArchived: Boolean = false,
     val isDraft: Boolean = true,
+    val isLocked: Boolean = false,
+    val theme: JournalTheme? = null,
+    val font: String? = null,
+    val fontVariation: FontVariationConfig? = null,
     val deletedAt: Long? = null,
     val syncedAt: Long? = null,
     val cloudId: String? = null,
 ) {
     val isDeleted: Boolean get() = deletedAt != null
+    val isSynced: Boolean get() = !isDraft && syncedAt != null && (updatedAt == null || syncedAt >= updatedAt)
 
     fun isContentEqualTo(other: Journal): Boolean {
         val thisSongNormalized = this.songDetails?.copy(
@@ -47,6 +53,10 @@ data class Journal(
                this.isBookmarked == other.isBookmarked &&
                this.isArchived == other.isArchived &&
                this.isDraft == other.isDraft &&
+               this.isLocked == other.isLocked &&
+               this.theme == other.theme &&
+               this.font == other.font &&
+               this.fontVariation == other.fontVariation &&
                this.deletedAt == other.deletedAt
     }
 
@@ -66,7 +76,7 @@ data class Journal(
         val jsonString = canonicalJsonFormatter.encodeToString(serializer(), normalized)
         val bytes = java.security.MessageDigest.getInstance("SHA-256")
             .digest(jsonString.toByteArray(Charsets.UTF_8))
-        return bytes.joinToString("") { "%02x".format(it) }
+        return bytes.toHexString()
     }
 }
 

@@ -1,0 +1,151 @@
+name: Play Store Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'Google Play Track'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+      status:
+        description: 'Release Status'
+        required: true
+        default: 'completed'
+        type: choice
+        options:
+          - completed
+          - draft
+          - inProgress
+          - halted
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Decode Play Keystore
+        env:
+          PLAY_KEYSTORE_B64: ${{ secrets.PLAY_RELEASE_KEYSTORE || secrets.RELEASE_KEYSTORE }}
+        run: |
+          if [ -z "$PLAY_KEYSTORE_B64" ]; then
+            echo "::error::Neither PLAY_RELEASE_KEYSTORE nor RELEASE_KEYSTORE secret is configured."
+            exit 1
+          fi
+          echo "$PLAY_KEYSTORE_B64" | base64 --decode > play-release.jks
+
+      - name: Extract Changelog Notes for Play Store
+        run: |
+          mkdir -p distribution/whatsnew
+          python3 -c '
+          import json, os
+          tag = os.environ.get("GITHUB_REF_NAME", "")
+          data = []
+          try:
+              data = json.load(open("app/src/main/assets/changelog.json", encoding="utf-8"))
+          except Exception as e:
+              print(f"Error loading changelog: {e}")
+
+          entry = next((e for e in data if e.get("version") == tag), data[0] if data else None)
+          notes = []
+          for c in (entry.get("changes", []) if entry else []):
+              if isinstance(c, str):
+                  notes.append("- " + c)
+              elif isinstance(c, dict) and (not c.get("flavors") or "play" in c.get("flavors", [])):
+                  notes.append("- " + c.get("text", ""))
+
+          changelog_text = "\n".join(notes)[:500].strip()
+          if not changelog_text:
+              changelog_text = "Bug fixes and performance improvements."
+
+          with open("distribution/whatsnew/whatsnew-en-US", "w", encoding="utf-8") as f:
+              f.write(changelog_text + "\n")
+          '
+          echo "Generated What'\''s New:"
+          cat distribution/whatsnew/whatsnew-en-US
+
+      - name: Build Play Release Bundle (.aab)
+        env:
+          PLAY_RELEASE_STORE_FILE: ../play-release.jks
+          PLAY_RELEASE_STORE_PASSWORD: ${{ secrets.PLAY_RELEASE_STORE_PASSWORD || secrets.RELEASE_STORE_PASSWORD }}
+          PLAY_RELEASE_KEY_ALIAS: ${{ secrets.PLAY_RELEASE_KEY_ALIAS || secrets.RELEASE_KEY_ALIAS }}
+          PLAY_RELEASE_KEY_PASSWORD: ${{ secrets.PLAY_RELEASE_KEY_PASSWORD || secrets.RELEASE_KEY_PASSWORD }}
+          REVENUECAT_API_KEY: ${{ secrets.REVENUECAT_API_KEY }}
+        run: ./gradlew :app:bundlePlayRelease
+
+      - name: Locate AAB
+        id: locate_aab
+        run: |
+          AAB_PATH=$(find app/build/outputs/ -name "*.aab" -print -quit)
+          if [ -z "$AAB_PATH" ]; then
+            echo "::error::Could not find AAB file in app/build/outputs/."
+            exit 1
+          fi
+          echo "AAB_PATH=$AAB_PATH" >> $GITHUB_ENV
+          echo "Found AAB at: $AAB_PATH"
+
+      - name: Upload AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-release-aab
+          path: ${{ env.AAB_PATH }}
+
+      - name: Setup Google Auth (Workload Identity)
+        if: env.WORKLOAD_IDENTITY_PROVIDER != ''
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.WORKLOAD_IDENTITY_POOL }}/providers/${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ secrets.WORKLOAD_IDENTITY_SERVICE_ACCOUNT }}'
+
+      - name: Publish to Google Play (Workload Identity)
+        if: env.WORKLOAD_IDENTITY_PROVIDER != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: ${{ steps.auth.outputs.credentials_file_path }}
+          packageName: com.denser.june.play
+          releaseFiles: ${{ env.AAB_PATH }}
+          tracks: ${{ inputs.track || 'production' }}
+          status: ${{ inputs.status || 'completed' }}
+          whatsNewDirectory: distribution/whatsnew
+          mappingFile: app/build/outputs/mapping/playRelease/mapping.txt
+
+      - name: Publish to Google Play (Service Account Key)
+        if: env.WORKLOAD_IDENTITY_PROVIDER == ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.denser.june.play
+          releaseFiles: ${{ env.AAB_PATH }}
+          tracks: ${{ inputs.track || 'production' }}
+          status: ${{ inputs.status || 'completed' }}
+          whatsNewDirectory: distribution/whatsnew
+          mappingFile: app/build/outputs/mapping/playRelease/mapping.txt

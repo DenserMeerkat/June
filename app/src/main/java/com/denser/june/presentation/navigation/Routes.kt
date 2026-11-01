@@ -1,10 +1,12 @@
 package com.denser.june.presentation.navigation
 
 import com.denser.june.core.domain.model.enums.FontType
+import com.denser.june.core.domain.model.enums.LockType
+import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface Route {
+sealed interface Route : NavKey {
     @Serializable
     data object Home : Route
 
@@ -27,17 +29,25 @@ sealed interface Route {
     @Serializable
     data class JournalMediaDetail(
         val journalId: String,
-        val initialIndex: Int
+        val initialIndex: Int,
+        val dateTime: Long? = null
     ) : Route
 
     @Serializable
     data class MediaViewerRoute(
         val mediaPaths: List<String>,
-        val initialIndex: Int
+        val initialIndex: Int,
+        val dateTime: Long? = null
     ) : Route
 
     @Serializable
     data object Bin : Route
+
+    @Serializable
+    data object Vault : Route
+
+    @Serializable
+    data object VaultSettings : Route
 
     @Serializable
     data object SyncSettings : Route
@@ -67,17 +77,24 @@ sealed interface Route {
     data object AboutSettings : Route
 
 
-    @Serializable
-    data object Permissions : Route
 
     @Serializable
-    data object LockMethod : Route
+    data object AppLockSettings : Route
 
     @Serializable
-    data object PinSetup : Route
+    data object VaultLockSettings : Route
 
     @Serializable
-    data object RecoverySetup : Route
+    data class PinSetup(val forVault: Boolean = false) : Route
+
+    @Serializable
+    data class PasswordSetup(val forVault: Boolean = false) : Route
+
+    @Serializable
+    data class PatternSetup(val forVault: Boolean = false) : Route
+
+    @Serializable
+    data class RecoverySetup(val lockType: LockType = LockType.PIN, val forVault: Boolean = false) : Route
 
     @Serializable
     data class Fonts(val type: FontType = FontType.APP) : Route
@@ -87,4 +104,7 @@ sealed interface Route {
 
     @Serializable
     data object DeveloperSettings : Route
+
+    @Serializable
+    data object ConsoleLogs : Route
 }

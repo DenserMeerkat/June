@@ -16,8 +16,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.denser.june.core.R
-import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.media.storage.SongMediaStorage
+import coil.request.CachePolicy
 import com.denser.june.presentation.theme.LocalInternetAllowed
 
 @Composable
@@ -34,17 +36,28 @@ fun RestrictedAsyncImage(
     val context = LocalContext.current
     val isInternetAllowed = LocalInternetAllowed.current
     val localFile = remember(localPath) {
-        FileUtils.resolveSongMedia(context, localPath, "art")
+        SongMediaStorage.resolveSongMedia(context, localPath, "art")
     }
     val model = remember(localFile, imageUrl, isInternetAllowed) {
         localFile ?: if (isInternetAllowed) imageUrl else null
     }
+    val imageRequest = remember(model, context) {
+        if (model != null) {
+            ImageRequest.Builder(context)
+                .data(model)
+                .crossfade(false)
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .build()
+        } else null
+    }
+
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         AsyncImage(
-            model = model,
+            model = imageRequest,
             contentDescription = contentDescription,
             contentScale = contentScale,
             modifier = Modifier.fillMaxSize()

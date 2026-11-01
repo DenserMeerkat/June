@@ -1,5 +1,7 @@
 package com.denser.june.presentation.components
 
+import android.os.Build
+import android.view.WindowManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.luminance
@@ -9,8 +11,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.graphics.toArgb
-
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 
@@ -38,7 +38,10 @@ fun JuneFullScreenDialog(
             controller.isAppearanceLightStatusBars = !isDarkTheme
             controller.isAppearanceLightNavigationBars = !isDarkTheme
             WindowCompat.setDecorFitsSystemWindows(window, false)
-            window.isNavigationBarContrastEnforced = false
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
+            }
+            window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         }
         content()
     }

@@ -24,12 +24,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalContext
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.SongDetails
-import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.media.storage.SongMediaStorage
 import com.denser.june.presentation.components.ListenDropdownMenu
 import com.denser.june.presentation.components.RestrictedAsyncImage
 import com.denser.june.presentation.components.SmallPlayPauseButton
 import com.denser.june.presentation.components.toAvailableLinks
-import com.denser.june.presentation.utils.rememberDynamicThemeColors
+import com.denser.june.presentation.theme.rememberDynamicThemeColors
 import com.denser.june.presentation.screens.home.timeline.TimelineVM
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -38,8 +38,8 @@ import com.denser.june.presentation.theme.LocalInternetAllowed
 
 import androidx.compose.ui.graphics.Shape
 import com.denser.june.core.utils.toLocalDate
-import com.denser.june.presentation.components.DayJournalGroupData
-import com.denser.june.presentation.components.rememberJournalGroupShape
+import com.denser.june.presentation.components.journal.DayJournalGroupData
+import com.denser.june.presentation.components.journal.rememberJournalGroupShape
 import java.time.LocalDate
 
 @Composable
@@ -132,7 +132,7 @@ fun TimelineMusicTab(
         }
 
         val hasLocalAudio = remember(activeSong?.localPreviewPath) {
-            FileUtils.resolveSongMedia(context, activeSong?.localPreviewPath, "library") != null
+            SongMediaStorage.resolveSongMedia(context, activeSong?.localPreviewPath, "library") != null
         }
         if (activeSong != null && (isInternetAllowed || hasLocalAudio)) {
             DockedMiniPlayer(
@@ -161,7 +161,7 @@ fun DockedMiniPlayer(
     val context = LocalContext.current
     val isInternetAllowed = LocalInternetAllowed.current
     val localArtFile = remember(song.localThumbnailPath) {
-        FileUtils.resolveSongMedia(context, song.localThumbnailPath, "art")
+        SongMediaStorage.resolveSongMedia(context, song.localThumbnailPath, "art")
     }
     val artModel = remember(localArtFile, song.thumbnailUrl, isInternetAllowed) {
         if (localArtFile != null) localArtFile else if (isInternetAllowed) song.thumbnailUrl else null
@@ -289,7 +289,7 @@ fun MusicListTile(
     val context = LocalContext.current
     val isInternetAllowed = LocalInternetAllowed.current
     val hasLocalAudio = remember(song.localPreviewPath) {
-        FileUtils.resolveSongMedia(context, song.localPreviewPath, "library") != null
+        SongMediaStorage.resolveSongMedia(context, song.localPreviewPath, "library") != null
     }
     var showMenu by remember { mutableStateOf(false) }
 

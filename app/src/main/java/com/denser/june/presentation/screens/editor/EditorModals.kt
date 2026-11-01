@@ -1,6 +1,7 @@
 package com.denser.june.presentation.screens.editor
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -10,22 +11,32 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TimeFormat
-import com.denser.june.core.utils.FileUtils
+import com.denser.june.core.domain.preferences.JournalPreferences
+import com.denser.june.core.media.compress.CompressUtils
+import com.denser.june.core.media.compress.model.CompressionPreset
+import com.denser.june.core.media.exif.ExifUtils
+import com.denser.june.core.media.storage.MediaStorageManager
 import com.denser.june.presentation.components.JuneDialog
 import com.denser.june.presentation.components.JuneDateTimePicker
 import com.denser.june.presentation.components.JuneDateTimePickerMode
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
-import com.denser.june.presentation.screens.editor.components.AddItemSheet
-import com.denser.june.presentation.screens.editor.components.AddLocationDialog
-import com.denser.june.presentation.screens.editor.components.JournalEmojiPickerDialog
-import com.denser.june.presentation.screens.editor.components.JournalTagsDialog
-import com.denser.june.presentation.screens.home.components.DeleteConfirmationSheet
+import com.denser.june.presentation.screens.editor.components.dialogs.AddItemSheet
+import com.denser.june.presentation.screens.editor.components.dialogs.AddLocationDialog
+import com.denser.june.presentation.screens.editor.components.emoji.JournalEmojiPickerSheet
+import com.denser.june.presentation.screens.editor.components.emoji.loadEmojiAssets
+import com.denser.june.presentation.screens.editor.components.dialogs.JournalTagsDialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.denser.june.presentation.plus.LocalIsPlus
+import com.denser.june.presentation.plus.LocalPlusSheetController
+import com.denser.june.presentation.screens.editor.components.dialogs.JunePlusSaveDialog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 
 class EditorDialogState {
     var showExitDialog by mutableStateOf(false)
-    var showDeleteConfirmation by mutableStateOf(false)
     var showDatePicker by mutableStateOf(false)
     var datePickerInitialTab by mutableIntStateOf(0)
     var showAddItemSheet by mutableStateOf(false)
@@ -33,6 +44,8 @@ class EditorDialogState {
     var showCameraSelectionDialog by mutableStateOf(false)
     var showLocationDialog by mutableStateOf(false)
     var showTagsDialog by mutableStateOf(false)
+    var showPlusSaveDialog by mutableStateOf(false)
+    var onPlusSaveExitAfter by mutableStateOf(false)
 }
 
 @Composable
@@ -47,23 +60,82 @@ fun EditorModals(
 ) {
     val context = LocalContext.current
     val navigator = koinInject<AppNavigator>()
+    val journalPrefs = koinInject<JournalPreferences>()
+    val isPlus = LocalIsPlus.current
+    val plusSheetController = LocalPlusSheetController.current
+    val isCompressPhotosEnabled by journalPrefs.isCompressPhotosEnabled().collectAsStateWithLifecycle(initialValue = false)
+    val photoQuality by journalPrefs.getPhotoCompressionQuality().collectAsStateWithLifecycle(initialValue = 80)
+    val isCompressVideosEnabled by journalPrefs.isCompressVideosEnabled().collectAsStateWithLifecycle(initialValue = false)
+    val videoQuality by journalPrefs.getVideoCompressionQuality().collectAsStateWithLifecycle(initialValue = 1080)
+    val coroutineScope = rememberCoroutineScope()
+
+    val appResources = remember(context) { context.applicationContext.resources }
+    val entrySavedMessage = stringResource(R.string.entry_saved_default_theme)
+
+    LaunchedEffect(Unit) {
+        loadEmojiAssets(appResources)
+    }
 
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var tempVideoUri by remember { mutableStateOf<Uri?>(null) }
 
+    fun processImportedMedia(uri: Uri, isVideoHint: Boolean? = null) {
+        val uriString = uri.toString()
+        onAction(EditorAction.AddImage(uriString))
+        onAction(EditorAction.SetMediaProcessing(uriString, true))
+        coroutineScope.launch {
+            val persistedPath = withContext(Dispatchers.IO) {
+                MediaStorageManager.persistMedia(context, uri)
+            }
+            if (persistedPath != null) {
+                onAction(EditorAction.ReplaceImage(uriString, persistedPath))
+                val isVideo = isVideoHint ?: ExifUtils.isVideoPath(persistedPath)
+                val needsCompression = ((isVideo && isCompressVideosEnabled) || (!isVideo && isCompressPhotosEnabled)) &&
+                    CompressUtils.shouldCompressMedia(context, persistedPath, targetVideoHeight = videoQuality, maxPhotoDimension = 2048)
+                if (needsCompression) {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            CompressUtils.saveUncompressedOriginalFile(context, persistedPath)
+                            if (isVideo) {
+                                val preset = when {
+                                    videoQuality <= 480 -> CompressionPreset.LOW
+                                    videoQuality <= 720 -> CompressionPreset.MEDIUM
+                                    else -> CompressionPreset.HIGH
+                                }
+                                CompressUtils.compressVideo(context, persistedPath, preset)
+                            } else {
+                                val preset = when {
+                                    photoQuality <= 70 -> CompressionPreset.LOW
+                                    photoQuality <= 80 -> CompressionPreset.MEDIUM
+                                    else -> CompressionPreset.HIGH
+                                }
+                                CompressUtils.compressPhoto(context, persistedPath, preset)
+                            }
+                        } finally {
+                            onAction(EditorAction.SetMediaProcessing(persistedPath, false))
+                        }
+                    }
+                } else {
+                    onAction(EditorAction.SetMediaProcessing(persistedPath, false))
+                }
+            } else {
+                onAction(EditorAction.RemoveImage(uriString))
+                onAction(EditorAction.SetMediaProcessing(uriString, false))
+            }
+        }
+    }
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia()
     ) { uris ->
-        val newPaths = uris.mapNotNull { FileUtils.persistMedia(context, it) }
-        if (newPaths.isNotEmpty()) onAction(EditorAction.AddImages(newPaths))
+        uris.forEach { processImportedMedia(it) }
     }
 
     val photoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && tempCameraUri != null) {
-            FileUtils.persistMedia(context, tempCameraUri!!)
-                ?.let { onAction(EditorAction.AddImage(it)) }
+            processImportedMedia(tempCameraUri!!, isVideoHint = false)
         }
     }
 
@@ -71,8 +143,7 @@ fun EditorModals(
         contract = ActivityResultContracts.CaptureVideo()
     ) { success ->
         if (success && tempVideoUri != null) {
-            FileUtils.persistMedia(context, tempVideoUri!!)
-                ?.let { onAction(EditorAction.AddImage(it)) }
+            processImportedMedia(tempVideoUri!!, isVideoHint = true)
         }
     }
 
@@ -84,7 +155,7 @@ fun EditorModals(
             confirmButton = {
                 TextButton(onClick = {
                     dialogState.showCameraSelectionDialog = false
-                    val uri = FileUtils.createTempVideoUri(context)
+                    val uri = MediaStorageManager.createTempVideoUri(context)
                     tempVideoUri = uri
                     videoLauncher.launch(uri)
                 }) { Text(stringResource(R.string.record_video)) }
@@ -92,7 +163,7 @@ fun EditorModals(
             dismissButton = {
                 TextButton(onClick = {
                     dialogState.showCameraSelectionDialog = false
-                    val uri = FileUtils.createTempPictureUri(context)
+                    val uri = MediaStorageManager.createTempPictureUri(context)
                     tempCameraUri = uri
                     photoLauncher.launch(uri)
                 }) { Text(stringResource(R.string.take_photo)) }
@@ -109,26 +180,55 @@ fun EditorModals(
             confirmButton = {
                 Button(onClick = {
                     dialogState.showExitDialog = false
-                    onAction(EditorAction.SaveJournal)
-                    onAction(EditorAction.NavigateBack)
-                }) { Text(stringResource(R.string.save)) }
+                    val hasPlusStyling = (editorState.font != null || editorState.fontVariation != null || editorState.theme != null)
+                    if (!isPlus && hasPlusStyling) {
+                        dialogState.onPlusSaveExitAfter = true
+                        dialogState.showPlusSaveDialog = true
+                    } else {
+                        editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                        onAction(EditorAction.SaveJournal)
+                        onAction(EditorAction.NavigateBack)
+                    }
+                }) { Text(stringResource(R.string.action_save)) }
             },
             dismissButton = {
                 OutlinedButton(onClick = {
                     dialogState.showExitDialog = false
+                    editorState.images.forEach { CompressUtils.restoreUncompressedOriginalFile(context, it) }
                     onAction(EditorAction.NavigateBack)
-                }) { Text(stringResource(R.string.discard)) }
+                }) { Text(stringResource(R.string.action_discard)) }
             },
             text = { Text(stringResource(R.string.save_progress_message)) }
         )
     }
 
-    if (dialogState.showDeleteConfirmation) {
-        DeleteConfirmationSheet(
-            onDismissRequest = { dialogState.showDeleteConfirmation = false },
-            onConfirm = {
-                dialogState.showDeleteConfirmation = false
-                onAction(EditorAction.DeleteJournal)
+    if (dialogState.showPlusSaveDialog) {
+        JunePlusSaveDialog(
+            onDismissRequest = { dialogState.showPlusSaveDialog = false },
+            onUnlockPlus = {
+                dialogState.showPlusSaveDialog = false
+                plusSheetController.show {
+                    editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                    onAction(EditorAction.SaveJournal)
+                    if (dialogState.onPlusSaveExitAfter) {
+                        onAction(EditorAction.NavigateBack)
+                    }
+                }
+            },
+            onSaveWithoutPlusStyling = {
+                dialogState.showPlusSaveDialog = false
+                onAction(EditorAction.SetJournalFont(fontName = null, variation = null))
+                onAction(EditorAction.SetJournalTheme(theme = null))
+                editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                onAction(EditorAction.SaveJournal)
+                Toast.makeText(
+                    context,
+                    entrySavedMessage,
+                    Toast.LENGTH_SHORT
+                ).show()
+                if (dialogState.onPlusSaveExitAfter) {
+                    onAction(EditorAction.NavigateBack)
+                }
             }
         )
     }
@@ -151,6 +251,7 @@ fun EditorModals(
     if (dialogState.showLocationDialog) {
         AddLocationDialog(
             existingLocation = editorState.location,
+            journalTheme = editorState.theme,
             onLocationSelected = { loc -> onAction(EditorAction.SetLocation(loc)) },
             onRemoveLocation = { onAction(EditorAction.RemoveLocation) },
             onDismiss = { dialogState.showLocationDialog = false }
@@ -176,7 +277,7 @@ fun EditorModals(
     }
 
     if (dialogState.showEmojiPicker) {
-        JournalEmojiPickerDialog(
+        JournalEmojiPickerSheet(
             initialEmoji = editorState.emoji,
             onEmojiSelected = { emoji ->
                 onAction(EditorAction.ChangeEmoji(emoji))

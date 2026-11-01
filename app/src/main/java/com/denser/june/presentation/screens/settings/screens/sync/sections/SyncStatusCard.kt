@@ -103,10 +103,6 @@ fun SyncStatusCard(
                             val completed = uploadCount + downloadCount
 
                             val (header, subtitle) = when {
-                                total <= 0 -> {
-                                    "Syncing" to currentOp.ifBlank { "Initializing connection..." }
-                                }
-
                                 currentOp.contains("clean", ignoreCase = true) ||
                                         currentOp.contains("purge", ignoreCase = true) ||
                                         currentOp.contains("tombstone", ignoreCase = true) -> {
@@ -119,28 +115,24 @@ fun SyncStatusCard(
                                         .removePrefix("Uploading ")
                                         .removeSuffix("...")
                                     val displayItem = if (targetItem.equals("changes", ignoreCase = true)) {
-                                        "untitled journal"
+                                        "journal changes"
                                     } else {
                                         targetItem
                                     }
-                                    val progressHeader = "Pushing changes (${completed + 1} of $total)"
-                                    val progressDetail = "Uploading $displayItem..."
-                                    progressHeader to progressDetail
+                                    "Pushing changes" to "Uploading $displayItem..."
                                 }
 
                                 currentOp.startsWith("Downloading", ignoreCase = true) ||
                                         currentOp.startsWith("Pulling", ignoreCase = true) -> {
-                                    val progressHeader = "Pulling changes (${completed + 1} of $total)"
-                                    val progressDetail = "Downloading journal updates..."
-                                    progressHeader to progressDetail
+                                    "Pulling changes" to "Downloading updates..."
                                 }
 
                                 uploadCount > 0 && downloadCount > 0 -> {
-                                    "Syncing ($completed of $total)" to "Pulled $downloadCount, pushed $uploadCount"
+                                    "Syncing" to "Pulled $downloadCount, pushed $uploadCount"
                                 }
 
                                 else -> {
-                                    "Syncing (${completed + 1} of $total)" to currentOp.ifBlank { "Processing updates..." }
+                                    "Syncing" to currentOp.ifBlank { "Processing updates..." }
                                 }
                             }
 

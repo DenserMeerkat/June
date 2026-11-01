@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import com.denser.hyphen.model.MarkupStyle
 import com.denser.hyphen.model.MarkupStyleRange
 import com.denser.june.core.R
+import com.denser.june.presentation.components.JuneDropdownMenu
+import com.denser.june.presentation.components.JuneDropdownMenuItem
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
 import com.denser.june.presentation.components.JuneTextField
@@ -37,17 +39,13 @@ fun JuneLinkMenu(
     val scope = rememberCoroutineScope()
     val url = remember(span.style) { (span.style as? MarkupStyle.Link).getDisplayUrl() }
 
-    DropdownMenu(
+    JuneDropdownMenu(
         expanded = true,
         onDismissRequest = onDismiss,
         offset = DpOffset(menuOffset.x.dp, menuOffset.y.dp + 4.dp),
-        shape = RoundedCornerShape(24.dp),
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         tonalElevation = 6.dp,
-        modifier = Modifier.padding(horizontal = 8.dp)
     ) {
-        DropdownMenuItem(
-            modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+        JuneDropdownMenuItem(
             text = { Text(stringResource(R.string.open_link), style = MaterialTheme.typography.labelLarge) },
             onClick = {
                 onDismiss()
@@ -62,8 +60,7 @@ fun JuneLinkMenu(
                 )
             }
         )
-        DropdownMenuItem(
-            modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+        JuneDropdownMenuItem(
             text = { Text(stringResource(R.string.edit_link), style = MaterialTheme.typography.labelLarge) },
             onClick = {
                 onDismiss()
@@ -78,8 +75,7 @@ fun JuneLinkMenu(
                 )
             }
         )
-        DropdownMenuItem(
-            modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+        JuneDropdownMenuItem(
             text = { Text(stringResource(R.string.copy_url), style = MaterialTheme.typography.labelLarge) },
             onClick = {
                 scope.launch {
@@ -167,15 +163,15 @@ fun JuneLinkSheet(
                 JuneFloatingActionBar {
                      JuneFloatingAction(
                         onClick = onDismiss,
-                        label = stringResource(R.string.cancel),
+                        label = stringResource(R.string.action_cancel),
                         icon = { Icon(painterResource(R.drawable.close_24px), null, Modifier.size(20.dp)) },
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     JuneFloatingAction(
                         onClick = { onConfirm(text, url) },
-                        label = stringResource(R.string.confirm),
+                        label = stringResource(R.string.action_confirm),
                         icon = { Icon(painterResource(R.drawable.check_24px), null, Modifier.size(20.dp)) },
                         enabled = url.isNotBlank()
                     )

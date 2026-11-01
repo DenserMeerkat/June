@@ -14,6 +14,7 @@ data class AppTheme(
     val style: PaletteStyle = PaletteStyle.TonalSpot,
     val materialTheme: Boolean = false,
     val appFont: String = "Google Sans Flex",
+    val appFontVariation: FontVariationConfig? = FontVariationConfig.DEFAULT,
 )
 
 fun ThemePreferences.getAppThemeFlow(fontPrefs: FontPreferences): Flow<AppTheme> {
@@ -33,5 +34,7 @@ fun ThemePreferences.getAppThemeFlow(fontPrefs: FontPreferences): Flow<AppTheme>
         )
     }.combine(fontPrefs.getAppFont()) { theme, font ->
         theme.copy(appFont = font)
+    }.combine(fontPrefs.getAppFontVariation()) { theme, variation ->
+        theme.copy(appFontVariation = variation)
     }
 }

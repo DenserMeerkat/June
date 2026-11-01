@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens
+import com.denser.june.presentation.components.JuneBackButton
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,8 +15,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import com.denser.june.presentation.components.JuneDropdownMenu
+import com.denser.june.presentation.components.JuneDropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -55,15 +56,29 @@ import org.koin.compose.viewmodel.koinViewModel
 
 import com.denser.june.presentation.utils.SecurityQuestionUtils
 
+import androidx.compose.runtime.rememberCoroutineScope
+import com.denser.june.core.domain.preferences.PrivacyPreferences
+import kotlinx.coroutines.launch
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecoverySetupScreen() {
+fun RecoverySetupScreen(lockType: LockType = LockType.PIN, forVault: Boolean = false) {
     val settingsVM: SettingsVM = koinViewModel()
     val state = settingsVM.state.collectAsStateWithLifecycle().value
     val onAction = settingsVM::onAction
+    val privacyPreferences = koinInject<PrivacyPreferences>()
+    val coroutineScope = rememberCoroutineScope()
+    val vaultQuestion by privacyPreferences.getVaultSecurityQuestionFlow()
+        .collectAsStateWithLifecycle(initialValue = null)
+    val effectiveQuestion = if (forVault) vaultQuestion else state.securityQuestion
+    val vaultPinHash by privacyPreferences.getVaultPinHashFlow().collectAsStateWithLifecycle(initialValue = null)
+    val vaultPasswordHash by privacyPreferences.getVaultPasswordHashFlow().collectAsStateWithLifecycle(initialValue = null)
+    val vaultPatternHash by privacyPreferences.getVaultPatternHashFlow().collectAsStateWithLifecycle(initialValue = null)
+
     val navigator = koinInject<AppNavigator>()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val context = LocalContext.current
+    val lockSetSuccessMsg = stringResource(R.string.lock_set_successfully)
 
     val customQuestionTitle = stringResource(R.string.question_custom)
     val predefinedItems = remember { SecurityQuestionUtils.PREDEFINED_QUESTIONS }
@@ -72,22 +87,22 @@ fun RecoverySetupScreen() {
         stringResource(it.questionResId) to stringResource(it.placeholderResId)
     } + (customQuestionTitle to stringResource(R.string.placeholder_default_answer))
 
-    val predefinedIndex = remember(state.securityQuestion) {
-        SecurityQuestionUtils.findPredefinedQuestionIndex(context, state.securityQuestion)
+    val predefinedIndex = remember(effectiveQuestion) {
+        SecurityQuestionUtils.findPredefinedQuestionIndex(context, effectiveQuestion)
     }
-    val isCustomStored = remember(state.securityQuestion, predefinedIndex) {
-        state.securityQuestion != null && predefinedIndex == null
+    val isCustomStored = remember(effectiveQuestion, predefinedIndex) {
+        effectiveQuestion != null && predefinedIndex == null
     }
 
-    var selectedQuestion by remember(state.securityQuestion, predefinedIndex, customQuestionTitle) {
+    var selectedQuestion by remember(effectiveQuestion, predefinedIndex, customQuestionTitle) {
         mutableStateOf(
             if (isCustomStored) customQuestionTitle
             else if (predefinedIndex != null) questionItems[predefinedIndex].first
             else questionItems.first().first
         )
     }
-    var customQuestionText by remember(state.securityQuestion, isCustomStored) {
-        mutableStateOf(if (isCustomStored) state.securityQuestion ?: "" else "")
+    var customQuestionText by remember(effectiveQuestion, isCustomStored) {
+        mutableStateOf(if (isCustomStored) effectiveQuestion ?: "" else "")
     }
     var answer by remember { mutableStateOf("") }
     var isDropdownExpanded by remember { mutableStateOf(false) }
@@ -107,30 +122,7 @@ fun RecoverySetupScreen() {
                 title = { Text(stringResource(R.string.security_question)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = "Back",
-                        )
-                    }
-                },
-                actions = {
-                    OutlinedButton(
-                        onClick = {
-                            onAction(SettingsAction.UpdateSecurityQuestionAndAnswer(null, null))
-                            onAction(SettingsAction.UpdateLockType(LockType.PIN))
-                            onAction(SettingsAction.OnAppLockToggle(true))
-                            navigator.navigateBack()
-                        }
-                    ) {
-                        Text(stringResource(R.string.skip), color = MaterialTheme.colorScheme.primary)
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 }
             )
         }
@@ -189,23 +181,19 @@ fun RecoverySetupScreen() {
                         }
                     }
 
-                    DropdownMenu(
+                    JuneDropdownMenu(
                         expanded = isDropdownExpanded,
                         onDismissRequest = { isDropdownExpanded = false },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
-                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     ) {
                         questionItems.forEach { (question, _) ->
                             val isCustomOption = question == customQuestionTitle
 
-                            DropdownMenuItem(
+                            JuneDropdownMenuItem(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .clip(RoundedCornerShape(16.dp)),
+                                    .padding(vertical = 4.dp),
                                 text = {
                                     Text(
                                         text = question,
@@ -266,16 +254,80 @@ fun RecoverySetupScreen() {
                         answerError = true
                     } else {
                         val answerHash = SecurityUtils.hashAnswer(answer)
-                        onAction(SettingsAction.UpdateSecurityQuestionAndAnswer(finalQuestion, answerHash))
-                        onAction(SettingsAction.UpdateLockType(LockType.PIN))
-                        onAction(SettingsAction.OnAppLockToggle(true))
-                        navigator.navigateBack()
+                        if (forVault) {
+                            coroutineScope.launch {
+                                privacyPreferences.setVaultCustomLock(
+                                    type = lockType,
+                                    pinHash = if (lockType == LockType.PIN) vaultPinHash else null,
+                                    passwordHash = if (lockType == LockType.PASSWORD) vaultPasswordHash else null,
+                                    patternHash = if (lockType == LockType.PATTERN) vaultPatternHash else null,
+                                    securityQuestion = finalQuestion,
+                                    securityAnswerHash = answerHash
+                                )
+                                android.widget.Toast.makeText(
+                                    context,
+                                    lockSetSuccessMsg,
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                                navigator.navigateBack()
+                            }
+                        } else {
+                            onAction(SettingsAction.UpdateSecurityQuestionAndAnswer(finalQuestion, answerHash))
+                            onAction(SettingsAction.UpdateLockType(lockType))
+                            onAction(SettingsAction.OnAppLockToggle(true))
+                            android.widget.Toast.makeText(
+                                context,
+                                lockSetSuccessMsg,
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                            navigator.navigateBack()
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.save_and_enable_lock))
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = {
+                    if (forVault) {
+                        coroutineScope.launch {
+                            privacyPreferences.setVaultCustomLock(
+                                type = lockType,
+                                pinHash = if (lockType == LockType.PIN) vaultPinHash else null,
+                                passwordHash = if (lockType == LockType.PASSWORD) vaultPasswordHash else null,
+                                patternHash = if (lockType == LockType.PATTERN) vaultPatternHash else null,
+                                securityQuestion = null,
+                                securityAnswerHash = null
+                            )
+                            android.widget.Toast.makeText(
+                                context,
+                                lockSetSuccessMsg,
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                            navigator.navigateBack()
+                        }
+                    } else {
+                        onAction(SettingsAction.UpdateSecurityQuestionAndAnswer(null, null))
+                        onAction(SettingsAction.UpdateLockType(lockType))
+                        onAction(SettingsAction.OnAppLockToggle(true))
+                        android.widget.Toast.makeText(
+                            context,
+                            lockSetSuccessMsg,
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                        navigator.navigateBack()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.skip_and_enable_lock))
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

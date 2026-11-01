@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens
+import com.denser.june.presentation.components.JuneBackButton
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,18 +39,7 @@ fun GeneralSettingsScreen() {
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(R.string.general)) },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 }
             )
         }
@@ -94,6 +84,18 @@ fun GeneralSettingsScreen() {
                     }
                 }
 
+                val compressionGroup = listOfNotNull(
+                    generalTiles["COMPRESS_PHOTOS"],
+                    generalTiles["COMPRESS_VIDEOS"]
+                )
+                if (compressionGroup.isNotEmpty()) {
+                    item {
+                        SettingSection {
+                            compressionGroup.forEach { it.content() }
+                        }
+                    }
+                }
+
                 val deleteTile = generalTiles["DELETE_ALL_JOURNALS"]
                 if (deleteTile != null) {
                     item {
@@ -114,7 +116,7 @@ fun GeneralSettingsScreen() {
         JuneConfirmationDialog(
             title = stringResource(R.string.move_all_to_bin_title),
             description = stringResource(R.string.move_all_to_bin_desc),
-            confirmText = stringResource(R.string.delete),
+            confirmText = stringResource(R.string.action_delete),
             confirmButtonText = stringResource(R.string.move_all_to_bin),
             onDismiss = { showDeleteDialog = false },
             onConfirm = {

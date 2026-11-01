@@ -3,15 +3,11 @@ package com.denser.june.presentation.utils
 import android.content.Context
 import com.denser.june.BuildConfig
 import com.denser.june.core.domain.preferences.PrivacyPreferences
-import com.denser.june.presentation.screens.settings.components.VersionEntry
+import com.denser.june.presentation.screens.settings.components.sheets.VersionEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
-
-import com.denser.june.presentation.utils.AnnouncementEntry
-import com.denser.june.presentation.utils.AnnouncementAction
-import com.denser.june.presentation.utils.AnnouncementActionType
 
 class StartupManager(
     private val context: Context,
@@ -77,34 +73,7 @@ class StartupManager(
     private suspend fun checkAnnouncement() {
         val latestAnnouncement = try {
             val jsonString = context.assets.open("announcements.json").bufferedReader().use { it.readText() }
-            val jsonArray = JSONArray(jsonString)
-            if (jsonArray.length() > 0) {
-                val obj = jsonArray.getJSONObject(0)
-                val actionObj = obj.optJSONObject("action")
-                val action = if (actionObj != null) {
-                    val typeStr = actionObj.getString("type")
-                    val type = try {
-                        AnnouncementActionType.valueOf(typeStr.uppercase())
-                    } catch (e: Exception) {
-                        AnnouncementActionType.WEB_URL
-                    }
-                    AnnouncementAction(
-                        text = actionObj.getString("text"),
-                        type = type,
-                        target = actionObj.getString("target")
-                    )
-                } else null
-
-                AnnouncementEntry(
-                    id = obj.getString("id"),
-                    title = obj.getString("title"),
-                    message = obj.getString("message"),
-                    icon = obj.optString("icon", null),
-                    minVersion = obj.optString("minVersion", null),
-                    maxVersion = obj.optString("maxVersion", null),
-                    action = action
-                )
-            } else null
+            parseAnnouncement(jsonString)
         } catch (e: Exception) {
             null
         }

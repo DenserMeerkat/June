@@ -1,4 +1,5 @@
 package com.denser.june.presentation.screens.settings.screens
+import com.denser.june.presentation.components.JuneBackButton
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -25,6 +26,7 @@ import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.screens.settings.components.*
+import com.denser.june.presentation.screens.settings.components.sheets.*
 import com.denser.june.presentation.screens.settings.tiles.CloudSyncTile
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -192,18 +194,7 @@ fun DataSyncSettingsScreen() {
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(R.string.data_and_sync)) },
                 navigationIcon = {
-                    FilledIconButton(
-                        onClick = { navigator.navigateBack() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.arrow_back_24px),
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
+                    JuneBackButton(onClick = { navigator.navigateBack() })
                 }
             )
         }
@@ -225,12 +216,13 @@ fun DataSyncSettingsScreen() {
                 ) {
                     val isBackingUp = state.exportState.isLoading
                     SettingsItem(
-                        title = stringResource(R.string.create_backup),
+                        title = stringResource(R.string.action_backup),
                         subtitle = if (isBackingUp) stringResource(R.string.exporting) else stringResource(R.string.create_backup_desc),
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.upload_24px),
-                                null
+                                null,
+                                tint = MaterialTheme.colorScheme.secondary
                             )
                         },
                         trailingContent = if (isBackingUp) {
@@ -246,12 +238,13 @@ fun DataSyncSettingsScreen() {
 
                     val isRestoring = state.restoreState.isLoading
                     SettingsItem(
-                        title = stringResource(R.string.restore_backup),
+                        title = stringResource(R.string.action_restore),
                         subtitle = if (isRestoring) stringResource(R.string.restoring) else stringResource(R.string.restore_backup_desc),
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.download_24px),
-                                null
+                                null,
+                                tint = MaterialTheme.colorScheme.secondary
                             )
                         },
                         trailingContent = if (isRestoring) {
@@ -283,7 +276,8 @@ fun DataSyncSettingsScreen() {
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.file_save_24px),
-                                null
+                                null,
+                                tint = MaterialTheme.colorScheme.secondary
                             )
                         },
                         trailingContent = if (isExportingMarkdown) {
@@ -304,7 +298,8 @@ fun DataSyncSettingsScreen() {
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.folder_open_24px),
-                                null
+                                null,
+                                tint = MaterialTheme.colorScheme.secondary
                             )
                         },
                         trailingContent = if (isImportingMarkdown) {
@@ -363,10 +358,10 @@ fun DataSyncSettingsScreen() {
                         showRestoreWarning = null
                         onAction(SettingsAction.OnRestoreJournals(uri))
                     }
-                ) { Text(stringResource(R.string.restore)) }
+                ) { Text(stringResource(R.string.action_restore)) }
             },
             dismissButton = {
-                OutlinedButton(onClick = { showRestoreWarning = null }) { Text(stringResource(R.string.cancel)) }
+                OutlinedButton(onClick = { showRestoreWarning = null }) { Text(stringResource(R.string.action_cancel)) }
             },
             text = {
                 Text(stringResource(R.string.restore_warning_message))
@@ -374,6 +369,3 @@ fun DataSyncSettingsScreen() {
         )
     }
 }
-
-@Composable
-fun SyncBackupSettingsScreen() = DataSyncSettingsScreen()

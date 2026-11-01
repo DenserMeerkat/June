@@ -50,9 +50,15 @@ interface SyncPreferences {
     fun getDatabaseLoggingEnabled(): Flow<Boolean>
     suspend fun setDatabaseLoggingEnabled(enabled: Boolean)
 
+    fun getBillingLoggingEnabled(): Flow<Boolean>
+    suspend fun setBillingLoggingEnabled(enabled: Boolean)
+
     fun isDeveloperModeEnabled(): Flow<Boolean>
     suspend fun setDeveloperModeEnabled(enabled: Boolean)
 
     fun getLastCompletedDataRepairVersion(): Flow<Int>
     suspend fun setLastCompletedDataRepairVersion(version: Int)
+
+    fun getLastPurgeTime(): Flow<Long>
+    suspend fun setLastPurgeTime(time: Long)
 }

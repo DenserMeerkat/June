@@ -196,4 +196,66 @@ class SyncSongMediaTest : BaseSyncTest() {
             File(journal!!.songDetails!!.localPreviewPath!!).exists()
         )
     }
+
+    @Test
+    fun `journal attached song without library entry is uploaded to cloud`() = runTest {
+        val songFile = File(harness.songMediaDir, "library/uncataloged.mp3")
+        songFile.parentFile?.mkdirs()
+        songFile.writeBytes(byteArrayOf(1, 2, 3, 4, 5))
+
+        val j1 = SyncFixtures.newJournal("j1", updatedAt = T1).copy(
+            songDetails = SongDetails(
+                title = "Linked Song",
+                artistName = "Web Artist",
+                localPreviewPath = songFile.absolutePath
+            )
+        )
+        harness.repo.seed(j1)
+
+        val result = harness.sync()
+
+        assertTrue(result.isSuccess)
+        assertTrue(harness.cloud.allSongMediaKeys().contains("uncataloged.mp3"))
+        assertNotNull(harness.cloud.manifest?.songMediaMetadata?.get("uncataloged.mp3"))
+    }
+
+    @Test
+    fun `song upload failure does not fail sync and updates manifest`() = runTest {
+        val testAudio = harness.givenSongInLibrary("s1", "failing_song.mp3", bytes = byteArrayOf(1, 2, 3))
+        val j1 = SyncFixtures.newJournal("j1", updatedAt = T1).copy(
+            songDetails = SongDetails(
+                title = "Failing Track",
+                artistName = "Artist",
+                localPreviewPath = testAudio.absolutePath
+            )
+        )
+        harness.repo.seed(j1)
+        harness.cloud.failNextUploadSongMedia = true
+
+        val result = harness.sync()
+
+        assertTrue(result.isSuccess)
+        assertNotNull(harness.cloud.manifest)
+    }
+
+    @Test
+    fun `downloaded non-mp3 song registers in SongLibraryDao with correct hash`() = runTest {
+        harness.cloud.putSongMedia("song_dl.m4a", byteArrayOf(10, 20, 30))
+        harness.givenCloudOnlyJournal(
+            "j1",
+            songDetails = SongDetails(
+                title = "M4A Track",
+                artistName = "M4A Artist",
+                localPreviewPath = "song_dl.m4a"
+            ),
+            modifiedAt = T1
+        )
+
+        val result = harness.sync()
+
+        assertTrue(result.isSuccess)
+        val entry = harness.songDao.getByHash("song_dl")
+        assertNotNull(entry)
+        assertEquals("M4A Track", entry?.title)
+    }
 }

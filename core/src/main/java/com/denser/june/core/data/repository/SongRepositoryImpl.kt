@@ -17,6 +17,7 @@ import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongSourceType
 import com.denser.june.core.domain.repository.SongRepository
+import com.denser.june.core.media.storage.SongMediaStorage
 import com.denser.june.core.utils.FileUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -464,14 +465,14 @@ class SongRepositoryImpl(
 
     override suspend fun addToLibrary(song: SongDetails): Result<SongDetails> = withContext(Dispatchers.IO) {
         try {
-            val resolvedLocal = FileUtils.resolveSongMedia(context, song.localPreviewPath, "library")
+            val resolvedLocal = SongMediaStorage.resolveSongMedia(context, song.localPreviewPath, "library")
             if (resolvedLocal?.exists() == true && resolvedLocal.length() > 0L) {
                 return@withContext Result.success(persistAndSyncSong(song, resolvedLocal.absolutePath))
             }
 
             val existingInLibrary = songLibraryDao.getByTitleAndArtist(song.title, song.artistName)
             if (existingInLibrary != null) {
-                val resolvedLib = FileUtils.resolveSongMedia(context, existingInLibrary.localPath, "library")
+                val resolvedLib = SongMediaStorage.resolveSongMedia(context, existingInLibrary.localPath, "library")
                 if (resolvedLib?.exists() == true && resolvedLib.length() > 0L) {
                     return@withContext Result.success(persistAndSyncSong(song, resolvedLib.absolutePath, existingInLibrary.localArtPath))
                 }
@@ -494,7 +495,7 @@ class SongRepositoryImpl(
             if (linkUrl != null) {
                 val fresh = fetchSongDetails(linkUrl).getOrNull()
                 if (fresh != null) {
-                    val resolvedAudio = FileUtils.resolveSongMedia(context, fresh.localPreviewPath, "library")
+                    val resolvedAudio = SongMediaStorage.resolveSongMedia(context, fresh.localPreviewPath, "library")
                     if (resolvedAudio?.exists() == true && resolvedAudio.length() > 0L) {
                         val merged = song.copy(
                             title = fresh.title.ifBlank { song.title },
