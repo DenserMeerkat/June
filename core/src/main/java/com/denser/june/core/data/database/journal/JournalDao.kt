@@ -16,6 +16,9 @@ interface JournalDao {
     @Update
     suspend fun updateJournal(journal: JournalEntity)
 
+    @Update
+    suspend fun updateJournals(journals: List<JournalEntity>)
+
     @Query("DELETE FROM journals WHERE id = :id")
     suspend fun deleteJournal(id: String)
 
@@ -114,6 +117,9 @@ interface JournalDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTags(tags: List<TagEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertTag(tag: TagEntity)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertJournalTagCrossRefs(crossRefs: List<JournalTagCrossRef>)
 
@@ -182,6 +188,23 @@ interface JournalDao {
 
     @Query("UPDATE tags SET name = :newName WHERE name = :oldName")
     suspend fun updateTagName(oldName: String, newName: String)
+
+    @Transaction
+    @Query("""
+        SELECT j.* FROM journals j
+        INNER JOIN journal_tag_cross_ref ref ON j.id = ref.id
+        WHERE ref.tagName = :tagName
+    """)
+    suspend fun getAllJournalsByTagNameSync(tagName: String): List<JournalEntity>
+
+    @Query("""
+        INSERT OR IGNORE INTO journal_tag_cross_ref (id, tagName)
+        SELECT id, :newName FROM journal_tag_cross_ref WHERE tagName = :oldName
+    """)
+    suspend fun copyTagCrossRefs(oldName: String, newName: String)
+
+    @Query("DELETE FROM journal_tag_cross_ref WHERE tagName = :tagName")
+    suspend fun deleteTagCrossRefs(tagName: String)
 
     @Query("UPDATE journal_tag_cross_ref SET tagName = :newName WHERE tagName = :oldName")
     suspend fun updateTagCrossRefName(oldName: String, newName: String)
