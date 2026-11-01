@@ -1,5 +1,19 @@
 [
   {
+    "id": "june_plus_intro_v1",
+    "flavors": [
+      "play"
+    ],
+    "title": "June Plus",
+    "message": "Support continuous development and unlock the complete June experience.",
+    "icon": "flower_24px_fill",
+    "action": {
+      "text": "Get Plus",
+      "type": "IN_APP_ROUTE",
+      "target": "plus"
+    }
+  },
+  {
     "id": "translation_callout_v1",
     "title": "Help Translate",
     "message": "June speaks your language with your help! Contribute on Weblate.",

@@ -18,8 +18,8 @@ val appNamespace = "com.denser.june"
 val apkNamePrefix = "june"
 
 // Format: M mm pp b
-val appVersionCode = 103010
-val appVersionName = "1.3.1"
+val appVersionCode = 200000
+val appVersionName = "2.0.0"
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
@@ -138,6 +138,16 @@ val revenueCatApiKey = (localProperties["REVENUECAT_API_KEY"] ?: System.getenv("
     buildTypes {
         release {
             resValue("string", "app_name", appName)
+            isMinifyEnabled = true
+            isShrinkResources = true
+        }
+
+        create("beta") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            applicationIdSuffix = ".beta"
+            resValue("string", "app_name", appName)
+            versionNameSuffix = "-beta"
             isMinifyEnabled = true
             isShrinkResources = true
         }

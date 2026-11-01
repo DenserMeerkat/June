@@ -1,8 +1,26 @@
 [
   {
+    "version": "v2.0.0",
+    "changes": [
+      {
+        "text": "June Plus: Support development and unlock premium features.",
+        "flavors": [
+          "play"
+        ]
+      },
+      "Private Vault to protect sensitive journal entries.",
+      "Typography customization with bundled variable fonts.",
+      "Per-journal styling with custom fonts and palettes.",
+      "New Pattern and Password lock methods.",
+      "Dynamic map theming matching theme colors.",
+      "Performance and sync fixes.",
+      "UI polish and refinements."
+    ]
+  },
+  {
     "version": "v1.3.1",
     "changes": [
-      "Fixed map unrendering and blank flicker on app resume.",
+      "Fixed map rendering and blank flicker on app resume.",
       "Refined location picker search bar and controls.",
       "Fixed cloud sync analysis and progress tracking.",
       "Misc UI refinements and translations."
