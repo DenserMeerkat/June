@@ -1,7 +1,9 @@
 package com.denser.june.core.data.repository
 
 import android.content.Context
+import androidx.room.withTransaction
 import com.denser.june.core.data.database.journal.JournalDao
+import com.denser.june.core.data.database.journal.JournalDatabase
 import com.denser.june.core.data.database.journal.TagEntity
 import com.denser.june.core.data.database.journal.JournalTagCrossRef
 import com.denser.june.core.data.database.journal.DeletedJournalTombstone
@@ -14,10 +16,10 @@ import com.denser.june.core.domain.preferences.SyncPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 
 class JournalRepositoryImpl(
     private val journalDao: JournalDao,
+    private val journalDatabase: JournalDatabase,
     private val syncPrefs: SyncPreferences,
     private val context: Context
 ) : JournalRepository {
@@ -64,9 +66,11 @@ class JournalRepositoryImpl(
         val journalToInsert = if (journal.id.isBlank()) {
             journal.copy(id = java.util.UUID.randomUUID().toString())
         } else journal
-        
-        journalDao.insertJournal(journalToInsert.asEntity())
-        updateJournalTags(journalToInsert)
+
+        journalDatabase.withTransaction {
+            journalDao.insertJournal(journalToInsert.asEntity())
+            replaceJournalTags(journalToInsert.id, journalToInsert.tags)
+        }
         return journalToInsert.id
     }
 
@@ -80,11 +84,16 @@ class JournalRepositoryImpl(
     }
 
     override suspend fun hardDeleteJournal(id: String) {
-        val journal = journalDao.getJournalById(id)
-        if (journal?.syncedAt != null) {
-            journalDao.insertTombstone(DeletedJournalTombstone(id))
+        journalDatabase.withTransaction {
+            val journal = journalDao.getJournalById(id)
+            if (journal?.syncedAt != null) {
+                journalDao.insertTombstone(DeletedJournalTombstone(id))
+            }
+            // Drop this journal's cross references, otherwise the filter queries keep
+            // joining against rows that no longer have a matching journal.
+            journalDao.deleteTagsForJournal(id)
+            journalDao.hardDeleteJournal(id)
         }
-        journalDao.hardDeleteJournal(id)
     }
 
     override suspend fun deleteAllJournals() {
@@ -92,12 +101,16 @@ class JournalRepositoryImpl(
     }
 
     override suspend fun emptyBin() {
-        val deleted = journalDao.getDeletedJournalsSync()
-        val syncedDeletedIds = deleted.filter { it.syncedAt != null }.map { it.id }
-        if (syncedDeletedIds.isNotEmpty()) {
-            journalDao.insertTombstones(syncedDeletedIds.map { DeletedJournalTombstone(it) })
+        journalDatabase.withTransaction {
+            val deleted = journalDao.getDeletedJournalsSync()
+            val syncedDeletedIds = deleted.filter { it.syncedAt != null }.map { it.id }
+            if (syncedDeletedIds.isNotEmpty()) {
+                journalDao.insertTombstones(syncedDeletedIds.map { DeletedJournalTombstone(it) })
+            }
+            journalDao.emptyBin()
+            journalDao.deleteOrphanedCrossRefs()
+            journalDao.deleteOrphanedTags()
         }
-        journalDao.emptyBin()
     }
 
     override suspend fun restoreAllJournals() {
@@ -105,20 +118,26 @@ class JournalRepositoryImpl(
     }
 
     override suspend fun updateJournal(journal: Journal) {
-        journalDao.updateJournal(journal.asEntity())
-        updateJournalTags(journal)
+        journalDatabase.withTransaction {
+            journalDao.updateJournal(journal.asEntity())
+            replaceJournalTags(journal.id, journal.tags)
+        }
     }
 
-    private suspend fun updateJournalTags(journal: Journal) {
-        journalDao.deleteTagsForJournal(journal.id)
-        journal.tags.forEach { tagName ->
-            val trimmed = tagName.trim()
-            if (trimmed.isNotBlank()) {
-                journalDao.insertTag(TagEntity(name = trimmed))
-                journalDao.insertJournalTagCrossRef(JournalTagCrossRef(id = journal.id, tagName = trimmed))
-            }
-        }
-        journalDao.deleteOrphanedTags()
+    /**
+     * Rewrites the tag rows for a single journal. Must run inside a transaction: the delete
+     * followed by the inserts used to be separate transactions, so a process death in between
+     * could leave a journal without any tag cross references.
+     *
+     * Orphaned tags are intentionally not pruned here. This runs on every autosave, and
+     * [JournalDao.deleteOrphanedTags] is a full scan of the cross reference table.
+     */
+    private suspend fun replaceJournalTags(journalId: String, tags: List<String>) {
+        journalDao.deleteTagsForJournal(journalId)
+        val normalized = tags.map { it.trim() }.filter { it.isNotBlank() }.distinct()
+        if (normalized.isEmpty()) return
+        journalDao.insertTags(normalized.map { TagEntity(name = it) })
+        journalDao.insertJournalTagCrossRefs(normalized.map { JournalTagCrossRef(id = journalId, tagName = it) })
     }
 
 

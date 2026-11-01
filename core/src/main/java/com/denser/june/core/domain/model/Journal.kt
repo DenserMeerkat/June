@@ -1,5 +1,6 @@
 package com.denser.june.core.domain.model
 
+import com.denser.june.core.utils.toHexString
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.io.File
@@ -75,7 +76,7 @@ data class Journal(
         val jsonString = canonicalJsonFormatter.encodeToString(serializer(), normalized)
         val bytes = java.security.MessageDigest.getInstance("SHA-256")
             .digest(jsonString.toByteArray(Charsets.UTF_8))
-        return bytes.joinToString("") { "%02x".format(it) }
+        return bytes.toHexString()
     }
 }
 
