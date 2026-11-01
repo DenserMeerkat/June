@@ -17,14 +17,16 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import org.json.JSONArray
-
 import com.denser.june.BuildConfig
 import com.denser.june.core.R
 import com.denser.june.presentation.components.AnnouncementCard
-import com.denser.june.presentation.utils.AnnouncementEntry
+import com.denser.june.presentation.navigation.AppNavigator
+import com.denser.june.presentation.plus.LocalPlusSheetController
 import com.denser.june.presentation.utils.AnnouncementActionType
-import com.denser.june.presentation.utils.AnnouncementAction
+import com.denser.june.presentation.utils.handleAnnouncementAction
+import com.denser.june.presentation.utils.parseAnnouncement
+import org.json.JSONArray
+import org.koin.compose.koinInject
 
 data class VersionEntry(
     val version: String,
@@ -38,6 +40,10 @@ fun ChangelogBottomSheet(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val navigator = koinInject<AppNavigator>()
+    val plusSheetController = LocalPlusSheetController.current
+    val uriHandler = LocalUriHandler.current
+
     val changelogs = remember {
         try {
             val jsonString = context.assets.open("changelog.json").bufferedReader().use { it.readText() }
@@ -82,38 +88,11 @@ fun ChangelogBottomSheet(
     val announcement = remember {
         try {
             val jsonString = context.assets.open("announcements.json").bufferedReader().use { it.readText() }
-            val jsonArray = JSONArray(jsonString)
-            if (jsonArray.length() > 0) {
-                val obj = jsonArray.getJSONObject(0)
-                val actionObj = obj.optJSONObject("action")
-                val action = if (actionObj != null) {
-                    val typeStr = actionObj.getString("type")
-                    val type = try {
-                        AnnouncementActionType.valueOf(typeStr.uppercase())
-                    } catch (e: Exception) {
-                        AnnouncementActionType.WEB_URL
-                    }
-                    AnnouncementAction(
-                        text = actionObj.getString("text"),
-                        type = type,
-                        target = actionObj.getString("target")
-                    )
-                } else null
-
-                AnnouncementEntry(
-                    id = obj.getString("id"),
-                    title = obj.getString("title"),
-                    message = obj.getString("message"),
-                    icon = obj.optString("icon", null),
-                    action = action
-                )
-            } else null
+            parseAnnouncement(jsonString)
         } catch (e: Exception) {
             null
         }
     }
-
-    val uriHandler = LocalUriHandler.current
 
     ModalBottomSheet(
         onDismissRequest = { setShowSheet(false) },
@@ -151,14 +130,15 @@ fun ChangelogBottomSheet(
                             announcement = announcement,
                             onActionClick = {
                                 announcement.action?.let { action ->
-                                    when (action.type) {
-                                        AnnouncementActionType.WEB_URL -> {
-                                            uriHandler.openUri(action.target)
-                                        }
-                                        else -> {
-                                            uriHandler.openUri(action.target)
-                                        }
+                                    if (action.type == AnnouncementActionType.IN_APP_ROUTE) {
+                                        setShowSheet(false)
                                     }
+                                    handleAnnouncementAction(
+                                        action = action,
+                                        navigator = navigator,
+                                        uriHandler = uriHandler,
+                                        onOpenPlus = { plusSheetController.show() }
+                                    )
                                 }
                             }
                         )

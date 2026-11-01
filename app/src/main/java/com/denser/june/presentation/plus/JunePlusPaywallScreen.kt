@@ -155,7 +155,7 @@ private fun JunePlusPaywallContent(
                 ) {
                     val buttonText = when {
                         isPurchasing -> "Unlocking Plus…"
-                        plusPrice != null -> "Unlock Plus — $plusPrice"
+                        plusPrice != null -> "Unlock Plus • $plusPrice"
                         else -> "Unlock Plus"
                     }
 

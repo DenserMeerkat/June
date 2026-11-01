@@ -160,7 +160,8 @@ fun JuneApp(
                                 handleAnnouncementAction(
                                     action = action,
                                     navigator = navigator,
-                                    uriHandler = uriHandler
+                                    uriHandler = uriHandler,
+                                    onOpenPlus = { plusSheetController.show() }
                                 )
                             }
                             startupManager.dismissAnnouncement(announcement.id)

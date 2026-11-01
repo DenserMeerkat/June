@@ -2,10 +2,6 @@
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 
-# Compose runtime flags optimization
--assumevalues public class androidx.compose.runtime.ComposeRuntimeFlags {
-    static boolean isLinkBufferComposerEnabled return true;
-}
 
 # Navigation 3
 -keepnames interface com.denser.june.presentation.navigation.Route

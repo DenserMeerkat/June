@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -57,7 +58,7 @@ fun JuneFloatingAction(
         onClick = { if (enabled) onClick() },
         expanded = true,
         icon = { icon?.invoke() },
-        text = { Text(label, style = MaterialTheme.typography.labelLarge) },
+        text = { Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         containerColor = if (enabled) containerColor else disabledContainerColor,
         contentColor = if (enabled) contentColor else disabledContentColor,
         shape = CircleShape,
