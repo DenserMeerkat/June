@@ -77,6 +77,7 @@ class SyncTestHarness {
         title: String = "Title $id",
         content: String = "Content $id",
         images: List<String> = emptyList(),
+        tags: List<String> = emptyList(),
         songDetails: SongDetails? = null,
         updatedAt: Long = T1,
         syncedAt: Long = updatedAt,
@@ -87,7 +88,8 @@ class SyncTestHarness {
             title = title,
             syncedAt = syncedAt,
             updatedAt = updatedAt,
-            images = images
+            images = images,
+            tags = tags
         ).copy(content = content, songDetails = songDetails)
 
         repo.seed(journal)
@@ -108,6 +110,7 @@ class SyncTestHarness {
         title: String = "Local $id",
         content: String = "Content $id",
         images: List<String> = emptyList(),
+        tags: List<String> = emptyList(),
         songDetails: SongDetails? = null,
         updatedAt: Long = T0
     ): Journal {
@@ -116,6 +119,7 @@ class SyncTestHarness {
             title = title,
             content = content,
             images = images,
+            tags = tags,
             updatedAt = updatedAt
         ).copy(songDetails = songDetails)
         repo.seed(journal)
@@ -127,6 +131,7 @@ class SyncTestHarness {
         title: String = "Cloud $id",
         content: String = "Content $id",
         images: List<String> = emptyList(),
+        tags: List<String> = emptyList(),
         songDetails: SongDetails? = null,
         modifiedAt: Long = T1,
         rev: Int = 1
@@ -136,7 +141,8 @@ class SyncTestHarness {
             title = title,
             syncedAt = modifiedAt,
             updatedAt = modifiedAt,
-            images = images
+            images = images,
+            tags = tags
         ).copy(content = content, songDetails = songDetails)
 
         cloud.putJournal(journal, modifiedAt = modifiedAt)

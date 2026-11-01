@@ -31,7 +31,8 @@ object SyncFixtures {
         title: String = "New Journal",
         content: String = "Hello world",
         updatedAt: Long = T0,
-        images: List<String> = emptyList()
+        images: List<String> = emptyList(),
+        tags: List<String> = emptyList()
     ) = Journal(
         id = id,
         title = title,
@@ -41,7 +42,8 @@ object SyncFixtures {
         dateTime = T0,
         syncedAt = null,
         cloudId = null,
-        images = images
+        images = images,
+        tags = tags
     )
 
     /** A journal that was synced at T1 and not modified since. */
@@ -50,7 +52,8 @@ object SyncFixtures {
         title: String = "Synced Journal",
         syncedAt: Long = T1,
         updatedAt: Long = T1,
-        images: List<String> = emptyList()
+        images: List<String> = emptyList(),
+        tags: List<String> = emptyList()
     ) = Journal(
         id = id,
         title = title,
@@ -60,7 +63,8 @@ object SyncFixtures {
         dateTime = T0,
         syncedAt = syncedAt,
         cloudId = "$id.json",
-        images = images
+        images = images,
+        tags = tags
     )
 
     /** A journal modified on Device A after the last sync. */
