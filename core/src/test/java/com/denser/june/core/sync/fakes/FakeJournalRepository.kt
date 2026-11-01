@@ -109,13 +109,73 @@ class FakeJournalRepository : JournalRepository {
 
     override suspend fun deleteTombstone(id: String) { tombstones.remove(id) }
 
-    override fun getTagSuggestions(query: String): Flow<List<String>> = flowOf(emptyList())
-    override fun getUniqueTags(): Flow<List<String>> = flowOf(emptyList())
-    override fun getTagCounts(): Flow<Map<String, Int>> = flowOf(emptyMap())
-    override suspend fun toggleBookmark(id: String) { db[id]?.let { db[id] = it.copy(isBookmarked = !it.isBookmarked) } }
-    override suspend fun toggleLock(id: String) { db[id]?.let { db[id] = it.copy(isLocked = !it.isLocked) } }
-    override suspend fun renameTag(oldName: String, newName: String) {}
-    override suspend fun deleteTag(tagName: String) {}
+    override fun getTagSuggestions(query: String): Flow<List<String>> =
+        _journalFlow.map { list ->
+            list.filter { !it.isLocked }
+                .flatMap { it.tags }
+                .filter { it.startsWith(query, ignoreCase = true) }
+                .distinct()
+        }
+    override fun getUniqueTags(): Flow<List<String>> =
+        _journalFlow.map { list ->
+            list.filter { !it.isLocked }
+                .flatMap { it.tags }
+                .distinct()
+        }
+    override fun getTagCounts(): Flow<Map<String, Int>> =
+        _journalFlow.map { list ->
+            list.filter { !it.isLocked }
+                .flatMap { it.tags }
+                .groupingBy { it }
+                .eachCount()
+        }
+    override suspend fun toggleBookmark(id: String) {
+        db[id]?.let {
+            db[id] = it.copy(isBookmarked = !it.isBookmarked)
+            _journalFlow.value = db.values.filter { j -> j.deletedAt == null }.toList()
+        }
+    }
+    override suspend fun toggleLock(id: String) {
+        db[id]?.let {
+            db[id] = it.copy(isLocked = !it.isLocked)
+            _journalFlow.value = db.values.filter { j -> j.deletedAt == null }.toList()
+        }
+    }
+    override suspend fun renameTag(oldName: String, newName: String) {
+        val trimmedOld = oldName.trim()
+        val trimmedNew = newName.trim()
+        if (trimmedOld.isEmpty() || trimmedNew.isEmpty() || trimmedOld == trimmedNew) return
+        val timestamp = System.currentTimeMillis()
+        var changed = false
+        db.keys.forEach { id ->
+            val journal = db[id] ?: return@forEach
+            val updated = journal.tags.map { if (it == trimmedOld) trimmedNew else it }.distinct()
+            if (updated != journal.tags) {
+                db[id] = journal.copy(tags = updated, updatedAt = timestamp)
+                changed = true
+            }
+        }
+        if (changed) {
+            _journalFlow.value = db.values.filter { j -> j.deletedAt == null }.toList()
+        }
+    }
+    override suspend fun deleteTag(tagName: String) {
+        val trimmed = tagName.trim()
+        if (trimmed.isEmpty()) return
+        val timestamp = System.currentTimeMillis()
+        var changed = false
+        db.keys.forEach { id ->
+            val journal = db[id] ?: return@forEach
+            val updated = journal.tags.filter { it != trimmed }
+            if (updated != journal.tags) {
+                db[id] = journal.copy(tags = updated, updatedAt = timestamp)
+                changed = true
+            }
+        }
+        if (changed) {
+            _journalFlow.value = db.values.filter { j -> j.deletedAt == null }.toList()
+        }
+    }
     override fun observeHasUnsyncedJournals(threshold: Long): Flow<Boolean> =
         _journalFlow.map { _ -> hasTombstones() || hasUnsyncedJournals(threshold) }
     override suspend fun hasUnsyncedJournals(threshold: Long): Boolean =

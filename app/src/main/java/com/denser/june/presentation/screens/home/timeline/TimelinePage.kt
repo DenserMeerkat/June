@@ -106,7 +106,7 @@ fun TimelinePage(
     }
 
     val nonDraftJournalsInMonth = journalsInMonth.filter { !it.isDraft }
-    val weeksInMonth = remember(currentMonth) { getWeeksInMonth(currentMonth) }
+    val weeksInMonth = remember(currentMonth, startOfWeek) { getWeeksInMonth(currentMonth, startOfWeek) }
     val maxCalendarHeight = remember(weeksInMonth) { (weeksInMonth * 44).dp + 24.dp }
     val maxCalendarHeightPx = with(density) { maxCalendarHeight.toPx() }
     val minCalendarHeightPx = 0f

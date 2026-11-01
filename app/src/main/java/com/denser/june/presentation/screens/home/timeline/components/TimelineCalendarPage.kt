@@ -76,11 +76,11 @@ fun TimelineCalendarPage(
                             val hasSelf = count > 0
                             val emoji = dayJournals?.firstNotNullOfOrNull { it.emoji }
 
-                            val isSunday = date.dayOfWeek == DayOfWeek.SUNDAY
-                            val connectLeft = hasSelf && !isSunday && hasEntry(date.minusDays(1))
+                            val isFirstColumn = i == 0
+                            val connectLeft = hasSelf && !isFirstColumn && hasEntry(date.minusDays(1))
 
-                            val isSaturday = date.dayOfWeek == DayOfWeek.SATURDAY
-                            val connectRight = hasSelf && !isSaturday && hasEntry(date.plusDays(1))
+                            val isLastColumn = i == 6
+                            val connectRight = hasSelf && !isLastColumn && hasEntry(date.plusDays(1))
 
                             val startRadius = if (connectLeft) 8.dp else 16.dp
                             val endRadius = if (connectRight) 8.dp else 16.dp

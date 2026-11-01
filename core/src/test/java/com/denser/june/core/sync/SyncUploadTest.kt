@@ -108,4 +108,30 @@ class SyncUploadTest : BaseSyncTest() {
         assertEquals(count, harness.cloud.manifest?.totalJournals)
         assertEquals(count, harness.cloud.manifest?.journalMetadata?.size)
     }
+
+    @Test
+    fun `journal with tags uploads to cloud and retains tags`() = runTest {
+        harness.givenLocalOnlyJournal("j_tags", tags = listOf("travel", "japan"), updatedAt = T0)
+
+        val result = harness.sync()
+
+        assertTrue(result.isSuccess)
+        val cloudJournal = harness.cloud.getJournal("j_tags")
+        assertNotNull(cloudJournal)
+        assertEquals(listOf("travel", "japan"), cloudJournal?.tags)
+    }
+
+    @Test
+    fun `renaming tag marks journal as modified and uploads updated tags`() = runTest {
+        harness.givenSyncedJournal("j1", tags = listOf("trip"), updatedAt = T1)
+
+        harness.repo.renameTag("trip", "travel")
+
+        val result = harness.sync()
+
+        assertTrue(result.isSuccess)
+        assertEquals(1, harness.cloud.uploadJournalCallCount)
+        val cloudJournal = harness.cloud.getJournal("j1")
+        assertEquals(listOf("travel"), cloudJournal?.tags)
+    }
 }

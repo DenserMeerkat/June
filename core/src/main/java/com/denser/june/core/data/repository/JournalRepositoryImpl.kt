@@ -19,10 +19,19 @@ import kotlinx.coroutines.flow.map
 
 class JournalRepositoryImpl(
     private val journalDao: JournalDao,
-    private val journalDatabase: JournalDatabase,
-    private val syncPrefs: SyncPreferences,
-    private val context: Context
+    private val journalDatabase: JournalDatabase? = null,
+    private val syncPrefs: SyncPreferences? = null,
+    private val context: Context? = null
 ) : JournalRepository {
+
+    internal var transactionRunner: suspend (suspend () -> Unit) -> Unit = { block ->
+        val db = journalDatabase
+        if (db != null) {
+            db.withTransaction { block() }
+        } else {
+            block()
+        }
+    }
 
     override fun getJournals(
         query: String?,
@@ -67,7 +76,7 @@ class JournalRepositoryImpl(
             journal.copy(id = java.util.UUID.randomUUID().toString())
         } else journal
 
-        journalDatabase.withTransaction {
+        transactionRunner {
             journalDao.insertJournal(journalToInsert.asEntity())
             replaceJournalTags(journalToInsert.id, journalToInsert.tags)
         }
@@ -84,7 +93,7 @@ class JournalRepositoryImpl(
     }
 
     override suspend fun hardDeleteJournal(id: String) {
-        journalDatabase.withTransaction {
+        transactionRunner {
             val journal = journalDao.getJournalById(id)
             if (journal?.syncedAt != null) {
                 journalDao.insertTombstone(DeletedJournalTombstone(id))
@@ -101,7 +110,7 @@ class JournalRepositoryImpl(
     }
 
     override suspend fun emptyBin() {
-        journalDatabase.withTransaction {
+        transactionRunner {
             val deleted = journalDao.getDeletedJournalsSync()
             val syncedDeletedIds = deleted.filter { it.syncedAt != null }.map { it.id }
             if (syncedDeletedIds.isNotEmpty()) {
@@ -118,7 +127,7 @@ class JournalRepositoryImpl(
     }
 
     override suspend fun updateJournal(journal: Journal) {
-        journalDatabase.withTransaction {
+        transactionRunner {
             journalDao.updateJournal(journal.asEntity())
             replaceJournalTags(journal.id, journal.tags)
         }
@@ -156,28 +165,58 @@ class JournalRepositoryImpl(
     }
 
     override suspend fun renameTag(oldName: String, newName: String) {
-        val timestamp = System.currentTimeMillis()
-        
-        journalDao.updateTagName(oldName, newName)
-        journalDao.updateTagCrossRefName(oldName, newName)
-        
-        val journalsToUpdate = journalDao.getJournalsByTagNameSync(newName)
-        journalsToUpdate.forEach { entity ->
-            val updatedTags = entity.tags.map { if (it == oldName) newName else it }
-            if (updatedTags != entity.tags) {
-                journalDao.updateJournal(entity.copy(
-                    tags = updatedTags, 
-                    updatedAt = timestamp
-                ))
+        val trimmedOld = oldName.trim()
+        val trimmedNew = newName.trim()
+        if (trimmedOld.isEmpty() || trimmedNew.isEmpty() || trimmedOld == trimmedNew) return
+
+        transactionRunner {
+            val timestamp = System.currentTimeMillis()
+            val affectedJournals = journalDao.getAllJournalsByTagNameSync(trimmedOld)
+
+            journalDao.insertTag(TagEntity(name = trimmedNew))
+            journalDao.copyTagCrossRefs(trimmedOld, trimmedNew)
+            journalDao.deleteTagCrossRefs(trimmedOld)
+            journalDao.deleteTag(trimmedOld)
+
+            val updatedEntities = affectedJournals.mapNotNull { entity ->
+                val updatedTags = entity.tags.map { if (it == trimmedOld) trimmedNew else it }.distinct()
+                if (updatedTags != entity.tags) {
+                    entity.copy(tags = updatedTags, updatedAt = timestamp)
+                } else {
+                    null
+                }
+            }
+
+            if (updatedEntities.isNotEmpty()) {
+                journalDao.updateJournals(updatedEntities)
             }
         }
-        
-        journalDao.bumpJournalTimestampsByTag(newName, timestamp)
     }
 
     override suspend fun deleteTag(tagName: String) {
-        journalDao.bumpJournalTimestampsByTag(tagName, System.currentTimeMillis())
-        journalDao.deleteTag(tagName)
+        val trimmed = tagName.trim()
+        if (trimmed.isEmpty()) return
+
+        transactionRunner {
+            val timestamp = System.currentTimeMillis()
+            val affectedJournals = journalDao.getAllJournalsByTagNameSync(trimmed)
+
+            journalDao.deleteTagCrossRefs(trimmed)
+            journalDao.deleteTag(trimmed)
+
+            val updatedEntities = affectedJournals.mapNotNull { entity ->
+                val updatedTags = entity.tags.filter { it != trimmed }
+                if (updatedTags != entity.tags) {
+                    entity.copy(tags = updatedTags, updatedAt = timestamp)
+                } else {
+                    null
+                }
+            }
+
+            if (updatedEntities.isNotEmpty()) {
+                journalDao.updateJournals(updatedEntities)
+            }
+        }
     }
 
     override suspend fun toggleBookmark(id: String) {
