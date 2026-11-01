@@ -773,7 +773,7 @@ fun MapSearchBar(
             ) {
                 Icon(
                     painterResource(R.drawable.arrow_back_24px),
-                    contentDescription = stringResource(R.string.back),
+                    contentDescription = stringResource(R.string.action_back),
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(24.dp)
                 )
@@ -798,7 +798,7 @@ fun MapSearchBar(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.close_24px),
-                                contentDescription = stringResource(R.string.clear),
+                                contentDescription = stringResource(R.string.action_clear),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(18.dp)
                             )

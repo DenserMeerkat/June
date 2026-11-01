@@ -205,7 +205,7 @@ fun JournalMediaItem(
                     onDismissRequest = { showMenu = false },
                 ) {
                     JuneDropdownMenuItem(
-                        text = { Text(stringResource(R.string.delete)) },
+                        text = { Text(stringResource(R.string.action_delete)) },
                         onClick = {
                             showMenu = false
                             isPlaying = false

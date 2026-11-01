@@ -347,7 +347,7 @@ fun JuneDateTimePicker(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OutlinedButton(onClick = onDismiss) {
-                            Text(stringResource(R.string.cancel))
+                            Text(stringResource(R.string.action_cancel))
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         FilledTonalButton(

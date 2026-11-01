@@ -82,7 +82,7 @@ fun InternetAccessDialog(
                     }
                 }
             ) {
-                Text(stringResource(R.string.done))
+                Text(stringResource(R.string.action_done))
             }
         },
         dismissButton = null
@@ -184,7 +184,7 @@ fun InternetRestrictedBanner(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.settings_b_roll_24px),
-                    contentDescription = stringResource(R.string.settings),
+                    contentDescription = stringResource(R.string.label_settings),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(22.dp)
                 )

@@ -96,7 +96,7 @@ fun SettingsScreen() {
             JuneTopAppBar(
                 type = JuneAppBarType.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = "Settings") },
+                title = { Text(text = stringResource(R.string.label_settings)) },
                 navigationIcon = {
                     JuneBackButton(onClick = { navigator.navigateBack() })
                 },
@@ -424,7 +424,7 @@ fun SettingsScreen() {
         JuneConfirmationDialog(
             title = stringResource(R.string.move_all_to_bin),
             description = stringResource(R.string.move_all_to_bin_desc),
-            confirmText = stringResource(R.string.delete),
+            confirmText = stringResource(R.string.action_delete),
             confirmButtonText = stringResource(R.string.move_all_to_bin),
             onDismiss = { showDeleteDialog = false },
             onConfirm = {

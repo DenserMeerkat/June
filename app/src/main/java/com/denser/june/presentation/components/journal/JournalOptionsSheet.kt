@@ -334,7 +334,7 @@ fun JournalOptionsActionRow(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.share_24px),
-                        contentDescription = stringResource(R.string.share),
+                        contentDescription = stringResource(R.string.action_share),
                         modifier = Modifier.size(24.dp)
                     )
                 }

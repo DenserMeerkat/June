@@ -1,1359 +1,635 @@
 <resources>
+    <!-- Non-Translatable -->
+    <string name="brand_app_name" translatable="false">June</string>
+    <string name="brand_google_drive" translatable="false">Google Drive</string>
+    <string name="brand_webdav" translatable="false">WebDAV</string>
+    <string name="brand_github" translatable="false">GitHub</string>
+    <string name="brand_spotify" translatable="false">Spotify</string>
+    <string name="brand_buy_me_a_coffee" translatable="false">Buy Me a Coffee</string>
+    <string name="brand_material_you" translatable="false">Material You</string>
+    <string name="brand_email" translatable="false">Email</string>
+    <string name="url_server_placeholder" translatable="false">https://example.com/dav/user/</string>
+    <string name="url_web_placeholder" translatable="false">https://example.com</string>
 
-    <!-- Brand Names -->
+    <!-- Common Actions -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="action_done">Done</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_export">Export</string>
+    <string name="action_backup">Backup</string>
+    <string name="action_restore">Restore</string>
+    <string name="action_share">Share</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_paste">Paste</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_reset">Reset</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_discard">Discard</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_back">Back</string>
+    <string name="action_close">Close</string>
+    <string name="action_lock">Lock</string>
+    <string name="action_unlock">Unlock</string>
 
-    <string name="app_name" translatable="false">June</string>
+    <!-- Common Labels -->
+    <string name="label_settings">Settings</string>
+    <string name="label_timeline">Timeline</string>
+    <string name="label_vault">Vault</string>
+    <string name="label_bin">Bin</string>
+    <string name="label_backup">Backup</string>
+    <string name="label_restore">Restore</string>
 
-    <string name="email" translatable="false">Email</string>
+    <!-- Accessibility -->
+    <string name="cd_back">Navigate back</string>
+    <string name="cd_more_options">More options</string>
+    <string name="cd_expand">Expand</string>
+    <string name="cd_collapse">Collapse</string>
+    <string name="cd_add_journal">Add journal</string>
 
-    <string name="github" translatable="false">GitHub</string>
-
-    <string name="buy_me_a_coffee" translatable="false">Buy Me a Coffee</string>
-
-    <string name="play_store" translatable="false">Play Store</string>
-
-    <string name="translate">Translate</string>
-
-
-
-    <!-- Actions -->
-
+    <!-- Feature Actions -->
     <string name="advanced">Advanced</string>
-
-    <string name="all">All</string>
-
-    <string name="back">Back</string>
-
     <string name="bookmark">Bookmark</string>
-
-    <string name="cancel">Cancel</string>
-
     <string name="change">Change</string>
-
     <string name="change_location">Change Location</string>
-
-    <string name="clear">Clear</string>
-
-    <string name="close">Close</string>
-
-    <string name="confirm">Confirm</string>
-
-    <string name="copy">Copy</string>
-
     <string name="copy_url">Copy URL</string>
-
-    <string name="delete">Delete</string>
-
-    <string name="disable">Disable</string>
-
     <string name="disconnect">Disconnect</string>
-
-    <string name="discard">Discard</string>
-
-    <string name="done">Done</string>
-
-    <string name="edit">Edit</string>
-
     <string name="next">Next</string>
-
     <string name="edit_link">Edit Link</string>
-
-    <string name="edit_song">Edit Song</string>
-
     <string name="enable">Enable</string>
-
-    <string name="export">Export</string>
-
     <string name="filter">Filter</string>
-
     <string name="got_it">Got it</string>
-
     <string name="later">Later</string>
-
     <string name="manage_in_settings">Manage in Settings</string>
-
     <string name="merge_and_save">Merge &amp; Save</string>
-
     <string name="move_to_front">Move to Front</string>
-
     <string name="new_journal">New Journal</string>
-
     <string name="ok">OK</string>
-
     <string name="okay">Okay</string>
-
     <string name="open_folder">Open folder</string>
-
     <string name="open_hosted_weblate">Open Hosted Weblate</string>
-
     <string name="open_link">Open Link</string>
-
     <string name="options">Options</string>
-
-    <string name="paste">Paste</string>
-
     <string name="paste_link_placeholder">Paste link here...</string>
-
     <string name="permanently_delete">Permanently Delete</string>
-
     <string name="permanently_delete_all">Permanently Delete All</string>
-
     <string name="record_video">Record Video</string>
-
     <string name="refresh">Refresh</string>
-
-    <string name="remove">Remove</string>
-
     <string name="remove_bookmark">Remove Bookmark</string>
-
     <string name="rename">Rename</string>
-
-    <string name="reset">Reset</string>
-
-    <string name="reset_pin">Reset PIN</string>
-
-    <string name="restore">Restore</string>
-
     <string name="restore_all">Restore All</string>
-
     <string name="review">Review</string>
-
-    <string name="save">Save</string>
-
     <string name="save_and_enable_lock">Save &amp; Enable Lock</string>
-
-    <string name="share">Share</string>
-
-    <string name="lock">Lock</string>
-
-    <string name="unlock">Unlock</string>
-
     <string name="unlock_june">Unlock June</string>
-
     <string name="unlock_vault">Unlock Vault</string>
-
-    <string name="skip">Skip</string>
-
     <string name="skip_and_enable_lock">Skip &amp; Enable Lock</string>
-
     <string name="stop_sync">Stop Sync</string>
-
     <string name="sync_now">Sync Now</string>
-
     <string name="take_photo">Take Photo</string>
 
-    <string name="verify_and_reset_pin">Verify &amp; Reset PIN</string>
-
-
-
     <!-- Status Labels -->
-
     <string name="all_caught_up">All caught up</string>
-
     <string name="already_latest_version">You are already using the latest version of June.</string>
-
     <string name="analysis_pending">Analysis pending</string>
-
     <string name="api_key_invalid">Invalid API Key. Please verify.</string>
-
     <string name="api_key_valid">API Key is valid and verified!</string>
-
-    <string name="bookmarks">Bookmarks</string>
-
     <string name="camera_options_message">Would you like to take a photo or record a video?</string>
-
     <string name="check_for_differences">Check for differences</string>
-
     <string name="cloud">Cloud</string>
-
     <string name="console_logs">Console Logs</string>
-
     <string name="created">Created</string>
-
     <string name="developer_options">Developer options</string>
-
     <string name="disabled">Disabled</string>
-
-    <string name="drafts">Drafts</string>
-
     <string name="internet_disabled_update_notice">Internet access is disabled in June\'s privacy settings. Please enable it under Permissions to check for updates.</string>
-
     <string name="journal_media">Journal Media</string>
-
     <string name="journals_and_media_pending">%1$d journals &amp; %2$d media</string>
-
     <string name="local">Local</string>
-
     <string name="local_and_cloud_matching">Local &amp; cloud are matching</string>
-
     <string name="more_entries">More entries</string>
-
     <string name="name">Name</string>
-
-    <string name="no_bookmarks">No bookmarks</string>
-
-    <string name="no_bookmarks_desc">Keep favorite moments in reach. Any entry you mark will appear here to revisit.</string>
-
-    <string name="no_drafts">No drafts</string>
-
-    <string name="no_drafts_desc">Your unfinished thoughts stay here. Any entry you start will be saved to finish later.</string>
-
     <string name="no_journals_this_month">No journals this month.</string>
-
     <string name="no_journals_yet">No journals yet</string>
-
     <string name="no_journals_yet_desc">Start capturing your journey today. Create your first entry to start your collection.</string>
-
     <string name="no_links_available">No links available</string>
-
     <string name="no_locations_this_month">No locations added for this month.</string>
-
     <string name="no_locations_found">No locations found</string>
-
     <string name="no_media_this_month">No media this month.</string>
-
     <string name="no_music_this_month">No music tracked this month.</string>
-
     <string name="empty_library">Your library is empty</string>
-
     <string name="empty_library_desc">Add songs by pasting a link or choosing an audio file from your device using the buttons above.</string>
-
     <string name="scope_affects_library">Changes affect library and future journals</string>
-
     <string name="scope_affects_journal_only">Changes only affect current journal</string>
-
     <string name="not_synced">Not synced</string>
-
     <string name="now">Now</string>
-
     <string name="recent">Recent</string>
-
     <string name="save_progress_message">Would you like to save your progress before leaving?</string>
-
     <string name="search_settings_placeholder">Search settings...</string>
-
     <string name="sync_required">Sync required</string>
-
     <string name="synced">Synced</string>
-
     <string name="test_api_key">Test API Key</string>
-
     <string name="test_connection">Test Connection</string>
-
     <string name="testing_connection">Testing Connection...</string>
-
     <string name="testing_key">Testing Key...</string>
-
     <string name="today">Today</string>
-
     <string name="unsaved_tags_message">You have unsaved changes to your tags. Do you want to save them before exiting?</string>
-
     <string name="untitled">Untitled</string>
-
     <string name="updated">Updated</string>
-
     <string name="verifying_connection">Verifying connection...</string>
-
     <string name="whats_new">What\'s New</string>
 
-
-
     <!-- Dialogs & Banners -->
-
     <string name="save_entry">Save Entry?</string>
-
     <string name="change_lock_title">Change lock?</string>
-
     <string name="checking_for_updates">Checking for updates</string>
-
     <string name="diagnostics">Diagnostics</string>
-
     <string name="enter_pin">Enter PIN</string>
-
     <string name="locked">Locked</string>
-
     <string name="incorrect_answer_try_again">Incorrect answer. Please try again.</string>
-
     <string name="internet_access_disabled">Internet Access Disabled</string>
-
     <string name="internet_access_restricted">Internet access restricted</string>
-
     <string name="internet_restricted_desc">To use this feature, please enable internet access in the app settings.</string>
-
     <string name="move_to_bin">Move to Bin</string>
-
     <string name="move_all_to_bin">Move All to Bin</string>
-
     <string name="move_all_to_bin_desc">This will move all your journal entries to the Bin. You can restore them within 30 days.</string>
-
     <string name="move_all_to_bin_title">Move all to Bin?</string>
-
     <string name="move_to_bin_default_desc">Move to bin? It will be permanently deleted after 30 days.</string>
-
     <string name="no_license_text_available">No license text available.</string>
-
     <string name="no_settings_found">No settings found</string>
-
     <string name="no_settings_found_desc">We couldn\'t find any settings matching \"%1$s\".</string>
-
     <string name="open_source_licenses_desc">Open Source Licenses &amp; Dependencies</string>
-
-    <string name="pick_a_mood">Pick a Mood</string>
-
     <string name="search_emojis">Search emojis…</string>
-
-    <string name="clear_emoji">Clear emoji</string>
-
     <string name="no_emojis_found">No emojis found</string>
-
-    <string name="no_recent_emojis">No recent emojis</string>
-
     <string name="emoji_category_recent">Recent Emoji</string>
-
     <string name="emoji_category_smileys">Smileys &amp; Emotions</string>
-
     <string name="emoji_category_people">People</string>
-
     <string name="emoji_category_animals">Animals &amp; Nature</string>
-
     <string name="emoji_category_food">Food &amp; Drink</string>
-
     <string name="emoji_category_travel">Travel &amp; Places</string>
-
     <string name="emoji_category_activities">Activities &amp; Events</string>
-
     <string name="emoji_category_objects">Objects</string>
-
     <string name="emoji_category_symbols">Symbols</string>
-
     <string name="emoji_category_flags">Flags</string>
-
-    <string name="pin_reset_successfully">PIN reset successfully</string>
-
     <string name="repair_sync">Repair Sync</string>
-
     <string name="repair_sync_desc">This will audit local database records, repair image paths, clean orphaned media files, and perform a full cloud revalidation pass. This may take longer than a standard sync.</string>
-
     <string name="repair_sync_title">Repair Sync &amp; Revalidate?</string>
-
-    <string name="select_an_emoji">Select an emoji</string>
-
-    <string name="select_app_theme">Select App Theme</string>
-
     <string name="type_to_confirm">\n\nType \'%1$s\' below to confirm.</string>
-
     <string name="unknown_license">Unknown License</string>
-
-    <string name="unknown_version">Unknown version</string>
-
     <string name="wrong_pin_try_again">Incorrect, try again</string>
-
     <string name="switch_provider">Switch Provider</string>
-
     <string name="switch_provider_desc">Switching your active cloud target to %1$s will re-check your local library against the new provider state.</string>
-
     <string name="switch_provider_title">Switch Provider?</string>
-
     <string name="update_available">Update Available</string>
-
     <string name="update_available_foss">A new version of June is available. Here is what\'s new:</string>
-
     <string name="update_available_play_store">A new version of June is available on the Google Play Store.</string>
-
     <string name="update_check_failed">Update Check Failed</string>
-
     <string name="up_to_date">Up to date</string>
 
-
-
     <!-- Plurals -->
-
     <plurals name="active_filters_count">
-
         <item quantity="one">%1$d active</item>
-
         <item quantity="other">%1$d active</item>
-
     </plurals>
-
     <plurals name="journals_pending_count">
-
         <item quantity="one">%1$d journal pending</item>
-
         <item quantity="other">%1$d journals pending</item>
-
     </plurals>
-
     <plurals name="journals_stat_count">
-
         <item quantity="one">%1$d Journal</item>
-
         <item quantity="other">%1$d Journals</item>
-
     </plurals>
-
     <plurals name="media_pending_count">
-
         <item quantity="one">%1$d media file pending</item>
-
         <item quantity="other">%1$d media files pending</item>
-
     </plurals>
-
     <plurals name="media_stat_count">
-
         <item quantity="one">%1$d Media</item>
-
         <item quantity="other">%1$d Media</item>
-
     </plurals>
-
     <plurals name="words_count">
-
         <item quantity="one">%1$d word</item>
-
         <item quantity="other">%1$d words</item>
-
     </plurals>
-
-
 
     <!-- Settings Categories -->
-
     <string name="about">About</string>
-
-    <string name="about_desc">Version, developer, licenses, links</string>
-
     <string name="appearance">Appearance</string>
-
-    <string name="appearance_desc">Themes, fonts, dark mode, colors</string>
-
     <string name="bin">Bin</string>
-
-    <string name="bin_desc">View or restore deleted journals</string>
-
     <string name="editor">Editor</string>
-
-    <string name="editor_desc">Formatting and writing options</string>
-
     <string name="general">General</string>
-
-    <string name="general_desc">Manage journaling preferences</string>
-
     <string name="privacy_and_security">Privacy &amp; Security</string>
-
-    <string name="privacy_and_security_desc">App lock, screen privacy, biometric</string>
-
-    <string name="settings">Settings</string>
-
-    <string name="sync_and_backup">Sync &amp; Backup</string>
-
-    <string name="sync_and_backup_desc">Cloud sync, local backup, WebDAV</string>
-
     <string name="data_and_sync">Data &amp; Sync</string>
 
-    <string name="data_and_sync_desc">Backups, cloud sync, export &amp; import</string>
-
-
-
     <!-- Settings - General -->
-
     <string name="always_open_new_note">Open editor on startup</string>
-
     <string name="always_open_new_note_desc">Always open a new note when launching the app</string>
-
     <string name="delete_all_journals">Delete all journals</string>
-
     <string name="delete_all_journals_desc">Move all entries to Bin</string>
-
     <string name="include_time">Include time</string>
-
     <string name="include_time_desc">Always enable time when creating journals</string>
-
     <string name="keyboard_autocorrect">Auto correction</string>
-
     <string name="keyboard_autocorrect_desc">Correct misspelled words automatically</string>
-
     <string name="keyboard_capitalization">Auto capitalization</string>
-
     <string name="keyboard_capitalization_desc">Capitalize first word of sentences</string>
-
     <string name="map_settings">Map settings</string>
-
     <string name="map_settings_desc">Select style and manage API keys</string>
-
-    <string name="compression">Compression</string>
-
     <string name="compress_photos">Compress photos</string>
-
     <string name="compress_photos_desc">Auto compress added photos</string>
-
-    <string name="photo_quality">Photo quality</string>
-
     <string name="compress_videos">Compress videos</string>
-
     <string name="compress_videos_desc">Auto compress added videos</string>
-
-    <string name="video_quality">Video quality</string>
-
     <string name="markdown_editor">Markdown editor</string>
-
     <string name="markdown_editor_desc">Rich text formatting enabled</string>
-
     <string name="plain_text_mode">Plain text mode</string>
-
     <string name="reminders">Reminders</string>
-
     <string name="reminders_desc">Set journaling reminders</string>
-
     <string name="start_of_week">Start of the week</string>
-
     <string name="time_format">Time format</string>
-
     <string name="time_format_12h">12-Hour</string>
-
     <string name="time_format_24h">24-Hour</string>
 
-
-
     <!-- Settings - Appearance -->
-
     <string name="amoled">True Black Mode</string>
-
     <string name="amoled_desc">Optimized for AMOLED displays</string>
-
     <string name="app_follow_theme">App</string>
-
     <string name="app_font">App Font</string>
-
     <string name="app_theme">App Theme</string>
-
     <string name="dark">Dark</string>
-
-    <string name="font">Font</string>
-
     <string name="journal_font">Journal Font</string>
-
     <string name="reset_font">Reset Font</string>
-
     <string name="journal_theme">Journal Theme</string>
-
     <string name="reset_theme">Reset Theme</string>
-
     <string name="width">Width</string>
-
     <string name="optical_size">Optical Size</string>
-
     <string name="light">Light</string>
-
-    <string name="look_and_feel">Look &amp; Feel</string>
-
     <string name="material_theme">Material Theme</string>
-
     <string name="material_theme_desc">Theme based on your wallpaper</string>
-
     <string name="online_fonts_require_internet">Online fonts require internet access.</string>
-
-    <string name="palette">Palette</string>
-
     <string name="palette_selection">Palette Selection</string>
-
     <string name="palette_selection_desc">Choose theme variant palette</string>
-
     <string name="palette_style">Palette Style</string>
-
     <string name="seed_color">Seed color</string>
-
     <string name="seed_color_desc">Color to generate palette from</string>
-
     <string name="system">System</string>
 
-
-
     <!-- Settings - Language & Weblate -->
-
     <string name="editor_direction">Editor Direction</string>
-
     <string name="editor_direction_auto">Auto (Follow App Locale)</string>
-
     <string name="editor_direction_ltr">Left-to-Right (LTR)</string>
-
     <string name="editor_direction_rtl">Right-to-Left (RTL)</string>
-
     <string name="force_ltr_layout">Force LTR Interface</string>
-
     <string name="force_ltr_layout_desc">Keep app navigation left-to-right</string>
-
     <string name="help_translate_desc">Contribute translations on Weblate</string>
-
     <string name="language">Language</string>
-
     <string name="translate_app">Help translate June</string>
-
     <string name="translate_dialog_desc">June\'s translations are crowd-sourced and hosted on Hosted Weblate, a web-based open-source translation platform.\n\nYou can easily add translations for your language or suggest improvements directly in your browser without any coding knowledge.</string>
 
-
-
     <!-- Settings - Privacy & Security -->
-
     <string name="app_lock">App Lock</string>
-
     <string name="app_lock_desc">Lock app with biometric or device credential</string>
-
     <string name="custom_pin">PIN</string>
-
     <string name="custom_password">Password</string>
-
     <string name="custom_pattern">Pattern</string>
-
-    <string name="lock_journal_desc">Keep your journal private by adding an extra layer of security</string>
-
-    <string name="lock_your_journal">Lock your journal</string>
-
     <string name="no_lock">No lock</string>
-
     <string name="permissions">Permissions</string>
-
-    <string name="permissions_desc">Manage app permissions</string>
-
-    <string name="permissions_desc_long">Manage how June interacts with your device features</string>
-
     <string name="same_as_screen_lock">Same as screen lock</string>
-
     <string name="screen_privacy">Screen Privacy</string>
-
     <string name="screen_privacy_desc">Prevent screenshots and hide app content in recents</string>
-
     <string name="security_question">Security Question</string>
-
     <string name="switch_lock_warning">Switching lock method will reset your current credentials.</string>
-
     <string name="ways_to_lock">Ways to lock</string>
-
     <string name="lock_method">Lock method</string>
-
     <string name="vault">Vault</string>
-
     <string name="vault_desc">Keep sensitive journals hidden and protected</string>
-
     <string name="move_to_vault">Move to Vault</string>
-
     <string name="move_out_of_vault">Move out of Vault</string>
-
     <string name="move_to_vault_desc">Move to Vault? It will be hidden and protected behind your lock.</string>
-
     <string name="move_out_of_vault_desc">Move out of Vault? It will be visible in your journals timeline again.</string>
-
-    <string name="moved_to_vault">Moved to Vault</string>
-
-    <string name="moved_out_of_vault">Moved out of Vault</string>
-
     <string name="vault_empty_title">Vault is empty</string>
-
     <string name="vault_empty_desc">Journals you lock will appear here</string>
-
     <string name="vault_notice">Journals in Vault are hidden from feeds and will not be synced.</string>
 
-
-
     <!-- Security - PIN, Password, Pattern & Recovery -->
-
     <string name="answer_cannot_be_empty">Answer cannot be empty</string>
-
     <string name="answer_label">Answer</string>
-
     <string name="answer_placeholder">Enter your recovery answer</string>
-
     <string name="change_recovery">Change recovery</string>
-
     <string name="confirm_pin">Confirm PIN</string>
-
     <string name="create_pin">Create PIN</string>
-
     <string name="confirm_password">Confirm Password</string>
-
     <string name="create_password">Create Password</string>
-
     <string name="confirm_pattern">Confirm Pattern</string>
-
-    <string name="create_pattern">Draw Pattern</string>
-
+    <string name="draw_pattern">Draw Pattern</string>
     <string name="enter_password">Enter Password</string>
-
-    <string name="enter_pattern">Draw Pattern</string>
-
-    <string name="pattern_too_short">Connect at least 4 dots</string>
-
-    <string name="password_cannot_be_empty">Password cannot be empty</string>
-
     <string name="does_not_match">Doesn\'t match, try again</string>
-
     <string name="forgot_lock">Forgot?</string>
-
     <string name="reset_lock">Reset Lock</string>
-
     <string name="verify_and_reset_lock">Verify and reset lock</string>
-
     <string name="lock_reset_successfully">Lock reset successfully</string>
-
     <string name="lock_set_successfully">Lock set successfully</string>
-
     <string name="lock_disabled_successfully">App lock disabled</string>
-
     <string name="lock_recovery_desc">Answer your recovery question to reset your lock.</string>
-
     <string name="lock_no_recovery_warning_desc">Without a recovery question, forgotten credentials cannot be reset.</string>
-
     <string name="lock_recovery_configured_desc">You can reset your lock using your security question.</string>
-
     <string name="custom_question_label">Custom Question</string>
-
     <string name="custom_question_placeholder">e.g. What is your secret nickname?</string>
-
     <string name="developer_options_disabled">Developer options disabled</string>
-
     <string name="important">Important</string>
-
     <string name="setup_recovery">Setup recovery</string>
-
     <string name="placeholder_artist">e.g. Coldplay, Taylor Swift</string>
-
     <string name="placeholder_book">e.g. Alchemist, 1984</string>
-
     <string name="placeholder_default_answer">e.g. Enter your answer</string>
-
     <string name="placeholder_first_entry_city">e.g. London, Paris, Tokyo</string>
-
     <string name="placeholder_motto">e.g. carpe diem, keep going</string>
-
     <string name="placeholder_perfect_day">e.g. peace, creative, cozy</string>
-
     <string name="placeholder_writing_place">e.g. bedroom, local cafe</string>
-
     <string name="question_artist">Who is your favorite musical artist or band?</string>
-
     <string name="question_book">What is the name of a book that deeply inspired you?</string>
-
     <string name="question_cannot_be_empty">Question cannot be empty</string>
-
     <string name="question_custom">Write a custom question...</string>
-
     <string name="question_first_entry_city">In which city did you write your first entry?</string>
-
     <string name="question_motto">What is a short motto or phrase you live by?</string>
-
     <string name="question_perfect_day">What single word describes your perfect day?</string>
-
     <string name="question_writing_place">What is your favorite writing place or sanctuary?</string>
-
     <string name="recovery_question">Recovery Question</string>
-
     <string name="recovery_setup_desc">If you forget your credentials, answering this question will allow you to reset your lock.</string>
-
     <string name="your_answer_label">Your Answer</string>
 
-
-
     <!-- Settings - Permissions -->
-
     <string name="internet_access">Internet Access</string>
-
     <string name="internet_access_desc">Used for maps, cloud sync, song metadata, and online fonts.</string>
-
     <string name="location_permission_granted">Permission granted. Used to select current location on map.</string>
-
     <string name="location_permission_needed">Tap to enable. Used to quickly select your current location on the map.</string>
-
     <string name="notification">Notification</string>
-
     <string name="notification_permission_granted">Permission granted. Used to show journaling reminders.</string>
-
     <string name="notification_permission_needed">Tap to enable. Used to show journaling reminders.</string>
-
     <string name="permission_already_granted">Permission already granted</string>
 
-
-
     <!-- Settings - Reminders -->
-
     <string name="journaling_reminders">Journaling Reminders</string>
-
     <string name="reminder_screen_desc">Stay consistent with your journaling by setting up reminders</string>
-
     <string name="reminder_time">Reminder time</string>
-
     <string name="repeat">Repeat</string>
-
     <string name="repeat_daily">Daily</string>
-
     <string name="repeat_none">None</string>
-
     <string name="repeat_weekdays">Weekdays</string>
-
     <string name="repeat_weekends">Weekends</string>
-
     <string name="schedule">Schedule</string>
 
-
-
     <!-- Settings - Sync & Backup -->
-
     <string name="advanced_sync_desc">Analysis &amp; repair tools</string>
-
     <string name="analyze_sync">Analyze Sync</string>
-
     <string name="analyze_sync_desc">Analyze cloud sync health</string>
-
     <string name="automatic_sync">Automatic Sync</string>
-
     <string name="automatic_sync_desc">Sync changes as they happen</string>
-
     <string name="backup_and_restore">Backup &amp; Restore</string>
-
     <string name="data_portability">Export &amp; Import</string>
-
-    <string name="create_backup">Backup</string>
-
     <string name="create_backup_desc">Save all journals and media to a backup file</string>
-
     <string name="create_backup_dialog_title">Backup Data</string>
-
     <string name="create_backup_dialog_desc">Creates a complete backup of all journals, media, and songs to restore later.</string>
-
     <string name="backup_include_media_desc">Photos, videos, and songs attached to entries</string>
-
-    <string name="backup_action">Backup</string>
-
-    <string name="restore_backup">Restore</string>
-
     <string name="restore_backup_desc">Restore journals from a backup file</string>
-
     <string name="backup_format_too_old">Backup format is too old</string>
-
     <string name="backup_logging">Backup Logging</string>
-
     <string name="backup_saved_successfully">Backup saved successfully</string>
-
     <string name="cloud_sync">Cloud Sync</string>
-
     <string name="cloud_sync_desc">Sync across devices via Cloud</string>
-
     <string name="database_logging">Database Logging</string>
-
     <string name="enable_cloud_sync">Enable Cloud Sync</string>
-
-    <string name="export_data">Export Data</string>
-
-    <string name="export_data_desc">Save your journals and media to a secure file.</string>
-
     <string name="exporting">Exporting...</string>
-
     <string name="failed_to_save_file">Failed to save file</string>
-
     <string name="general_settings">General Settings</string>
-
     <string name="invalid_or_corrupted_backup_file">Invalid or Corrupted Backup File</string>
-
     <string name="last_successful_sync">Last successful sync</string>
-
     <string name="logging">Logging</string>
-
-    <string name="logging_settings_desc">Logging settings and console</string>
-
     <string name="export_as_markdown">Export as Markdown</string>
-
     <string name="export_markdown_archive">Export Markdown</string>
-
     <string name="export_markdown_archive_desc">Export notes in an open format for easy reading and viewing</string>
-
-    <string name="export_markdown_dialog_title">Export Markdown</string>
-
     <string name="export_markdown_dialog_desc">Exports all your entries as Markdown files for offline reading and viewing.</string>
-
     <string name="export_journal_title">Export Journal</string>
-
     <string name="export_journal_has_media_desc">This note has media attachments. Choose how you would like to export it:</string>
-
     <string name="export_option_package_zip">Package (.zip)</string>
-
     <string name="recommended">Recommended</string>
-
     <string name="export_option_package_zip_desc">Bundles note and media files together for viewing.</string>
-
     <string name="export_option_clean_text_md">Text note (.md)</string>
-
     <string name="export_option_clean_text_md_desc">Plain text note without media attachments.</string>
-
-    <string name="export_action">Export</string>
-
-    <string name="export_data_dialog_desc">Select format and options for exporting your journal entries.</string>
-
-    <string name="export_format_json_label">JSON (Backup)</string>
-
-    <string name="export_format_markdown_label">Markdown</string>
-
-    <string name="export_format_json_desc">Complete database backup with sync state. Best for restoring to June.</string>
-
-    <string name="export_format_markdown_desc">Plain text notes formatted for easy reading and viewing anywhere.</string>
-
-    <string name="format">Format</string>
-
     <string name="media_options">Media Attachments</string>
-
     <string name="include_media">Include media</string>
-
     <string name="export_include_media_desc">Photos and videos attached to entries</string>
-
     <string name="export_exclude_media_desc">Text only (faster and smaller)</string>
-
     <string name="import_markdown">Import Markdown</string>
-
     <string name="import_markdown_desc">Import .md files or a Markdown backup zip</string>
-
     <string name="journal_exported_successfully">Journal exported successfully</string>
-
     <string name="markdown_export_saved_successfully">Markdown export saved successfully</string>
-
     <string name="markdown_imported_successfully">%1$d journal(s) imported successfully</string>
-
     <string name="markdown_import_failed">Failed to import markdown: %1$s</string>
-
     <string name="never_synced">Never synced</string>
-
     <string name="repair_sync_short_desc">Repair and revalidate sync state</string>
-
     <string name="restore_backup_title">Restore Backup?</string>
-
     <string name="restore_complete">Restore Complete!</string>
-
-    <string name="restore_data">Restore Data</string>
-
-    <string name="restore_data_desc">Import data from a previously saved backup file.</string>
-
     <string name="restore_failed">Restore Failed: %1$s</string>
-
     <string name="restore_warning_message">This will merge the backup with your current data.\n\n• Entries with matching IDs will be OVERWRITTEN.\n• New entries will be ADDED.\n\nThis action cannot be undone.</string>
-
     <string name="restoring">Restoring...</string>
-
     <string name="sync_details">Sync Details</string>
-
     <string name="sync_details_desc">Review changes before syncing</string>
-
     <string name="sync_header_desc">Keep your journals in sync across all your devices using a cloud storage provider.</string>
-
     <string name="sync_internet_required_desc">Enable internet access to use cloud sync.</string>
-
     <string name="sync_logging">Sync Logging</string>
-
     <string name="wifi_only_sync">Auto-sync on Wi-Fi only</string>
-
     <string name="wifi_only_sync_desc">Avoid syncing over mobile data</string>
 
-
-
     <!-- Settings - WebDAV -->
-
     <string name="password_app_token_label">Password / App Token</string>
-
     <string name="server_url_label">Server URL</string>
-
     <string name="server_url_placeholder" translatable="false">https://example.com/dav/user/</string>
-
     <string name="username_label">Username</string>
-
     <string name="username_placeholder">your-username</string>
-
     <string name="webdav_configuration">WebDAV Configuration</string>
 
-
-
     <!-- Settings - Bin & Deletion -->
-
     <string name="bin_empty_desc">Journals you delete will appear here for 30 days before being permanently removed.</string>
-
     <string name="bin_is_empty">Bin is empty</string>
-
     <string name="bin_retention_notice">Items in Bin will be permanently deleted after 30 days.</string>
-
     <string name="delete_journal_local_desc">Permanently delete this journal? This action cannot be undone.</string>
-
     <string name="delete_journal_sync_desc">Permanently delete this journal from this device and your cloud storage? This action cannot be undone.</string>
-
     <string name="empty_bin">Empty Bin</string>
-
     <string name="empty_bin_local_desc">This will permanently delete all journals in the bin. This action cannot be undone.</string>
-
     <string name="empty_bin_sync_desc">This will permanently delete all journals in the bin from this device and your cloud storage. This action cannot be undone.</string>
-
     <string name="empty_bin_title">Empty Bin?</string>
-
     <string name="restore_all_desc">This will restore all deleted entries back to your timeline.</string>
-
     <string name="restore_all_title">Restore All?</string>
 
-
-
     <!-- Tags & Categories -->
-
     <string name="about_to_delete">You are about to delete:</string>
-
     <string name="delete_tag_title">Delete Tag?</string>
-
     <string name="delete_tag_warning">This will remove the tag from all entries. The entries themselves won\'t be deleted.</string>
-
     <string name="filter_entries">Filter Entries</string>
-
     <string name="how_tags_work">How Tags Work</string>
-
     <string name="how_tags_work_desc">Tag entries by spaces, people and topics to find them later.</string>
-
     <string name="move_to_tab_warning">This will move to the %1$s tab.</string>
-
     <string name="no_entries">No entries</string>
-
     <string name="no_entries_filter_desc">No journals match the current filters.</string>
-
     <string name="no_tag_category_yet">No %1$s yet</string>
-
     <string name="no_tags_to_filter">No additional tags to filter by.</string>
-
     <string name="people_desc">Track friends, family, or colleagues across entries.</string>
-
     <string name="people_empty_msg">Who was there? (@name)</string>
-
     <string name="rename_tag_title">Rename Tag</string>
-
     <string name="save_changes_title">Save Changes?</string>
-
     <string name="spaces_desc">Broad categories like Work, Travel, or Dream.</string>
-
     <string name="spaces_empty_msg">Categorize this entry</string>
-
     <string name="tag_category_empty_desc">Tag a journal entry with a %1$s to get started.</string>
-
     <string name="tag_merge_warning">Already exists in %1$s. This will merge all entries.</string>
-
     <string name="topics_desc">Note the moods, settings, or details of your day.</string>
-
     <string name="topics_empty_msg">Capture any specifics (#topic)</string>
 
-
-
     <!-- Reminders & Notifications -->
-
     <string name="reminder_msg_1">Don\'t forget to record your thoughts for today.</string>
-
     <string name="reminder_msg_2">Your journal is waiting for your story.</string>
-
     <string name="reminder_msg_3">Consistency is key! Write a little bit today.</string>
-
     <string name="reminder_msg_4">What was the best part of your day?</string>
-
     <string name="reminder_msg_5">Take a moment to reflect on what happened today.</string>
-
     <string name="reminder_msg_6">A few words now, a lifetime of memories later.</string>
-
     <string name="reminder_msg_7">Reflect on today\'s journey before you rest.</string>
-
     <string name="reminder_title_1">Time to write!</string>
-
     <string name="reminder_title_2">Dear Diary...</string>
-
     <string name="reminder_title_3">Capture the moment</string>
-
     <string name="reminder_title_4">How was your day?</string>
-
     <string name="reminder_title_5">Daily Reflection</string>
-
     <string name="reminder_title_6">Note to self</string>
-
     <string name="reminder_title_7">Unwind and write</string>
 
-
-
     <!-- Maps & Location -->
-
     <string name="api_credentials">API Credentials</string>
-
     <string name="carto" translatable="false">CARTO</string>
-
     <string name="carto_auto_notice">CARTO doesn\'t require an API key and is automatically configured.</string>
-
     <string name="check_api_key_or_internet">Check your API key or internet connection</string>
-
     <string name="configure_api_key_for_preview">Configure and test API key below to enable preview</string>
-
     <string name="connect_internet_for_map">Connect to the internet to load map preview</string>
-
     <string name="default_map_theme">Default map theme</string>
-
     <string name="map_theme_accents">Theme accents</string>
-
     <string name="map_theme_accents_desc">Applies only to CARTO and Stadia maps</string>
-
     <string name="failed_to_load_map">Failed to load map</string>
-
     <string name="get_api_key_or_token">Get API key or access token</string>
-
     <string name="internet_connection_required">Internet connection required</string>
-
     <string name="map" translatable="false">Map</string>
-
     <string name="map_credits_body">June uses vector tiles and geocoding services from various open data and mapping providers.</string>
-
     <string name="openmap" translatable="false">OpenMap</string>
-
     <string name="openmap_auto_notice">OpenMap doesn\'t require an API key and is automatically configured.</string>
-
     <string name="maptiler" translatable="false">MapTiler</string>
-
     <string name="maptiler_api_key_placeholder">MapTiler API key</string>
-
     <string name="maps_require_internet">Maps require internet access.</string>
-
     <string name="maps_require_internet_locations">Maps require internet access to load tiles and display locations.</string>
-
     <string name="maps_require_internet_tiles">Maps require internet access to load tiles.</string>
-
     <string name="maps_search_require_internet">Maps and search require internet access.</string>
-
     <string name="preview">Preview</string>
-
     <string name="collapse_map">Collapse Map</string>
-
     <string name="confirm_location">Confirm Location</string>
-
     <string name="current_location">Current Location</string>
-
     <string name="expand_map">Expand Map</string>
-
     <string name="fetching_address">Fetching address…</string>
-
     <string name="locating">Locating…</string>
-
     <string name="move_map_to_select">Move map to select</string>
-
     <string name="network_restricted">Network restricted</string>
-
     <string name="no_address_available">No address available</string>
-
     <string name="pinned_location">Pinned Location</string>
-
     <string name="remove_location">Remove Location</string>
-
     <string name="search_location_placeholder">Search location…</string>
-
     <string name="stadia" translatable="false">Stadia Maps</string>
-
     <string name="stadia_api_key_placeholder">Stadia API key</string>
-
     <string name="toggle_dark_mode">Toggle Dark Mode</string>
-
     <string name="unknown_place">Unknown Place</string>
-
     <string name="zoom_in">Zoom In</string>
-
     <string name="zoom_out">Zoom Out</string>
 
-
-
     <!-- About & Diagnostics -->
-
     <string name="about_june">About June</string>
-
     <string name="about_june_desc">version and github link</string>
-
     <string name="about_libraries">About Libraries</string>
-
     <string name="about_libraries_desc">View licenses of third-party libraries</string>
-
     <string name="android_os" translatable="false">Android OS</string>
-
-    <string name="app_icon">App Icon</string>
-
     <string name="changelog">Changelog</string>
-
     <string name="changelog_desc">View release history</string>
-
     <string name="check_for_updates">Check for Updates</string>
-
     <string name="check_for_updates_desc">Check if a newer version is available</string>
-
     <string name="developer_profile">Developer profile</string>
-
     <string name="device" translatable="false">Device</string>
-
     <string name="gpl_license_desc" translatable="false">GPL-3.0 License</string>
-
     <string name="hyphen_version" translatable="false">Hyphen Version</string>
-
     <string name="license">License</string>
-
     <string name="map_credits">Map Credits</string>
-
     <string name="map_credits_desc">Credits and licenses for map data</string>
-
     <string name="pkg_name" translatable="false">Package Name</string>
-
     <string name="signing_key_sha256" translatable="false">Signing Key SHA-256</string>
-
     <string name="supported_abis" translatable="false">Supported ABIs</string>
-
     <string name="version_code" translatable="false">Version Code</string>
-
     <string name="version_name" translatable="false">Version Name</string>
 
-
-
     <!-- Home & Search -->
-
     <string name="bookmarked">Bookmarked</string>
-
     <string name="draft">Draft</string>
-
     <string name="journals">Journals</string>
-
     <string name="location">Location</string>
-
     <string name="media">Media</string>
-
     <string name="music">Music</string>
-
     <string name="no_matches_found">No matches found</string>
-
     <string name="no_matches_found_desc">We couldn\'t find any journals matching your current search or filters.</string>
-
     <string name="search">Search</string>
-
-    <string name="search_journal_desc">Type a keyword or select a filter above to find specific entries.</string>
-
     <string name="search_your_journal">Search your journal</string>
-
     <string name="tags">Tags</string>
-
     <string name="timeline">Timeline</string>
 
-
-
     <!-- Editor & Formatting -->
-
     <string name="add_attachment">Add Attachment</string>
-
     <string name="add_emoji">Add Emoji</string>
-
     <string name="add_item">Add Item</string>
-
     <string name="add_location_and_map">Add location &amp; map</string>
-
     <string name="add_photo_or_video">Add photo / video</string>
-
     <string name="add_song">Add Song</string>
-
-    <string name="add_song_link">Add Song</string>
-
     <string name="add_title">Add title</string>
-
     <string name="capture_media">Capture Media</string>
-
-    <string name="date_time_picker">Date and Time Picker</string>
-
     <string name="display_text_label">Display Text</string>
-
     <string name="display_text_placeholder">Enter text to display</string>
-
-    <string name="fetch_song_require_internet">Enable internet access to fetch song details.</string>
-
     <string name="link_url_label">Link URL</string>
-
     <string name="link_url_placeholder" translatable="false">https://example.com</string>
-
     <string name="take_photo_or_video">Take photo / video</string>
-
     <string name="whats_on_your_mind">What\'s on your mind?</string>
 
-
-
     <!-- Font Variations -->
-
     <string name="fonts">Fonts</string>
-
     <string name="style">Style</string>
-
     <string name="presets">Presets</string>
-
     <string name="roundness">Roundness</string>
-
     <string name="grade">Grade</string>
-
     <string name="slant">Slant</string>
-
     <string name="weight">Weight</string>
-
     <string name="monospace">Monospace</string>
-
     <string name="casual">Casual</string>
-
     <string name="cursive">Cursive</string>
-
     <string name="bounce">Bounce</string>
-
     <string name="informality">Informality</string>
-
     <string name="spacing">Spacing</string>
-
     <string name="parametric_axes">Parametric Fine-Tuning</string>
-
     <string name="counter_width">Counter Width</string>
-
     <string name="thick_stroke">Thick Stroke (X)</string>
-
     <string name="thin_stroke">Thin Stroke (Y)</string>
-
     <string name="uppercase_height">Uppercase Height</string>
-
     <string name="lowercase_height">Lowercase Height</string>
-
     <string name="ascender_height">Ascender Height</string>
-
     <string name="descender_depth">Descender Depth</string>
-
     <string name="figure_height">Figure Height</string>
-
     <string name="default_font">Default Font</string>
-
     <string name="custom_font">Custom Font</string>
-
-    <string name="from_settings">From settings</string>
-
-    <string name="this_entry_only">This entry only</string>
-
     <string name="default_theme">Default Theme</string>
-
     <string name="custom_theme">Custom Theme</string>
-
     <string name="font_credits">Font Credits</string>
-
     <string name="font_credits_desc">Credits and licenses for bundled typography</string>
-
     <string name="font_credits_body">June bundles high-quality open-source variable fonts for an expressive journaling experience.</string>
-
     <string name="unlock_june_plus">Unlock June Plus</string>
-
     <string name="unlock_plus">Unlock Plus</string>
-
     <string name="save_with_default">Save with Default</string>
-
     <string name="plus_styling_detected_title">June Plus Theme</string>
-
     <string name="plus_styling_detected_desc">This entry uses custom fonts or colors from June Plus. Unlock Plus to save with your styling, or save with the default theme.</string>
-
     <string name="entry_saved_default_theme">Entry saved with default theme</string>
-
-    <string name="keep_editing">Keep Editing</string>
-
     <string name="reset_plus_status">Reset Plus Status</string>
-
     <string name="plus_status_reset">Plus status has been reset</string>
-
 </resources>

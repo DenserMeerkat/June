@@ -85,13 +85,13 @@ fun JournalTagsDialog(
                     showExitDialog = false
                     onSaveTags(localTags)
                     onDismiss()
-                }) { Text(stringResource(R.string.save)) }
+                }) { Text(stringResource(R.string.action_save)) }
             },
             dismissButton = {
                 OutlinedButton(onClick = {
                     showExitDialog = false
                     onDismiss()
-                }) { Text(stringResource(R.string.discard)) }
+                }) { Text(stringResource(R.string.action_discard)) }
             },
             text = { Text(stringResource(R.string.unsaved_tags_message)) }
         )
@@ -132,7 +132,7 @@ fun JournalTagsDialog(
                 JuneFloatingActionBar {
                     JuneFloatingAction(
                         onClick = { if (hasChanges) localTags = tags },
-                        label = stringResource(R.string.reset),
+                        label = stringResource(R.string.action_reset),
                         icon = { Icon(painterResource(R.drawable.replay_24px), null) },
                         enabled = hasChanges,
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -145,7 +145,7 @@ fun JournalTagsDialog(
                             }
                             onDismiss()
                         },
-                        label = stringResource(R.string.done),
+                        label = stringResource(R.string.action_done),
                         icon = {
                             Icon(painterResource(R.drawable.check_24px), null)
                         }

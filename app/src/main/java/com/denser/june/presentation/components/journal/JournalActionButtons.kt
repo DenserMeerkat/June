@@ -51,7 +51,7 @@ fun JournalLockActionButton(
             PlusLeadingIconContainer(size = 36.dp) {
                 Icon(
                     painter = painterResource(R.drawable.lock_open_right_24px),
-                    contentDescription = stringResource(R.string.lock),
+                    contentDescription = stringResource(R.string.action_lock),
                     tint = UiUtils.plusContentColor,
                     modifier = Modifier.size(20.dp)
                 )
@@ -59,7 +59,7 @@ fun JournalLockActionButton(
         } else {
             Icon(
                 painter = painterResource(if (isLocked) R.drawable.lock_24px else R.drawable.lock_open_right_24px),
-                contentDescription = stringResource(if (isLocked) R.string.unlock else R.string.lock),
+                contentDescription = stringResource(if (isLocked) R.string.action_unlock else R.string.action_lock),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -85,7 +85,7 @@ fun JournalDeleteActionButton(
     ) {
         Icon(
             painter = painterResource(if (isDeleted) R.drawable.restore_from_trash_24px else R.drawable.delete_24px),
-            contentDescription = stringResource(if (isDeleted) R.string.restore else R.string.delete),
+            contentDescription = stringResource(if (isDeleted) R.string.action_restore else R.string.action_delete),
             modifier = Modifier.size(24.dp)
         )
     }

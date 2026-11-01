@@ -79,7 +79,7 @@ fun JournalConfirmationView(
         JuneFloatingActionBar {
             JuneFloatingAction(
                 onClick = onCancel,
-                label = stringResource(R.string.cancel),
+                label = stringResource(R.string.action_cancel),
                 icon = {
                     Icon(
                         painter = painterResource(R.drawable.close_24px),

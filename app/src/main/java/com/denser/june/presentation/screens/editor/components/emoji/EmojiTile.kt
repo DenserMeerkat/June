@@ -111,7 +111,7 @@ fun EmojiTile(
                 onDismissRequest = { showRemoveMenu = false },
             ) {
                 JuneDropdownMenuItem(
-                    text = { Text(stringResource(com.denser.june.core.R.string.remove)) },
+                    text = { Text(stringResource(com.denser.june.core.R.string.action_remove)) },
                     onClick = {
                         showRemoveMenu = false
                         onRemoveFromRecents()

@@ -87,7 +87,7 @@ fun DeveloperTile() {
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.github),
-                        contentDescription = stringResource(R.string.github),
+                        contentDescription = stringResource(R.string.brand_github),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -103,7 +103,7 @@ fun DeveloperTile() {
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.buy_me_a_coffee),
-                        contentDescription = stringResource(R.string.buy_me_a_coffee),
+                        contentDescription = stringResource(R.string.brand_buy_me_a_coffee),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -119,7 +119,7 @@ fun DeveloperTile() {
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.alternate_email_24px),
-                        contentDescription = stringResource(R.string.email),
+                        contentDescription = stringResource(R.string.brand_email),
                         modifier = Modifier.size(18.dp)
                     )
                 }

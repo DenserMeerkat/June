@@ -216,7 +216,7 @@ fun DataSyncSettingsScreen() {
                 ) {
                     val isBackingUp = state.exportState.isLoading
                     SettingsItem(
-                        title = stringResource(R.string.create_backup),
+                        title = stringResource(R.string.action_backup),
                         subtitle = if (isBackingUp) stringResource(R.string.exporting) else stringResource(R.string.create_backup_desc),
                         leadingContent = {
                             Icon(
@@ -238,7 +238,7 @@ fun DataSyncSettingsScreen() {
 
                     val isRestoring = state.restoreState.isLoading
                     SettingsItem(
-                        title = stringResource(R.string.restore_backup),
+                        title = stringResource(R.string.action_restore),
                         subtitle = if (isRestoring) stringResource(R.string.restoring) else stringResource(R.string.restore_backup_desc),
                         leadingContent = {
                             Icon(
@@ -358,10 +358,10 @@ fun DataSyncSettingsScreen() {
                         showRestoreWarning = null
                         onAction(SettingsAction.OnRestoreJournals(uri))
                     }
-                ) { Text(stringResource(R.string.restore)) }
+                ) { Text(stringResource(R.string.action_restore)) }
             },
             dismissButton = {
-                OutlinedButton(onClick = { showRestoreWarning = null }) { Text(stringResource(R.string.cancel)) }
+                OutlinedButton(onClick = { showRestoreWarning = null }) { Text(stringResource(R.string.action_cancel)) }
             },
             text = {
                 Text(stringResource(R.string.restore_warning_message))

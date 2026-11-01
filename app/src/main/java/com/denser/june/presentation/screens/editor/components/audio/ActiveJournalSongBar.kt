@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -59,10 +60,10 @@ fun ActiveJournalSongBar(
                         containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError
                     )
-                ) { Text("Remove") }
+                ) { Text(stringResource(R.string.action_remove)) }
             },
             dismissButton = {
-                OutlinedButton(onClick = { showRemoveConfirm = false }) { Text("Cancel") }
+                OutlinedButton(onClick = { showRemoveConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -72,7 +73,9 @@ fun ActiveJournalSongBar(
     val durationMs = effectiveEnd?.let { (it - song.clipStartMs).coerceAtLeast(0L) }
     val durationStr = durationMs?.toSongDurationString()
 
-    val connectedActions = remember(onEdit, onTrim) {
+    val editLabel = stringResource(R.string.action_edit)
+
+    val connectedActions = remember(onEdit, onTrim, editLabel) {
         listOf(
             ConnectedBarAction(
                 iconRes = R.drawable.delete_24px,
@@ -83,7 +86,7 @@ fun ActiveJournalSongBar(
             ),
             ConnectedBarAction(
                 iconRes = R.drawable.edit_24px,
-                label = "Edit",
+                label = editLabel,
                 contentDescription = "Edit Details",
                 onClick = onEdit
             ),

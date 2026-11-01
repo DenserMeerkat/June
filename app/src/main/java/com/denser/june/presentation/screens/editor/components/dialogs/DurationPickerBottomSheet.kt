@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -199,7 +200,7 @@ fun DurationPickerBottomSheet(
                             onDurationSelected(selectedMs)
                             onDismiss()
                         },
-                        label = "Done",
+                        label = stringResource(R.string.action_done),
                         icon = {
                             Icon(
                                 painter = painterResource(R.drawable.check_24px),

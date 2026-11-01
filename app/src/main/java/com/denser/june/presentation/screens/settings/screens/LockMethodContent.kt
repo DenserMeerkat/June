@@ -132,7 +132,7 @@ fun LockMethodContent(
             }
             LockType.PATTERN -> {
                 PatternLockContent(
-                    title = stringResource(R.string.enter_pattern),
+                    title = stringResource(R.string.draw_pattern),
                     isError = verificationError,
                     onErrorDismissed = { verificationError = false },
                     onBackClick = {
@@ -413,7 +413,7 @@ fun LockMethodContent(
                     OutlinedButton(
                         onClick = { pendingAction = null }
                     ) {
-                        Text(stringResource(R.string.cancel))
+                        Text(stringResource(R.string.action_cancel))
                     }
                 },
                 text = {

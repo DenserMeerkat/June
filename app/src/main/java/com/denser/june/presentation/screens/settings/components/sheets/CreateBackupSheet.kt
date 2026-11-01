@@ -103,7 +103,7 @@ fun CreateBackupBottomSheet(
             ) {
                 JuneFloatingAction(
                     onClick = onDismiss,
-                    label = stringResource(R.string.cancel),
+                    label = stringResource(R.string.action_cancel),
                     icon = { Icon(painterResource(R.drawable.close_24px), contentDescription = null) },
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -113,7 +113,7 @@ fun CreateBackupBottomSheet(
                         onDismiss()
                         onBackup(includeMedia)
                     },
-                    label = stringResource(R.string.backup_action),
+                    label = stringResource(R.string.action_backup),
                     icon = { Icon(painterResource(R.drawable.check_24px), contentDescription = null) }
                 )
             }
@@ -159,7 +159,7 @@ fun ExportMarkdownBottomSheet(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = stringResource(R.string.export_markdown_dialog_title),
+                    text = stringResource(R.string.export_markdown_archive),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
@@ -209,7 +209,7 @@ fun ExportMarkdownBottomSheet(
             ) {
                 JuneFloatingAction(
                     onClick = onDismiss,
-                    label = stringResource(R.string.cancel),
+                    label = stringResource(R.string.action_cancel),
                     icon = { Icon(painterResource(R.drawable.close_24px), contentDescription = null) },
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -219,7 +219,7 @@ fun ExportMarkdownBottomSheet(
                         onDismiss()
                         onExport(includeMedia)
                     },
-                    label = stringResource(R.string.export_action),
+                    label = stringResource(R.string.action_export),
                     icon = { Icon(painterResource(R.drawable.check_24px), contentDescription = null) }
                 )
             }

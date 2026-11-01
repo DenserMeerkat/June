@@ -163,7 +163,7 @@ fun JournalSongItem(
                             }
                             if (onRemove != null) {
                                 JuneDropdownMenuItem(
-                                    text = { Text(stringResource(R.string.remove)) },
+                                    text = { Text(stringResource(R.string.action_remove)) },
                                     onClick = {
                                         showMenu = false
                                         onRemove()

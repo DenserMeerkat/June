@@ -361,7 +361,7 @@ fun JournalEmojiPickerSheet(
             ) {
                 JuneFloatingAction(
                     onClick = onDismiss,
-                    label = stringResource(R.string.cancel),
+                    label = stringResource(R.string.action_cancel),
                     icon = {
                         Icon(
                             painter = painterResource(R.drawable.close_24px),
@@ -378,7 +378,7 @@ fun JournalEmojiPickerSheet(
                         stagedEmoji?.let { emojiPreferences.addRecentEmoji(it) }
                         onDismiss()
                     },
-                    label = stringResource(R.string.done),
+                    label = stringResource(R.string.action_done),
                     icon = {
                         Icon(
                             painter = painterResource(R.drawable.check_24px),

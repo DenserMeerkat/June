@@ -190,7 +190,7 @@ fun ExportJournalSheet(
                 ) {
                     JuneFloatingAction(
                         onClick = onDismiss,
-                        label = stringResource(R.string.cancel),
+                        label = stringResource(R.string.action_cancel),
                         icon = { Icon(painterResource(R.drawable.close_24px), contentDescription = null) },
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -206,7 +206,7 @@ fun ExportJournalSheet(
                                 mdLauncher.launch("${baseName}.md")
                             }
                         },
-                        label = stringResource(R.string.export_action),
+                        label = stringResource(R.string.action_export),
                         icon = { Icon(painterResource(R.drawable.check_24px), contentDescription = null) }
                     )
                 }

@@ -231,7 +231,7 @@ fun UpdateBottomSheet(
                             modifier = Modifier.wrapContentWidth()
                         ) {
                             JuneFloatingAction(
-                                label = stringResource(R.string.cancel),
+                                label = stringResource(R.string.action_cancel),
                                 onClick = onDismissInternetDisabled,
                                 selected = false
                             )

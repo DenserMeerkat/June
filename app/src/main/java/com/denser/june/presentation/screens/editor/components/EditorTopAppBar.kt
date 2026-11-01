@@ -118,7 +118,7 @@ fun EditorTopAppBar(
                 ) {
                     Icon(
                         painterResource(R.drawable.check_24px),
-                        stringResource(R.string.done)
+                        stringResource(R.string.action_done)
                     )
                 }
             } else if (isColorMode) {
@@ -145,7 +145,7 @@ fun EditorTopAppBar(
                 ) {
                     Icon(
                         painterResource(R.drawable.check_24px),
-                        stringResource(R.string.done)
+                        stringResource(R.string.action_done)
                     )
                 }
             } else {
@@ -166,7 +166,7 @@ fun EditorTopAppBar(
                             )
                         }
                         Text(
-                            text = stringResource(R.string.save),
+                            text = stringResource(R.string.action_save),
                             style = MaterialTheme.typography.labelLarge
                         )
                     }

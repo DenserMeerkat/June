@@ -124,12 +124,12 @@ fun PasswordSetupScreen(forVault: Boolean = false) {
                     }
                 } else null,
                 leftIcon = R.drawable.arrow_back_24px,
-                leftText = stringResource(R.string.back),
+                leftText = stringResource(R.string.action_back),
                 onRightClick = {
                     submitPassword(currentPasswordInput)
                 },
                 rightEnabled = currentPasswordInput.isNotBlank(),
-                rightText = if (step == PasswordSetupStep.CONFIRM) stringResource(R.string.confirm) else stringResource(R.string.next),
+                rightText = if (step == PasswordSetupStep.CONFIRM) stringResource(R.string.action_confirm) else stringResource(R.string.next),
                 rightIcon = R.drawable.start_24px
             )
         },

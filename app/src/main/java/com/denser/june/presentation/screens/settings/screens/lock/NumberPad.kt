@@ -98,7 +98,7 @@ fun NumberPad(
                 icon = {
                     Icon(
                         painter = painterResource(R.drawable.backspace_24px_fill),
-                        contentDescription = stringResource(R.string.delete),
+                        contentDescription = stringResource(R.string.action_delete),
                         modifier = Modifier.size(buttonSize * 0.42f)
                     )
                 }
@@ -122,7 +122,7 @@ fun NumberPad(
                                 R.drawable.start_24px
                             ),
                             contentDescription = stringResource(
-                                if (isNextConfirm) R.string.confirm else R.string.next
+                                if (isNextConfirm) R.string.action_confirm else R.string.next
                             ),
                             modifier = Modifier.size(buttonSize * 0.42f)
                         )

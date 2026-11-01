@@ -232,7 +232,7 @@ fun AddSongScreen(
                     JuneFloatingActionBar {
                         JuneFloatingAction(
                             onClick = { trimmerDismiss() },
-                            label = "Cancel",
+                            label = stringResource(R.string.action_cancel),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.close_24px),
@@ -244,7 +244,7 @@ fun AddSongScreen(
                         )
                         JuneFloatingAction(
                             onClick = { pendingTrimmerSave?.invoke() },
-                            label = "Done",
+                            label = stringResource(R.string.action_done),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.check_24px),
@@ -264,7 +264,7 @@ fun AddSongScreen(
                                 activeEditingSong = null
                                 currentStep = AddSongStep.Library
                             },
-                            label = "Cancel",
+                            label = stringResource(R.string.action_cancel),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.close_24px),
@@ -290,7 +290,7 @@ fun AddSongScreen(
                                 activeEditingSong = null
                                 currentStep = AddSongStep.Library
                             },
-                            label = "Save",
+                            label = stringResource(R.string.action_save),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.check_24px),
@@ -308,7 +308,7 @@ fun AddSongScreen(
                                 activeEditingSong = null
                                 currentStep = AddSongStep.Library
                             },
-                            label = "Cancel",
+                            label = stringResource(R.string.action_cancel),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.close_24px),
@@ -334,7 +334,7 @@ fun AddSongScreen(
                                 activeEditingSong = null
                                 currentStep = AddSongStep.Library
                             },
-                            label = "Save",
+                            label = stringResource(R.string.action_save),
                             icon = {
                                 Icon(
                                     painter = painterResource(R.drawable.check_24px),
@@ -390,12 +390,12 @@ fun AddSongScreen(
                             currentStep = AddSongStep.Library
                         }
                     ) {
-                        Text("Remove")
+                        Text(stringResource(R.string.action_remove))
                     }
                 },
                 dismissButton = {
                     OutlinedButton(onClick = { showDeleteConfirm = false }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.action_cancel))
                     }
                 }
             )

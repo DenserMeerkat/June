@@ -157,7 +157,7 @@ fun FilterBottomSheet(
                 }
                 JuneFloatingAction(
                     onClick = onDismiss,
-                    label = stringResource(R.string.done),
+                    label = stringResource(R.string.action_done),
                     icon = { Icon(painterResource(R.drawable.check_24px), contentDescription = null) }
                 )
             }

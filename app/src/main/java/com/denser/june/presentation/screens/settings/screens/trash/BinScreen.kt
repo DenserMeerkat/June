@@ -207,7 +207,7 @@ fun BinScreen() {
                 } else {
                     stringResource(R.string.empty_bin_local_desc)
                 },
-                confirmText = stringResource(R.string.delete),
+                confirmText = stringResource(R.string.action_delete),
                 confirmButtonText = stringResource(R.string.permanently_delete_all),
                 isDestructive = true,
                 icon = R.drawable.delete_24px

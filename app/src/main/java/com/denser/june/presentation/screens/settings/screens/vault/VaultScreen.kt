@@ -99,7 +99,7 @@ fun VaultScreen() {
                     ) {
                         Icon(
                             painterResource(R.drawable.settings_b_roll_24px),
-                            contentDescription = stringResource(R.string.settings)
+                            contentDescription = stringResource(R.string.label_settings)
                         )
                     }
                 }

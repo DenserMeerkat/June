@@ -42,7 +42,7 @@ fun PatternSetupScreen(forVault: Boolean = false) {
     var isError by remember { mutableStateOf(false) }
 
     val title = when (step) {
-        PatternSetupStep.CREATE -> stringResource(R.string.create_pattern)
+        PatternSetupStep.CREATE -> stringResource(R.string.draw_pattern)
         PatternSetupStep.CONFIRM -> stringResource(R.string.confirm_pattern)
     }
 
@@ -124,12 +124,12 @@ fun PatternSetupScreen(forVault: Boolean = false) {
                     }
                 } else null,
                 leftIcon = R.drawable.arrow_back_24px,
-                leftText = stringResource(R.string.back),
+                leftText = stringResource(R.string.action_back),
                 onRightClick = {
                     submitPattern(currentPatternInput)
                 },
                 rightEnabled = currentPatternInput.size >= 4,
-                rightText = if (step == PatternSetupStep.CONFIRM) stringResource(R.string.confirm) else stringResource(R.string.next),
+                rightText = if (step == PatternSetupStep.CONFIRM) stringResource(R.string.action_confirm) else stringResource(R.string.next),
                 rightIcon = R.drawable.start_24px
             )
         },

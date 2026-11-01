@@ -74,13 +74,13 @@ fun LightboxTopBar(
                 JuneCloseButton(
                     onClick = onBackOrCancel,
                     colors = btnColors,
-                    contentDescription = "Cancel"
+                    contentDescription = stringResource(R.string.action_cancel)
                 )
             } else {
                 JuneBackButton(
                     onClick = onBackOrCancel,
                     colors = btnColors,
-                    contentDescription = "Back"
+                    contentDescription = stringResource(R.string.action_back)
                 )
             }
 
@@ -175,7 +175,7 @@ fun LightboxTopBar(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.check_24px),
-                        contentDescription = "Save",
+                        contentDescription = stringResource(R.string.action_save),
                     )
                 }
             } else {
@@ -226,7 +226,7 @@ fun LightboxTopBar(
                         }
                         if (onDeleteMedia != null) {
                             JuneDropdownMenuItem(
-                                text = { Text(stringResource(R.string.delete)) },
+                                text = { Text(stringResource(R.string.action_delete)) },
                                 onClick = {
                                     showMenu = false
                                     onDeleteMedia()

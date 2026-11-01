@@ -121,7 +121,7 @@ fun HomeScreen() {
                                         IconButton(onClick = { journalsVM.clearSearch() }) {
                                             Icon(
                                                 painterResource(R.drawable.close_24px),
-                                                contentDescription = stringResource(R.string.clear)
+                                                contentDescription = stringResource(R.string.action_clear)
                                             )
                                         }
                                     }
@@ -129,7 +129,7 @@ fun HomeScreen() {
                             )
                         } else {
                             Text(
-                                text = stringResource(R.string.app_name),
+                                text = stringResource(R.string.brand_app_name),
                                 fontWeight = FontWeight.Bold,
                             )
                         }
@@ -161,7 +161,7 @@ fun HomeScreen() {
                                     if (isSearchActive) R.drawable.arrow_back_24px else R.drawable.search_24px
                                 ),
                                 contentDescription = stringResource(
-                                    if (isSearchActive) R.string.back else R.string.search
+                                    if (isSearchActive) R.string.action_back else R.string.search
                                 )
                             )
                         }
@@ -184,7 +184,7 @@ fun HomeScreen() {
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.settings_24px),
-                                    contentDescription = stringResource(R.string.settings)
+                                    contentDescription = stringResource(R.string.label_settings)
                                 )
                             }
                         }

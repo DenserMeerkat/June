@@ -77,7 +77,7 @@ fun ConsoleLogsScreen() {
                             ),
                             ConnectedBarAction(
                                 iconRes = R.drawable.content_copy_24px,
-                                contentDescription = stringResource(R.string.copy),
+                                contentDescription = stringResource(R.string.action_copy),
                                 enabled = logsList.isNotEmpty(),
                                 onClick = {
                                     val logs = logsList.joinToString("\n")
@@ -88,7 +88,7 @@ fun ConsoleLogsScreen() {
                             ),
                             ConnectedBarAction(
                                 iconRes = R.drawable.delete_24px,
-                                contentDescription = stringResource(R.string.clear),
+                                contentDescription = stringResource(R.string.action_clear),
                                 enabled = logsList.isNotEmpty(),
                                 isDestructive = true,
                                 onClick = {
@@ -288,7 +288,7 @@ private fun ConsoleLogItem(log: String) {
                 onDismissRequest = { showContextMenu = false }
             ) {
                 JuneDropdownMenuItem(
-                    text = { Text(stringResource(R.string.copy)) },
+                    text = { Text(stringResource(R.string.action_copy)) },
                     onClick = {
                         showContextMenu = false
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

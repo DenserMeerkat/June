@@ -189,14 +189,14 @@ fun EditorModals(
                         onAction(EditorAction.SaveJournal)
                         onAction(EditorAction.NavigateBack)
                     }
-                }) { Text(stringResource(R.string.save)) }
+                }) { Text(stringResource(R.string.action_save)) }
             },
             dismissButton = {
                 OutlinedButton(onClick = {
                     dialogState.showExitDialog = false
                     editorState.images.forEach { CompressUtils.restoreUncompressedOriginalFile(context, it) }
                     onAction(EditorAction.NavigateBack)
-                }) { Text(stringResource(R.string.discard)) }
+                }) { Text(stringResource(R.string.action_discard)) }
             },
             text = { Text(stringResource(R.string.save_progress_message)) }
         )

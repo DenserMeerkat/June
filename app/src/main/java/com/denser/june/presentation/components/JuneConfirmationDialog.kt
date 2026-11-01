@@ -42,7 +42,7 @@ fun JuneConfirmationDialog(
     title: String,
     description: String,
     confirmText: String? = null,
-    confirmButtonText: String = stringResource(R.string.confirm),
+    confirmButtonText: String = stringResource(R.string.action_confirm),
     isDestructive: Boolean = true,
     icon: Int? = R.drawable.delete_24px
 ) {
@@ -151,7 +151,7 @@ fun JuneConfirmationDialog(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(stringResource(R.string.cancel))
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         }

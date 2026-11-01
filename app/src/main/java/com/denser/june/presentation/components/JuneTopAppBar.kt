@@ -99,7 +99,7 @@ fun JuneBackButton(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
     ),
-    contentDescription: String = stringResource(R.string.back)
+    contentDescription: String = stringResource(R.string.action_back)
 ) {
     FilledIconButton(
         onClick = onClick,
@@ -121,7 +121,7 @@ fun JuneCloseButton(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
     ),
-    contentDescription: String = stringResource(R.string.close)
+    contentDescription: String = stringResource(R.string.action_close)
 ) {
     FilledIconButton(
         onClick = onClick,

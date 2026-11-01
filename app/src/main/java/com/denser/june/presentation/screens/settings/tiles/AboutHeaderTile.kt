@@ -124,7 +124,7 @@ fun AboutHeaderTile() {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = stringResource(R.string.app_name),
+            text = stringResource(R.string.brand_app_name),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface

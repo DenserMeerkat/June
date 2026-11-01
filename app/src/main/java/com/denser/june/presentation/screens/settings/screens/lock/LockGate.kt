@@ -254,7 +254,7 @@ fun LockGate(
 
             LockType.PATTERN -> {
                 PatternLockContent(
-                    title = title ?: stringResource(R.string.enter_pattern),
+                    title = title ?: stringResource(R.string.draw_pattern),
                     isError = isError,
                     onErrorDismissed = { isError = false },
                     onForgotPattern = if (effectiveSecurityQuestion != null) { { showRecovery = true } } else null,

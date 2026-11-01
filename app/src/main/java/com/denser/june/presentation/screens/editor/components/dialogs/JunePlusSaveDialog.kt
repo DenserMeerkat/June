@@ -70,7 +70,7 @@ fun JunePlusSaveDialog(
                     onClick = onDismissRequest,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(stringResource(R.string.cancel))
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         },

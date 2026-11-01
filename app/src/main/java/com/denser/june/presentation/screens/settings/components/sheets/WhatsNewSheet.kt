@@ -122,7 +122,7 @@ fun WhatsNewBottomSheet(
                 onClick = onDismissRequest,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = stringResource(R.string.done))
+                Text(text = stringResource(R.string.action_done))
             }
 
             Spacer(modifier = Modifier.height(24.dp))

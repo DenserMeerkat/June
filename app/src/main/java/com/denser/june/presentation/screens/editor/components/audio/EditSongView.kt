@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -164,7 +165,7 @@ fun EditSongView(
                         JuneDropdownMenuItem(
                             text = {
                                 Text(
-                                    text = "Remove",
+                                    text = stringResource(R.string.action_remove),
                                     color = MaterialTheme.colorScheme.error
                                 )
                             },

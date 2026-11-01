@@ -40,7 +40,7 @@ private const val ERROR_DISPLAY_DURATION = 500L
 @Composable
 fun PatternLockContent(
     modifier: Modifier = Modifier,
-    title: String = stringResource(R.string.enter_pattern),
+    title: String = stringResource(R.string.draw_pattern),
     isError: Boolean = false,
     errorText: String = stringResource(R.string.wrong_pin_try_again),
     onErrorDismissed: () -> Unit = {},

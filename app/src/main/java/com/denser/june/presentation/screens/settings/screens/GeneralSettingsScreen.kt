@@ -116,7 +116,7 @@ fun GeneralSettingsScreen() {
         JuneConfirmationDialog(
             title = stringResource(R.string.move_all_to_bin_title),
             description = stringResource(R.string.move_all_to_bin_desc),
-            confirmText = stringResource(R.string.delete),
+            confirmText = stringResource(R.string.action_delete),
             confirmButtonText = stringResource(R.string.move_all_to_bin),
             onDismiss = { showDeleteDialog = false },
             onConfirm = {

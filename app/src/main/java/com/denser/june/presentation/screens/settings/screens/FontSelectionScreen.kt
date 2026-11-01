@@ -112,7 +112,7 @@ fun FontSelectionScreen(
                                         .padding(end = 4.dp)
                                 )
                             }
-                            Text(stringResource(R.string.save))
+                            Text(stringResource(R.string.action_save))
                         }
                     }
                 }

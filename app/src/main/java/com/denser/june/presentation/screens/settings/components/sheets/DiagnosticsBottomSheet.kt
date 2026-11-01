@@ -166,23 +166,23 @@ fun DiagnosticsBottomSheet(
                         clipboard.setPrimaryClip(clip)
                         Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
                     },
-                    label = stringResource(R.string.copy),
+                    label = stringResource(R.string.action_copy),
                     icon = {
                         Icon(
                             painter = painterResource(R.drawable.content_copy_24px),
-                            contentDescription = stringResource(R.string.copy),
+                            contentDescription = stringResource(R.string.action_copy),
                             modifier = Modifier.size(18.dp)
                         )
                     }
                 )
                 JuneFloatingAction(
                     onClick = onDismissRequest,
-                    label = stringResource(R.string.done),
+                    label = stringResource(R.string.action_done),
                     selected = false,
                     icon = {
                         Icon(
                             painter = painterResource(R.drawable.check_24px),
-                            contentDescription = stringResource(R.string.done),
+                            contentDescription = stringResource(R.string.action_done),
                             modifier = Modifier.size(18.dp)
                         )
                     }

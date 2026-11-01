@@ -187,7 +187,7 @@ fun TagsPage() {
                                             JuneDropdownMenuItem(
                                                 text = {
                                                     Text(
-                                                        text = stringResource(R.string.delete),
+                                                        text = stringResource(R.string.action_delete),
                                                         style = MaterialTheme.typography.bodyLarge,
                                                         color = MaterialTheme.colorScheme.error
                                                     )
