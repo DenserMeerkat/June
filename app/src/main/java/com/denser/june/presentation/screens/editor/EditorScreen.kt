@@ -25,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.media.compress.CompressUtils
+import com.denser.june.core.media.exif.ExifUtils
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.toDateWithDay
@@ -109,14 +110,15 @@ fun EditorScreen(
 
     LaunchedEffect(state.images, state.songDetails?.localThumbnailPath) {
         val songThumbnail = state.songDetails?.localThumbnailPath
+        val photoPathsOnly = state.images.filterNot { ExifUtils.isVideoPath(it) }
         extractedMediaColors = MediaColorExtractor.extractColors(
             context = context,
-            imagePaths = state.images,
+            imagePaths = photoPathsOnly,
             songThumbnailPath = songThumbnail
         )
         extractedMediaThemes = MediaColorExtractor.extractThemes(
             context = context,
-            imagePaths = state.images,
+            imagePaths = photoPathsOnly,
             songThumbnailPath = songThumbnail
         )
     }

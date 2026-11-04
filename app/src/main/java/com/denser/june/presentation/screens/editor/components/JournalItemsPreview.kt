@@ -164,7 +164,8 @@ fun JournalItemsPreview(
                 Box(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    when (val slide = verticalSlides[pageIndex]) {
+                    val slide = verticalSlides.getOrNull(pageIndex) ?: return@Box
+                    when (slide) {
                         is JournalPreviewItem.Song -> {
                             Box(
                                 modifier = Modifier
@@ -226,7 +227,10 @@ fun JournalItemsPreview(
                                 if (chunks.size > 1) {
                                     item { Spacer(modifier = Modifier.width(0.dp)) }
                                 }
-                                items(chunks) { chunk ->
+                                items(
+                                    items = chunks,
+                                    key = { chunk -> chunk.joinToString(",") }
+                                ) { chunk ->
                                     Box(
                                         modifier = Modifier
                                             .fillParentMaxWidth(widthFraction)

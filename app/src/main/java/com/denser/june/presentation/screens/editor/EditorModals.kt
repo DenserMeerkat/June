@@ -261,8 +261,12 @@ fun EditorModals(
     if (dialogState.showAddItemSheet) {
         AddItemSheet(
             onDismiss = { dialogState.showAddItemSheet = false },
-            onTakePhotoClick = { dialogState.showCameraSelectionDialog = true },
+            onTakePhotoClick = {
+                dialogState.showAddItemSheet = false
+                dialogState.showCameraSelectionDialog = true
+            },
             onAddPhotoClick = {
+                dialogState.showAddItemSheet = false
                 galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
             },
             onAddSongClick = {

@@ -40,6 +40,7 @@ import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.denser.june.core.R
+import com.denser.june.core.media.exif.ExifUtils
 import com.denser.june.core.media.storage.MediaStorageManager
 import com.denser.june.core.utils.toHoursMinutesSeconds
 import com.denser.june.presentation.utils.rememberManagedExoPlayer
@@ -67,7 +68,7 @@ fun JournalMediaItem(
         if (path.startsWith("content://")) {
             context.contentResolver.getType(Uri.parse(path))?.startsWith("video") == true
         } else {
-            path.endsWith("mp4", ignoreCase = true)
+            ExifUtils.isVideoPath(path)
         }
     }
     var isPlaying by remember { mutableStateOf(false) }
