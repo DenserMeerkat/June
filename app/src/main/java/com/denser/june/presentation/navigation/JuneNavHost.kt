@@ -71,6 +71,7 @@ fun JuneNavHost(
 
     val editorRoute = backStack.filterIsInstance<Route.Editor>().lastOrNull()
     var editorSession by remember { mutableStateOf<EditorSession?>(null) }
+    var activeEditorVM by remember { mutableStateOf<EditorVM?>(null) }
 
     if (editorRoute != null && editorSession?.route != editorRoute) {
         editorSession?.viewModelStore?.clear()
@@ -88,12 +89,15 @@ fun JuneNavHost(
             }
         )[EditorVM::class.java]
         editorSession = EditorSession(editorRoute, store, vm)
+        activeEditorVM = vm
     }
 
     LaunchedEffect(editorRoute) {
         if (editorRoute == null && editorSession != null) {
+            kotlinx.coroutines.delay(500)
             editorSession?.viewModelStore?.clear()
             editorSession = null
+            activeEditorVM = null
         }
     }
 
@@ -101,10 +105,11 @@ fun JuneNavHost(
         onDispose {
             editorSession?.viewModelStore?.clear()
             editorSession = null
+            activeEditorVM = null
         }
     }
 
-    val currentEditorVM = editorSession?.viewModel ?: koinViewModel()
+    val currentEditorVM = editorSession?.viewModel ?: activeEditorVM ?: koinViewModel()
 
     val directionMultiplier = if (LocalLayoutDirection.current == LayoutDirection.Ltr) 1 else -1
 
