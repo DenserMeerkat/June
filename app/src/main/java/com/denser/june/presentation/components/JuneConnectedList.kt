@@ -74,28 +74,27 @@ fun JuneConnectedItem(
     val isClickable = onClick != null && enabled
 
     val defaultBaseShape = remember(index, count, shape) {
-        if (shape != null) {
-            shape
-        } else if (index != null && count != null) {
-            when {
-                count == 1 -> RoundedCornerShape(28.dp)
-                index == 0 -> RoundedCornerShape(
-                    topStart = 28.dp,
-                    topEnd = 28.dp,
-                    bottomStart = 8.dp,
-                    bottomEnd = 8.dp
-                )
-                index == count - 1 -> RoundedCornerShape(
-                    topStart = 8.dp,
-                    topEnd = 8.dp,
-                    bottomStart = 28.dp,
-                    bottomEnd = 28.dp
-                )
-                else -> RoundedCornerShape(8.dp)
+        shape
+            ?: if (index != null && count != null) {
+                when {
+                    count == 1 -> RoundedCornerShape(28.dp)
+                    index == 0 -> RoundedCornerShape(
+                        topStart = 28.dp,
+                        topEnd = 28.dp,
+                        bottomStart = 8.dp,
+                        bottomEnd = 8.dp
+                    )
+                    index == count - 1 -> RoundedCornerShape(
+                        topStart = 8.dp,
+                        topEnd = 8.dp,
+                        bottomStart = 28.dp,
+                        bottomEnd = 28.dp
+                    )
+                    else -> RoundedCornerShape(8.dp)
+                }
+            } else {
+                JuneConnectedItemShape
             }
-        } else {
-            JuneConnectedItemShape
-        }
     }
 
     val pressProgress by animateFloatAsState(

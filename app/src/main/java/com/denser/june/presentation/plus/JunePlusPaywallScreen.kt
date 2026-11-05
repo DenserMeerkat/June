@@ -92,26 +92,32 @@ fun JunePlusPaywallScreen(
     val billingHandler = koinInject<BillingHandler>()
     val isPlus by billingHandler.isPlus.collectAsStateWithLifecycle()
 
-    AnimatedVisibility(
-        visible = controller.isVisible,
-        enter = slideInVertically(
-            initialOffsetY = { it },
-            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing)
-        ),
-        exit = slideOutVertically(
-            targetOffsetY = { it },
-            animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
-        ),
-        modifier = modifier.fillMaxSize()
-    ) {
-        BackHandler(enabled = true) {
-            controller.dismiss(isPlus)
-        }
+    if (controller.isVisible) {
+        JuneFullScreenDialog(
+            onDismissRequest = { controller.dismiss(isPlus) }
+        ) {
+            BackHandler(enabled = true) {
+                controller.dismiss(isPlus)
+            }
 
-        JunePlusPaywallContent(
-            onDismiss = { controller.dismiss(isPlus) },
-            onUnlocked = { controller.onPlusUnlockedSuccess() }
-        )
+            AnimatedVisibility(
+                visible = controller.isVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(durationMillis = 200)),
+                exit = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+                ) + fadeOut(animationSpec = tween(durationMillis = 200)),
+                modifier = modifier.fillMaxSize()
+            ) {
+                JunePlusPaywallContent(
+                    onDismiss = { controller.dismiss(isPlus) },
+                    onUnlocked = { controller.onPlusUnlockedSuccess() }
+                )
+            }
+        }
     }
 }
 
@@ -236,8 +242,12 @@ private fun JunePlusPaywallContent(
                                         errorMessage = null
                                         val result = billingHandler.purchasePlus(currentActivity)
                                         isPurchasing = false
-                                        if (result.isSuccess && result.getOrNull() == true) {
-                                            onUnlocked()
+                                        if (result.isSuccess) {
+                                            if (result.getOrNull() == true) {
+                                                onUnlocked()
+                                            } else {
+                                                errorMessage = "No active Plus purchase found to restore."
+                                            }
                                         } else if (result.isFailure) {
                                             val msg = result.exceptionOrNull()?.message
                                             if (msg != "Purchase cancelled") {
