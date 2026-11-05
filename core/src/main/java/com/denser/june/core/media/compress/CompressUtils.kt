@@ -6,6 +6,7 @@ import android.media.MediaMetadataRetriever
 import com.denser.june.core.media.compress.model.CompressionPreset
 import com.denser.june.core.media.compress.model.CompressionPreviewResult
 import com.denser.june.core.media.exif.ExifUtils
+import com.denser.june.core.media.exif.model.*
 import com.denser.june.core.media.storage.MediaStorageManager
 import java.io.File
 
@@ -242,4 +243,30 @@ object CompressUtils {
         path: String,
         preset: CompressionPreset
     ): Boolean = VideoCompressor.compressVideo(context, path, preset)
+
+    fun isOptimized(metadata: MediaMetadata): Boolean = when (metadata) {
+        is AudioMetadata -> {
+            metadata.fileSizeBytes <= 1024 * 1024L ||
+                (metadata.bitrate != null && (metadata.bitrate.filter { it.isDigit() }.toIntOrNull() ?: 999) <= 128)
+        }
+        is VideoMetadata -> {
+            val shortEdge = minOf(metadata.width, metadata.height).takeIf { it > 0 } ?: metadata.height
+            !metadata.isHdr && (
+                shortEdge <= 480 ||
+                metadata.fileSizeBytes <= 5 * 1024 * 1024L ||
+                (shortEdge <= 720 && metadata.fileSizeBytes <= 25 * 1024 * 1024L) ||
+                (shortEdge <= 1080 && metadata.fileSizeBytes <= 50 * 1024 * 1024L) ||
+                (shortEdge <= 1440 && metadata.fileSizeBytes <= 100 * 1024 * 1024L)
+            )
+        }
+        is PhotoMetadata -> {
+            metadata.fileSizeBytes <= 300 * 1024L ||
+                (maxOf(metadata.width, metadata.height) <= 1080 && metadata.fileSizeBytes <= 800 * 1024L) ||
+                (maxOf(metadata.width, metadata.height) <= 2048 && metadata.fileSizeBytes <= 1.2 * 1024 * 1024L) ||
+                (metadata.width == 0 && metadata.height == 0 && metadata.fileSizeBytes <= 500 * 1024L)
+        }
+    }
 }
+
+val MediaMetadata.isOptimized: Boolean
+    get() = CompressUtils.isOptimized(this)

@@ -4,6 +4,7 @@ import android.app.Application
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.denser.june.core.domain.repository.JournalRepository
+import com.denser.june.core.media.storage.AudioStorageManager
 import com.denser.june.core.media.storage.MediaStorageManager
 import com.denser.june.billing.initializePurchases
 import com.denser.june.di.flavorModule
@@ -54,6 +55,8 @@ class JuneApplication : Application(), ImageLoaderFactory {
                     allJournals.mapNotNull { it.songDetails?.localThumbnailPath } +
                     librarySongs.mapNotNull { it.localThumbnailPath }
                 MediaStorageManager.cleanOrphanedFiles(applicationContext, activePaths)
+                val activeAudioPaths = allJournals.flatMap { journal -> journal.audios.map { it.path } }.filter { it.isNotBlank() }
+                AudioStorageManager.cleanOrphanedAudioFiles(applicationContext, activeAudioPaths)
                 songRepo.cleanupUnreferencedSongMedia(allJournals)
             } catch (e: Exception) {
                 e.printStackTrace()

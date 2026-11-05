@@ -16,11 +16,12 @@ data class ParsedPhotoInfo(
     val height: Int,
     val megapixels: String?,
     val resolution: String?,
-    val isJuneOptimized: Boolean,
     val isHdr: Boolean
 )
 
 object PhotoMetadataParser {
+
+    private const val MIN_VALID_EPOCH_MILLIS = 946684800000L
 
     fun parsePhotoExif(
         exif: ExifInterface?,
@@ -30,9 +31,9 @@ object PhotoMetadataParser {
         fallbackDateTime: Long?
     ): ParsedPhotoInfo {
         val parsedDate = try {
-            exif?.dateTimeOriginal?.takeIf { it > 0L }
-                ?: exif?.dateTime?.takeIf { it > 0L }
-                ?: exif?.dateTimeDigitized?.takeIf { it > 0L }
+            exif?.dateTimeOriginal?.takeIf { it > MIN_VALID_EPOCH_MILLIS }
+                ?: exif?.dateTime?.takeIf { it > MIN_VALID_EPOCH_MILLIS }
+                ?: exif?.dateTimeDigitized?.takeIf { it > MIN_VALID_EPOCH_MILLIS }
         } catch (_: Exception) { null }
 
         val dateTakenMillis = parsedDate ?: run {
@@ -42,7 +43,7 @@ object PhotoMetadataParser {
                     ?: exif?.getAttribute(ExifInterface.TAG_DATETIME_DIGITIZED)
             } catch (_: Exception) { null }
             parseExifDate(dateStr)
-        } ?: fallbackDateTime ?: System.currentTimeMillis()
+        } ?: fallbackDateTime?.takeIf { it > MIN_VALID_EPOCH_MILLIS } ?: System.currentTimeMillis()
 
         val make = try { exif?.getAttribute(ExifInterface.TAG_MAKE)?.trim().orEmpty() } catch (_: Exception) { "" }
         val model = try { exif?.getAttribute(ExifInterface.TAG_MODEL)?.trim().orEmpty() } catch (_: Exception) { "" }
@@ -74,7 +75,6 @@ object PhotoMetadataParser {
         val mpStr = if (w > 0 && h > 0) String.format(Locale.getDefault(), "%.1f MP", (w.toLong() * h) / 1_000_000f) else null
         val resStr = if (w > 0 && h > 0) "$w × $h" else null
 
-        val isJuneOpt = try { exif?.getAttribute(ExifInterface.TAG_USER_COMMENT) == "june:optimized" } catch (_: Exception) { false }
         val isHdr = isHdrPhoto(exif)
 
         return ParsedPhotoInfo(
@@ -88,7 +88,6 @@ object PhotoMetadataParser {
             height = h,
             megapixels = mpStr,
             resolution = resStr,
-            isJuneOptimized = isJuneOpt,
             isHdr = isHdr
         )
     }
@@ -156,7 +155,8 @@ object PhotoMetadataParser {
     private fun parseExifDate(dateStr: String?): Long? {
         if (dateStr.isNullOrBlank()) return null
         return try {
-            SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault()).parse(dateStr)?.time
+            val parsed = SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault()).parse(dateStr)?.time
+            if (parsed != null && parsed > MIN_VALID_EPOCH_MILLIS) parsed else null
         } catch (_: Exception) {
             null
         }

@@ -43,6 +43,8 @@ class JournalPreferencesImpl(
         val PHOTO_COMPRESSION_QUALITY = intPreferencesKey("photo_compression_quality")
         val COMPRESS_VIDEOS_ENABLED = booleanPreferencesKey("compress_videos_enabled")
         val VIDEO_COMPRESSION_QUALITY = intPreferencesKey("video_compression_quality")
+        val COMPRESS_AUDIO_ENABLED = booleanPreferencesKey("compress_audio_enabled")
+        val AUDIO_COMPRESSION_QUALITY = intPreferencesKey("audio_compression_quality")
         val MAP_THEME_ACCENT_ENABLED = booleanPreferencesKey("map_theme_accent_enabled")
         const val DEFAULT_REMINDER_TIME = "21:14"
     }
@@ -282,6 +284,24 @@ class JournalPreferencesImpl(
     override suspend fun setVideoCompressionQuality(quality: Int) {
         dataStore.edit { preferences ->
             preferences[VIDEO_COMPRESSION_QUALITY] = quality
+        }
+    }
+
+    override fun isCompressAudioEnabled(): Flow<Boolean> = dataStore.data
+        .map { preferences -> preferences[COMPRESS_AUDIO_ENABLED] ?: false }
+
+    override suspend fun setCompressAudioEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[COMPRESS_AUDIO_ENABLED] = enabled
+        }
+    }
+
+    override fun getAudioCompressionQuality(): Flow<Int> = dataStore.data
+        .map { preferences -> preferences[AUDIO_COMPRESSION_QUALITY] ?: 128 }
+
+    override suspend fun setAudioCompressionQuality(quality: Int) {
+        dataStore.edit { preferences ->
+            preferences[AUDIO_COMPRESSION_QUALITY] = quality
         }
     }
 
