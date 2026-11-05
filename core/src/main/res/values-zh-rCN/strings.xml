@@ -442,4 +442,24 @@
     <string name="markdown_imported_successfully">成功导入 %1$d 篇日记</string>
     <string name="markdown_import_failed">无法导入 Markdown: %1$s</string>
     <string name="locked">已锁定</string>
+    <string name="action_edit">编辑</string>
+    <string name="action_export">导出</string>
+    <string name="action_backup">备份</string>
+    <string name="action_share">分享</string>
+    <string name="action_paste">粘贴</string>
+    <string name="action_retry">重试</string>
+    <string name="action_lock">锁定</string>
+    <string name="action_unlock">解锁</string>
+    <string name="label_timeline">时间线</string>
+    <string name="label_vault">保险库</string>
+    <string name="label_bin">回收站</string>
+    <string name="label_backup">备份</string>
+    <string name="label_restore">还原</string>
+    <string name="cd_back">导航返回</string>
+    <string name="cd_more_options">更多选项</string>
+    <string name="cd_expand">展开</string>
+    <string name="cd_collapse">折叠</string>
+    <string name="cd_add_journal">添加日记</string>
+    <string name="unlock_vault">解锁保险库</string>
+    <string name="unlock_june">解锁 June</string>
 </resources>
