@@ -28,13 +28,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.model.Journal
-import com.denser.june.core.media.exif.model.MediaExifInfo
+import com.denser.june.core.media.exif.model.MediaMetadata
 
 @Composable
 fun LightboxInfoBottomSheet(
     isInfoVisible: Boolean,
     onDismiss: () -> Unit,
-    exifInfo: MediaExifInfo?,
+    exifInfo: MediaMetadata?,
     dateTime: Long?,
     parentJournal: Journal?,
     isJournalNavigationEnabled: Boolean,
@@ -228,7 +228,7 @@ fun LightboxInfoBottomSheet(
                     }
             ) {
                 LightboxInfoSheetContent(
-                    exifInfo = exifInfo,
+                    metadata = exifInfo,
                     dateTime = dateTime,
                     parentJournal = parentJournal,
                     isJournalNavigationEnabled = isJournalNavigationEnabled,

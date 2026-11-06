@@ -28,6 +28,8 @@ import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.media.compress.CompressUtils
 import com.denser.june.core.media.compress.model.CompressionPreset
 import com.denser.june.core.media.exif.ExifUtils
+import com.denser.june.core.media.exif.model.PhotoMetadata
+import com.denser.june.core.media.exif.model.VideoMetadata
 import com.denser.june.presentation.components.lightbox.*
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -125,9 +127,13 @@ fun JuneMediaLightbox(
     val minSheetHeight = screenHeight * 0.65f
     val sheetTop = screenHeight - minSheetHeight
 
-    val mediaAspect = remember(metadataState.exifInfo) {
-        val w = metadataState.exifInfo?.width ?: 0
-        val h = metadataState.exifInfo?.height ?: 0
+    val mediaAspect = remember(metadataState.metadata) {
+        val meta = metadataState.metadata
+        val (w, h) = when (meta) {
+            is PhotoMetadata -> Pair(meta.width, meta.height)
+            is VideoMetadata -> Pair(meta.width, meta.height)
+            else -> Pair(0, 0)
+        }
         if (w > 0 && h > 0) w.toFloat() / h.toFloat() else null
     }
 

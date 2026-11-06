@@ -16,7 +16,7 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.media.compress.model.CompressionPreset
 import com.denser.june.core.media.compress.model.CompressionPreviewResult
-import com.denser.june.core.media.exif.model.MediaExifInfo
+import com.denser.june.core.media.exif.model.MediaMetadata
 import com.denser.june.core.utils.formatBytes
 import com.denser.june.core.utils.toMediumDate
 import com.denser.june.presentation.components.JuneDropdownMenu
@@ -36,7 +36,7 @@ fun LightboxTopBar(
     appliedPreset: CompressionPreset?,
     availablePresets: Set<CompressionPreset>,
     currentPath: String?,
-    exifInfo: MediaExifInfo?,
+    exifInfo: MediaMetadata?,
     dateTime: Long?,
     parentJournal: Journal?,
     currentPreview: CompressionPreviewResult?,

@@ -2,6 +2,7 @@ package com.denser.june.presentation.navigation
 
 import android.util.Log
 
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -24,6 +25,7 @@ import com.denser.june.presentation.screens.editor.EditorScreen
 import com.denser.june.presentation.screens.editor.EditorVM
 import com.denser.june.presentation.screens.editor.screens.AddSongScreen
 import com.denser.june.presentation.screens.editor.screens.ItemGalleryScreen
+import com.denser.june.presentation.screens.editor.screens.RecordAudioScreen
 import com.denser.june.presentation.screens.home.HomeScreen
 import com.denser.june.presentation.screens.settings.SettingsScreen
 import com.denser.june.presentation.screens.settings.screens.AboutSettingsScreen
@@ -118,8 +120,9 @@ fun JuneNavHost(
         modifier = modifier,
         onBack = onBack,
         transitionSpec = {
-            if (targetState.isLightbox() || initialState.isLightbox()) {
-                fadeIn() togetherWith fadeOut()
+            if (targetState.isLightbox() || initialState.isLightbox() ||
+                targetState.isAudioStudio() || initialState.isAudioStudio()) {
+                fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(220))
             } else if (isForwardTransition(initialState, targetState, backStack)) {
                 (slideInHorizontally(initialOffsetX = { directionMultiplier * it }))
                     .togetherWith(slideOutHorizontally(targetOffsetX = { directionMultiplier * -it / 4 }) + fadeOut())
@@ -129,8 +132,9 @@ fun JuneNavHost(
             }
         },
         popTransitionSpec = {
-            if (targetState.isLightbox() || initialState.isLightbox()) {
-                fadeIn() togetherWith fadeOut()
+            if (targetState.isLightbox() || initialState.isLightbox() ||
+                targetState.isAudioStudio() || initialState.isAudioStudio()) {
+                fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(220))
             } else if (isForwardTransition(initialState, targetState, backStack)) {
                 (slideInHorizontally(initialOffsetX = { directionMultiplier * it }))
                     .togetherWith(slideOutHorizontally(targetOffsetX = { directionMultiplier * -it / 4 }) + fadeOut())
@@ -140,8 +144,9 @@ fun JuneNavHost(
             }
         },
         predictivePopTransitionSpec = { _ ->
-            if (targetState.isLightbox() || initialState.isLightbox()) {
-                fadeIn() togetherWith fadeOut()
+            if (targetState.isLightbox() || initialState.isLightbox() ||
+                targetState.isAudioStudio() || initialState.isAudioStudio()) {
+                fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(220))
             } else if (isForwardTransition(initialState, targetState, backStack)) {
                 (slideInHorizontally(initialOffsetX = { directionMultiplier * it }))
                     .togetherWith(slideOutHorizontally(targetOffsetX = { directionMultiplier * -it / 4 }) + fadeOut())
@@ -179,6 +184,21 @@ fun JuneNavHost(
                 ) {
                     AddSongScreen(
                         viewModel = currentEditorVM,
+                        onNavigateBack = { navigator.navigateBack() }
+                    )
+                }
+            }
+
+            entry<Route.RecordAudio> { route ->
+                val state by currentEditorVM.state.collectAsStateWithLifecycle()
+                JuneThemeWrapper(
+                    theme = state.theme,
+                    font = state.font,
+                    fontVariation = state.fontVariation
+                ) {
+                    RecordAudioScreen(
+                        viewModel = currentEditorVM,
+                        initialAudioId = route.initialAudioId,
                         onNavigateBack = { navigator.navigateBack() }
                     )
                 }
@@ -340,6 +360,28 @@ private fun Scene<*>.isLightbox(): Boolean {
         if (first.contains("MediaViewerRoute") || first.contains("JournalMediaDetail") ||
             second.contains("MediaViewerRoute") || second.contains("JournalMediaDetail")
         ) {
+            return true
+        }
+    }
+    return false
+}
+
+private fun Scene<*>.isAudioStudio(): Boolean {
+    val k = key
+    if (k is Route.RecordAudio) return true
+    if (k is Pair<*, *>) {
+        val first = k.first.toString()
+        val second = k.second.toString()
+        if (first.contains("RecordAudio") || second.contains("RecordAudio")) {
+            return true
+        }
+    }
+    val ck = entries.lastOrNull()?.contentKey
+    if (ck is Route.RecordAudio) return true
+    if (ck is Pair<*, *>) {
+        val first = ck.first.toString()
+        val second = ck.second.toString()
+        if (first.contains("RecordAudio") || second.contains("RecordAudio")) {
             return true
         }
     }
