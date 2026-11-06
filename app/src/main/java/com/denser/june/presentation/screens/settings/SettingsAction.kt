@@ -52,4 +52,6 @@ sealed interface SettingsAction {
     data class OnPhotoQualityChange(val quality: Int) : SettingsAction
     data class OnCompressVideosToggle(val enabled: Boolean) : SettingsAction
     data class OnVideoQualityChange(val quality: Int) : SettingsAction
+    data class OnCompressAudioToggle(val enabled: Boolean) : SettingsAction
+    data class OnAudioQualityChange(val quality: Int) : SettingsAction
 }

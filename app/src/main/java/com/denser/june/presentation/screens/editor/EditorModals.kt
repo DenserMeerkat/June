@@ -195,6 +195,7 @@ fun EditorModals(
                 OutlinedButton(onClick = {
                     dialogState.showExitDialog = false
                     editorState.images.forEach { CompressUtils.restoreUncompressedOriginalFile(context, it) }
+                    onAction(EditorAction.DiscardChanges)
                     onAction(EditorAction.NavigateBack)
                 }) { Text(stringResource(R.string.action_discard)) }
             },
@@ -268,6 +269,10 @@ fun EditorModals(
             onAddPhotoClick = {
                 dialogState.showAddItemSheet = false
                 galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
+            },
+            onAddAudioClick = {
+                dialogState.showAddItemSheet = false
+                navigator.navigateTo(Route.RecordAudio(), isSingleTop = true)
             },
             onAddSongClick = {
                 dialogState.showAddItemSheet = false

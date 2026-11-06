@@ -76,6 +76,8 @@ class SettingsVM(
             journalPrefs.getPhotoCompressionQuality(),
             journalPrefs.isCompressVideosEnabled(),
             journalPrefs.getVideoCompressionQuality(),
+            journalPrefs.isCompressAudioEnabled(),
+            journalPrefs.getAudioCompressionQuality(),
             privacyPrefs.getPasswordHashFlow(),
             privacyPrefs.getPatternHashFlow(),
             billingHandler.isPlus
@@ -87,9 +89,9 @@ class SettingsVM(
             isAppLockEnabled = array[6] as Boolean,
             lockType = array[7] as LockType,
             pinHash = array[8] as String?,
-            passwordHash = array[29] as String?,
-            patternHash = array[30] as String?,
-            isPlus = array[31] as Boolean,
+            passwordHash = array[31] as String?,
+            patternHash = array[32] as String?,
+            isPlus = array[33] as Boolean,
             isScreenPrivacyEnabled = array[9] as Boolean,
             isAutoTimeEnabled = array[10] as Boolean,
             startOfWeek = array[11] as DayOfWeek,
@@ -108,6 +110,8 @@ class SettingsVM(
             photoCompressionQuality = array[26] as Int,
             isCompressVideosEnabled = array[27] as Boolean,
             videoCompressionQuality = array[28] as Int,
+            isCompressAudioEnabled = array[29] as Boolean,
+            audioCompressionQuality = array[30] as Int,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -219,6 +223,8 @@ class SettingsVM(
                 is SettingsAction.OnPhotoQualityChange -> journalPrefs.setPhotoCompressionQuality(action.quality)
                 is SettingsAction.OnCompressVideosToggle -> journalPrefs.setCompressVideosEnabled(action.enabled)
                 is SettingsAction.OnVideoQualityChange -> journalPrefs.setVideoCompressionQuality(action.quality)
+                is SettingsAction.OnCompressAudioToggle -> journalPrefs.setCompressAudioEnabled(action.enabled)
+                is SettingsAction.OnAudioQualityChange -> journalPrefs.setAudioCompressionQuality(action.quality)
             }
         }
     }

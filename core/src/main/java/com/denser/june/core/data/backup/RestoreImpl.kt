@@ -34,6 +34,7 @@ class RestoreImpl(
         withContext(Dispatchers.IO) {
             return@withContext try {
                 val mediaDir = File(context.filesDir, MEDIA_FOLDER).apply { if (!exists()) mkdirs() }
+                val audioDir = File(context.filesDir, "journal_audio").apply { if (!exists()) mkdirs() }
                 val songLibraryDir = File(context.filesDir, "song_media/library").apply { if (!exists()) mkdirs() }
                 val songArtDir = File(context.filesDir, "song_media/art").apply { if (!exists()) mkdirs() }
                 val journalsList = mutableListOf<Journal>()
@@ -133,6 +134,14 @@ class RestoreImpl(
                                         FileOutputStream(targetFile).use { fos ->
                                             zis.copyTo(fos)
                                         }
+                                    } else if (entryName.startsWith("journal_audio/") && !entry.isDirectory) {
+                                        val fileName = File(entryName).name
+                                        val targetFile = File(audioDir, fileName)
+                                        FileOutputStream(targetFile).use { fos ->
+                                            zis.copyTo(fos)
+                                        }
+                                        extractedMediaMap[entryName] = targetFile.absolutePath
+                                        extractedMediaMap[fileName] = targetFile.absolutePath
                                     }
                                 }
                             }
@@ -150,7 +159,7 @@ class RestoreImpl(
                 AppLogger.d(AppLogger.Category.BACKUP, TAG, "Found ${journalsList.size} journals to import. Inserting into DB...")
 
                 journalsList.forEach { journal ->
-                    val updatedJournal = remapMediaPaths(journal, extractedMediaMap, mediaDir, songLibraryDir, songArtDir)
+                    val updatedJournal = remapMediaPaths(journal, extractedMediaMap, mediaDir, audioDir, songLibraryDir, songArtDir)
                     val existing = journalRepo.getJournalById(updatedJournal.id)
                     val journalToSave = if (existing != null) {
                         updatedJournal.copy(
@@ -207,6 +216,7 @@ class RestoreImpl(
         journal: Journal,
         extractedMediaMap: Map<String, String>,
         mediaDir: File,
+        audioDir: File,
         songLibraryDir: File,
         songArtDir: File
     ): Journal {
@@ -231,6 +241,25 @@ class RestoreImpl(
             journal.images
         }
 
+        val localizedAudios = if (journal.audios.isNotEmpty()) {
+            journal.audios.map { audio ->
+                val clean = audio.path.trim()
+                val fileName = File(clean).name
+                val mapped = extractedMediaMap[clean]
+                    ?: extractedMediaMap[clean.removePrefix("journal_audio/")]
+                    ?: extractedMediaMap[fileName]
+                val resolvedPath = if (mapped != null && File(mapped).exists()) {
+                    mapped
+                } else {
+                    val direct = File(audioDir, fileName)
+                    if (direct.exists()) direct.absolutePath else audio.path
+                }
+                audio.copy(path = resolvedPath)
+            }
+        } else {
+            journal.audios
+        }
+
         val localizedSong = journal.songDetails?.let { song ->
             val localAudio = song.localPreviewPath?.let {
                 val file = File(songLibraryDir, File(it).name)
@@ -243,6 +272,6 @@ class RestoreImpl(
             song.copy(localPreviewPath = localAudio, localThumbnailPath = localArt)
         }
 
-        return journal.copy(images = newPaths, songDetails = localizedSong)
+        return journal.copy(images = newPaths, audios = localizedAudios, songDetails = localizedSong)
     }
 }

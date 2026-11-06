@@ -170,6 +170,18 @@ object SettingsTileRegistry {
                 content = { CompressVideosTile() }
             ),
             SettingTile(
+                key = "COMPRESS_AUDIO",
+                title = stringResource(R.string.compress_audio),
+                subtitle = { _, state ->
+                    if (state.isCompressAudioEnabled) {
+                        "${state.audioCompressionQuality} kbps"
+                    } else null
+                },
+                category = "General",
+                keywords = listOf("compress", "audio", "voice", "quality", "size", "bitrate", "recording"),
+                content = { CompressAudioTile() }
+            ),
+            SettingTile(
                 key = "START_OF_WEEK",
                 title = stringResource(R.string.start_of_week),
                 subtitle = { _, state -> state.startOfWeek.getDisplayName(TextStyle.FULL, java.util.Locale.getDefault()) },

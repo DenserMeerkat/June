@@ -12,4 +12,6 @@ data class MediaOperations(
     val onEditJournalSong: () -> Unit = {},
     val onRemoveLocation: () -> Unit = {},
     val onLocationDialogToggle: (Boolean) -> Unit = {},
+    val onAudioClick: (String?) -> Unit = {},
+    val onRemoveAudio: ((String) -> Unit)? = null
 )

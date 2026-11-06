@@ -118,3 +118,50 @@ fun CompressVideosTile() {
         }
     )
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CompressAudioTile() {
+    val viewModel: SettingsVM = koinViewModel()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    SettingsItem(
+        title = stringResource(R.string.compress_audio),
+        subtitle = stringResource(R.string.compress_audio_desc),
+        leadingContent = {
+            Icon(
+                painter = painterResource(R.drawable.mic_24px),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondary
+            )
+        },
+        trailingContent = {
+            Switch(
+                checked = state.isCompressAudioEnabled,
+                onCheckedChange = { viewModel.onAction(SettingsAction.OnCompressAudioToggle(it)) }
+            )
+        },
+        onClick = { viewModel.onAction(SettingsAction.OnCompressAudioToggle(!state.isCompressAudioEnabled)) },
+        content = {
+            AnimatedVisibility(
+                visible = state.isCompressAudioEnabled,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    JuneConnectedButtonGroup(
+                        options = listOf("64 kbps" to 64, "128 kbps" to 128, "192 kbps" to 192),
+                        selected = { (_, target) -> state.audioCompressionQuality == target },
+                        onSelect = { (_, target) ->
+                            viewModel.onAction(SettingsAction.OnAudioQualityChange(target))
+                        },
+                        label = { (name, _) -> name },
+                        equalWeight = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+    )
+}
