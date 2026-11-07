@@ -12,7 +12,9 @@ import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.JournalAudio
 import com.denser.june.core.domain.model.SongDetails
+import com.denser.june.core.media.storage.AudioStorageManager
 import java.time.DayOfWeek
 import com.denser.june.core.utils.combineDateAndTime
 import com.denser.june.core.utils.toYearMonth
@@ -29,9 +31,10 @@ import java.time.YearMonth
 import java.io.File
 import androidx.core.net.toUri
 
-enum class TimelineTab(@androidx.annotation.StringRes val labelRes: Int, val iconRes: Int) {
+enum class TimelineTab(@param:androidx.annotation.StringRes val labelRes: Int, val iconRes: Int) {
     Journals(R.string.journals, R.drawable.list_alt_24px),
     Media(R.string.media, R.drawable.art_track_24px),
+    Audio(R.string.audio_notes, R.drawable.mic_24px),
     Music(R.string.music, R.drawable.music_note_24px),
     Map(R.string.map, R.drawable.location_on_24px)
 }
@@ -40,7 +43,7 @@ class TimelineVM(
     private val repo: JournalRepository,
     private val journalPrefs: JournalPreferences,
     private val privacyPreferences: PrivacyPreferences,
-    context: Context,
+    private val context: Context,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -90,14 +93,36 @@ class TimelineVM(
     private val _activeSong = MutableStateFlow<SongDetails?>(null)
     val activeSong = _activeSong.asStateFlow()
 
+    private val _activeAudio = MutableStateFlow<JournalAudio?>(null)
+    val activeAudio = _activeAudio.asStateFlow()
+
+    private val _activeAudioJournalId = MutableStateFlow<String?>(null)
+    val activeAudioJournalId = _activeAudioJournalId.asStateFlow()
+
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying = _isPlaying.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
-    private val _sliderProgress = MutableStateFlow(0f)
-    val sliderProgress = _sliderProgress.asStateFlow()
+    private val _songProgress = MutableStateFlow(0f)
+    val songProgress = _songProgress.asStateFlow()
+
+    private val _audioProgress = MutableStateFlow(0f)
+    val audioProgress = _audioProgress.asStateFlow()
+
+    val sliderProgress = _songProgress.asStateFlow()
+
+    private enum class MediaSource { NONE, SONG, AUDIO }
+    private val _currentMediaSource = MutableStateFlow(MediaSource.NONE)
+
+    val isSongPlaying: StateFlow<Boolean> = combine(_isPlaying, _currentMediaSource) { playing, source ->
+        playing && source == MediaSource.SONG
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val isAudioPlaying: StateFlow<Boolean> = combine(_isPlaying, _currentMediaSource) { playing, source ->
+        playing && source == MediaSource.AUDIO
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     private val exoPlayer: ExoPlayer by lazy {
         ExoPlayer.Builder(context).build().apply {
@@ -110,7 +135,9 @@ class TimelineVM(
                     _isLoading.value = playbackState == Player.STATE_BUFFERING
                     if (playbackState == Player.STATE_ENDED) {
                         _isPlaying.value = false
-                        _sliderProgress.value = 0f
+                        _songProgress.value = 0f
+                        _audioProgress.value = 0f
+                        _currentMediaSource.value = MediaSource.NONE
                         seekTo(0)
                         pause()
                     }
@@ -136,20 +163,30 @@ class TimelineVM(
         viewModelScope.launch {
             while (isActive) {
                 if (_isPlaying.value) {
-                    val active = _activeSong.value
-                    val startMs = (active?.clipStartMs ?: 0L).coerceAtLeast(0L)
-                    val totalDuration = exoPlayer.duration.coerceAtLeast(1L)
-                    val effectiveEndMs = active?.clipEndMs?.coerceAtMost(totalDuration)?.takeIf { it > startMs } ?: totalDuration
-                    val clipSpan = (effectiveEndMs - startMs).coerceAtLeast(1L)
-                    val currentPos = exoPlayer.currentPosition
+                    when (_currentMediaSource.value) {
+                        MediaSource.AUDIO -> {
+                            updateAudioProgress()
+                        }
+                        MediaSource.SONG -> {
+                            val active = _activeSong.value
+                            if (active != null) {
+                                val startMs = (active.clipStartMs ?: 0L).coerceAtLeast(0L)
+                                val totalDuration = exoPlayer.duration.coerceAtLeast(1L)
+                                val effectiveEndMs = active.clipEndMs?.coerceAtMost(totalDuration)?.takeIf { it > startMs } ?: totalDuration
+                                val clipSpan = (effectiveEndMs - startMs).coerceAtLeast(1L)
+                                val currentPos = exoPlayer.currentPosition
 
-                    if (active?.clipEndMs != null && currentPos >= effectiveEndMs) {
-                        exoPlayer.seekTo(startMs)
-                        exoPlayer.pause()
-                        _sliderProgress.value = 0f
-                    } else {
-                        val offsetInClip = (currentPos - startMs).coerceIn(0L, clipSpan)
-                        _sliderProgress.value = offsetInClip.toFloat() / clipSpan.toFloat()
+                                if (active.clipEndMs != null && currentPos >= effectiveEndMs) {
+                                    exoPlayer.seekTo(startMs)
+                                    exoPlayer.pause()
+                                    _songProgress.value = 0f
+                                } else {
+                                    val offsetInClip = (currentPos - startMs).coerceIn(0L, clipSpan)
+                                    _songProgress.value = offsetInClip.toFloat() / clipSpan.toFloat()
+                                }
+                            }
+                        }
+                        MediaSource.NONE -> {}
                     }
                 }
                 delay(100)
@@ -175,53 +212,127 @@ class TimelineVM(
         }
     }
 
+    private fun loadSongIntoPlayer(song: SongDetails, autoPlay: Boolean) {
+        val localFile = song.localPreviewPath?.let { File(it) }?.takeIf { it.exists() && it.length() > 0L }
+        val uri = if (localFile != null) {
+            localFile.toUri()
+        } else if (isInternetAllowed.value && song.previewUrl != null) {
+            song.previewUrl?.toUri()
+        } else {
+            null
+        }
+        if (uri != null) {
+            _currentMediaSource.value = MediaSource.SONG
+            exoPlayer.stop()
+            exoPlayer.clearMediaItems()
+            exoPlayer.setMediaItem(MediaItem.fromUri(uri))
+            exoPlayer.prepare()
+            val startMs = (song.clipStartMs ?: 0L).coerceAtLeast(0L)
+            val seekTarget = if (_songProgress.value > 0f) {
+                val totalDuration = exoPlayer.duration.coerceAtLeast(1L)
+                val effectiveEndMs = song.clipEndMs?.coerceAtMost(totalDuration)?.takeIf { it > startMs } ?: totalDuration
+                val clipSpan = (effectiveEndMs - startMs).coerceAtLeast(1L)
+                startMs + (_songProgress.value * clipSpan).toLong()
+            } else {
+                startMs
+            }
+            if (seekTarget > 0) {
+                exoPlayer.seekTo(seekTarget)
+            }
+            if (autoPlay) {
+                exoPlayer.play()
+            }
+        }
+    }
+
+    private fun loadAudioIntoPlayer(audio: JournalAudio, autoPlay: Boolean) {
+        val resolvedFile = AudioStorageManager.resolveAudioFile(context, audio.path)
+        if (resolvedFile.exists()) {
+            _currentMediaSource.value = MediaSource.AUDIO
+            exoPlayer.stop()
+            exoPlayer.clearMediaItems()
+            exoPlayer.setMediaItem(MediaItem.fromUri(resolvedFile.toUri()))
+            exoPlayer.prepare()
+            val seekTarget = if (_audioProgress.value > 0f) {
+                (_audioProgress.value * audio.durationMs).toLong()
+            } else {
+                0L
+            }
+            if (seekTarget > 0L) {
+                exoPlayer.seekTo(seekTarget)
+            }
+            if (autoPlay) {
+                exoPlayer.play()
+            }
+        }
+    }
+
     fun onSongSelected(song: SongDetails, journalId: String, autoPlay: Boolean = true) {
         val hasLocalAudio = song.localPreviewPath?.let { File(it).exists() } == true
         if (!hasLocalAudio && !isInternetAllowed.value) return
         playingJournalId = journalId
         val sameSong = (_activeSong.value?.localPreviewPath != null && _activeSong.value?.localPreviewPath == song.localPreviewPath) ||
                 (_activeSong.value?.previewUrl != null && _activeSong.value?.previewUrl == song.previewUrl)
-        if (sameSong) {
-            togglePlayPause()
+        if (sameSong && _currentMediaSource.value == MediaSource.SONG) {
+            toggleSongPlayPause()
         } else {
             _activeSong.value = song
-            val localFile = song.localPreviewPath?.let { File(it) }?.takeIf { it.exists() && it.length() > 0L }
-            val uri = if (localFile != null) {
-                localFile.toUri()
-            } else if (isInternetAllowed.value && song.previewUrl != null) {
-                song.previewUrl?.toUri()
-            } else {
-                null
+            _songProgress.value = 0f
+            loadSongIntoPlayer(song, autoPlay)
+        }
+    }
+
+    fun onAudioSelected(audio: JournalAudio, journalId: String, autoPlay: Boolean = true) {
+        val sameAudio = _activeAudio.value?.id == audio.id
+        if (sameAudio && _currentMediaSource.value == MediaSource.AUDIO) {
+            toggleAudioPlayPause()
+        } else {
+            _activeAudio.value = audio
+            _activeAudioJournalId.value = journalId
+            _audioProgress.value = 0f
+            playingJournalId = journalId
+            loadAudioIntoPlayer(audio, autoPlay)
+        }
+    }
+
+    fun toggleSongPlayPause() {
+        val active = _activeSong.value ?: return
+        if (_currentMediaSource.value != MediaSource.SONG) {
+            loadSongIntoPlayer(active, autoPlay = true)
+            return
+        }
+        if (exoPlayer.isPlaying) {
+            exoPlayer.pause()
+        } else {
+            val startMs = (active.clipStartMs ?: 0L).coerceAtLeast(0L)
+            val totalDuration = exoPlayer.duration.coerceAtLeast(1L)
+            val effectiveEndMs = active.clipEndMs?.coerceAtMost(totalDuration)?.takeIf { it > startMs } ?: totalDuration
+            val currentPos = exoPlayer.currentPosition
+            if (currentPos < startMs || (active.clipEndMs != null && currentPos >= effectiveEndMs)) {
+                exoPlayer.seekTo(startMs)
             }
-            if (uri != null) {
-                exoPlayer.stop()
-                exoPlayer.clearMediaItems()
-                exoPlayer.setMediaItem(MediaItem.fromUri(uri))
-                exoPlayer.prepare()
-                val startMs = (song.clipStartMs ?: 0L).coerceAtLeast(0L)
-                if (startMs > 0) {
-                    exoPlayer.seekTo(startMs)
-                }
-                if (autoPlay) {
-                    exoPlayer.play()
-                }
-            }
+            if (exoPlayer.mediaItemCount > 0) exoPlayer.play()
+        }
+    }
+
+    fun toggleAudioPlayPause() {
+        val active = _activeAudio.value ?: return
+        if (_currentMediaSource.value != MediaSource.AUDIO) {
+            loadAudioIntoPlayer(active, autoPlay = true)
+            return
+        }
+        if (exoPlayer.isPlaying) {
+            exoPlayer.pause()
+        } else {
+            if (exoPlayer.mediaItemCount > 0) exoPlayer.play()
         }
     }
 
     fun togglePlayPause() {
-        if (exoPlayer.isPlaying) {
-            exoPlayer.pause()
+        if (_currentMediaSource.value == MediaSource.AUDIO) {
+            toggleAudioPlayPause()
         } else {
-            val active = _activeSong.value
-            val startMs = (active?.clipStartMs ?: 0L).coerceAtLeast(0L)
-            val totalDuration = exoPlayer.duration.coerceAtLeast(1L)
-            val effectiveEndMs = active?.clipEndMs?.coerceAtMost(totalDuration)?.takeIf { it > startMs } ?: totalDuration
-            val currentPos = exoPlayer.currentPosition
-            if (currentPos < startMs || (active?.clipEndMs != null && currentPos >= effectiveEndMs)) {
-                exoPlayer.seekTo(startMs)
-            }
-            if (exoPlayer.mediaItemCount > 0) exoPlayer.play()
+            toggleSongPlayPause()
         }
     }
 
@@ -229,6 +340,35 @@ class TimelineVM(
         if (exoPlayer.isPlaying) {
             exoPlayer.pause()
         }
+    }
+
+    private fun updateAudioProgress() {
+        val totalDuration = exoPlayer.duration.coerceAtLeast(1L)
+        val currentPos = exoPlayer.currentPosition
+        _audioProgress.value = (currentPos.toFloat() / totalDuration.toFloat()).coerceIn(0f, 1f)
+    }
+
+    fun rewind5s() {
+        val active = _activeAudio.value ?: return
+        if (_currentMediaSource.value != MediaSource.AUDIO) {
+            loadAudioIntoPlayer(active, autoPlay = false)
+        }
+        val current = exoPlayer.currentPosition
+        val newPos = (current - 5000L).coerceAtLeast(0L)
+        exoPlayer.seekTo(newPos)
+        updateAudioProgress()
+    }
+
+    fun forward10s() {
+        val active = _activeAudio.value ?: return
+        if (_currentMediaSource.value != MediaSource.AUDIO) {
+            loadAudioIntoPlayer(active, autoPlay = false)
+        }
+        val current = exoPlayer.currentPosition
+        val duration = exoPlayer.duration.coerceAtLeast(0L)
+        val newPos = (current + 10000L).coerceAtMost(duration)
+        exoPlayer.seekTo(newPos)
+        updateAudioProgress()
     }
 
     fun onMonthChange(newMonth: YearMonth) {

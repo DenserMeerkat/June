@@ -225,7 +225,7 @@ fun EditSongView(
             value = artist,
             onValueChange = onArtistChange,
             label = "Artist",
-            leadingIcon = R.drawable.person_24px,
+            leadingIcon = R.drawable.artist_24px,
             placeholder = "Artist name",
             enabled = enabled
         )
@@ -234,7 +234,7 @@ fun EditSongView(
             value = album,
             onValueChange = onAlbumChange,
             label = "Album",
-            leadingIcon = R.drawable.art_track_24px,
+            leadingIcon = R.drawable.album_24px,
             placeholder = "Album name",
             enabled = enabled
         )

@@ -1,6 +1,7 @@
 package com.denser.june.presentation.components
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -250,5 +251,60 @@ fun JuneConnectedRowItem(
             }
             belowContent?.invoke(this)
         }
+    }
+}
+
+@Composable
+fun JuneConnectedSegmentButton(
+    onClick: () -> Unit,
+    baseShape: CornerBasedShape,
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    pressedRadius: Dp = 14.dp,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+    content: @Composable RowScope.() -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val pressProgress by animateFloatAsState(
+        targetValue = if (isPressed) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "segmentCornerAnim"
+    )
+
+    val density = LocalDensity.current
+    val dummySize = androidx.compose.ui.geometry.Size(1000f, 1000f)
+    val baseTopStart = (baseShape.topStart.toPx(dummySize, density) / density.density).dp
+    val baseTopEnd = (baseShape.topEnd.toPx(dummySize, density) / density.density).dp
+    val baseBottomStart = (baseShape.bottomStart.toPx(dummySize, density) / density.density).dp
+    val baseBottomEnd = (baseShape.bottomEnd.toPx(dummySize, density) / density.density).dp
+
+    val currentShape = RoundedCornerShape(
+        topStart = lerp(baseTopStart, pressedRadius, pressProgress),
+        topEnd = lerp(baseTopEnd, pressedRadius, pressProgress),
+        bottomStart = lerp(baseBottomStart, pressedRadius, pressProgress),
+        bottomEnd = lerp(baseBottomEnd, pressedRadius, pressProgress)
+    )
+
+    Box(
+        modifier = modifier
+            .clip(currentShape)
+            .background(containerColor)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            modifier = Modifier.padding(contentPadding),
+            verticalAlignment = Alignment.CenterVertically,
+            content = content
+        )
     }
 }

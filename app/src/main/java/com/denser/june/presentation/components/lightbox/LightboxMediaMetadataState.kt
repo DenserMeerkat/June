@@ -18,9 +18,7 @@ class LightboxMediaMetadataState(
     val isMediaBackedUp: Boolean,
     val isPendingSync: Boolean,
     val syncProvider: String?
-) {
-    val exifInfo: MediaMetadata? get() = metadata
-}
+)
 
 @Composable
 fun rememberLightboxMediaMetadataState(

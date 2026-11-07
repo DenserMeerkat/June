@@ -199,7 +199,7 @@ fun JuneMediaLightbox(
         LightboxInfoBottomSheet(
             isInfoVisible = isInfoVisible,
             onDismiss = { isInfoVisible = false },
-            exifInfo = metadataState.exifInfo,
+            metadata = metadataState.metadata,
             dateTime = dateTime,
             parentJournal = metadataState.parentJournal,
             isJournalNavigationEnabled = journalId == null,
@@ -237,7 +237,7 @@ fun JuneMediaLightbox(
                 appliedPreset = compressionState.appliedPreset,
                 availablePresets = compressionState.availablePresets,
                 currentPath = currentPath,
-                exifInfo = metadataState.exifInfo,
+                metadata = metadataState.metadata,
                 dateTime = dateTime,
                 parentJournal = metadataState.parentJournal,
                 currentPreview = compressionState.currentPreview,

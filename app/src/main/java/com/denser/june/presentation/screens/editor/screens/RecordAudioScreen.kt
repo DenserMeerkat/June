@@ -34,7 +34,7 @@ import com.denser.june.core.media.storage.AudioStorageManager
 import com.denser.june.core.utils.FileUtils
 import com.denser.june.presentation.components.JuneBackButton
 import com.denser.june.presentation.components.JuneTopAppBar
-import com.denser.june.presentation.components.media.MediaInfoSheet
+import com.denser.june.presentation.components.sheets.AudioInfoSheet
 import com.denser.june.presentation.screens.editor.EditorAction
 import com.denser.june.presentation.screens.editor.EditorVM
 import com.denser.june.presentation.screens.editor.components.audio.*
@@ -296,7 +296,7 @@ fun RecordAudioScreen(
                                 }
                             }
                             FilledTonalIconButton(
-                                onClick = { filePicker.launch("audio/*") },
+                                onClick = { filePicker.launch("audio/" + "*") },
                                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                                     contentColor = MaterialTheme.colorScheme.onSurface
@@ -363,17 +363,8 @@ fun RecordAudioScreen(
 
     if (audioForInfo != null) {
         val currentInfoAudio = state.audios.firstOrNull { it.id == audioForInfo?.id } ?: audioForInfo!!
-        val metadata = remember(currentInfoAudio) {
-            MediaMetadataReader.readMediaMetadata(
-                context = context,
-                path = currentInfoAudio.path,
-                fallbackDateTime = currentInfoAudio.createdAt.takeIf { it > 946684800000L },
-                journalTitle = currentInfoAudio.title
-            )
-        }
-        MediaInfoSheet(
-            metadata = metadata,
-            title = currentInfoAudio.title,
+        AudioInfoSheet(
+            audio = currentInfoAudio,
             onDismiss = { audioForInfo = null }
         )
     }

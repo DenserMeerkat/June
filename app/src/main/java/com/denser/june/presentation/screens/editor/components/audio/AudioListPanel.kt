@@ -217,7 +217,7 @@ fun AudioListPanel(
                                         }
 
                                         JuneDropdownMenuItem(
-                                            text = { Text("Audio Info") },
+                                            text = { Text("Info") },
                                             onClick = {
                                                 showMenu = false
                                                 onAudioInfo(audio)

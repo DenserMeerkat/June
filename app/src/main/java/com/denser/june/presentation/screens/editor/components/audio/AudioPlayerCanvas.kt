@@ -168,7 +168,7 @@ fun AudioPlayerCanvas(
                             onDismissRequest = { showMenu = false }
                         ) {
                             JuneDropdownMenuItem(
-                                text = { Text("Audio Info") },
+                                text = { Text("Info") },
                                 onClick = {
                                     showMenu = false
                                     onAudioInfo(activeAudio)

@@ -120,6 +120,7 @@
     <string name="no_locations_this_month">No locations added for this month.</string>
     <string name="no_locations_found">No locations found</string>
     <string name="no_media_this_month">No media this month.</string>
+    <string name="no_audio_this_month">No audio notes this month.</string>
     <string name="no_music_this_month">No music tracked this month.</string>
     <string name="empty_library">Your library is empty</string>
     <string name="empty_library_desc">Add songs by pasting a link or choosing an audio file from your device using the buttons above.</string>

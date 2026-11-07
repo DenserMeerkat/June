@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.home.timeline.components
+package com.denser.june.presentation.screens.home.timeline.components.common
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -39,3 +39,4 @@ fun TimelineDateColumn(
         )
     }
 }
+

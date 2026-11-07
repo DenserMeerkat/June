@@ -5,6 +5,7 @@ data class MediaOperations(
     val onRemoveMedia: (String) -> Unit = {},
     val onMoveToFront: (String) -> Unit = {},
     val onMediaClick: ((String) -> Unit)? = {},
+    val onMediaLongClick: ((String) -> Unit)? = null,
     val frontMediaPath: String? = null,
     val onRemoveSong: () -> Unit = {},
     val onSongSheetToggle: (Boolean) -> Unit = {},

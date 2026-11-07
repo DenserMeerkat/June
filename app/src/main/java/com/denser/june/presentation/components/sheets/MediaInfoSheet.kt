@@ -1,23 +1,22 @@
-package com.denser.june.presentation.components.lightbox
+package com.denser.june.presentation.components.sheets
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.media.compress.isOptimized
 import com.denser.june.core.media.exif.model.MediaMetadata
 import com.denser.june.core.utils.toExifDateTimeDisplay
 import com.denser.june.presentation.components.media.MediaDetailsList
-import com.denser.june.presentation.screens.home.timeline.components.TimelineJournalCard
+import com.denser.june.presentation.screens.home.timeline.components.journal.TimelineJournalCard
 
 @Composable
-fun LightboxInfoSheetContent(
+fun MediaInfoSheetContent(
     metadata: MediaMetadata?,
     dateTime: Long?,
     parentJournal: Journal?,
@@ -38,24 +37,13 @@ fun LightboxInfoSheetContent(
             .padding(horizontal = 16.dp)
             .padding(bottom = 32.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(36.dp)
-                    .height(4.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
-            )
-        }
+        val dateDisplay = metadata?.dateTaken
+            ?: (dateTime?.takeIf { it > 946684800000L }
+                ?: parentJournal?.dateTime?.takeIf { it > 946684800000L }
+                ?: System.currentTimeMillis()).toExifDateTimeDisplay()
 
         Text(
-            text = metadata?.dateTaken
-                ?: (dateTime?.takeIf { it > 946684800000L } ?: parentJournal?.dateTime?.takeIf { it > 946684800000L } ?: System.currentTimeMillis()).toExifDateTimeDisplay(),
+            text = dateDisplay,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -91,27 +79,48 @@ fun LightboxInfoSheetContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LightboxDetailsSection(
-    metadata: MediaMetadata?,
-    isBackedUp: Boolean,
-    isPendingSync: Boolean,
+fun MediaInfoSheet(
+    metadata: MediaMetadata,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    dateTime: Long? = metadata.dateTakenMillis,
+    parentJournal: Journal? = null,
+    isJournalNavigationEnabled: Boolean = parentJournal != null,
+    isBackedUp: Boolean = metadata.isBackedUp,
+    isPendingSync: Boolean = false,
     syncProvider: String? = null,
-    isCompressing: Boolean,
-    canCompressFurther: Boolean = false,
-    allowCompression: Boolean = true,
-    onCompressClick: () -> Unit,
-    modifier: Modifier = Modifier
+    isCompressing: Boolean = false,
+    canCompressFurther: Boolean = !metadata.isOptimized,
+    allowCompression: Boolean = false,
+    onJournalClick: () -> Unit = {},
+    onCompressClick: () -> Unit = {}
 ) {
-    MediaDetailsList(
-        metadata = metadata,
-        isBackedUp = isBackedUp,
-        isPendingSync = isPendingSync,
-        syncProvider = syncProvider,
-        isCompressing = isCompressing,
-        canCompressFurther = canCompressFurther,
-        allowCompression = allowCompression,
-        onCompressClick = onCompressClick,
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         modifier = modifier
-    )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+        ) {
+            MediaInfoSheetContent(
+                metadata = metadata,
+                dateTime = dateTime,
+                parentJournal = parentJournal,
+                isJournalNavigationEnabled = isJournalNavigationEnabled,
+                isMediaBackedUp = isBackedUp,
+                isPendingSync = isPendingSync,
+                syncProvider = syncProvider,
+                isCompressing = isCompressing,
+                canCompressFurther = canCompressFurther,
+                allowCompression = allowCompression,
+                onJournalClick = onJournalClick,
+                onCompressClick = onCompressClick
+            )
+        }
+    }
 }

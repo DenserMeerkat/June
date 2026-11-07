@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.home.timeline.components
+package com.denser.june.presentation.screens.home.timeline.components.media
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -7,26 +7,33 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.media.exif.MediaMetadataReader
 import com.denser.june.core.utils.toFullDate
-import com.denser.june.presentation.navigation.AppNavigator
-import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.components.journal.JournalMediaItem
 import com.denser.june.presentation.components.journal.MediaOperations
+import com.denser.june.presentation.components.sheets.MediaInfoSheet
+import com.denser.june.presentation.navigation.AppNavigator
+import com.denser.june.presentation.navigation.Route
+import com.denser.june.presentation.screens.home.timeline.TimelineVM
+import com.denser.june.presentation.screens.home.timeline.components.common.EmptyStateMessage
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TimelineMediaTab(
     journals: List<Journal>,
-    bottomPadding: Dp
+    bottomPadding: Dp,
+    viewModel: TimelineVM = koinViewModel()
 ) {
     val navigator = koinInject<AppNavigator>()
     val allMedia = remember(journals) { journals.flatMap { it.images } }
@@ -35,8 +42,15 @@ fun TimelineMediaTab(
             .groupBy { it.dateTime.toFullDate() }
     }
 
+    var selectedMediaForOptions by remember { mutableStateOf<Pair<Journal, String>?>(null) }
+    val currentMediaForOptions = remember(selectedMediaForOptions, journals) {
+        val (selectedJournal, selectedPath) = selectedMediaForOptions ?: return@remember null
+        val updatedJournal = journals.find { it.id == selectedJournal.id } ?: selectedJournal
+        updatedJournal to selectedPath
+    }
+
     if (allMedia.isEmpty()) {
-        EmptyStateMessage(androidx.compose.ui.res.stringResource(com.denser.june.core.R.string.no_media_this_month))
+        EmptyStateMessage(stringResource(R.string.no_media_this_month))
     } else {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val screenWidth = maxWidth
@@ -73,6 +87,7 @@ fun TimelineMediaTab(
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             rowImages.forEach { mediaPath ->
+                                val parentJournal = journalsInDate.find { it.images.contains(mediaPath) } ?: journalsInDate.first()
                                 Box(modifier = Modifier.weight(1f)) {
                                     JournalMediaItem(
                                         path = mediaPath,
@@ -91,6 +106,9 @@ fun TimelineMediaTab(
                                                     ),
                                                     isSingleTop = true,
                                                 )
+                                            },
+                                            onMediaLongClick = {
+                                                selectedMediaForOptions = parentJournal to mediaPath
                                             }
                                         ),
                                     )
@@ -106,6 +124,30 @@ fun TimelineMediaTab(
                 }
             }
         }
+    }
+
+    if (currentMediaForOptions != null) {
+        val (journal, mediaPath) = currentMediaForOptions
+        val context = LocalContext.current
+        val metadata = remember(mediaPath, journal) {
+            MediaMetadataReader.readMediaMetadata(
+                context = context,
+                path = mediaPath,
+                fallbackDateTime = journal.dateTime.takeIf { it > 946684800000L } ?: System.currentTimeMillis(),
+                journalTitle = journal.title
+            )
+        }
+        MediaInfoSheet(
+            metadata = metadata,
+            parentJournal = journal,
+            dateTime = journal.dateTime,
+            isJournalNavigationEnabled = true,
+            onDismiss = { selectedMediaForOptions = null },
+            onJournalClick = {
+                selectedMediaForOptions = null
+                navigator.navigateTo(Route.Editor(journal.id), isSingleTop = true)
+            }
+        )
     }
 }
 

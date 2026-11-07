@@ -1,28 +1,11 @@
-package com.denser.june.presentation.screens.home.timeline.components
+package com.denser.june.presentation.screens.home.timeline.components.map
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import android.graphics.Bitmap
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,50 +13,46 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.MapStyleProvider
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.preferences.JournalPreferences
-import com.denser.june.presentation.components.InternetRestrictedIndicator
-import com.denser.june.presentation.components.MapAttributions
-import com.denser.june.presentation.components.MapControlColumn
-import com.denser.june.presentation.components.MapLibreInitializer
-import com.denser.june.presentation.utils.MapAccentColorizer
-import com.denser.june.presentation.components.rememberMapDarkMode
-import com.denser.june.presentation.components.MapViewLifecycleEffect
+import com.denser.june.core.utils.toDayOfMonth
+import com.denser.june.core.utils.toShortMonth
+import com.denser.june.presentation.components.*
 import com.denser.june.presentation.screens.home.timeline.TimelineVM
+import com.denser.june.presentation.screens.home.timeline.components.common.EmptyStateMessage
 import com.denser.june.presentation.theme.LocalInternetAllowed
+import com.denser.june.presentation.utils.MapAccentColorizer
 import com.denser.june.presentation.utils.MapProviderUtils
+import com.denser.june.presentation.utils.TimelineMapUtils
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import android.graphics.Bitmap
-import org.maplibre.android.style.expressions.Expression
-import org.maplibre.android.style.layers.Property
-import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapLibreMapOptions
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
+import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.LineLayer
+import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
-import com.denser.june.core.utils.toDayOfMonth
-import com.denser.june.core.utils.toShortMonth
-import com.denser.june.presentation.utils.TimelineMapUtils
 
 @Composable
 fun TimelineMapTab(
@@ -244,7 +223,12 @@ fun TimelineMapTab(
                 }
             )
         }
+    }
 
+    var hasInitialBoundsAnimated by remember(sortedPoints) { mutableStateOf(false) }
+
+    fun animateToInitialBounds(mapboxMap: MapLibreMap) {
+        val pathPoints = locationGroups.map { LatLng(it.location.latitude, it.location.longitude) }
         if (pathPoints.size == 1) {
             mapboxMap.animateCamera(
                 org.maplibre.android.camera.CameraUpdateFactory.newCameraPosition(
@@ -268,7 +252,7 @@ fun TimelineMapTab(
     }
 
     if (validPoints.isEmpty()) {
-        EmptyStateMessage(androidx.compose.ui.res.stringResource(R.string.no_locations_this_month))
+        EmptyStateMessage(stringResource(R.string.no_locations_this_month))
         return
     }
 
@@ -289,11 +273,21 @@ fun TimelineMapTab(
             LaunchedEffect(styleUrl, sortedPoints, mapView, isMapThemeAccentEnabled, colorScheme) {
                 if (styleUrl.isBlank()) return@LaunchedEffect
                 mapView.getMapAsync { mapboxMap ->
+                    val previousCamera = mapboxMap.cameraPosition
+                    val shouldRestoreCamera = hasInitialBoundsAnimated && previousCamera.zoom > 0
                     mapboxMap.uiSettings.isAttributionEnabled = false
                     mapboxMap.uiSettings.isLogoEnabled = false
                     mapboxMap.uiSettings.isCompassEnabled = false
                     mapboxMap.setStyle(styleUrl) { style ->
                         renderMapContent(mapboxMap, style)
+                        if (shouldRestoreCamera) {
+                            mapboxMap.moveCamera(
+                                org.maplibre.android.camera.CameraUpdateFactory.newCameraPosition(previousCamera)
+                            )
+                        } else {
+                            animateToInitialBounds(mapboxMap)
+                            hasInitialBoundsAnimated = true
+                        }
                     }
                 }
             }

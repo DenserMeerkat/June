@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.home.timeline.components
+package com.denser.june.presentation.screens.home.timeline.components.journal
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -30,6 +30,7 @@ import com.denser.june.presentation.components.journal.rememberJournalDisplayTit
 import com.denser.june.presentation.components.journal.rememberJournalGroupShape
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
+import com.denser.june.presentation.screens.home.timeline.components.common.TimelineDateColumn
 import org.koin.compose.koinInject
 import java.time.LocalDate
 
@@ -170,3 +171,4 @@ fun TimelineDayGroup(
         }
     }
 }
+

@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.home.timeline.components
+package com.denser.june.presentation.screens.home.timeline.components.journal
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
@@ -14,15 +14,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.denser.june.core.domain.model.Journal
-import com.denser.june.presentation.navigation.AppNavigator
-import com.denser.june.presentation.navigation.Route
-import kotlinx.coroutines.delay
-import org.koin.compose.koinInject
-
 import com.denser.june.core.R
+import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.toLocalDate
 import com.denser.june.presentation.components.journal.DayJournalGroupData
+import com.denser.june.presentation.navigation.AppNavigator
+import com.denser.june.presentation.navigation.Route
+import com.denser.june.presentation.screens.home.timeline.components.common.EmptyStateMessage
+import kotlinx.coroutines.delay
+import org.koin.compose.koinInject
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -109,3 +109,4 @@ fun TimelineJournalTab(
         }
     }
 }
+

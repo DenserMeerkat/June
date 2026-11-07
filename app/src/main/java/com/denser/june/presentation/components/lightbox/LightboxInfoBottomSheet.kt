@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,12 +31,14 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.media.exif.model.MediaMetadata
+import com.denser.june.presentation.components.sheets.MediaInfoSheetContent
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LightboxInfoBottomSheet(
     isInfoVisible: Boolean,
     onDismiss: () -> Unit,
-    exifInfo: MediaMetadata?,
+    metadata: MediaMetadata?,
     dateTime: Long?,
     parentJournal: Journal?,
     isJournalNavigationEnabled: Boolean,
@@ -202,7 +206,8 @@ fun LightboxInfoBottomSheet(
                     }
                 }
         ) {
-            Box(
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
                     .pointerInput(maxExpansionPx) {
@@ -227,8 +232,9 @@ fun LightboxInfoBottomSheet(
                         )
                     }
             ) {
-                LightboxInfoSheetContent(
-                    metadata = exifInfo,
+                BottomSheetDefaults.DragHandle()
+                MediaInfoSheetContent(
+                    metadata = metadata,
                     dateTime = dateTime,
                     parentJournal = parentJournal,
                     isJournalNavigationEnabled = isJournalNavigationEnabled,

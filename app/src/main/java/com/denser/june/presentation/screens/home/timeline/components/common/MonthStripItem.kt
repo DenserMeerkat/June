@@ -1,4 +1,4 @@
-package com.denser.june.presentation.screens.home.timeline.components
+package com.denser.june.presentation.screens.home.timeline.components.common
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
@@ -6,51 +6,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import java.time.YearMonth
-import java.time.format.TextStyle
 import com.denser.june.core.R
-import com.denser.june.presentation.components.InfiniteMonthStrip
-import com.denser.june.presentation.components.YearHeader
-
-@Composable
-fun TimelineMonthStrip(
-    currentMonth: YearMonth,
-    isExpanded: Boolean,
-    onMonthSelect: (YearMonth) -> Unit,
-    onToggleExpand: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val platformLocale = LocalLocale.current.platformLocale
-    InfiniteMonthStrip(
-        currentMonth = currentMonth,
-        modifier = modifier.padding(vertical = 12.dp),
-        yearContent = { year -> YearHeader(year) },
-        monthContent = { ym, isSelected ->
-            MonthStripItem(
-                label = ym.month.getDisplayName(TextStyle.SHORT, platformLocale),
-                isSelected = isSelected,
-                isExpanded = isSelected && isExpanded,
-                onClick = {
-                    if (isSelected) {
-                        onToggleExpand()
-                    } else {
-                        onMonthSelect(ym)
-                    }
-                }
-            )
-        }
-    )
-}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -123,3 +87,4 @@ fun MonthStripItem(
         }
     }
 }
+

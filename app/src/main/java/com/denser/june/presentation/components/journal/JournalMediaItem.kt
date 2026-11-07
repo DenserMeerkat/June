@@ -78,7 +78,7 @@ fun JournalMediaItem(
     val showVideoPlayer = isVideo && enablePlayback && !isProcessing
 
     val shouldShowMoveToFront = path != operations.frontMediaPath
-    val shouldCaptureTouch = !isProcessing && (enablePlayback || operations.onMediaClick != null)
+    val shouldCaptureTouch = !isProcessing && (enablePlayback || operations.onMediaClick != null || operations.onMediaLongClick != null)
 
     val resolvedFile = remember(path) {
         if (path.startsWith("content://") || path.startsWith("file://")) null
@@ -103,13 +103,15 @@ fun JournalMediaItem(
             .indication(interactionSource, LocalIndication.current)
             .then(
                 if (shouldCaptureTouch) {
-                    Modifier.pointerInput(operations.onMediaClick, enableContextMenu) {
+                    Modifier.pointerInput(operations.onMediaClick, operations.onMediaLongClick, enableContextMenu) {
                         detectTapGestures(
                             onTap = { operations.onMediaClick?.invoke(path) },
                             onLongPress = { offset ->
                                 if (enableContextMenu) {
                                     showMenu = true
                                     pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                                } else {
+                                    operations.onMediaLongClick?.invoke(path)
                                 }
                             },
                             onPress = { offset ->
