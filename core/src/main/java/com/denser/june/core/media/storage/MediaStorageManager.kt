@@ -22,7 +22,7 @@ object MediaStorageManager {
 
             val inputStream = contentResolver.openInputStream(uri) ?: return null
 
-            val mediaDir = File(context.filesDir, "journal_media").apply { if (!exists()) mkdirs() }
+            val mediaDir = File(context.filesDir, "media").apply { if (!exists()) mkdirs() }
             val fileName = "media_${System.currentTimeMillis()}_${(0..999).random()}.$extension"
             val file = File(mediaDir, fileName)
 
@@ -48,16 +48,53 @@ object MediaStorageManager {
     }
 
     fun cleanOrphanedFiles(context: Context, activePaths: List<String>) {
-        val mediaDir = File(context.filesDir, "journal_media")
-        if (!mediaDir.exists()) return
-
         val activeFileNames = activePaths.map { File(it).name }.toSet()
-
-        mediaDir.listFiles()?.forEach { file ->
-            if (file.name !in activeFileNames) {
-                file.delete()
+        val mediaDir = File(context.filesDir, "media")
+        if (mediaDir.exists()) {
+            mediaDir.listFiles()?.forEach { file ->
+                if (file.name !in activeFileNames) {
+                    file.delete()
+                }
             }
         }
+        val legacyDir = File(context.filesDir, "journal_media")
+        if (legacyDir.exists()) {
+            legacyDir.listFiles()?.forEach { file ->
+                if (file.name !in activeFileNames) {
+                    file.delete()
+                }
+            }
+            if (legacyDir.listFiles()?.isEmpty() == true) {
+                legacyDir.delete()
+            }
+        }
+    }
+
+    fun migrateLegacyMediaStorage(context: Context) {
+        try {
+            val legacyDir = File(context.filesDir, "journal_media")
+            if (!legacyDir.exists() || !legacyDir.isDirectory) return
+            val targetDir = File(context.filesDir, "media").apply { if (!exists()) mkdirs() }
+            legacyDir.listFiles()?.forEach { file ->
+                if (file.isFile) {
+                    val destFile = File(targetDir, file.name)
+                    if (destFile.exists() && destFile.length() > 0L) {
+                        file.delete()
+                    } else {
+                        val renamed = file.renameTo(destFile)
+                        if (!renamed) {
+                            try {
+                                file.copyTo(destFile, overwrite = true)
+                                file.delete()
+                            } catch (_: Exception) {}
+                        }
+                    }
+                }
+            }
+            if (legacyDir.listFiles()?.isEmpty() == true) {
+                legacyDir.delete()
+            }
+        } catch (_: Exception) {}
     }
 
     fun createTempPictureUri(context: Context): Uri {
@@ -107,8 +144,11 @@ object MediaStorageManager {
         if (direct.exists() && direct.length() > 0L) return direct
 
         val fileName = direct.name.substringAfterLast('/')
-        val internalMedia = File(File(context.filesDir, "journal_media"), fileName)
+        val internalMedia = File(File(context.filesDir, "media"), fileName)
         if (internalMedia.exists() && internalMedia.length() > 0L) return internalMedia
+
+        val legacyMedia = File(File(context.filesDir, "journal_media"), fileName)
+        if (legacyMedia.exists() && legacyMedia.length() > 0L) return legacyMedia
 
         return direct
     }

@@ -27,6 +27,8 @@ class SyncPreferencesImpl(
         private val gdJournalsFolderId = stringPreferencesKey("gd_journals_folder_id")
         private val gdMediaFolderId = stringPreferencesKey("gd_media_folder_id")
         private val gdSongMediaFolderId = stringPreferencesKey("gd_song_media_folder_id")
+        private val gdAudiosFolderId = stringPreferencesKey("gd_audios_folder_id")
+        private val gdSongsFolderId = stringPreferencesKey("gd_songs_folder_id")
         private val completedDataRepairVersion = intPreferencesKey("completed_data_repair_version")
         private val lastPurgeTime = longPreferencesKey("last_purge_time")
         private val syncLoggingEnabled = booleanPreferencesKey("sync_logging_enabled")
@@ -122,9 +124,25 @@ class SyncPreferencesImpl(
         dataStore.edit { it.updateOrRemove(gdMediaFolderId, id) }
     }
 
-    override fun getGoogleDriveSongMediaFolderId(): Flow<String?> = dataStore.data.map { it[gdSongMediaFolderId] }
+    override fun getGoogleDriveSongMediaFolderId(): Flow<String?> = dataStore.data.map { it[gdSongsFolderId] ?: it[gdSongMediaFolderId] }
     override suspend fun setGoogleDriveSongMediaFolderId(id: String?) {
-        dataStore.edit { it.updateOrRemove(gdSongMediaFolderId, id) }
+        dataStore.edit {
+            it.updateOrRemove(gdSongsFolderId, id)
+            it.updateOrRemove(gdSongMediaFolderId, id)
+        }
+    }
+
+    override fun getGoogleDriveAudiosFolderId(): Flow<String?> = dataStore.data.map { it[gdAudiosFolderId] }
+    override suspend fun setGoogleDriveAudiosFolderId(id: String?) {
+        dataStore.edit { it.updateOrRemove(gdAudiosFolderId, id) }
+    }
+
+    override fun getGoogleDriveSongsFolderId(): Flow<String?> = dataStore.data.map { it[gdSongsFolderId] ?: it[gdSongMediaFolderId] }
+    override suspend fun setGoogleDriveSongsFolderId(id: String?) {
+        dataStore.edit {
+            it.updateOrRemove(gdSongsFolderId, id)
+            it.updateOrRemove(gdSongMediaFolderId, id)
+        }
     }
 
     override fun getSyncLoggingEnabled(): Flow<Boolean> = dataStore.data

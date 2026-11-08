@@ -17,7 +17,7 @@ import java.util.UUID
 object AudioStorageManager {
 
     fun getAudioDir(context: Context): File {
-        return File(context.filesDir, "journal_audio").apply {
+        return File(context.filesDir, "audios").apply {
             if (!exists()) mkdirs()
         }
     }
