@@ -58,18 +58,18 @@ class SyncAnalysisTest : BaseSyncTest() {
     }
 
     @Test
-    fun `analysis pendingSongDownloads excludes unreferenced orphaned songs on cloud`() = runTest {
-        // Cloud has 2 orphaned audio files not attached to any active local journal
-        harness.cloud.putSongMedia("orphan1.mp3", byteArrayOf(1, 2, 3))
-        harness.cloud.putSongMedia("orphan2.mp3", byteArrayOf(4, 5, 6))
+    fun `analysis pendingSongDownloads includes unreferenced songs from cloud song pool`() = runTest {
+        // Cloud has 2 songs in the cloud song library pool not attached to any active local journal
+        harness.cloud.putSongMedia("library_song1.mp3", byteArrayOf(1, 2, 3))
+        harness.cloud.putSongMedia("library_song2.mp3", byteArrayOf(4, 5, 6))
 
         val active = SyncFixtures.newJournal("active", updatedAt = T1)
         harness.repo.seed(active)
 
         val analysis = harness.performAnalysis().getOrThrow()
 
-        assertEquals("Unreferenced cloud songs must not be counted in pendingSongDownloads", 0, analysis.pendingSongDownloadsCount)
-        assertEquals(0, analysis.pendingSongDownloadsList.size)
+        assertEquals("Cloud songs in song pool must be counted in pendingSongDownloads", 2, analysis.pendingSongDownloadsCount)
+        assertEquals(2, analysis.pendingSongDownloadsList.size)
     }
 
     @Test
@@ -89,5 +89,85 @@ class SyncAnalysisTest : BaseSyncTest() {
 
         assertEquals("Attached song on cloud missing locally must be in pendingSongDownloads", 1, analysis.pendingSongDownloadsCount)
         assertEquals("Attached Track — Attached Artist", analysis.pendingSongDownloadsList.first())
+    }
+
+    @Test
+    fun `analysis pendingMediaUploads maps media filenames to parent journal title and extension`() = runTest {
+        val mediaFile = harness.givenMediaFileOnDisk("photo1.jpg", byteArrayOf(1, 2, 3))
+        val journal = SyncFixtures.newJournal(
+            "j_vacation",
+            title = "Trip to Tokyo",
+            updatedAt = T1,
+            images = listOf(mediaFile.absolutePath)
+        )
+        harness.repo.seed(journal)
+        // Cloud already has the journal synced, but missing the media file
+        harness.cloud.putJournal(journal, modifiedAt = T1)
+
+        val analysis = harness.performAnalysis().getOrThrow()
+
+        assertEquals(1, analysis.pendingMediaUploadsCount)
+        assertEquals("Trip to Tokyo • JPG", analysis.pendingMediaUploadsList.first())
+    }
+
+    @Test
+    fun `analysis localDeletions maps deleted journal IDs to journal title`() = runTest {
+        val journal = SyncFixtures.newJournal(
+            "j_deleted",
+            title = "Old Thoughts",
+            updatedAt = T1
+        )
+        harness.repo.seed(journal)
+        harness.repo.tombstones.add("j_deleted")
+        // Cloud still has the journal, so it will be recognized as pending local deletion from cloud
+        harness.cloud.putJournal(journal, modifiedAt = T1)
+
+        val analysis = harness.performAnalysis().getOrThrow()
+
+        assertEquals(1, analysis.pendingDeletionsCount)
+        assertEquals("Old Thoughts", analysis.localDeletionsList.first())
+    }
+
+    @Test
+    fun `analysis pendingSongDownloads includes cloud song when cloud journal is pending download`() = runTest {
+        harness.cloud.putSongMedia("incoming_track.mp3", byteArrayOf(1, 2, 3))
+        harness.givenCloudOnlyJournal(
+            "j_remote",
+            title = "Distant Memory",
+            songDetails = SongDetails(
+                title = "Incoming Track",
+                artistName = "Incoming Artist",
+                localPreviewPath = "incoming_track.mp3"
+            ),
+            modifiedAt = T1
+        )
+
+        val analysis = harness.performAnalysis().getOrThrow()
+
+        assertEquals("Pending cloud journal must trigger 1 journal download", 1, analysis.pendingDownloadsCount)
+        assertEquals("Journal title must be peeked from remote journal JSON", "Distant Memory", analysis.pendingDownloadsList.first())
+        assertEquals("Incoming cloud song must be counted in pendingSongDownloads", 1, analysis.pendingSongDownloadsCount)
+        assertEquals("Song title and artist must be peeked from remote journal JSON", "Incoming Track — Incoming Artist", analysis.pendingSongDownloadsList.first())
+    }
+
+    @Test
+    fun `analysis pendingSongDownloads resolves song name and artist even when localPreviewPath is null in journal`() = runTest {
+        harness.cloud.putSongMedia("uuid_song_123.mp3", byteArrayOf(1, 2, 3))
+        harness.givenCloudOnlyJournal(
+            "j_legacy_remote",
+            title = "Legacy Memory",
+            songDetails = SongDetails(
+                title = "Bohemian Rhapsody",
+                artistName = "Queen",
+                localPreviewPath = null,
+                localThumbnailPath = "uuid_song_123.jpg"
+            ),
+            modifiedAt = T1
+        )
+
+        val analysis = harness.performAnalysis().getOrThrow()
+
+        assertEquals("Cloud song must be counted in pendingSongDownloads", 1, analysis.pendingSongDownloadsCount)
+        assertEquals("Song title and artist must be resolved from journal songDetails", "Bohemian Rhapsody — Queen", analysis.pendingSongDownloadsList.first())
     }
 }

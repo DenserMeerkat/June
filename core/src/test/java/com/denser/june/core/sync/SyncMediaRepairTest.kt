@@ -5,7 +5,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class RepairRepeatedMediaFileNameTest {
+class SyncMediaRepairTest {
 
     private fun cleanRepeatedMediaName(name: String): String {
         return if (name.startsWith("media_") && name.contains("_media_")) {
