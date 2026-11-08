@@ -85,7 +85,7 @@ fun AudioPlayerCanvas(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    var titleValue by remember(activeAudio.id, activeAudio.title) {
+                    var titleValue by remember(activeAudio.id) {
                         mutableStateOf(
                             TextFieldValue(
                                 text = activeAudio.title.orEmpty(),
@@ -93,13 +93,28 @@ fun AudioPlayerCanvas(
                             )
                         )
                     }
+
+                    LaunchedEffect(activeAudio.id) {
+                        val currentText = activeAudio.title.orEmpty()
+                        if (titleValue.text != currentText) {
+                            titleValue = TextFieldValue(
+                                text = currentText,
+                                selection = TextRange(currentText.length)
+                            )
+                        }
+                    }
+
+                    LaunchedEffect(titleValue.text, activeAudio.id) {
+                        kotlinx.coroutines.delay(300L)
+                        if (titleValue.text != activeAudio.title.orEmpty()) {
+                            onUpdateTitle(activeAudio.id, titleValue.text)
+                        }
+                    }
+
                     BasicTextField(
                         value = titleValue,
                         onValueChange = { newValue ->
                             titleValue = newValue
-                            if (newValue.text != activeAudio.title.orEmpty()) {
-                                onUpdateTitle(activeAudio.id, newValue.text)
-                            }
                         },
                         enabled = !isProcessing,
                         textStyle = MaterialTheme.typography.titleMedium.copy(
