@@ -86,7 +86,8 @@ fun GeneralSettingsScreen() {
 
                 val compressionGroup = listOfNotNull(
                     generalTiles["COMPRESS_PHOTOS"],
-                    generalTiles["COMPRESS_VIDEOS"]
+                    generalTiles["COMPRESS_VIDEOS"],
+                    generalTiles["COMPRESS_AUDIO"]
                 )
                 if (compressionGroup.isNotEmpty()) {
                     item {

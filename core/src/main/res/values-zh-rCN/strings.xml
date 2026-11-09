@@ -27,6 +27,7 @@
     <string name="new_journal">新日记</string>
     <string name="ok">确认</string>
     <string name="okay">确认</string>
+    <string name="label_overview">概览</string>
     <string name="open_folder">打开文件夹</string>
     <string name="open_hosted_weblate">打开托管的 Weblate</string>
     <string name="open_link">打开链接</string>
@@ -84,13 +85,13 @@
     <string name="synced">同步于</string>
     <string name="test_api_key">测试 API密钥</string>
     <string name="test_connection">测试连接</string>
-    <string name="testing_connection">测试连接中...</string>
+    <string name="testing_connection">测试中...</string>
     <string name="testing_key">测试密钥中…</string>
     <string name="today">今天</string>
     <string name="unsaved_tags_message">您的标签中有未保存的更改。是否要在退出前保存这些更改？</string>
     <string name="untitled">无标题</string>
     <string name="updated">更新于</string>
-    <string name="verifying_connection">验证连接中...</string>
+    <string name="verifying_connection">测试中...</string>
     <string name="whats_new">更新日志</string>
     <string name="save_entry">保存条目？</string>
     <string name="change_lock_title">更改密码？</string>
@@ -257,8 +258,6 @@
     <string name="repeat_weekends">周末</string>
     <string name="schedule">日程安排</string>
     <string name="advanced_sync_desc">分析与修复工具</string>
-    <string name="analyze_sync">分析同步</string>
-    <string name="analyze_sync_desc">分析云同步状态</string>
     <string name="automatic_sync">自动同步</string>
     <string name="automatic_sync_desc">实时同步更改</string>
     <string name="backup_format_too_old">备份格式过时</string>
@@ -282,9 +281,8 @@
     <string name="restore_failed">恢复失败：%1$s</string>
     <string name="restore_warning_message">这将把备份与您当前的数据合并。\n\n• ID 匹配的条目将被覆盖。\n• 新条目将被添加。\n\n此操作无法撤销。</string>
     <string name="restoring">正在恢复...</string>
-    <string name="sync_details">同步详细信息</string>
-    <string name="sync_details_desc">同步前请检查更改内容</string>
-    <string name="sync_header_desc">使用云存储服务，让您的日记在所有设备上保持同步。</string>
+    <string name="sync_overview">同步概览</string>
+    <string name="all_in_sync">已同步</string>
     <string name="sync_internet_required_desc">请开启互联网连接以使用云同步功能。</string>
     <string name="sync_logging">同步日志记录</string>
     <string name="wifi_only_sync">仅在 Wi-Fi 环境下自动同步</string>

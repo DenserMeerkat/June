@@ -33,20 +33,25 @@ class ExportImpl(
 
             AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Found ${journals.size} journals to export")
 
-            val mediaDir = File(context.filesDir, "journal_media")
-            val songLibraryDir = File(context.filesDir, "song_media/library")
-            val songArtDir = File(context.filesDir, "song_media/art")
+            val mediaDir = File(context.filesDir, "media")
+            val audioDir = File(context.filesDir, "audios")
+            val songLibraryDir = File(context.filesDir, "songs/library")
+            val songArtDir = File(context.filesDir, "songs/art")
 
             val cleanedJournals = journals.map { journal ->
                 val cleanedImages = journal.images.map { path ->
                     val file = File(path)
                     File(mediaDir, file.name).absolutePath
                 }
+                val cleanedAudios = journal.audios.map { audio ->
+                    val file = File(audio.path)
+                    audio.copy(path = File(audioDir, file.name).absolutePath)
+                }
                 val cleanedSong = journal.songDetails?.copy(
                     localPreviewPath = journal.songDetails.localPreviewPath?.let { File(songLibraryDir, File(it).name).absolutePath },
                     localThumbnailPath = journal.songDetails.localThumbnailPath?.let { File(songArtDir, File(it).name).absolutePath }
                 )
-                journal.copy(images = cleanedImages, songDetails = cleanedSong)
+                journal.copy(images = cleanedImages, audios = cleanedAudios, songDetails = cleanedSong)
             }
 
             val journalMeta = cleanedJournals.associate { j ->
@@ -54,6 +59,7 @@ class ExportImpl(
             }
 
             val totalMedia = cleanedJournals.flatMap { it.images }.map { File(it).name }.distinct().size
+            val totalAudios = cleanedJournals.flatMap { it.audios }.map { File(it.path).name }.distinct().size
             val totalSongMedia = if (includeSongFiles) {
                 cleanedJournals.mapNotNull { it.songDetails }.flatMap {
                     listOfNotNull(it.localPreviewPath?.let { p -> File(p).name }, it.localThumbnailPath?.let { p -> File(p).name })
@@ -68,6 +74,7 @@ class ExportImpl(
                 totalJournals = cleanedJournals.size,
                 totalMedia = totalMedia,
                 totalSongMedia = totalSongMedia,
+                totalAudio = totalAudios,
                 journalMetadata = journalMeta
             )
 
@@ -86,8 +93,12 @@ class ExportImpl(
                         localPreviewPath = journal.songDetails.localPreviewPath?.let { File(it).name },
                         localThumbnailPath = journal.songDetails.localThumbnailPath?.let { File(it).name }
                     )
+                    val sanitizedAudios = journal.audios.map { audio ->
+                        audio.copy(path = File(audio.path).name)
+                    }
                     val sanitizedJournal = journal.copy(
                         images = journal.images.map { File(it).name },
+                        audios = sanitizedAudios,
                         songDetails = sanitizedSong
                     )
                     val journalJson = Json.Default.encodeToString(Journal.serializer(), sanitizedJournal)
@@ -119,6 +130,22 @@ class ExportImpl(
                                 }
                             }
                         }
+                        journal.audios.forEach { audio ->
+                            val file = File(audio.path)
+                            if (file.exists() && processedFileNames.add("audio_${file.name}")) {
+                                try {
+                                    val audioEntry = ZipEntry("audios/${file.name}")
+                                    zos.putNextEntry(audioEntry)
+                                    FileInputStream(file).use { fis ->
+                                        fis.copyTo(zos)
+                                    }
+                                    zos.closeEntry()
+                                    packedMediaCount++
+                                } catch (e: Exception) {
+                                    AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack audio file: ${file.name}", e)
+                                }
+                            }
+                        }
                     }
                     AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Packed $packedMediaCount media files")
                 }
@@ -132,7 +159,7 @@ class ExportImpl(
                             val file = File(path)
                             if (file.exists() && processedSongNames.add("library/${file.name}")) {
                                 try {
-                                    val songEntry = ZipEntry("song_media/library/${file.name}")
+                                    val songEntry = ZipEntry("songs/library/${file.name}")
                                     zos.putNextEntry(songEntry)
                                     FileInputStream(file).use { it.copyTo(zos) }
                                     zos.closeEntry()
@@ -146,7 +173,7 @@ class ExportImpl(
                             val file = File(path)
                             if (file.exists() && processedSongNames.add("art/${file.name}")) {
                                 try {
-                                    val artEntry = ZipEntry("song_media/art/${file.name}")
+                                    val artEntry = ZipEntry("songs/art/${file.name}")
                                     zos.putNextEntry(artEntry)
                                     FileInputStream(file).use { it.copyTo(zos) }
                                     zos.closeEntry()
@@ -180,7 +207,7 @@ class ExportImpl(
 
             AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Found ${journals.size} journals to export as markdown")
 
-            val mediaDir = File(context.filesDir, "journal_media")
+            val mediaDir = File(context.filesDir, "media")
             val cleanedJournals = journals.map { journal ->
                 val cleanedImages = journal.images.map { path ->
                     val file = File(path)

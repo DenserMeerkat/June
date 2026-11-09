@@ -729,7 +729,7 @@ fun InlineKeyTestSection(
                 Text(stringResource(R.string.testing_key))
             } else {
                 Icon(
-                    painter = painterResource(R.drawable.sync_24px),
+                    painter = painterResource(R.drawable.cable_24px),
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )

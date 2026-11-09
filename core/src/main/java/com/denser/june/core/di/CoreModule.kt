@@ -33,6 +33,7 @@ import com.denser.june.core.data.preferences.FontPreferencesImpl
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.repository.SongRepository
 import com.denser.june.core.domain.sync.CloudProvider
+import com.denser.june.core.domain.sync.SyncHashCache
 import com.denser.june.core.domain.sync.SyncManager
 import java.io.File
 import okhttp3.OkHttpClient
@@ -87,6 +88,8 @@ val coreModule = module {
         com.denser.june.core.data.sync.WorkManagerSyncScheduler(get())
     }
 
+    single { SyncHashCache(File(get<Context>().filesDir, "sync")) }
+
     single {
         val context = get<Context>()
         val providers = mutableMapOf<String, CloudProvider>()
@@ -100,11 +103,13 @@ val coreModule = module {
             get(),
             get(),
             providers,
-            File(context.filesDir, "journal_media"),
+            File(context.filesDir, "media"),
             get(),
             get(named("ApplicationScope")),
             get(),
-            File(context.filesDir, "song_media")
+            File(context.filesDir, "songs"),
+            File(context.filesDir, "audios"),
+            get()
         )
     }
 }

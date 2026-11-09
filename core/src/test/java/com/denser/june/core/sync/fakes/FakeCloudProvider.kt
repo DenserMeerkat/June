@@ -111,7 +111,12 @@ class FakeCloudProvider : CloudProvider {
 
     override suspend fun deleteMedia(journalId: String, filename: String): Result<Unit> {
         if (failNextDeleteMedia) { failNextDeleteMedia = false; return Result.failure(Exception("Media delete failed")) }
-        _media.remove("$journalId/$filename")
+        if (journalId.isNotBlank()) {
+            _media.remove("$journalId/$filename")
+        } else {
+            val keyToRemove = _media.keys.firstOrNull { it.endsWith("/$filename") || it == filename }
+            if (keyToRemove != null) _media.remove(keyToRemove)
+        }
         return Result.success(Unit)
     }
 
@@ -163,5 +168,40 @@ class FakeCloudProvider : CloudProvider {
 
     override suspend fun listSongMedia(): Result<List<String>> {
         return Result.success(_songMedia.keys.toList())
+    }
+
+    private val _audios = mutableMapOf<String, ByteArray>()
+    var failNextUploadAudio = false
+    var failNextDownloadAudio = false
+    var failNextDeleteAudio = false
+
+    fun putAudio(filename: String, bytes: ByteArray = byteArrayOf(1, 2, 3)) {
+        _audios[filename] = bytes
+    }
+
+    fun allAudioKeys(): Set<String> = _audios.keys.toSet()
+
+    override suspend fun uploadAudio(file: File): Result<String> {
+        if (failNextUploadAudio) { failNextUploadAudio = false; return Result.failure(Exception("Audio upload failed")) }
+        _audios[file.name] = file.readBytes()
+        return Result.success(file.name)
+    }
+
+    override suspend fun downloadAudio(filename: String, targetFile: File): Result<File> {
+        if (failNextDownloadAudio) { failNextDownloadAudio = false; return Result.failure(Exception("Audio download failed")) }
+        val bytes = _audios[filename] ?: return Result.failure(Exception("Audio not found"))
+        targetFile.parentFile?.mkdirs()
+        targetFile.writeBytes(bytes)
+        return Result.success(targetFile)
+    }
+
+    override suspend fun deleteAudio(filename: String): Result<Unit> {
+        if (failNextDeleteAudio) { failNextDeleteAudio = false; return Result.failure(Exception("Audio delete failed")) }
+        _audios.remove(filename)
+        return Result.success(Unit)
+    }
+
+    override suspend fun listAudios(): Result<List<String>> {
+        return Result.success(_audios.keys.toList())
     }
 }

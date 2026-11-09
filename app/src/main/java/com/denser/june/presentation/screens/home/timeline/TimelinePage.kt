@@ -30,9 +30,13 @@ import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.components.journal.ExportJournalSheet
 import com.denser.june.presentation.components.journal.JournalOptionsSheet
-import com.denser.june.presentation.screens.home.timeline.components.TimelineCalendarPage
-import com.denser.june.presentation.screens.home.timeline.components.TimelineMonthStrip
-import com.denser.june.presentation.screens.home.timeline.components.TimelineTabs
+import com.denser.june.presentation.screens.home.timeline.components.common.TimelineCalendarPage
+import androidx.compose.ui.platform.LocalLocale
+import java.time.format.TextStyle
+import com.denser.june.presentation.components.InfiniteMonthStrip
+import com.denser.june.presentation.components.YearHeader
+import com.denser.june.presentation.screens.home.timeline.components.common.MonthStripItem
+import com.denser.june.presentation.screens.home.timeline.components.common.TimelineTabs
 import com.denser.june.presentation.utils.UiUtils
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
@@ -215,11 +219,25 @@ fun TimelinePage(
             .fillMaxSize()
             .nestedScroll(nestedScrollConnection)
     ) {
-        TimelineMonthStrip(
+        val platformLocale = LocalLocale.current.platformLocale
+        InfiniteMonthStrip(
             currentMonth = currentMonth,
-            isExpanded = calendarHeightPx > 0,
-            onMonthSelect = { month -> viewModel.onMonthChange(month) },
-            onToggleExpand = { viewModel.setCalendarExpanded(!isCalendarExpanded) }
+            modifier = Modifier.padding(vertical = 12.dp),
+            yearContent = { year -> YearHeader(year) },
+            monthContent = { ym, isSelected ->
+                MonthStripItem(
+                    label = ym.month.getDisplayName(TextStyle.SHORT, platformLocale),
+                    isSelected = isSelected,
+                    isExpanded = isSelected && calendarHeightPx > 0,
+                    onClick = {
+                        if (isSelected) {
+                            viewModel.setCalendarExpanded(!isCalendarExpanded)
+                        } else {
+                            viewModel.onMonthChange(ym)
+                        }
+                    }
+                )
+            }
         )
 
         Box(

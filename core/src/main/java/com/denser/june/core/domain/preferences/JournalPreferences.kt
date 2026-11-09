@@ -72,6 +72,12 @@ interface JournalPreferences {
     fun getVideoCompressionQuality(): Flow<Int>
     suspend fun setVideoCompressionQuality(quality: Int)
 
+    fun isCompressAudioEnabled(): Flow<Boolean>
+    suspend fun setCompressAudioEnabled(enabled: Boolean)
+
+    fun getAudioCompressionQuality(): Flow<Int>
+    suspend fun setAudioCompressionQuality(quality: Int)
+
     fun isMapThemeAccentEnabled(): Flow<Boolean>
     suspend fun setMapThemeAccentEnabled(enabled: Boolean)
 }

@@ -18,6 +18,7 @@ data class EditorState(
     val images: List<String> = emptyList(),
     val location: JournalLocation? = null,
     val songDetails: SongDetails? = null,
+    val audios: List<com.denser.june.core.domain.model.JournalAudio> = emptyList(),
     val tags: List<String> = emptyList(),
     val tagSuggestions: List<String> = emptyList(),
     val createdAt: Long = System.currentTimeMillis(),
@@ -47,6 +48,7 @@ data class EditorState(
     val pendingStagedSong: SongDetails? = null,
     val journalEditSongPending: Boolean = false,
     val processingMediaPaths: Set<String> = emptySet(),
+    val processingAudioIds: Set<String> = emptySet(),
     val font: String? = null,
     val fontVariation: FontVariationConfig? = null,
     val initialFont: String? = null,
@@ -65,6 +67,7 @@ data class EditorState(
                 emoji != null ||
                 images.isNotEmpty() ||
                 songDetails != null ||
+                audios.isNotEmpty() ||
                 location != null ||
                 tags.isNotEmpty()
 }

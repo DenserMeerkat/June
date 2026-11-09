@@ -33,8 +33,13 @@
     <string name="action_close">Close</string>
     <string name="action_lock">Lock</string>
     <string name="action_unlock">Unlock</string>
+    <string name="action_play">Play</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_resume">Resume</string>
+    <string name="action_stop">Stop</string>
 
     <!-- Common Labels -->
+    <string name="label_overview">Overview</string>
     <string name="label_settings">Settings</string>
     <string name="label_timeline">Timeline</string>
     <string name="label_vault">Vault</string>
@@ -116,6 +121,7 @@
     <string name="no_locations_this_month">No locations added for this month.</string>
     <string name="no_locations_found">No locations found</string>
     <string name="no_media_this_month">No media this month.</string>
+    <string name="no_audio_this_month">No audio notes this month.</string>
     <string name="no_music_this_month">No music tracked this month.</string>
     <string name="empty_library">Your library is empty</string>
     <string name="empty_library_desc">Add songs by pasting a link or choosing an audio file from your device using the buttons above.</string>
@@ -128,15 +134,16 @@
     <string name="search_settings_placeholder">Search settings...</string>
     <string name="sync_required">Sync required</string>
     <string name="synced">Synced</string>
+    <string name="test">Test</string>
     <string name="test_api_key">Test API Key</string>
-    <string name="test_connection">Test Connection</string>
-    <string name="testing_connection">Testing Connection...</string>
+    <string name="test_connection">Test</string>
+    <string name="testing_connection">Testing...</string>
     <string name="testing_key">Testing Key...</string>
     <string name="today">Today</string>
     <string name="unsaved_tags_message">You have unsaved changes to your tags. Do you want to save them before exiting?</string>
     <string name="untitled">Untitled</string>
     <string name="updated">Updated</string>
-    <string name="verifying_connection">Verifying connection...</string>
+    <string name="verifying_connection">Testing...</string>
     <string name="whats_new">What\'s New</string>
 
     <!-- Dialogs & Banners -->
@@ -238,6 +245,9 @@
     <string name="compress_photos_desc">Auto compress added photos</string>
     <string name="compress_videos">Compress videos</string>
     <string name="compress_videos_desc">Auto compress added videos</string>
+    <string name="compress_audio">Compress audio</string>
+    <string name="compress_audio_desc">Auto compress added audio</string>
+    <string name="importing_audio">Importing audio…</string>
     <string name="markdown_editor">Markdown editor</string>
     <string name="markdown_editor_desc">Rich text formatting enabled</string>
     <string name="plain_text_mode">Plain text mode</string>
@@ -378,8 +388,6 @@
 
     <!-- Settings - Sync & Backup -->
     <string name="advanced_sync_desc">Analysis &amp; repair tools</string>
-    <string name="analyze_sync">Analyze Sync</string>
-    <string name="analyze_sync_desc">Analyze cloud sync health</string>
     <string name="automatic_sync">Automatic Sync</string>
     <string name="automatic_sync_desc">Sync changes as they happen</string>
     <string name="backup_and_restore">Backup &amp; Restore</string>
@@ -430,13 +438,12 @@
     <string name="restore_failed">Restore Failed: %1$s</string>
     <string name="restore_warning_message">This will merge the backup with your current data.\n\n• Entries with matching IDs will be OVERWRITTEN.\n• New entries will be ADDED.\n\nThis action cannot be undone.</string>
     <string name="restoring">Restoring...</string>
-    <string name="sync_details">Sync Details</string>
-    <string name="sync_details_desc">Review changes before syncing</string>
-    <string name="sync_header_desc">Keep your journals in sync across all your devices using a cloud storage provider.</string>
+    <string name="sync_overview">Sync Overview</string>
     <string name="sync_internet_required_desc">Enable internet access to use cloud sync.</string>
     <string name="sync_logging">Sync Logging</string>
     <string name="wifi_only_sync">Auto-sync on Wi-Fi only</string>
     <string name="wifi_only_sync_desc">Avoid syncing over mobile data</string>
+    <string name="all_in_sync">In sync</string>
 
     <!-- Settings - WebDAV -->
     <string name="password_app_token_label">Password / App Token</string>
@@ -632,4 +639,12 @@
     <string name="entry_saved_default_theme">Entry saved with default theme</string>
     <string name="reset_plus_status">Reset Plus Status</string>
     <string name="plus_status_reset">Plus status has been reset</string>
+    <string name="add_audio">Add Audio</string>
+    <string name="record_audio">Record Audio</string>
+    <string name="attach_audio">Attach Audio</string>
+    <string name="add_or_record_audio">Add or record audio</string>
+    <string name="audio_notes">Audio Notes</string>
+    <string name="audios">Audios</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
 </resources>

@@ -6,14 +6,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.preferences.SyncPreferences
 import com.denser.june.core.domain.repository.JournalRepository
-import com.denser.june.core.media.exif.ExifUtils
-import com.denser.june.core.media.exif.model.MediaExifInfo
+import com.denser.june.core.media.exif.MediaMetadataReader
+import com.denser.june.core.media.exif.model.MediaMetadata
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
 class LightboxMediaMetadataState(
-    val exifInfo: MediaExifInfo?,
+    val metadata: MediaMetadata?,
     val parentJournal: Journal?,
     val isMediaBackedUp: Boolean,
     val isPendingSync: Boolean,
@@ -55,7 +55,7 @@ fun rememberLightboxMediaMetadataState(
         }
     }
 
-    var exifInfo by remember { mutableStateOf<MediaExifInfo?>(null) }
+    var metadata by remember { mutableStateOf<MediaMetadata?>(null) }
 
     val isPendingSync = remember(currentPath, newlyCompressedPaths, parentJournal, isSyncEnabled) {
         if (!isSyncEnabled || currentPath == null) {
@@ -92,7 +92,7 @@ fun rememberLightboxMediaMetadataState(
     LaunchedEffect(currentPath, refreshTrigger, parentJournal, isMediaBackedUp) {
         if (currentPath == null) return@LaunchedEffect
         val info = withContext(Dispatchers.IO) {
-            ExifUtils.readMediaExif(
+            MediaMetadataReader.readMediaMetadata(
                 context = context,
                 path = currentPath,
                 fallbackDateTime = fallbackDateTime ?: parentJournal?.dateTime,
@@ -101,12 +101,12 @@ fun rememberLightboxMediaMetadataState(
                 isBackedUp = isMediaBackedUp
             )
         }
-        exifInfo = info
+        metadata = info
     }
 
-    return remember(exifInfo, parentJournal, isMediaBackedUp, isPendingSync, syncProvider) {
+    return remember(metadata, parentJournal, isMediaBackedUp, isPendingSync, syncProvider) {
         LightboxMediaMetadataState(
-            exifInfo = exifInfo,
+            metadata = metadata,
             parentJournal = parentJournal,
             isMediaBackedUp = isMediaBackedUp,
             isPendingSync = isPendingSync,

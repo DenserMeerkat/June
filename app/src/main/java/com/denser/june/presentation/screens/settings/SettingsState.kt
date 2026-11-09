@@ -47,4 +47,6 @@ data class SettingsState(
     val photoCompressionQuality: Int = 80,
     val isCompressVideosEnabled: Boolean = false,
     val videoCompressionQuality: Int = 1080,
+    val isCompressAudioEnabled: Boolean = false,
+    val audioCompressionQuality: Int = 128,
 )

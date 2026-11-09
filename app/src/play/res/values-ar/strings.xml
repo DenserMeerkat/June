@@ -1,0 +1,17 @@
+<resources>
+    <string name="connected">متصل</string>
+    <string name="direct_connection">اتصال مباشر</string>
+    <string name="direct_connection_desc">يتصل June مباشرة بـ Google Drive دون المرور عبر أي خوادم وسيطة.</string>
+    <string name="google_account">حساب Google</string>
+    <string name="link_google_drive">ربط Google Drive</string>
+    <string name="link_google_drive_desc">مزامنة اليوميات بخصوصية مع مجلد مخصص للتطبيق على Google Drive.</string>
+    <string name="no_server_tracking">بدون تتبع</string>
+    <string name="no_server_tracking_desc">لا توجد قواعد بيانات أو تتبع أو تحليلات. تظل بياناتك خاصة تماماً.</string>
+    <string name="profile_and_email">معلومات الحساب</string>
+    <string name="profile_and_email_desc">تُستخدم على جهازك فقط لعرض حالة تسجيل الدخول. لا يتم حفظها أو مشاركتها.</string>
+    <string name="sandboxed_storage">وصول معزول</string>
+    <string name="sandboxed_storage_desc">يقتصر الوصول على مجلد June فقط، ولا يمكن للتطبيق الوصول لبقية ملفات Drive.</string>
+    <string name="sign_in_with_google">تسجيل الدخول باستخدام Google</string>
+    <string name="privacy_and_data_security">الخصوصية وأمان البيانات</string>
+    <string name="privacy_and_data_security_desc">كيف يحمي June بياناتك أثناء المزامنة مع Google Drive:</string>
+</resources>

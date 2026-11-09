@@ -201,6 +201,10 @@ fun EditorScreen(
             },
             onRemoveLocation = { if (!isCustomizing) viewModel.onAction(EditorAction.RemoveLocation) },
             onLocationDialogToggle = { if (!isCustomizing) dialogState.showLocationDialog = true },
+            onAudioClick = { initialAudioId ->
+                if (!isCustomizing) navigator.navigateTo(Route.RecordAudio(initialAudioId), isSingleTop = true)
+            },
+            onRemoveAudio = { if (!isCustomizing) viewModel.onAction(EditorAction.RemoveAudio(it)) }
         )
     }
 
@@ -329,18 +333,25 @@ fun EditorScreen(
                                     animationSpec = tween(fontAnimDuration, easing = fontEasing)
                                 ) + fadeOut(animationSpec = tween(fontAnimDuration, easing = fontEasing))
                             ) {
-                                if (state.images.isNotEmpty() || state.songDetails != null || state.location != null) {
+                                if (state.images.isNotEmpty() || state.audios.isNotEmpty() || state.songDetails != null || state.location != null) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     JournalItemsPreview(
                                         mediaPaths = state.images,
+                                        audios = state.audios,
                                         mediaOperations = mediaOperations,
                                         songDetails = state.songDetails,
                                         location = state.location,
                                         processingMediaPaths = state.processingMediaPaths,
+                                        processingAudioIds = state.processingAudioIds,
                                         readOnly = isCustomizing,
                                         selectedSlideIndex = previewSlideIndex,
                                         onSlideIndexChange = { previewSlideIndex = it },
                                         theme = state.theme,
+                                        onAudioClick = { initialAudioId ->
+                                            if (!isCustomizing) {
+                                                navigator.navigateTo(Route.RecordAudio(initialAudioId), isSingleTop = true)
+                                            }
+                                        },
                                         onShowAllClick = {
                                             if (!isCustomizing) {
                                                 navigator.navigateTo(

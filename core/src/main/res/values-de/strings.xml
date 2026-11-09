@@ -27,6 +27,7 @@
     <string name="new_journal">Neues Tagebuch</string>
     <string name="ok">Ok</string>
     <string name="okay">Okey</string>
+    <string name="label_overview">Übersicht</string>
     <string name="open_folder">Ordner öffnen</string>
     <string name="open_hosted_weblate">Gehostetes Weblate öffnen</string>
     <string name="open_link">Link öffnen</string>
@@ -84,13 +85,13 @@
     <string name="synced">Synchronisiert</string>
     <string name="test_api_key">API-Schlüssel testen</string>
     <string name="test_connection">Verbindung testen</string>
-    <string name="testing_connection">Verbindung wird getestet...</string>
+    <string name="testing_connection">Wird getestet...</string>
     <string name="testing_key">Schlüssel wird getestet...</string>
     <string name="today">Heute</string>
     <string name="unsaved_tags_message">Du hast ungespeicherte Änderungen zu deinen Tags. Willst du diese speichern, bevor du gehst?</string>
     <string name="untitled">Ohne Titel</string>
     <string name="updated">Aktualisiert</string>
-    <string name="verifying_connection">Verbindung wird geprüft...</string>
+    <string name="verifying_connection">Wird geprüft...</string>
     <string name="whats_new">Was gibt\'s Neues</string>
     <string name="change_lock_title">Sperre ändern?</string>
     <string name="checking_for_updates">Nach Updates prüfen</string>
@@ -203,8 +204,6 @@
     <string name="repeat">Wiederhole</string>
     <string name="schedule">Zeitplan</string>
     <string name="advanced_sync_desc">Analyse- &amp; Reparaturwerkzeuge</string>
-    <string name="analyze_sync">Synchronisation analysieren</string>
-    <string name="analyze_sync_desc">Online-Speicher-Synchronisation überprüfen</string>
     <string name="automatic_sync">Automatische Synchronisation</string>
     <string name="automatic_sync_desc">Echtzeit-Synchronisierung</string>
     <string name="backup_format_too_old">Sicherungsformat ist zu alt</string>
@@ -228,9 +227,8 @@
     <string name="restore_failed">Wiederherstelle fehlgeschlagene: %1$s</string>
     <string name="restore_warning_message">Dadurch wird die Sicherung mit deinen aktuellen Daten zusammengeführt.\n\n• Einträge mit gleichen IDs werden ÜBERSCHRIEBEN.\n• Neue Einträge werden HINZUGEFÜGT.\n\nDiese Aktion ist unwiderruflich.</string>
     <string name="restoring">Wiederherstellen...</string>
-    <string name="sync_details">Synchronisationsdetails</string>
-    <string name="sync_details_desc">Überprüfe Änderungen vor dem synchronisieren</string>
-    <string name="sync_header_desc">Halte deine Tagebücher über einen Online-Speicheranbieter auf all deinen Geräten synchron.</string>
+    <string name="sync_overview">Synchronisationsübersicht</string>
+    <string name="all_in_sync">Synchron</string>
     <string name="sync_internet_required_desc">Aktiviere Internetzugriff, um Online-Speicher Synchronisation zu nutzen.</string>
     <string name="sync_logging">Synchronisationsprotokollierung</string>
     <string name="wifi_only_sync">Automatisches synchronisieren nur über Wi-Fi</string>

@@ -1,6 +1,7 @@
 package com.denser.june.presentation.components
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -67,7 +68,66 @@ fun JuneConnectedItem(
     index: Int? = null,
     count: Int? = null,
     pressedRadius: Dp = 28.dp,
+    selected: Boolean = false,
+    selectedRadius: Dp = 28.dp,
     content: (@Composable ColumnScope.() -> Unit)? = null
+) {
+    JuneConnectedRowItem(
+        modifier = modifier,
+        leadingContent = leadingContent,
+        trailingContent = trailingContent,
+        enabled = enabled,
+        shape = shape,
+        containerColor = containerColor,
+        contentPadding = contentPadding,
+        onClick = onClick,
+        index = index,
+        count = count,
+        pressedRadius = pressedRadius,
+        selected = selected,
+        selectedRadius = selectedRadius,
+        belowContent = content
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun JuneConnectedRowItem(
+    modifier: Modifier = Modifier,
+    leadingContent: (@Composable () -> Unit)? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
+    enabled: Boolean = true,
+    shape: Shape? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    contentPadding: PaddingValues = PaddingValues(16.dp),
+    onClick: (() -> Unit)? = null,
+    index: Int? = null,
+    count: Int? = null,
+    pressedRadius: Dp = 28.dp,
+    selected: Boolean = false,
+    selectedRadius: Dp = 28.dp,
+    leadingSpacing: Dp = 16.dp,
+    belowContent: (@Composable ColumnScope.() -> Unit)? = null,
+    content: @Composable RowScope.() -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -97,8 +157,10 @@ fun JuneConnectedItem(
             }
     }
 
+    val targetRadius = if (isClickable && isPressed) pressedRadius else if (selected) selectedRadius else null
+
     val pressProgress by animateFloatAsState(
-        targetValue = if (isClickable && isPressed) 1f else 0f,
+        targetValue = if (targetRadius != null) 1f else 0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMediumLow
@@ -106,7 +168,9 @@ fun JuneConnectedItem(
         label = "juneConnectedItemCornerAnim"
     )
 
-    val currentShape = if (isClickable && defaultBaseShape is CornerBasedShape) {
+    val effectiveRadius = targetRadius ?: pressedRadius
+
+    val currentShape = if (defaultBaseShape is CornerBasedShape) {
         val density = LocalDensity.current
         val dummySize = androidx.compose.ui.geometry.Size(1000f, 1000f)
         val baseTopStart = (defaultBaseShape.topStart.toPx(dummySize, density) / density.density).dp
@@ -115,10 +179,10 @@ fun JuneConnectedItem(
         val baseBottomEnd = (defaultBaseShape.bottomEnd.toPx(dummySize, density) / density.density).dp
 
         RoundedCornerShape(
-            topStart = lerp(baseTopStart, pressedRadius, pressProgress),
-            topEnd = lerp(baseTopEnd, pressedRadius, pressProgress),
-            bottomStart = lerp(baseBottomStart, pressedRadius, pressProgress),
-            bottomEnd = lerp(baseBottomEnd, pressedRadius, pressProgress)
+            topStart = lerp(baseTopStart, effectiveRadius, pressProgress),
+            topEnd = lerp(baseTopEnd, effectiveRadius, pressProgress),
+            bottomStart = lerp(baseBottomStart, effectiveRadius, pressProgress),
+            bottomEnd = lerp(baseBottomEnd, effectiveRadius, pressProgress)
         )
     } else {
         defaultBaseShape
@@ -138,7 +202,9 @@ fun JuneConnectedItem(
                         enabled = enabled,
                         onClick = onClick
                     )
-                } else Modifier
+                } else {
+                    Modifier
+                }
             )
     ) {
         Column(
@@ -153,32 +219,24 @@ fun JuneConnectedItem(
                 if (leadingContent != null) {
                     Box(
                         modifier = Modifier
-                            .padding(end = 16.dp)
+                            .padding(end = leadingSpacing)
                             .defaultMinSize(minWidth = 24.dp, minHeight = 24.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         leadingContent()
                     }
                 }
-                Column(
+                Box(
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = if (trailingContent != null) 8.dp else 0.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
-                    )
-                    if (subtitle != null) {
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                    ) {
+                        content()
                     }
                 }
                 if (trailingContent != null) {
@@ -191,7 +249,62 @@ fun JuneConnectedItem(
                     }
                 }
             }
-            content?.invoke(this)
+            belowContent?.invoke(this)
         }
+    }
+}
+
+@Composable
+fun JuneConnectedSegmentButton(
+    onClick: () -> Unit,
+    baseShape: CornerBasedShape,
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    pressedRadius: Dp = 14.dp,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+    content: @Composable RowScope.() -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val pressProgress by animateFloatAsState(
+        targetValue = if (isPressed) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "segmentCornerAnim"
+    )
+
+    val density = LocalDensity.current
+    val dummySize = androidx.compose.ui.geometry.Size(1000f, 1000f)
+    val baseTopStart = (baseShape.topStart.toPx(dummySize, density) / density.density).dp
+    val baseTopEnd = (baseShape.topEnd.toPx(dummySize, density) / density.density).dp
+    val baseBottomStart = (baseShape.bottomStart.toPx(dummySize, density) / density.density).dp
+    val baseBottomEnd = (baseShape.bottomEnd.toPx(dummySize, density) / density.density).dp
+
+    val currentShape = RoundedCornerShape(
+        topStart = lerp(baseTopStart, pressedRadius, pressProgress),
+        topEnd = lerp(baseTopEnd, pressedRadius, pressProgress),
+        bottomStart = lerp(baseBottomStart, pressedRadius, pressProgress),
+        bottomEnd = lerp(baseBottomEnd, pressedRadius, pressProgress)
+    )
+
+    Box(
+        modifier = modifier
+            .clip(currentShape)
+            .background(containerColor)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            modifier = Modifier.padding(contentPadding),
+            verticalAlignment = Alignment.CenterVertically,
+            content = content
+        )
     }
 }

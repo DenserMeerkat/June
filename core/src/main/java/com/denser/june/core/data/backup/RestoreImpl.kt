@@ -27,15 +27,16 @@ class RestoreImpl(
 
     companion object {
         private const val TAG = "RestoreImpl"
-        private const val MEDIA_FOLDER = "journal_media"
+        private const val MEDIA_FOLDER = "media"
     }
 
     override suspend fun restoreData(path: String): Result<Unit> =
         withContext(Dispatchers.IO) {
             return@withContext try {
                 val mediaDir = File(context.filesDir, MEDIA_FOLDER).apply { if (!exists()) mkdirs() }
-                val songLibraryDir = File(context.filesDir, "song_media/library").apply { if (!exists()) mkdirs() }
-                val songArtDir = File(context.filesDir, "song_media/art").apply { if (!exists()) mkdirs() }
+                val audioDir = File(context.filesDir, "audios").apply { if (!exists()) mkdirs() }
+                val songLibraryDir = File(context.filesDir, "songs/library").apply { if (!exists()) mkdirs() }
+                val songArtDir = File(context.filesDir, "songs/art").apply { if (!exists()) mkdirs() }
                 val journalsList = mutableListOf<Journal>()
                 var isLegacy = false
                 var isMarkdown = false
@@ -73,7 +74,7 @@ class RestoreImpl(
                                         val json = Json { ignoreUnknownKeys = true }
                                         val schema = json.decodeFromString<ExportSchema>(jsonString)
                                         journalsList.addAll(schema.journals)
-                                    } else if (entryName.startsWith("media/") && !entry.isDirectory) {
+                                    } else if ((entryName.startsWith("media/") || entryName.startsWith("journal_media/")) && !entry.isDirectory) {
                                         val fileName = File(entryName).name
                                         val targetFile = File(mediaDir, fileName)
                                         FileOutputStream(targetFile).use { fos ->
@@ -91,7 +92,7 @@ class RestoreImpl(
                                         val fileName = File(entryName).name
                                         val journal = com.denser.june.core.domain.markdown.MarkdownEngine.fromMarkdown(mdText, fileName)
                                         journalsList.add(journal)
-                                    } else if (entryName.startsWith("media/") && !entry.isDirectory) {
+                                    } else if ((entryName.startsWith("media/") || entryName.startsWith("journal_media/")) && !entry.isDirectory) {
                                         val originalFileName = File(entryName).name
                                         val safeFileName = if (originalFileName.startsWith("media_")) {
                                             originalFileName
@@ -115,7 +116,7 @@ class RestoreImpl(
                                         val json = Json { ignoreUnknownKeys = true }
                                         val journal = json.decodeFromString<Journal>(jsonString)
                                         journalsList.add(journal)
-                                    } else if (entryName.startsWith("media/") && !entry.isDirectory) {
+                                    } else if ((entryName.startsWith("media/") || entryName.startsWith("journal_media/")) && !entry.isDirectory) {
                                         val fileName = File(entryName).name
                                         val targetFile = File(mediaDir, fileName)
                                         FileOutputStream(targetFile).use { fos ->
@@ -123,9 +124,9 @@ class RestoreImpl(
                                         }
                                         extractedMediaMap[entryName] = targetFile.absolutePath
                                         extractedMediaMap[fileName] = targetFile.absolutePath
-                                    } else if (entryName.startsWith("song_media/") && !entry.isDirectory) {
+                                    } else if ((entryName.startsWith("songs/") || entryName.startsWith("song_media/")) && !entry.isDirectory) {
                                         val fileName = File(entryName).name
-                                        val targetFile = if (entryName.startsWith("song_media/art/")) {
+                                        val targetFile = if (entryName.startsWith("songs/art/") || entryName.startsWith("song_media/art/")) {
                                             File(songArtDir, fileName)
                                         } else {
                                             File(songLibraryDir, fileName)
@@ -133,6 +134,14 @@ class RestoreImpl(
                                         FileOutputStream(targetFile).use { fos ->
                                             zis.copyTo(fos)
                                         }
+                                    } else if ((entryName.startsWith("audios/") || entryName.startsWith("journal_audio/")) && !entry.isDirectory) {
+                                        val fileName = File(entryName).name
+                                        val targetFile = File(audioDir, fileName)
+                                        FileOutputStream(targetFile).use { fos ->
+                                            zis.copyTo(fos)
+                                        }
+                                        extractedMediaMap[entryName] = targetFile.absolutePath
+                                        extractedMediaMap[fileName] = targetFile.absolutePath
                                     }
                                 }
                             }
@@ -150,7 +159,7 @@ class RestoreImpl(
                 AppLogger.d(AppLogger.Category.BACKUP, TAG, "Found ${journalsList.size} journals to import. Inserting into DB...")
 
                 journalsList.forEach { journal ->
-                    val updatedJournal = remapMediaPaths(journal, extractedMediaMap, mediaDir, songLibraryDir, songArtDir)
+                    val updatedJournal = remapMediaPaths(journal, extractedMediaMap, mediaDir, audioDir, songLibraryDir, songArtDir)
                     val existing = journalRepo.getJournalById(updatedJournal.id)
                     val journalToSave = if (existing != null) {
                         updatedJournal.copy(
@@ -207,6 +216,7 @@ class RestoreImpl(
         journal: Journal,
         extractedMediaMap: Map<String, String>,
         mediaDir: File,
+        audioDir: File,
         songLibraryDir: File,
         songArtDir: File
     ): Journal {
@@ -217,6 +227,7 @@ class RestoreImpl(
                 val mapped = extractedMediaMap[clean]
                     ?: extractedMediaMap[clean.removePrefix("../")]
                     ?: extractedMediaMap[clean.removePrefix("media/")]
+                    ?: extractedMediaMap[clean.removePrefix("journal_media/")]
                     ?: extractedMediaMap["${journal.id}/$fileName"]
                     ?: extractedMediaMap[fileName]
 
@@ -231,6 +242,26 @@ class RestoreImpl(
             journal.images
         }
 
+        val localizedAudios = if (journal.audios.isNotEmpty()) {
+            journal.audios.map { audio ->
+                val clean = audio.path.trim()
+                val fileName = File(clean).name
+                val mapped = extractedMediaMap[clean]
+                    ?: extractedMediaMap[clean.removePrefix("audios/")]
+                    ?: extractedMediaMap[clean.removePrefix("journal_audio/")]
+                    ?: extractedMediaMap[fileName]
+                val resolvedPath = if (mapped != null && File(mapped).exists()) {
+                    mapped
+                } else {
+                    val direct = File(audioDir, fileName)
+                    if (direct.exists()) direct.absolutePath else audio.path
+                }
+                audio.copy(path = resolvedPath)
+            }
+        } else {
+            journal.audios
+        }
+
         val localizedSong = journal.songDetails?.let { song ->
             val localAudio = song.localPreviewPath?.let {
                 val file = File(songLibraryDir, File(it).name)
@@ -243,6 +274,6 @@ class RestoreImpl(
             song.copy(localPreviewPath = localAudio, localThumbnailPath = localArt)
         }
 
-        return journal.copy(images = newPaths, songDetails = localizedSong)
+        return journal.copy(images = newPaths, audios = localizedAudios, songDetails = localizedSong)
     }
 }

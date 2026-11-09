@@ -16,7 +16,7 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.media.compress.model.CompressionPreset
 import com.denser.june.core.media.compress.model.CompressionPreviewResult
-import com.denser.june.core.media.exif.model.MediaExifInfo
+import com.denser.june.core.media.exif.model.MediaMetadata
 import com.denser.june.core.utils.formatBytes
 import com.denser.june.core.utils.toMediumDate
 import com.denser.june.presentation.components.JuneDropdownMenu
@@ -36,7 +36,7 @@ fun LightboxTopBar(
     appliedPreset: CompressionPreset?,
     availablePresets: Set<CompressionPreset>,
     currentPath: String?,
-    exifInfo: MediaExifInfo?,
+    metadata: MediaMetadata?,
     dateTime: Long?,
     parentJournal: Journal?,
     currentPreview: CompressionPreviewResult?,
@@ -87,15 +87,15 @@ fun LightboxTopBar(
             if (isCompressMode) {
                 val compressionStatus = remember(
                     uncompressedOriginalBytes,
-                    exifInfo,
+                    metadata,
                     currentPreview,
                     hasUncompressedOriginal,
                     selectedPreset,
                     appliedPreset,
                     isGeneratingPreview
                 ) {
-                    val origBytes = uncompressedOriginalBytes ?: exifInfo?.fileSizeBytes ?: currentPreview?.originalSizeBytes ?: 0L
-                    val originalSizeStr = if (origBytes > 0L) origBytes.formatBytes() else (exifInfo?.fileSizeFormatted ?: "")
+                    val origBytes = uncompressedOriginalBytes ?: metadata?.fileSizeBytes ?: currentPreview?.originalSizeBytes ?: 0L
+                    val originalSizeStr = if (origBytes > 0L) origBytes.formatBytes() else (metadata?.fileSizeFormatted ?: "")
                     val isRevertingToOriginal = hasUncompressedOriginal && selectedPreset == CompressionPreset.ORIGINAL && appliedPreset != CompressionPreset.ORIGINAL
                     val isCurrentState = selectedPreset == null || (appliedPreset != null && selectedPreset == appliedPreset) ||
                         (!hasUncompressedOriginal && selectedPreset == CompressionPreset.ORIGINAL) ||
@@ -103,7 +103,7 @@ fun LightboxTopBar(
 
                     val subtitleText = when {
                         isGeneratingPreview -> "Estimating..."
-                        isCurrentState -> exifInfo?.fileSizeFormatted ?: originalSizeStr
+                        isCurrentState -> metadata?.fileSizeFormatted ?: originalSizeStr
                         selectedPreset == CompressionPreset.ORIGINAL -> originalSizeStr
                         currentPreview != null -> {
                             val newStr = currentPreview.compressedSizeBytes.formatBytes()
@@ -179,7 +179,7 @@ fun LightboxTopBar(
                     )
                 }
             } else {
-                val topDateMillis = exifInfo?.dateTakenMillis
+                val topDateMillis = metadata?.dateTakenMillis
                     ?: dateTime
                     ?: parentJournal?.dateTime
                     ?: (if (currentPath != null) java.io.File(currentPath).lastModified() else System.currentTimeMillis())

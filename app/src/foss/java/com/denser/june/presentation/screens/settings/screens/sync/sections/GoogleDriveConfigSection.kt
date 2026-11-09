@@ -7,12 +7,7 @@ import com.denser.june.core.domain.sync.SyncStatus
 fun GoogleDriveConfigSection(
     isVisible: Boolean,
     isConnected: Boolean,
-    status: SyncStatus,
-    isTestingConnection: Boolean,
-    onTestConnection: () -> Unit,
-    onManualSync: () -> Unit,
-    onRefresh: () -> Unit,
-    onStopSync: (() -> Unit)? = null
+    onRefresh: () -> Unit
 ) {
     // Empty Composable for FOSS variant since Google Drive is not supported
 }

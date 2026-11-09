@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
+import com.denser.june.core.domain.model.JournalAudio
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.presentation.components.JuneConnectedButtonGroup
@@ -47,6 +48,7 @@ import kotlinx.coroutines.launch
 
 sealed interface JournalPreviewItem {
     data class Images(val paths: List<String>) : JournalPreviewItem
+    data class Audios(val audios: List<JournalAudio>) : JournalPreviewItem
     data class Song(val details: SongDetails) : JournalPreviewItem
     data class Map(val location: JournalLocation) : JournalPreviewItem
 }
@@ -57,21 +59,25 @@ typealias MediaOperations = com.denser.june.presentation.components.journal.Medi
 @Composable
 fun JournalItemsPreview(
     mediaPaths: List<String>,
+    audios: List<JournalAudio> = emptyList(),
     songDetails: SongDetails?,
     location: JournalLocation?,
     mediaOperations: MediaOperations,
     processingMediaPaths: Set<String> = emptySet(),
+    processingAudioIds: Set<String> = emptySet(),
     readOnly: Boolean = false,
     selectedSlideIndex: Int? = null,
     onSlideIndexChange: ((Int) -> Unit)? = null,
+    onAudioClick: ((String?) -> Unit)? = null,
     onShowAllClick: () -> Unit = {},
     theme: com.denser.june.core.domain.model.JournalTheme? = null
 ) {
     val scope = rememberCoroutineScope()
 
-    val verticalSlides = remember(mediaPaths, songDetails, location) {
+    val verticalSlides = remember(mediaPaths, audios, songDetails, location) {
         val list = mutableListOf<JournalPreviewItem>()
         if (mediaPaths.isNotEmpty()) list.add(JournalPreviewItem.Images(mediaPaths))
+        if (audios.isNotEmpty()) list.add(JournalPreviewItem.Audios(audios))
         if (songDetails != null) list.add(JournalPreviewItem.Song(songDetails))
         if (location != null) list.add(JournalPreviewItem.Map(location))
         list
@@ -117,6 +123,18 @@ fun JournalItemsPreview(
             }
         ),
         ButtonConfig(
+            type = "Audios",
+            iconRes = R.drawable.perm_camera_mic,
+            filledIconRes = R.drawable.perm_camera_mic_fill,
+            isSelected = currentSlide is JournalPreviewItem.Audios,
+            exists = audios.isNotEmpty(),
+            onClick = {
+                val idx = verticalSlides.indexOfFirst { it is JournalPreviewItem.Audios }
+                if (idx != -1) scope.launch { pagerState.animateScrollToPage(idx) }
+                else if (!readOnly) (onAudioClick ?: mediaOperations.onAudioClick)?.invoke(null)
+            }
+        ),
+        ButtonConfig(
             type = "Song",
             iconRes = R.drawable.music_video_24px,
             filledIconRes = R.drawable.music_video_24px_fill,
@@ -157,6 +175,7 @@ fun JournalItemsPreview(
                         is JournalPreviewItem.Song -> "song_${slide.details.title}_${slide.details.artistName}"
                         is JournalPreviewItem.Map -> "map_${slide.location.latitude}_${slide.location.longitude}"
                         is JournalPreviewItem.Images -> "images_${slide.paths.hashCode()}"
+                        is JournalPreviewItem.Audios -> "audios_${slide.audios.hashCode()}"
                         null -> pageIndex
                     }
                 }
@@ -166,6 +185,23 @@ fun JournalItemsPreview(
                 ) {
                     val slide = verticalSlides.getOrNull(pageIndex) ?: return@Box
                     when (slide) {
+                        is JournalPreviewItem.Audios -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                                contentAlignment = androidx.compose.ui.Alignment.Center
+                            ) {
+                                JournalAudioItem(
+                                    audios = slide.audios,
+                                    onOpenStudio = if (!readOnly) (onAudioClick ?: mediaOperations.onAudioClick) else null,
+                                    onRemove = if (!readOnly) mediaOperations.onRemoveAudio else null,
+                                    theme = theme,
+                                    processingAudioIds = processingAudioIds,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
                         is JournalPreviewItem.Song -> {
                             Box(
                                 modifier = Modifier
@@ -255,7 +291,7 @@ fun JournalItemsPreview(
             }
         }
 
-        if (mediaPaths.isNotEmpty() || songDetails != null || location != null) {
+        if (mediaPaths.isNotEmpty() || audios.isNotEmpty() || songDetails != null || location != null) {
             Spacer(modifier = Modifier.height(4.dp))
             Row(
                 modifier = Modifier

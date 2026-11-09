@@ -39,6 +39,8 @@ class SyncTestHarness {
     lateinit var songDao: FakeSongLibraryDao
     lateinit var mediaDir: File
     lateinit var songMediaDir: File
+    lateinit var audioDir: File
+    lateinit var syncDir: File
     lateinit var syncManager: SyncManager
 
     fun setUp() {
@@ -49,6 +51,8 @@ class SyncTestHarness {
         songDao = FakeSongLibraryDao()
         mediaDir = createTempDirectory("june_test_media").toFile()
         songMediaDir = createTempDirectory("june_test_song_media").toFile()
+        audioDir = createTempDirectory("june_test_audios").toFile()
+        syncDir = createTempDirectory("june_test_sync").toFile()
 
         syncManager = SyncManager(
             journalRepo = repo,
@@ -58,7 +62,9 @@ class SyncTestHarness {
             syncScheduler = FakeSyncScheduler(),
             applicationScope = CoroutineScope(testDispatcher),
             songLibraryDao = songDao,
-            songMediaDir = songMediaDir
+            songMediaDir = songMediaDir,
+            audioDir = audioDir,
+            syncHashCache = com.denser.june.core.domain.sync.SyncHashCache(syncDir)
         )
     }
 
@@ -66,11 +72,20 @@ class SyncTestHarness {
         Dispatchers.resetMain()
         mediaDir.deleteRecursively()
         songMediaDir.deleteRecursively()
+        audioDir.deleteRecursively()
+        syncDir.deleteRecursively()
     }
 
     // =========================================================================
     // GIVEN (State Setup)
     // =========================================================================
+
+    fun givenAudioFileOnDisk(name: String, bytes: ByteArray = byteArrayOf(1, 2, 3, 4)): File {
+        val file = File(audioDir, name)
+        file.parentFile?.mkdirs()
+        file.writeBytes(bytes)
+        return file
+    }
 
     fun givenSyncedJournal(
         id: String,
