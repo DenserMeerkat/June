@@ -58,17 +58,7 @@ fun BinScreen() {
     var showEmptyBinDialog by remember { mutableStateOf(false) }
     var showRestoreAllDialog by remember { mutableStateOf(false) }
     var journalToExport by remember { mutableStateOf<Journal?>(null) }
-
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
-    val optionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val scope = rememberCoroutineScope()
-
-    fun dismissOptionsSheet(action: () -> Unit) {
-        action()
-        scope.launch { optionsSheetState.hide() }.invokeOnCompletion {
-            selectedJournalForOptions = null
-        }
-    }
 
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -237,30 +227,28 @@ fun BinScreen() {
             deletedJournals.find { it.id == id }
         }
 
-        if (currentJournalForOptions != null) {
-            ModalBottomSheet(
-                onDismissRequest = { selectedJournalForOptions = null },
-                sheetState = optionsSheetState,
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            ) {
-                JournalOptionsSheet(
-                    journal = currentJournalForOptions,
-                    is24Hour = is24Hour,
-                    onDismiss = { selectedJournalForOptions = null },
-                    onToggleBookmark = { binVM.toggleBookmark(currentJournalForOptions.id) },
-                    onExportMarkdown = {
-                        journalToExport = currentJournalForOptions
-                        selectedJournalForOptions = null
-                    },
-                    onDeleteOrRestore = {
-                        binVM.restoreJournal(currentJournalForOptions.id)
-                    },
-                    onPermanentDelete = {
-                        binVM.deletePermanently(currentJournalForOptions.id)
-                    }
-                )
+        JournalOptionsSheet(
+            journal = currentJournalForOptions,
+            is24Hour = is24Hour,
+            onDismiss = { selectedJournalForOptions = null },
+            onToggleBookmark = {
+                currentJournalForOptions?.id?.let { binVM.toggleBookmark(it) }
+            },
+            onExportMarkdown = {
+                journalToExport = currentJournalForOptions
+                selectedJournalForOptions = null
+            },
+            onDeleteOrRestore = {
+                currentJournalForOptions?.let {
+                    binVM.restoreJournal(it.id)
+                }
+            },
+            onPermanentDelete = {
+                currentJournalForOptions?.let {
+                    binVM.deletePermanently(it.id)
+                }
             }
-        }
+        )
 
     }
 }

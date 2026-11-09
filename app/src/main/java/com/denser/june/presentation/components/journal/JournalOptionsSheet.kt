@@ -39,12 +39,12 @@ enum class JournalOptionsSheetMode {
     CONFIRM_PERMANENT_DELETE
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun JournalOptionsSheet(
-    journal: Journal,
+    journal: Journal?,
     is24Hour: Boolean = false,
-    onDismiss: (() -> Unit)? = null,
+    onDismiss: () -> Unit,
     onToggleBookmark: () -> Unit,
     onDeleteOrRestore: () -> Unit,
     onToggleLock: (() -> Unit)? = null,
@@ -52,6 +52,9 @@ fun JournalOptionsSheet(
     onPermanentDelete: (() -> Unit)? = null,
     onExportMarkdown: (() -> Unit)? = null
 ) {
+    if (journal == null) return
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
     val isPlus = LocalIsPlus.current
     val plusSheetController = LocalPlusSheetController.current
@@ -74,9 +77,10 @@ fun JournalOptionsSheet(
         context.startActivity(shareIntent)
     }
 
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        modifier = Modifier.fillMaxWidth()
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer
     ) {
         AnimatedContent(
             targetState = currentMode,

@@ -76,7 +76,6 @@ fun TagsPage() {
     var showFilterSheet by remember { mutableStateOf(false) }
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
-    val optionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
     val filterSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -355,36 +354,30 @@ fun TagsPage() {
             onDismiss = { journalToExport = null }
         )
 
-        if (currentJournalForOptions != null) {
-            ModalBottomSheet(
-                onDismissRequest = { selectedJournalForOptions = null },
-                sheetState = optionsSheetState,
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            ) {
-                JournalOptionsSheet(
-                    journal = currentJournalForOptions,
-                    is24Hour = is24Hour,
-                    onDismiss = { selectedJournalForOptions = null },
-                    onToggleBookmark = {
-                        viewModel.toggleBookmark(currentJournalForOptions.id)
-                    },
-                    onToggleLock = {
-                        viewModel.toggleLock(currentJournalForOptions.id)
-                    },
-                    onExportMarkdown = {
-                        journalToExport = currentJournalForOptions
-                        selectedJournalForOptions = null
-                    },
-                    onDeleteOrRestore = {
-                        if (currentJournalForOptions.isDeleted) {
-                            viewModel.restoreJournal(currentJournalForOptions.id)
-                        } else {
-                            viewModel.softDelete(currentJournalForOptions.id)
-                        }
+        JournalOptionsSheet(
+            journal = currentJournalForOptions,
+            is24Hour = is24Hour,
+            onDismiss = { selectedJournalForOptions = null },
+            onToggleBookmark = {
+                currentJournalForOptions?.id?.let { viewModel.toggleBookmark(it) }
+            },
+            onToggleLock = {
+                currentJournalForOptions?.id?.let { viewModel.toggleLock(it) }
+            },
+            onExportMarkdown = {
+                journalToExport = currentJournalForOptions
+                selectedJournalForOptions = null
+            },
+            onDeleteOrRestore = {
+                currentJournalForOptions?.let {
+                    if (it.isDeleted) {
+                        viewModel.restoreJournal(it.id)
+                    } else {
+                        viewModel.softDelete(it.id)
                     }
-                )
+                }
             }
-        }
+        )
 
         if (selectedPrimaryTag != null && allTags != null) {
             if (showRenameDialog) {

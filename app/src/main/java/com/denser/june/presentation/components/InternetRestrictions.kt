@@ -153,42 +153,13 @@ fun InternetRestrictedBanner(
         )
     }
 
-    Surface(
+    JuneBanner(
+        icon = R.drawable.wifi_off_24px,
+        message = description,
+        actionIcon = R.drawable.settings_b_roll_24px,
+        actionContentDescription = stringResource(R.string.label_settings),
+        onAction = { showDialog = true },
+        onClick = { showDialog = true },
         modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .clickable { showDialog = true },
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shadowElevation = 4.dp
-    ) {
-        Row(
-            modifier = Modifier.padding(start = 16.dp, end = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.wifi_off_24px),
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            IconButton(
-                onClick = { showDialog = true }
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.settings_b_roll_24px),
-                    contentDescription = stringResource(R.string.label_settings),
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-        }
-    }
+    )
 }

@@ -21,6 +21,9 @@ import com.denser.june.presentation.components.JuneDateTimePicker
 import com.denser.june.presentation.components.JuneDateTimePickerMode
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
+import com.denser.june.core.domain.model.Journal
+import com.denser.june.presentation.components.journal.ExportJournalSheet
+import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import com.denser.june.presentation.screens.editor.components.dialogs.AddItemSheet
 import com.denser.june.presentation.screens.editor.components.dialogs.AddLocationDialog
 import com.denser.june.presentation.screens.editor.components.emoji.JournalEmojiPickerSheet
@@ -46,6 +49,8 @@ class EditorDialogState {
     var showTagsDialog by mutableStateOf(false)
     var showPlusSaveDialog by mutableStateOf(false)
     var onPlusSaveExitAfter by mutableStateOf(false)
+    var journalToExport by mutableStateOf<Journal?>(null)
+    var showOptionsSheet by mutableStateOf(false)
 }
 
 @Composable
@@ -303,6 +308,54 @@ fun EditorModals(
             onSaveTags = { newTags -> onAction(EditorAction.UpdateTags(newTags)) },
             onSearchTags = { onAction(EditorAction.SearchTags(it)) },
             onDismiss = { dialogState.showTagsDialog = false }
+        )
+    }
+
+    ExportJournalSheet(
+        journal = dialogState.journalToExport,
+        onDismiss = { dialogState.journalToExport = null }
+    )
+
+    if (dialogState.showOptionsSheet) {
+        val journalPreview = remember(editorState) {
+            Journal(
+                id = editorState.journalId ?: "",
+                title = editorState.title,
+                content = editorState.content,
+                emoji = editorState.emoji,
+                images = editorState.images,
+                location = editorState.location,
+                songDetails = editorState.songDetails,
+                tags = editorState.tags,
+                createdAt = editorState.createdAt,
+                updatedAt = editorState.updatedAt,
+                dateTime = editorState.dateTime,
+                isBookmarked = editorState.isBookmarked,
+                isArchived = editorState.isArchived,
+                isDraft = editorState.isDraft,
+                isLocked = editorState.isLocked,
+                deletedAt = editorState.deletedAt,
+                syncedAt = editorState.syncedAt,
+                cloudId = editorState.cloudId
+            )
+        }
+        JournalOptionsSheet(
+            journal = journalPreview,
+            is24Hour = editorState.timeFormat == TimeFormat.TWENTY_FOUR_HOUR,
+            onDismiss = { dialogState.showOptionsSheet = false },
+            onToggleBookmark = { onAction(EditorAction.ToggleBookmark) },
+            onToggleLock = { onAction(EditorAction.ToggleLock) },
+            onExportMarkdown = {
+                dialogState.showOptionsSheet = false
+                dialogState.journalToExport = journalPreview
+            },
+            onDeleteOrRestore = {
+                if (editorState.isDeleted) {
+                    onAction(EditorAction.RestoreJournal)
+                } else {
+                    onAction(EditorAction.DeleteJournal)
+                }
+            }
         )
     }
 }
