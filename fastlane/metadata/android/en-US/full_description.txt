@@ -3,12 +3,13 @@ June is an open-source alternative to Pixel Journal, built with Jetpack Compose 
 Features:
 
 * Multimedia Capsules: Attach photos, videos, and precise locations to entries.
+* Voice Audio Recordings: Record audio notes with a live waveform visualizer and inline playback cards.
 * Tagging Groups: Categorize entries using Spaces, People, and Topics tag groups.
 * Soundtrack Support: Paste links from major streaming platforms to fetch cover art and details.
 * Mood Tracking: Tag entries with emojis to log your emotional journey.
 * Rich Text Editor: Style text with bold, italics, underline, highlight, and tag autocompletion.
 * Timeline & Streaks: Navigate history via a Month View calendar timeline and view writing streaks.
-* Privacy Vault: Secure entries using Biometric Unlock or custom PIN.
+* Privacy Vault: Secure entries using Biometrics, PIN, Password, or Pattern.
 * Expressive Theming: Supports Dynamic Wallpaper Colors (Material You) and custom font selection.
 * Total Ownership: 100% offline architecture with local Backup & Restore.
 * Cloud Sync: Keep journal in sync across devices using WebDAV (e.g. Nextcloud, ownCloud).
