@@ -48,4 +48,6 @@
     <string name="enter_pin">Inserisci PIN</string>
     <string name="update_available">Aggiornamento Disponibile</string>
     <string name="privacy_and_security">Privacy e Sicurezza</string>
+    <string name="clear_filters">Cancella filtri</string>
+    <string name="vault_no_lock_warning">Nessun blocco della cassaforte impostato</string>
 </resources>

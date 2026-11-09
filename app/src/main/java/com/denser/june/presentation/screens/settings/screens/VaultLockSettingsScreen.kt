@@ -1,8 +1,6 @@
 package com.denser.june.presentation.screens.settings.screens
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
@@ -29,10 +27,35 @@ fun VaultLockSettingsScreen() {
     val lockSessionVM = koinInject<LockSessionVM>()
     val isVaultUnlocked by lockSessionVM.isVaultUnlocked.collectAsStateWithLifecycle()
 
-    if (!isVaultUnlocked) {
+    val useCustomVaultLock by privacyPreferences.getVaultUseCustomLockFlow().collectAsStateWithLifecycle(initialValue = false)
+    val vaultLockType by privacyPreferences.getVaultLockTypeFlow().collectAsStateWithLifecycle(initialValue = null)
+    val isAppLockEnabled by privacyPreferences.getAppLockFlow().collectAsStateWithLifecycle(initialValue = false)
+    val isVaultProtected = (useCustomVaultLock && vaultLockType != null) || (isAppLockEnabled == true)
+
+    var keepUnlocked by remember { mutableStateOf(false) }
+    var localUnlocked by remember { mutableStateOf(isVaultUnlocked) }
+
+    LaunchedEffect(isVaultUnlocked) {
+        if (isVaultUnlocked) {
+            localUnlocked = true
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            if (!keepUnlocked && isVaultProtected) {
+                lockSessionVM.lockVault()
+            }
+        }
+    }
+
+    if (isVaultProtected && !localUnlocked) {
         LockGate(
             target = LockTarget.VAULT,
-            onUnlocked = { lockSessionVM.unlockVault() },
+            onUnlocked = {
+                lockSessionVM.unlockVault()
+                localUnlocked = true
+            },
             onDismiss = { navigator.navigateBack() }
         )
         return
@@ -41,8 +64,6 @@ fun VaultLockSettingsScreen() {
     val appLockMsg = stringResource(R.string.app_lock)
     val lockSetSuccessMsg = stringResource(R.string.lock_set_successfully)
 
-    val useCustomVaultLock by privacyPreferences.getVaultUseCustomLockFlow().collectAsStateWithLifecycle(initialValue = false)
-    val vaultLockType by privacyPreferences.getVaultLockTypeFlow().collectAsStateWithLifecycle(initialValue = null)
     val vaultPinHash by privacyPreferences.getVaultPinHashFlow().collectAsStateWithLifecycle(initialValue = null)
     val vaultPasswordHash by privacyPreferences.getVaultPasswordHashFlow().collectAsStateWithLifecycle(initialValue = null)
     val vaultPatternHash by privacyPreferences.getVaultPatternHashFlow().collectAsStateWithLifecycle(initialValue = null)
@@ -93,10 +114,20 @@ fun VaultLockSettingsScreen() {
             }
             android.widget.Toast.makeText(context, lockSetSuccessMsg, android.widget.Toast.LENGTH_SHORT).show()
         },
-        onSelectPin = { navigator.navigateTo(Route.PinSetup(forVault = true)) },
-        onSelectPassword = { navigator.navigateTo(Route.PasswordSetup(forVault = true)) },
-        onSelectPattern = { navigator.navigateTo(Route.PatternSetup(forVault = true)) },
+        onSelectPin = {
+            keepUnlocked = true
+            navigator.navigateTo(Route.PinSetup(forVault = true))
+        },
+        onSelectPassword = {
+            keepUnlocked = true
+            navigator.navigateTo(Route.PasswordSetup(forVault = true))
+        },
+        onSelectPattern = {
+            keepUnlocked = true
+            navigator.navigateTo(Route.PatternSetup(forVault = true))
+        },
         onNavigateToRecovery = { lockType ->
+            keepUnlocked = true
             navigator.navigateTo(Route.RecoverySetup(lockType, forVault = true))
         }
     )

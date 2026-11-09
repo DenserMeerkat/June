@@ -70,4 +70,6 @@
     <string name="no_journals_yet_desc">Commencez à immortaliser votre parcours dès aujourd\'hui. Créez votre première entrée pour débuter votre collection.</string>
     <string name="no_links_available">Pas de liens disponibles</string>
     <string name="no_locations_this_month">Aucun lieu ajouté pour ce mois-ci.</string>
+    <string name="clear_filters">Effacer les filtres</string>
+    <string name="vault_no_lock_warning">Aucun verrouillage du coffre-fort défini</string>
 </resources>

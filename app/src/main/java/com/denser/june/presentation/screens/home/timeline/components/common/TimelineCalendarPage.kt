@@ -126,13 +126,13 @@ fun CalendarDayTile(
     val hasJournals = entryCount > 0
 
     val backgroundColor = when {
-        hasJournals -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+        hasJournals -> MaterialTheme.colorScheme.secondaryContainer
         else -> Color.Transparent
     }
 
     val textColor = when {
-        hasJournals -> MaterialTheme.colorScheme.onTertiaryContainer
-        isToday -> MaterialTheme.colorScheme.tertiary
+        hasJournals -> MaterialTheme.colorScheme.onSecondaryContainer
+        isToday -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.onSurface
     }
 
@@ -144,7 +144,7 @@ fun CalendarDayTile(
                 if (isToday) {
                     Modifier.border(
                         width = 1.5.dp,
-                        color = MaterialTheme.colorScheme.tertiary,
+                        color = MaterialTheme.colorScheme.primary,
                         shape = shape
                     )
                 } else Modifier

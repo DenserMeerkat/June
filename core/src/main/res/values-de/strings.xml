@@ -400,4 +400,6 @@
     <string name="add_song">Lied hinzufügen</string>
     <string name="take_photo_or_video">Foto / Video aufnehmen</string>
     <string name="locked">Gesperrt</string>
+    <string name="clear_filters">Filter zurücksetzen</string>
+    <string name="vault_no_lock_warning">Keine Tresorsperre eingerichtet</string>
 </resources>

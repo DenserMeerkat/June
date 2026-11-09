@@ -647,4 +647,6 @@
     <string name="audios">Audios</string>
     <string name="move_up">Move up</string>
     <string name="move_down">Move down</string>
+    <string name="clear_filters">Clear filters</string>
+    <string name="vault_no_lock_warning">No Vault lock set</string>
 </resources>

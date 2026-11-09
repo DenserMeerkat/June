@@ -394,4 +394,6 @@
     <string name="take_photo_or_video">拍摄照片/视频</string>
     <string name="whats_on_your_mind">脑海中回荡着什么呢？</string>
     <string name="locked">已锁定</string>
+    <string name="clear_filters">清除筛选</string>
+    <string name="vault_no_lock_warning">未设置保管库锁定</string>
 </resources>

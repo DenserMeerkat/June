@@ -59,4 +59,6 @@
     <string name="developer_options">Настройки разработчика</string>
     <string name="disabled">Выключен</string>
     <string name="internet_disabled_update_notice">Доступ к интернету выключен в настройках конфиденциальности June. Пожалуйста, включите его в разделе \"Разрешения\", чтобы проверить наличие обновлений.</string>
+    <string name="clear_filters">Сбросить фильтры</string>
+    <string name="vault_no_lock_warning">Блокировка сейфа не установлена</string>
 </resources>

@@ -122,4 +122,6 @@
     <string name="update_available_play_store">June 的新版本已在 Google Play 商店上架。</string>
     <string name="update_check_failed">更新檢查失敗</string>
     <string name="up_to_date">最新</string>
+    <string name="clear_filters">清除篩選</string>
+    <string name="vault_no_lock_warning">未設定保管庫鎖定</string>
 </resources>

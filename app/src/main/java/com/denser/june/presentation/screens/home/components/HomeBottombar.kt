@@ -250,8 +250,7 @@ fun HomeBottomBar(
                     if (badgeRes != null) {
                         Surface(
                             shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            border = BorderStroke(2.dp, MaterialTheme.colorScheme.surface),
+                            color = fabConfig.badgeColor,
                             shadowElevation = 3.dp,
                             modifier = Modifier.size(22.dp)
                         ) {
@@ -263,7 +262,7 @@ fun HomeBottomBar(
                                     painter = painterResource(badgeRes),
                                     contentDescription = null,
                                     modifier = Modifier.size(12.dp),
-                                    tint = fabConfig.badgeColor,
+                                    tint = fabConfig.containerColor,
                                 )
                             }
                         }

@@ -44,4 +44,6 @@
     <string name="restore_all_title">அனைத்தையும் மீட்டமை</string>
     <string name="search">தேடு</string>
     <string name="whats_on_your_mind">உங்கள் மனதில் என்ன ஓடுகிறது?</string>
+    <string name="clear_filters">வடிப்பான்களை அழி</string>
+    <string name="vault_no_lock_warning">பெட்டகப் பூட்டு அமைக்கப்படவில்லை</string>
 </resources>

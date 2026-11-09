@@ -123,8 +123,8 @@ object MediaColorEngine {
         val backgroundNeutral = run {
             val hsl = floatArrayOf(0f, 0f, 0f)
             ColorUtils.colorToHSL(dominant.rgb, hsl)
-            hsl[1] = (hsl[1] * 0.65f).coerceIn(0.12f, 0.40f)
-            hsl[2] = 0.12f
+            hsl[1] = (hsl[1] * 0.40f).coerceIn(0.04f, 0.20f)
+            hsl[2] = hsl[2].coerceIn(0.40f, 0.60f)
             ColorUtils.HSLToColor(hsl)
         }
 
@@ -223,10 +223,10 @@ object MediaColorEngine {
 
         for (bp in blueprints) {
             val primaryColor = tunePixelAccent(bp.primary.rgb)
-            val secondaryColor = bp.secondary?.rgb?.let { tunePixelAccent(it, minSat = 0.55f, targetLight = 0.60f) }?.takeIf {
+            val secondaryColor = bp.secondary?.rgb?.let { tunePixelAccent(it, minSat = 0.20f) }?.takeIf {
                 !isTooSimilarHue(primaryColor, it, 18f)
             }
-            val tertiaryColor = bp.tertiary?.rgb?.let { tunePixelAccent(it, minSat = 0.45f, targetLight = 0.55f) }?.takeIf {
+            val tertiaryColor = bp.tertiary?.rgb?.let { tunePixelAccent(it, minSat = 0.20f) }?.takeIf {
                 it != primaryColor &&
                 (secondaryColor == null || !isTooSimilarHue(secondaryColor, it, 18f)) &&
                 !isTooSimilarHue(primaryColor, it, 18f)
@@ -256,13 +256,14 @@ object MediaColorEngine {
 
     private fun tunePixelAccent(
         argb: Int,
-        minSat: Float = 0.80f,
-        targetLight: Float = 0.65f
+        minSat: Float = 0.25f,
+        minLight: Float = 0.35f,
+        maxLight: Float = 0.70f
     ): Int {
         val hsl = floatArrayOf(0f, 0f, 0f)
         ColorUtils.colorToHSL(argb, hsl)
-        hsl[1] = hsl[1].coerceAtLeast(minSat)
-        hsl[2] = targetLight
+        if (hsl[1] < minSat) hsl[1] = minSat
+        hsl[2] = hsl[2].coerceIn(minLight, maxLight)
         return ColorUtils.HSLToColor(hsl)
     }
 

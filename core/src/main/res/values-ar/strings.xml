@@ -424,4 +424,6 @@
     <string name="about_june">حول June</string>
     <string name="about_june_desc">الإصدار ورابط GitHub</string>
     <string name="locked">مقفل</string>
+    <string name="clear_filters">مسح الفلاتر</string>
+    <string name="vault_no_lock_warning">لم يتم تعيين قفل للخزنة</string>
 </resources>
