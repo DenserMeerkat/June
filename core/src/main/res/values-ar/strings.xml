@@ -32,6 +32,7 @@
     <string name="action_restore">إعادة</string>
     <string name="action_reset">إعادة ضبط</string>
     <string name="manage_in_settings">إدارة في الإعدادات</string>
+    <string name="label_overview">نظرة عامة</string>
     <string name="paste_link_placeholder">لصق الرابط هنا...</string>
     <string name="move_all_to_bin">نقل الكل إلى سلة المهملات</string>
     <string name="no_journals_this_month">لا توجد يوميات هذا الشهر.</string>
@@ -60,7 +61,7 @@
     <string name="recent">مؤخرًا</string>
     <string name="save_progress_message">هل ترغب في حفظ التعديلات قبل المغادرة؟</string>
     <string name="testing_key">جارٍ اختبار المفتاح...</string>
-    <string name="verifying_connection">جارٍ التحقق من الاتصال...</string>
+    <string name="verifying_connection">جارٍ الاختبار...</string>
     <string name="checking_for_updates">جارٍ التحقق من وجود تحديثات</string>
     <string name="diagnostics">التشخيص</string>
     <string name="internet_access_disabled">تم تعطيل الوصول إلى الإنترنت</string>
@@ -95,7 +96,7 @@
     <string name="more_entries">المزيد من المدخلات</string>
     <string name="name">اسم</string>
     <string name="test_connection">اختبار الاتصال</string>
-    <string name="testing_connection">جارٍ اختبار الاتصال...</string>
+    <string name="testing_connection">جارٍ الاختبار...</string>
     <string name="unsaved_tags_message">لديك تغييرات غير محفوظة على علاماتك. هل تريد حفظها قبل الخروج؟</string>
     <string name="untitled">بدون عنوان</string>
     <string name="updated">تم التحديث</string>
@@ -291,8 +292,6 @@
     <string name="repeat_weekends">عطلات نهاية الأسبوع</string>
     <string name="schedule">جدول</string>
     <string name="advanced_sync_desc">أدوات التحليل والإصلاح</string>
-    <string name="analyze_sync">تحليل المزامنة</string>
-    <string name="analyze_sync_desc">تحليل حالة المزامنة السحابية</string>
     <string name="automatic_sync">المزامنة التلقائية</string>
     <string name="automatic_sync_desc">قم بمزامنة التغييرات فور حدوثها</string>
     <string name="backup_format_too_old">تنسيق النسخ الاحتياطي قديم جدًا</string>
@@ -316,9 +315,8 @@
     <string name="restore_failed">فشل الاستعادة: %1$s</string>
     <string name="restore_warning_message">سيؤدي هذا إلى دمج النسخة الاحتياطية مع بياناتك الحالية.\n\n• السجلات ذات المعرّفات المطابقة سيتم استبدالها.\n• السجلات الجديدة ستُضاف.\n\nلا يمكن التراجع عن هذا الإجراء.</string>
     <string name="restoring">جارٍ الاستعادة...</string>
-    <string name="sync_details">تفاصيل المزامنة</string>
-    <string name="sync_details_desc">راجع التغييرات قبل المزامنة</string>
-    <string name="sync_header_desc">حافظ على مزامنة يومياتك عبر جميع أجهزتك باستخدام مزود تخزين سحابي.</string>
+    <string name="sync_overview">نظرة عامة على المزامنة</string>
+    <string name="all_in_sync">متزامن</string>
     <string name="sync_internet_required_desc">قم بتفعيل صلاحية الوصول إلى الإنترنت لاستخدام المزامنة السحابية.</string>
     <string name="sync_logging">تسجيل المزامنة</string>
     <string name="wifi_only_sync">المزامنة التلقائية عبر شبكة Wi-Fi فقط</string>

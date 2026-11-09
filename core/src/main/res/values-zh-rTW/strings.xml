@@ -27,6 +27,7 @@
     <string name="ok">好</string>
     <string name="okay">瞭解</string>
     <string name="open_folder">開啟資料夾</string>
+    <string name="label_overview">概覽</string>
     <string name="open_hosted_weblate">開啟 Hosted Weblate</string>
     <string name="open_link">開啟連結</string>
     <string name="options">選項</string>
@@ -82,13 +83,13 @@
     <string name="synced">已同步</string>
     <string name="test_api_key">測試 API Key</string>
     <string name="test_connection">測試連線</string>
-    <string name="testing_connection">測試連線中…</string>
+    <string name="testing_connection">測試中…</string>
     <string name="testing_key">測試 Key 中…</string>
     <string name="today">今天</string>
     <string name="unsaved_tags_message">你有未儲存變更的標籤。你想在離開前儲存它們嗎？</string>
     <string name="untitled">未命名</string>
     <string name="updated">已更新</string>
-    <string name="verifying_connection">驗證連線中…</string>
+    <string name="verifying_connection">測試中…</string>
     <string name="whats_new">最新消息</string>
     <string name="save_entry">儲存條目？</string>
     <string name="change_lock_title">變更鎖定？</string>

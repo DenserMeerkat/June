@@ -31,11 +31,15 @@ import com.denser.june.presentation.screens.settings.screens.sync.sections.SyncS
 import com.denser.june.presentation.screens.settings.screens.sync.sections.WebDavConfigSection
 import com.denser.june.presentation.screens.settings.screens.sync.sections.GoogleDriveConfigSection
 import com.denser.june.presentation.components.InternetRestrictedBanner
-import com.denser.june.presentation.screens.settings.screens.sync.components.SyncDetailsDialog
+import com.denser.june.presentation.screens.settings.screens.sync.components.SyncCategory
+import com.denser.june.presentation.screens.settings.screens.sync.components.SyncOverviewSheet
 import com.denser.june.presentation.theme.LocalInternetAllowed
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import com.denser.june.core.R
+import com.denser.june.core.domain.sync.SyncStatus
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.text.font.FontWeight
 
@@ -45,7 +49,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import com.denser.june.presentation.components.JuneConfirmationDialog
 
-@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    androidx.compose.foundation.ExperimentalFoundationApi::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 fun SyncScreen() {
     val syncVM: SyncVM = koinViewModel()
@@ -55,6 +63,7 @@ fun SyncScreen() {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val lazyListState = rememberLazyListState()
     val isInternetAllowed = LocalInternetAllowed.current
+    var selectedCategoryForDetails by remember { mutableStateOf<SyncCategory?>(null) }
 
     val rotationAngle by animateFloatAsState(
         targetValue = if (state.showAdvancedOptions) 180f else 0f,
@@ -75,7 +84,7 @@ fun SyncScreen() {
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             JuneTopAppBar(
-                type = JuneAppBarType.Large,
+                type = JuneAppBarType.Small,
                 scrollBehavior = scrollBehavior,
                 title = { Text(stringResource(R.string.cloud_sync)) },
                 navigationIcon = {
@@ -123,14 +132,6 @@ fun SyncScreen() {
                         description = stringResource(R.string.sync_internet_required_desc)
                     )
                 }
-            }
-            item {
-                Text(
-                    text = stringResource(R.string.sync_header_desc),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 4.dp)
-                )
             }
 
             item {
@@ -198,7 +199,8 @@ fun SyncScreen() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
+                            .padding(horizontal = 24.dp)
+                            .padding(top = 4.dp, bottom = 0.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -246,12 +248,7 @@ fun SyncScreen() {
                                 GoogleDriveConfigSection(
                                     isVisible = true,
                                     isConnected = state.isGoogleDriveConnected,
-                                    status = state.status,
-                                    isTestingConnection = state.isTestingConnection,
-                                    onTestConnection = { syncVM.testConnection() },
-                                    onManualSync = { syncVM.manualSync() },
-                                    onRefresh = { syncVM.analyzeSync() },
-                                    onStopSync = { syncVM.stopSync() }
+                                    onRefresh = { syncVM.analyzeSync() }
                                 )
                             }
                             else -> {
@@ -261,7 +258,6 @@ fun SyncScreen() {
                                     webDavUser = state.webDavUser,
                                     webDavPass = state.webDavPass,
                                     isConfigLocked = state.isConfigLocked,
-                                    isTestingConnection = state.isTestingConnection,
                                     status = state.status,
                                     urlError = state.webDavUrlError,
                                     userError = state.webDavUserError,
@@ -269,12 +265,126 @@ fun SyncScreen() {
                                     onUrlChange = { syncVM.updateUrl(it) },
                                     onUserChange = { syncVM.updateUser(it) },
                                     onPassChange = { syncVM.updatePass(it) },
-                                    onToggleLock = { syncVM.toggleConfigLock() },
-                                    onTestConnection = { syncVM.testConnection() },
-                                    onManualSync = { syncVM.manualSync() },
-                                    onStopSync = { syncVM.stopSync() }
+                                    onToggleLock = { syncVM.toggleConfigLock() }
                                 )
                             }
+                        }
+                    }
+                }
+
+                val showCommonSyncControls = state.selectedProvider != "GoogleDrive" || state.isGoogleDriveConnected
+                if (showCommonSyncControls) {
+                    item {
+                        val isSyncing = state.status is SyncStatus.Syncing || state.status is SyncStatus.Preparing
+                        val isAnyBusy = isSyncing || state.isTestingConnection
+                        val interactionSources = remember { List(2) { MutableInteractionSource() } }
+
+                        ButtonGroup(
+                            overflowIndicator = {},
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            customItem(
+                                buttonGroupContent = {
+                                    FilledTonalButton(
+                                        onClick = { syncVM.testConnection() },
+                                        enabled = !isAnyBusy,
+                                        interactionSource = interactionSources[0],
+                                        shape = CircleShape,
+                                        contentPadding = PaddingValues(horizontal = 16.dp),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight()
+                                            .animateWidth(interactionSources[0])
+                                    ) {
+                                        if (state.isTestingConnection) {
+                                            CircularWavyProgressIndicator(
+                                                modifier = Modifier.size(18.dp),
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                stringResource(R.string.testing_connection),
+                                                style = MaterialTheme.typography.labelLarge,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        } else {
+                                            Icon(
+                                                painterResource(R.drawable.cable_24px),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                stringResource(R.string.test_connection),
+                                                style = MaterialTheme.typography.labelLarge,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
+                                    }
+                                },
+                                menuContent = {}
+                            )
+
+                            customItem(
+                                buttonGroupContent = {
+                                    Button(
+                                        onClick = {
+                                            if (isSyncing) {
+                                                syncVM.stopSync()
+                                            } else {
+                                                syncVM.manualSync()
+                                            }
+                                        },
+                                        enabled = if (isSyncing) true else !state.isTestingConnection,
+                                        interactionSource = interactionSources[1],
+                                        shape = CircleShape,
+                                        colors = if (isSyncing) {
+                                            ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                contentColor = MaterialTheme.colorScheme.error
+                                            )
+                                        } else {
+                                            ButtonDefaults.buttonColors()
+                                        },
+                                        contentPadding = PaddingValues(horizontal = 16.dp),
+                                        modifier = Modifier
+                                            .weight(1.8f)
+                                            .fillMaxHeight()
+                                            .animateWidth(interactionSources[1])
+                                    ) {
+                                        if (isSyncing) {
+                                            Icon(
+                                                painterResource(R.drawable.close_24px),
+                                                contentDescription = stringResource(R.string.stop_sync),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                stringResource(R.string.stop_sync),
+                                                style = MaterialTheme.typography.labelLarge,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        } else {
+                                            Icon(
+                                                painterResource(R.drawable.sync_24px),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                stringResource(R.string.sync_now),
+                                                style = MaterialTheme.typography.labelLarge,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                },
+                                menuContent = {}
+                            )
                         }
                     }
                 }
@@ -291,15 +401,22 @@ fun SyncScreen() {
                     onToggleAdvanced = { syncVM.toggleAdvancedOptions() },
                     onAnalyze = { syncVM.analyzeSync() },
                     onRepair = { syncVM.requestRepairSync() },
-                    onViewDetails = { syncVM.setShowAnalysisDetails(true) }
+                    onViewDetails = { category ->
+                        selectedCategoryForDetails = category
+                        syncVM.setShowAnalysisDetails(true)
+                    }
                 )
             }
         }
 
         if (state.showAnalysisDetails && state.analysis != null) {
-            SyncDetailsDialog(
+            SyncOverviewSheet(
                 analysis = state.analysis!!,
-                onDismiss = { syncVM.setShowAnalysisDetails(false) }
+                initialCategory = selectedCategoryForDetails,
+                onDismiss = {
+                    syncVM.setShowAnalysisDetails(false)
+                    selectedCategoryForDetails = null
+                }
             )
         }
 
