@@ -462,4 +462,16 @@
     <string name="cd_add_journal">添加日记</string>
     <string name="unlock_vault">解锁保险库</string>
     <string name="unlock_june">解锁 June</string>
+    <string name="no_locations_found">未发现位置</string>
+    <string name="search_emojis">搜索表情符号…</string>
+    <string name="no_emojis_found">未发现表情符号</string>
+    <string name="emoji_category_animals">动物与自然</string>
+    <string name="emoji_category_food">食物与饮料</string>
+    <string name="emoji_category_travel">旅行与地点</string>
+    <string name="emoji_category_activities">活动与事件</string>
+    <string name="reset_font">重置字体</string>
+    <string name="reset_theme">重置样式</string>
+    <string name="width">宽度</string>
+    <string name="custom_password">密码</string>
+    <string name="vault_desc">保持敏感日记隐藏和被保护</string>
 </resources>
