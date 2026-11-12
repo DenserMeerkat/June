@@ -3,9 +3,11 @@ package com.denser.june.core.sync
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.sync.fixtures.SyncFixtures
 import com.denser.june.core.sync.fixtures.SyncFixtures.T1
+import com.denser.june.core.sync.fixtures.SyncFixtures.T2
 import com.denser.june.core.sync.harness.BaseSyncTest
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
@@ -169,5 +171,69 @@ class SyncAnalysisTest : BaseSyncTest() {
 
         assertEquals("Cloud song must be counted in pendingSongDownloads", 1, analysis.pendingSongDownloadsCount)
         assertEquals("Song title and artist must be resolved from journal songDetails", "Bohemian Rhapsody — Queen", analysis.pendingSongDownloadsList.first())
+    }
+
+    @Test
+    fun `analysis pendingUploads includes predicted conflict copies with Conflict Copy label`() = runTest {
+        val baseJournal = harness.givenSyncedJournal("j_conflict", title = "Project Plan", content = "Initial plan", rev = 1)
+        harness.repo.seed(baseJournal.copy(content = "My local edits", updatedAt = T2))
+
+        val remoteJournal = baseJournal.copy(content = "Remote colleague edits", updatedAt = T2)
+        harness.cloud.putJournal(remoteJournal, modifiedAt = T2)
+        val manifest = harness.cloud.manifest!!
+        harness.cloud.manifest = manifest.copy(
+            journalMetadata = manifest.journalMetadata + ("j_conflict" to com.denser.june.core.domain.sync.JournalSyncMeta(rev = 2, contentHash = remoteJournal.computeContentHash()))
+        )
+
+        val analysis = harness.performAnalysis().getOrThrow()
+
+        assertEquals("Conflict copy must be counted in pendingUploadsCount", 1, analysis.pendingUploadsCount)
+        assertEquals(1, analysis.pendingUploadsList.size)
+        assertEquals("Project Plan (Conflict Copy)", analysis.pendingUploadsList.first())
+        assertEquals("Remote journal must be counted in pendingDownloadsCount", 1, analysis.pendingDownloadsCount)
+        assertEquals("Project Plan", analysis.pendingDownloadsList.first())
+    }
+
+    @Test
+    fun `analysis pendingSongUploads counts song with only un-synced album art as 1 and lists as Album Art`() = runTest {
+        // Song audio already on cloud
+        harness.givenCloudSongMedia("synced_audio.mp3", byteArrayOf(1, 2, 3))
+        harness.givenSongInLibrary("s1", "synced_audio.mp3", artFilename = "cover.jpg", bytes = byteArrayOf(1, 2, 3))
+
+        val analysis = harness.performAnalysis().getOrThrow()
+
+        assertEquals("Song with only album art missing on cloud must contribute 1 to count", 1, analysis.pendingSongUploadsCount)
+        assertEquals(1, analysis.pendingSongUploadsList.size)
+        assertEquals("Title s1 — Artist s1 (Album Art)", analysis.pendingSongUploadsList.first())
+    }
+
+    @Test
+    fun `analysis pendingSongUploads counts song with both audio and art as 1 song and lists both separately`() = runTest {
+        harness.givenSongInLibrary("s2", "new_audio.mp3", artFilename = "new_art.jpg")
+
+        val analysis = harness.performAnalysis().getOrThrow()
+
+        assertEquals("Song with both audio and art must contribute 1 to table count", 1, analysis.pendingSongUploadsCount)
+        assertEquals(2, analysis.pendingSongUploadsList.size)
+        assertTrue(analysis.pendingSongUploadsList.contains("Title s2 — Artist s2"))
+        assertTrue(analysis.pendingSongUploadsList.contains("Title s2 — Artist s2 (Album Art)"))
+    }
+
+    @Test
+    fun `analysis pendingDownloadsList resolves titles for multiple simultaneous conflicts`() = runTest {
+        for (i in 1..3) {
+            val base = harness.givenSyncedJournal("j$i", title = "Journal $i", content = "v1", rev = 1)
+            harness.repo.seed(base.copy(content = "local v2", updatedAt = T2))
+            val remote = base.copy(content = "remote v2", updatedAt = T2)
+            harness.cloud.putJournal(remote, modifiedAt = T2)
+            val m = harness.cloud.manifest!!
+            harness.cloud.manifest = m.copy(
+                journalMetadata = m.journalMetadata + ("j$i" to com.denser.june.core.domain.sync.JournalSyncMeta(rev = 2, contentHash = remote.computeContentHash()))
+            )
+        }
+
+        val analysis = harness.performAnalysis().getOrThrow()
+        assertEquals("3 conflicts must count as 3 pending downloads", 3, analysis.pendingDownloadsCount)
+        assertEquals(listOf("Journal 1", "Journal 2", "Journal 3"), analysis.pendingDownloadsList.sorted())
     }
 }

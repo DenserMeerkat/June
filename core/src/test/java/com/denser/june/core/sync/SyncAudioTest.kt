@@ -111,5 +111,66 @@ class SyncAudioTest : BaseSyncTest() {
         assertTrue(result.isFailure)
         assertEquals(null, harness.cloud.manifest)
     }
+
+    @Test
+    fun `voice note upload failure is resilient and succeeds on subsequent sync`() = runTest {
+        val audioFile = harness.givenAudioFileOnDisk("voice_note.m4a", byteArrayOf(10, 20, 30, 40))
+        val audio = JournalAudio(
+            id = "aud-resilient",
+            path = audioFile.absolutePath,
+            durationMs = 60000L,
+            title = "Important Voice Memo"
+        )
+        val j = SyncFixtures.newJournal("jVoice", updatedAt = T1).copy(audios = listOf(audio))
+        harness.repo.seed(j)
+
+        // Simulate network drop during audio upload
+        harness.cloud.failNextUploadAudio = true
+
+        val initialSync = harness.sync()
+        assertTrue("Sync should fail gracefully on audio transfer drop", initialSync.isFailure)
+        assertEquals("Manifest should not be updated", null, harness.cloud.manifest)
+
+        // Subsequent sync when back online
+        val secondSync = harness.sync()
+        assertTrue("Second sync must succeed", secondSync.isSuccess)
+        assertTrue("Cloud must now contain the audio file", harness.cloud.allAudioKeys().contains("voice_note.m4a"))
+        assertNotNull("Manifest audioMetadata must contain voice_note.m4a", harness.cloud.manifest?.audioMetadata?.get("voice_note.m4a"))
+    }
+
+    @Test
+    fun `audio attachment is re-downloaded when journal is resurrected from trash`() = runTest {
+        val audioFile = harness.givenAudioFileOnDisk("voice.m4a", byteArrayOf(1, 2, 3))
+        val audio = JournalAudio(id = "a1", path = audioFile.absolutePath, durationMs = 2000L)
+        val journal = harness.givenSyncedJournal("j_voice", rev = 1).copy(audios = listOf(audio))
+        harness.repo.seed(journal)
+        harness.cloud.putJournal(journal, modifiedAt = SyncFixtures.T1)
+        harness.cloud.putAudio("voice.m4a", byteArrayOf(1, 2, 3))
+        val currentManifest = harness.cloud.manifest!!
+        harness.cloud.manifest = currentManifest.copy(
+            totalAudio = 1,
+            audioMetadata = mapOf("voice.m4a" to com.denser.june.core.domain.sync.MediaSyncMeta(size = 3L))
+        )
+
+        // Soft delete locally and sync
+        harness.userSoftDeletesJournal("j_voice")
+        val sync1 = harness.sync()
+        assertTrue(sync1.isSuccess)
+
+        // Delete audio on disk to simulate cache cleanup
+        audioFile.delete()
+        org.junit.Assert.assertFalse(audioFile.exists())
+
+        // User restores journal
+        harness.userRestoresJournal("j_voice", restoredAt = SyncFixtures.T2)
+
+        val sync2 = harness.sync()
+        assertTrue(sync2.isSuccess)
+
+        val restored = harness.repo.getJournalById("j_voice")
+        assertNotNull(restored)
+        assertTrue(restored!!.audios.isNotEmpty())
+        assertTrue("Audio file must be re-downloaded after resurrection", File(restored.audios.first().path).exists())
+    }
 }
 

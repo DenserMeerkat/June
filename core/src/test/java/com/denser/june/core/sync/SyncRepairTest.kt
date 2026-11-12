@@ -63,5 +63,19 @@ class SyncRepairTest : BaseSyncTest() {
         assertFalse(harness.cloud.allMediaKeys().any { it.contains("orphan_to_delete.jpg") })
         assertFalse(harness.cloud.allAudioKeys().any { it.contains("orphan_rec.m4a") })
     }
+
+    @Test
+    fun `full revalidation removes orphaned song files from cloud`() = runTest {
+        harness.cloud.putSongMedia("orphan_song.mp3", byteArrayOf(1, 2))
+        harness.cloud.manifest = SyncFixtures.manifest(
+            totalSongMedia = 1,
+            songMediaMetadata = mapOf("orphan_song.mp3" to com.denser.june.core.domain.sync.MediaSyncMeta(size = 2L, hash = "h"))
+        )
+
+        val result = harness.sync(isFullRevalidation = true)
+        assertTrue(result.isSuccess)
+        assertFalse("Orphaned song file must be removed from cloud",
+            harness.cloud.allSongMediaKeys().contains("orphan_song.mp3"))
+    }
 }
 

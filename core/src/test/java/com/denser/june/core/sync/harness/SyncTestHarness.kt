@@ -64,7 +64,8 @@ class SyncTestHarness {
             songLibraryDao = songDao,
             songMediaDir = songMediaDir,
             audioDir = audioDir,
-            syncHashCache = com.denser.june.core.domain.sync.SyncHashCache(syncDir)
+            syncHashCache = com.denser.june.core.domain.sync.SyncHashCache(syncDir),
+            syncDir = syncDir
         )
     }
 

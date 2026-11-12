@@ -224,4 +224,25 @@ class SyncFaultToleranceTest : BaseSyncTest() {
         assertTrue("Status must be Error, was $status", status is SyncStatus.Error)
         assertNull("Manifest must not be written when sync fails", harness.cloud.manifest)
     }
+
+    @Test
+    fun `album art upload failure on first sync is retried successfully on second sync`() = runTest {
+        harness.givenSongInLibrary("s1", "audio.mp3", artFilename = "art.jpg")
+
+        harness.cloud.failNextUploadSongMedia = true
+
+        val firstSync = harness.sync()
+        // Song upload failure does not abort sync overall, but failed file is not committed
+        assertTrue(firstSync.isSuccess)
+
+        // Reset failure flag and run second sync
+        harness.cloud.failNextUploadSongMedia = false
+        val secondSync = harness.sync()
+        assertTrue("Second sync must succeed", secondSync.isSuccess)
+
+        assertTrue(
+            "Song media must now be in cloud",
+            harness.cloud.allSongMediaKeys().contains("art.jpg") || harness.cloud.allSongMediaKeys().contains("audio.mp3")
+        )
+    }
 }

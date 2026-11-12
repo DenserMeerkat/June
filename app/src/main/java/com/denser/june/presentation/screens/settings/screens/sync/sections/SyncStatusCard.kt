@@ -60,38 +60,43 @@ fun SyncStatusCard(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    if (lastSyncTime > 0) {
-                        Text(
-                            text = stringResource(R.string.last_successful_sync),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = lastSyncTime.toFullDateTime(is24Hour = is24Hour),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    } else if (status is SyncStatus.Idle) {
-                        Text(
-                            text = stringResource(R.string.cloud_sync),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = stringResource(R.string.never_synced),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                    val headerLabel = if (lastSyncTime > 0) {
+                        stringResource(R.string.last_successful_sync)
+                    } else {
+                        stringResource(R.string.cloud_sync)
                     }
+
+                    val valueText = if (lastSyncTime > 0) {
+                        lastSyncTime.toFullDateTime(is24Hour = is24Hour)
+                    } else {
+                        stringResource(R.string.never_synced)
+                    }
+
+                    Text(
+                        text = headerLabel,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Text(
+                        text = valueText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
 
                     when (status) {
                         is SyncStatus.Preparing -> {
                             Text(
-                                "Analyzing cloud differences...",
+                                text = "Analyzing cloud differences...",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -99,64 +104,71 @@ fun SyncStatusCard(
                             val currentOp = status.currentOperation
                             val uploadCount = status.uploadCount
                             val downloadCount = status.downloadCount
-                            val total = status.totalOperations
-                            val completed = uploadCount + downloadCount
 
-                            val (header, subtitle) = when {
+                            val syncText = when {
                                 currentOp.contains("clean", ignoreCase = true) ||
                                         currentOp.contains("purge", ignoreCase = true) ||
-                                        currentOp.contains("tombstone", ignoreCase = true) -> {
-                                    "Syncing (Finalizing)" to currentOp
-                                }
+                                        currentOp.contains("tombstone", ignoreCase = true) -> "Finalizing sync..."
 
                                 currentOp.startsWith("Pushing", ignoreCase = true) ||
                                         currentOp.startsWith("Uploading", ignoreCase = true) -> {
                                     val targetItem = currentOp.removePrefix("Pushing ")
                                         .removePrefix("Uploading ")
                                         .removeSuffix("...")
-                                    val displayItem = if (targetItem.equals("changes", ignoreCase = true)) {
-                                        "journal changes"
-                                    } else {
-                                        targetItem
+                                        .trim()
+                                    val displayItem = when {
+                                        targetItem.equals("changes", ignoreCase = true) || targetItem.contains("journal", ignoreCase = true) -> "journal changes"
+                                        targetItem.contains("media", ignoreCase = true) -> "media"
+                                        targetItem.contains("audio", ignoreCase = true) -> "audio"
+                                        targetItem.contains("art", ignoreCase = true) -> "album art"
+                                        targetItem.contains("song", ignoreCase = true) -> "songs"
+                                        else -> targetItem.ifBlank { "changes" }
                                     }
-                                    "Pushing changes" to "Uploading $displayItem..."
+                                    "Uploading $displayItem..."
                                 }
 
                                 currentOp.startsWith("Downloading", ignoreCase = true) ||
                                         currentOp.startsWith("Pulling", ignoreCase = true) -> {
-                                    "Pulling changes" to "Downloading updates..."
+                                    val targetItem = currentOp.removePrefix("Downloading ")
+                                        .removePrefix("Pulling ")
+                                        .removeSuffix("...")
+                                        .trim()
+                                    val displayItem = when {
+                                        targetItem.contains("journal", ignoreCase = true) -> "journal updates"
+                                        targetItem.contains("media", ignoreCase = true) -> "media"
+                                        targetItem.contains("audio", ignoreCase = true) -> "audio"
+                                        targetItem.contains("art", ignoreCase = true) -> "album art"
+                                        targetItem.contains("song", ignoreCase = true) -> "songs"
+                                        else -> targetItem.ifBlank { "updates" }
+                                    }
+                                    "Downloading $displayItem..."
                                 }
 
-                                uploadCount > 0 && downloadCount > 0 -> {
-                                    "Syncing" to "Pulled $downloadCount, pushed $uploadCount"
-                                }
-
-                                else -> {
-                                    "Syncing" to currentOp.ifBlank { "Processing updates..." }
-                                }
+                                currentOp.contains("conflict", ignoreCase = true) -> "Resolving conflict..."
+                                currentOp.contains("resurrect", ignoreCase = true) -> "Restoring remote entry..."
+                                uploadCount > 0 && downloadCount > 0 -> "Pulled $downloadCount, pushed $uploadCount"
+                                uploadCount > 0 -> "Pushed $uploadCount changes"
+                                downloadCount > 0 -> "Pulled $downloadCount changes"
+                                else -> currentOp.ifBlank { "Syncing..." }
                             }
 
-                            Column {
-                                Text(
-                                    text = header,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                if (subtitle.isNotBlank()) {
-                                    Text(
-                                        text = subtitle,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
+                            Text(
+                                text = syncText,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
 
                         is SyncStatus.Success -> {
                             Text(
-                                "All journals are up to date",
+                                text = "All journals are up to date",
                                 color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -177,18 +189,17 @@ fun SyncStatusCard(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        "Error: $userFriendlyMsg",
-                                        color = MaterialTheme.colorScheme.error,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
+                                Text(
+                                    text = "Error: $userFriendlyMsg",
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
                                 IconButton(
                                     onClick = { clipboardManager.setText(AnnotatedString(status.message)) },
-                                    modifier = Modifier.size(32.dp)
+                                    modifier = Modifier.size(24.dp)
                                 ) {
                                     Icon(
                                         painterResource(R.drawable.content_copy_24px),
@@ -202,13 +213,23 @@ fun SyncStatusCard(
 
                         is SyncStatus.Dirty -> {
                             Text(
-                                "Unsynced changes detected",
+                                text = "Unsynced changes detected",
                                 color = MaterialTheme.colorScheme.secondary,
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
-                        else -> {}
+                        is SyncStatus.Idle -> {
+                            Text(
+                                text = if (lastSyncTime > 0) "All journals are up to date" else "Tap to sync now",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
             }

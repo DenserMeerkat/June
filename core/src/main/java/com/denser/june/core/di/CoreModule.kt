@@ -100,16 +100,16 @@ val coreModule = module {
         }
         
         SyncManager(
-            get(),
-            get(),
-            providers,
-            File(context.filesDir, "media"),
-            get(),
-            get(named("ApplicationScope")),
-            get(),
-            File(context.filesDir, "songs"),
-            File(context.filesDir, "audios"),
-            get()
+            journalRepo = get(),
+            syncPrefs = get(),
+            providers = providers,
+            mediaDir = File(context.filesDir, "media"),
+            syncScheduler = get(),
+            applicationScope = get(named("ApplicationScope")),
+            songLibraryDao = get(),
+            songMediaDir = File(context.filesDir, "songs"),
+            audioDir = File(context.filesDir, "audios"),
+            syncHashCache = get()
         )
     }
 }

@@ -4,9 +4,11 @@ import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.sync.SyncStatus
 import com.denser.june.core.sync.fixtures.SyncFixtures
 import com.denser.june.core.sync.fixtures.SyncFixtures.T1
+import com.denser.june.core.sync.fixtures.SyncFixtures.T2
 import com.denser.june.core.sync.harness.BaseSyncTest
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -257,5 +259,97 @@ class SyncSongMediaTest : BaseSyncTest() {
         val entry = harness.songDao.getByHash("song_dl")
         assertNotNull(entry)
         assertEquals("M4A Track", entry?.title)
+    }
+
+    @Test
+    fun `shared song media is retained when one referencing journal is deleted`() = runTest {
+        val songFile = harness.givenSongInLibrary("s1", "shared_song.mp3", bytes = byteArrayOf(1, 2, 3, 4))
+        val songDetails = SongDetails(title = "Shared Song", artistName = "Shared Artist", localPreviewPath = songFile.absolutePath)
+
+        val j1 = SyncFixtures.newJournal("j1", title = "First Entry", updatedAt = T1).copy(songDetails = songDetails)
+        val j2 = SyncFixtures.newJournal("j2", title = "Second Entry", updatedAt = T1).copy(songDetails = songDetails)
+
+        harness.repo.seed(j1)
+        harness.repo.seed(j2)
+
+        val sync1 = harness.sync()
+        assertTrue(sync1.isSuccess)
+        assertTrue("Cloud must have shared_song.mp3", harness.cloud.allSongMediaKeys().contains("shared_song.mp3"))
+
+        // Delete j1
+        harness.userPermanentlyDeletesJournal("j1")
+        val sync2 = harness.sync()
+        assertTrue(sync2.isSuccess)
+
+        // shared_song.mp3 must still exist on cloud and locally because j2 and the song library reference it!
+        assertTrue("Cloud must retain shared_song.mp3", harness.cloud.allSongMediaKeys().contains("shared_song.mp3"))
+        assertTrue("Local song file must be preserved", songFile.exists())
+    }
+
+    @Test
+    fun `song is re-downloaded when soft-deleted journal is resurrected`() = runTest {
+        val songFile = harness.givenSongInLibrary("s1", "track.mp3", bytes = byteArrayOf(1, 2, 3, 4))
+        val songDetails = SongDetails(title = "Track", artistName = "Artist", localPreviewPath = songFile.absolutePath)
+        val journal = harness.givenSyncedJournal("j1", songDetails = songDetails, rev = 1)
+        harness.givenCloudSongMedia("track.mp3", byteArrayOf(1, 2, 3, 4))
+
+        // Soft delete locally and sync
+        harness.userSoftDeletesJournal("j1")
+        val sync1 = harness.sync()
+        assertTrue(sync1.isSuccess)
+
+        // Delete song on disk to simulate cache cleanup
+        songFile.delete()
+        assertFalse(songFile.exists())
+
+        // User restores journal
+        harness.userRestoresJournal("j1", restoredAt = T2)
+
+        val sync2 = harness.sync()
+        assertTrue(sync2.isSuccess)
+
+        val restored = harness.repo.getJournalById("j1")
+        assertNotNull(restored)
+        assertNotNull(restored?.songDetails?.localPreviewPath)
+        assertTrue("Song file must be re-downloaded after resurrection", File(restored!!.songDetails!!.localPreviewPath!!).exists())
+    }
+
+    @Test
+    fun `album art for incoming conflict copy is downloaded during resolution`() = runTest {
+        val base = harness.givenSyncedJournal("j1", title = "Entry", rev = 1)
+
+        // Local diverges
+        harness.repo.seed(base.copy(content = "local changes", updatedAt = T2))
+
+        // Remote diverges with song + art
+        val remoteWithSong = base.copy(
+            content = "remote changes",
+            updatedAt = T2,
+            songDetails = SongDetails(
+                title = "Cloud Song",
+                artistName = "Cloud Artist",
+                localPreviewPath = "cloud_track.mp3",
+                localThumbnailPath = "cloud_art.jpg"
+            )
+        )
+        harness.cloud.putJournal(remoteWithSong, modifiedAt = T2)
+        harness.givenCloudSongMedia("cloud_track.mp3", byteArrayOf(1, 2, 3))
+        harness.givenCloudSongMedia("cloud_art.jpg", byteArrayOf(4, 5, 6))
+
+        val manifest = harness.cloud.manifest!!
+        harness.cloud.manifest = manifest.copy(
+            journalMetadata = manifest.journalMetadata + ("j1" to com.denser.june.core.domain.sync.JournalSyncMeta(rev = 2, contentHash = remoteWithSong.computeContentHash()))
+        )
+
+        val result = harness.sync()
+        assertTrue(result.isSuccess)
+
+        val conflictCopy = harness.repo.getAllJournals().firstOrNull { it.title.contains("Conflict Copy") || it.id != "j1" }
+        val resolvedJ1 = harness.repo.getJournalById("j1")
+        // Either the original took remote or conflict copy took local/remote: check where the song Details ended up
+        val targetWithSong = if (resolvedJ1?.songDetails != null) resolvedJ1 else conflictCopy
+        assertNotNull("One of the journals must preserve the song details", targetWithSong?.songDetails)
+        assertNotNull("Album art path must be populated", targetWithSong?.songDetails?.localThumbnailPath)
+        assertTrue("Album art must exist on disk after sync", File(targetWithSong!!.songDetails!!.localThumbnailPath!!).exists())
     }
 }
