@@ -105,9 +105,11 @@ fun JuneNavHost(
 
     DisposableEffect(Unit) {
         onDispose {
-            editorSession?.viewModelStore?.clear()
-            editorSession = null
-            activeEditorVM = null
+            if (backStack.none { it is Route.Editor }) {
+                editorSession?.viewModelStore?.clear()
+                editorSession = null
+                activeEditorVM = null
+            }
         }
     }
 
