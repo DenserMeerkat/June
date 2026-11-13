@@ -154,6 +154,119 @@ object AudioStorageManager {
         }
     }
 
+    fun saveImportedAudioStream(
+        context: Context,
+        inputStream: java.io.InputStream,
+        source: String,
+        originalFileName: String,
+        fallbackDateTime: Long? = null,
+        title: String? = null
+    ): JournalAudio? {
+        return try {
+            val audioDir = getAudioDir(context)
+            val ext = originalFileName.substringAfterLast('.', "m4a").ifBlank { "m4a" }
+            val safeBase = originalFileName.substringBeforeLast('.')
+                .replace(Regex("[^a-zA-Z0-9_-]"), "_")
+                .take(40)
+            val safeSource = source.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            val fileName = "import_${safeSource}_${safeBase}.$ext"
+            val destFile = File(audioDir, fileName)
+
+            if (destFile.exists() && destFile.length() > 0) {
+                val buf = ByteArray(8192)
+                while (inputStream.read(buf) > 0) {}
+                val fileSize = destFile.length()
+                val metadata = extractMetadata(context, destFile, fallbackDateTime)
+                val resolvedTitle = title ?: metadata.title ?: originalFileName.substringBeforeLast('.')
+                val waveform = generateFallbackWaveform(destFile, 80)
+                val deterministicAudioId = UUID.nameUUIDFromBytes("${source}_${fileName}".toByteArray(Charsets.UTF_8)).toString()
+                return JournalAudio(
+                    id = deterministicAudioId,
+                    path = destFile.absolutePath,
+                    durationMs = metadata.durationMs,
+                    title = resolvedTitle,
+                    format = ext,
+                    size = fileSize,
+                    waveform = waveform,
+                    createdAt = metadata.createdAt ?: fallbackDateTime ?: System.currentTimeMillis()
+                )
+            }
+
+            destFile.outputStream().use { fos ->
+                inputStream.copyTo(fos)
+            }
+
+            if (destFile.length() == 0L) {
+                destFile.delete()
+                return null
+            }
+
+            val fileSize = destFile.length()
+            val metadata = extractMetadata(context, destFile, fallbackDateTime)
+            val resolvedTitle = title ?: metadata.title ?: originalFileName.substringBeforeLast('.')
+            val waveform = generateFallbackWaveform(destFile, 80)
+            val deterministicAudioId = UUID.nameUUIDFromBytes("${source}_${fileName}".toByteArray(Charsets.UTF_8)).toString()
+
+            JournalAudio(
+                id = deterministicAudioId,
+                path = destFile.absolutePath,
+                durationMs = metadata.durationMs,
+                title = resolvedTitle,
+                format = ext,
+                size = fileSize,
+                waveform = waveform,
+                createdAt = metadata.createdAt ?: fallbackDateTime ?: System.currentTimeMillis()
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun saveImportedAudioBytes(
+        context: Context,
+        bytes: ByteArray,
+        source: String,
+        identifier: String,
+        extension: String = "m4a",
+        fallbackDateTime: Long? = null,
+        title: String? = null
+    ): JournalAudio? {
+        return try {
+            if (bytes.isEmpty()) return null
+            val audioDir = getAudioDir(context)
+            val ext = extension.trimStart('.').ifBlank { "m4a" }
+            val safeId = identifier.replace(Regex("[^a-zA-Z0-9_-]"), "_").take(40)
+            val safeSource = source.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            val fileName = "import_${safeSource}_${safeId}.$ext"
+            val destFile = File(audioDir, fileName)
+
+            if (!destFile.exists() || destFile.length() != bytes.size.toLong()) {
+                destFile.outputStream().use { it.write(bytes) }
+            }
+
+            val fileSize = destFile.length()
+            val metadata = extractMetadata(context, destFile, fallbackDateTime)
+            val resolvedTitle = title ?: metadata.title
+            val waveform = generateFallbackWaveform(destFile, 80)
+            val deterministicAudioId = UUID.nameUUIDFromBytes("${source}_${fileName}".toByteArray(Charsets.UTF_8)).toString()
+
+            JournalAudio(
+                id = deterministicAudioId,
+                path = destFile.absolutePath,
+                durationMs = metadata.durationMs,
+                title = resolvedTitle,
+                format = ext,
+                size = fileSize,
+                waveform = waveform,
+                createdAt = metadata.createdAt ?: fallbackDateTime ?: System.currentTimeMillis()
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     fun deleteAudio(path: String?): Boolean {
         if (path == null) return false
         return try {
