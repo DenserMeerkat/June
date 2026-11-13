@@ -1,6 +1,6 @@
 package com.denser.june.presentation.screens.settings.screens
-import com.denser.june.presentation.components.JuneBackButton
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -10,24 +10,28 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
+import com.denser.june.core.domain.backup.BackupOperationStatus
 import com.denser.june.core.domain.backup.RestoreException
-import com.denser.june.presentation.navigation.AppNavigator
-import com.denser.june.presentation.utils.AsyncOp
 import com.denser.june.presentation.components.JuneAppBarType
-import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.components.JuneBackButton
 import com.denser.june.presentation.components.JuneDialog
+import com.denser.june.presentation.components.JuneTopAppBar
+import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.SettingsVM
-import com.denser.june.presentation.screens.settings.components.SettingSection
 import com.denser.june.presentation.screens.settings.components.*
 import com.denser.june.presentation.screens.settings.components.sheets.*
 import com.denser.june.presentation.screens.settings.tiles.CloudSyncTile
+import com.denser.june.presentation.utils.AsyncOp
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -38,13 +42,18 @@ fun DataSyncSettingsScreen() {
     val state = settingsVM.state.collectAsStateWithLifecycle().value
     val onAction = settingsVM::onAction
     val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val coroutineScope = rememberCoroutineScope()
     val navigator = koinInject<AppNavigator>()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     var showCreateBackupSheet by remember { mutableStateOf(false) }
+    var showSettingsBackupSheet by remember { mutableStateOf(false) }
     var showExportMarkdownSheet by remember { mutableStateOf(false) }
     var showAppImportSheet by remember { mutableStateOf(false) }
     var showRestoreWarning by remember { mutableStateOf<String?>(null) }
+    var pendingSettingsJsonToRestore by remember { mutableStateOf<String?>(null) }
+    var pendingSettingsJsonToSave by remember { mutableStateOf<String?>(null) }
 
     val backupSavedMsg = stringResource(R.string.backup_saved_successfully)
     val markdownExportSavedMsg = stringResource(R.string.markdown_export_saved_successfully)
@@ -68,6 +77,25 @@ fun DataSyncSettingsScreen() {
                     Toast.makeText(context, failedToSaveMsg, Toast.LENGTH_SHORT).show()
                 } finally {
                     onAction(SettingsAction.ResetBackup)
+                }
+            }
+        }
+    }
+
+    val saveSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let { targetUri ->
+            pendingSettingsJsonToSave?.let { jsonString ->
+                try {
+                    context.contentResolver.openOutputStream(targetUri)?.use { output ->
+                        output.write(jsonString.toByteArray(Charsets.UTF_8))
+                    }
+                    Toast.makeText(context, context.getString(R.string.settings_saved_successfully), Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(context, failedToSaveMsg, Toast.LENGTH_SHORT).show()
+                } finally {
+                    pendingSettingsJsonToSave = null
                 }
             }
         }
@@ -98,6 +126,23 @@ fun DataSyncSettingsScreen() {
     ) { uri ->
         uri?.let {
             showRestoreWarning = it.toString()
+        }
+    }
+
+    val restoreSettingsFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { targetUri ->
+            try {
+                val jsonString = context.contentResolver.openInputStream(targetUri)?.use { input ->
+                    input.bufferedReader().use { it.readText() }
+                }
+                if (!jsonString.isNullOrBlank()) {
+                    pendingSettingsJsonToRestore = jsonString
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, invalidBackupMsg, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -195,6 +240,21 @@ fun DataSyncSettingsScreen() {
         }
     }
 
+    LaunchedEffect(state.settingsRestoreState) {
+        when (val settingsState = state.settingsRestoreState) {
+            is AsyncOp.Success -> {
+                Toast.makeText(context, context.getString(R.string.settings_restored_successfully), Toast.LENGTH_SHORT).show()
+                onAction(SettingsAction.ResetSettingsRestore)
+            }
+            is AsyncOp.Error -> {
+                val err = settingsState.message ?: invalidBackupMsg
+                Toast.makeText(context, "Failed to restore settings: $err", Toast.LENGTH_LONG).show()
+                onAction(SettingsAction.ResetSettingsRestore)
+            }
+            else -> Unit
+        }
+    }
+
     LaunchedEffect(state.appImportState) {
         when (val importState = state.appImportState) {
             is AsyncOp.Success -> {
@@ -257,7 +317,16 @@ fun DataSyncSettingsScreen() {
                 SettingSection(
                     title = stringResource(R.string.backup_and_restore)
                 ) {
-                    val isBackingUp = state.exportState.isLoading
+                    BackupRestoreProgressCard(
+                        status = state.backupOperationStatus,
+                        title = stringResource(R.string.backup_progress_title)
+                    )
+                    BackupRestoreProgressCard(
+                        status = state.restoreOperationStatus,
+                        title = stringResource(R.string.restore_progress_title)
+                    )
+
+                    val isBackingUp = state.exportState.isLoading || state.backupOperationStatus is BackupOperationStatus.InProgress
                     SettingsItem(
                         title = stringResource(R.string.action_backup),
                         subtitle = if (isBackingUp) stringResource(R.string.exporting) else null,
@@ -275,12 +344,13 @@ fun DataSyncSettingsScreen() {
                         enabled = !isBackingUp,
                         onClick = {
                             if (!isBackingUp) {
+                                onAction(SettingsAction.LoadPreBackupCounts)
                                 showCreateBackupSheet = true
                             }
                         }
                     )
 
-                    val isRestoring = state.restoreState.isLoading
+                    val isRestoring = state.restoreState.isLoading || state.restoreOperationStatus is BackupOperationStatus.InProgress
                     SettingsItem(
                         title = stringResource(R.string.action_restore),
                         subtitle = if (isRestoring) stringResource(R.string.restoring) else null,
@@ -308,6 +378,21 @@ fun DataSyncSettingsScreen() {
                             }
                         }
                     )
+
+                    SettingsItem(
+                        title = stringResource(R.string.settings_backup),
+                        leadingContent = {
+                            Icon(
+                                painterResource(R.drawable.rule_settings),
+                                null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                            )
+                        },
+                        onClick = {
+                            showSettingsBackupSheet = true
+                        }
+                    )
                 }
             }
             item {
@@ -332,6 +417,7 @@ fun DataSyncSettingsScreen() {
                         enabled = !isExportingMarkdown,
                         onClick = {
                             if (!isExportingMarkdown) {
+                                onAction(SettingsAction.LoadPreBackupCounts)
                                 showExportMarkdownSheet = true
                             }
                         }
@@ -401,8 +487,43 @@ fun DataSyncSettingsScreen() {
     if (showCreateBackupSheet) {
         CreateBackupBottomSheet(
             onDismiss = { showCreateBackupSheet = false },
-            onBackup = { includeMedia, includeAudios, includeSongs ->
-                onAction(SettingsAction.OnExportJournals(includeMedia, includeAudios, includeSongs))
+            counts = state.preBackupCounts,
+            onBackup = { includeMedia, includeAudios, includeSongs, includeSettings, includeMapKeys ->
+                onAction(
+                    SettingsAction.OnExportJournals(
+                        includeMedia = includeMedia,
+                        includeAudios = includeAudios,
+                        includeSongFiles = includeSongs,
+                        includeSettings = includeSettings,
+                        includeMapKeys = includeMapKeys
+                    )
+                )
+            }
+        )
+    }
+
+    if (showSettingsBackupSheet) {
+        SettingsBackupBottomSheet(
+            onDismiss = { showSettingsBackupSheet = false },
+            hasMapKeys = state.hasMapKeys,
+            onSaveFile = { includeMapKeys ->
+                coroutineScope.launch {
+                    settingsVM.exportSettingsJson(includeMapKeys).onSuccess { json ->
+                        pendingSettingsJsonToSave = json
+                        saveSettingsLauncher.launch("June_Settings_${System.currentTimeMillis()}.json")
+                    }.onFailure {
+                        Toast.makeText(context, failedToSaveMsg, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            onRestoreFile = {
+                restoreSettingsFileLauncher.launch(
+                    arrayOf(
+                        "application/json",
+                        "text/plain",
+                        "*/*"
+                    )
+                )
             }
         )
     }
@@ -410,6 +531,7 @@ fun DataSyncSettingsScreen() {
     if (showExportMarkdownSheet) {
         ExportMarkdownBottomSheet(
             onDismiss = { showExportMarkdownSheet = false },
+            counts = state.preBackupCounts,
             onExport = { includeMedia, includeAudios, includeSongs ->
                 onAction(SettingsAction.OnExportMarkdown(includeMedia, includeAudios, includeSongs))
             }
@@ -451,6 +573,29 @@ fun DataSyncSettingsScreen() {
             },
             text = {
                 Text(stringResource(R.string.restore_warning_message))
+            }
+        )
+    }
+
+    if (pendingSettingsJsonToRestore != null) {
+        JuneDialog(
+            onDismissRequest = { pendingSettingsJsonToRestore = null },
+            title = stringResource(R.string.restore_settings_title),
+            icon = R.drawable.settings_24px,
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val json = pendingSettingsJsonToRestore!!
+                        pendingSettingsJsonToRestore = null
+                        onAction(SettingsAction.OnRestoreSettings(json))
+                    }
+                ) { Text(stringResource(R.string.action_restore)) }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { pendingSettingsJsonToRestore = null }) { Text(stringResource(R.string.action_cancel)) }
+            },
+            text = {
+                Text(stringResource(R.string.restore_settings_desc))
             }
         )
     }

@@ -29,8 +29,13 @@ sealed interface SettingsAction {
     data class OnExportJournals(
         val includeMedia: Boolean = true,
         val includeAudios: Boolean = true,
-        val includeSongFiles: Boolean = true
+        val includeSongFiles: Boolean = true,
+        val includeSettings: Boolean = true,
+        val includeMapKeys: Boolean = false
     ) : SettingsAction
+    data object LoadPreBackupCounts : SettingsAction
+    data class OnRestoreSettings(val json: String) : SettingsAction
+    data object ResetSettingsRestore : SettingsAction
     data class OnExportMarkdown(
         val includeMedia: Boolean = true,
         val includeAudios: Boolean = true,

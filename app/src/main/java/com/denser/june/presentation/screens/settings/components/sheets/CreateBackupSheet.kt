@@ -18,16 +18,21 @@ import com.denser.june.presentation.components.JuneConnectedList
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
 
+import com.denser.june.core.domain.backup.PreBackupCounts
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateBackupBottomSheet(
     onDismiss: () -> Unit,
-    onBackup: (includeMedia: Boolean, includeAudios: Boolean, includeSongs: Boolean) -> Unit
+    counts: PreBackupCounts? = null,
+    onBackup: (includeMedia: Boolean, includeAudios: Boolean, includeSongs: Boolean, includeSettings: Boolean, includeMapKeys: Boolean) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var includeMedia by remember { mutableStateOf(true) }
     var includeAudios by remember { mutableStateOf(true) }
     var includeSongs by remember { mutableStateOf(true) }
+    var includeSettings by remember { mutableStateOf(true) }
+    var includeMapKeys by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         sheetState = sheetState,
@@ -58,7 +63,7 @@ fun CreateBackupBottomSheet(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = stringResource(R.string.create_backup_dialog_title),
+                    text = stringResource(R.string.action_backup),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
@@ -92,13 +97,33 @@ fun CreateBackupBottomSheet(
                 targetValue = if (includeSongs) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
                 label = "backupSongsColor"
             )
+            val settingsContainerColor by animateColorAsState(
+                targetValue = if (includeSettings) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
+                label = "backupSettingsColor"
+            )
+            val mapKeysContainerColor by animateColorAsState(
+                targetValue = if (includeMapKeys) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
+                label = "backupMapKeysColor"
+            )
 
+            val showMapKeysToggle = counts?.hasMapKeys == true && includeSettings
             JuneConnectedList(
                 spacing = 2.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
+                val mediaTitle = counts?.let { "${it.totalMedia} " }.orEmpty() + stringResource(R.string.media)
+                val audiosTitle = counts?.let { "${it.totalAudios} " }.orEmpty() + stringResource(R.string.audios)
+                val songsTitle = counts?.let { "${it.totalSongs} " }.orEmpty() + stringResource(R.string.songs)
+
                 JuneConnectedItem(
-                    title = stringResource(R.string.media),
+                    title = mediaTitle,
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(R.drawable.photo_24px),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
                     index = 0,
                     count = 3,
                     containerColor = mediaContainerColor,
@@ -112,7 +137,14 @@ fun CreateBackupBottomSheet(
                     onClick = { includeMedia = !includeMedia }
                 )
                 JuneConnectedItem(
-                    title = stringResource(R.string.audios),
+                    title = audiosTitle,
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(R.drawable.mic_24px),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
                     index = 1,
                     count = 3,
                     containerColor = audiosContainerColor,
@@ -126,7 +158,14 @@ fun CreateBackupBottomSheet(
                     onClick = { includeAudios = !includeAudios }
                 )
                 JuneConnectedItem(
-                    title = stringResource(R.string.songs),
+                    title = songsTitle,
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(R.drawable.music_note_24px),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
                     index = 2,
                     count = 3,
                     containerColor = songsContainerColor,
@@ -139,6 +178,72 @@ fun CreateBackupBottomSheet(
                     },
                     onClick = { includeSongs = !includeSongs }
                 )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val settingsItemCount = if (showMapKeysToggle) 2 else 1
+            JuneConnectedList(
+                spacing = 2.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                JuneConnectedItem(
+                    title = stringResource(R.string.include_settings),
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(R.drawable.rule_settings),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    index = 0,
+                    count = settingsItemCount,
+                    containerColor = settingsContainerColor,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                    trailingContent = {
+                        Checkbox(
+                            checked = includeSettings,
+                            onCheckedChange = null
+                        )
+                    },
+                    onClick = {
+                        val next = !includeSettings
+                        includeSettings = next
+                        if (!next) {
+                            includeMapKeys = false
+                        }
+                    }
+                )
+                if (showMapKeysToggle) {
+                    JuneConnectedItem(
+                        title = stringResource(R.string.include_api_keys),
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(R.drawable.warning_24px),
+                                contentDescription = null,
+                                tint = if (includeSettings) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        },
+                        enabled = includeSettings,
+                        index = 1,
+                        count = settingsItemCount,
+                        containerColor = mapKeysContainerColor,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                        trailingContent = {
+                            Checkbox(
+                                checked = includeMapKeys,
+                                onCheckedChange = null,
+                                enabled = includeSettings
+                            )
+                        },
+                        onClick = {
+                            if (includeSettings) {
+                                includeMapKeys = !includeMapKeys
+                            }
+                        }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -156,7 +261,7 @@ fun CreateBackupBottomSheet(
                 JuneFloatingAction(
                     onClick = {
                         onDismiss()
-                        onBackup(includeMedia, includeAudios, includeSongs)
+                        onBackup(includeMedia, includeAudios, includeSongs, includeSettings, includeMapKeys)
                     },
                     label = stringResource(R.string.action_backup),
                     icon = { Icon(painterResource(R.drawable.check_24px), contentDescription = null) }
@@ -170,6 +275,7 @@ fun CreateBackupBottomSheet(
 @Composable
 fun ExportMarkdownBottomSheet(
     onDismiss: () -> Unit,
+    counts: PreBackupCounts?,
     onExport: (includeMedia: Boolean, includeAudios: Boolean, includeSongs: Boolean) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -245,8 +351,19 @@ fun ExportMarkdownBottomSheet(
                 spacing = 2.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
+                val mediaTitle = counts?.let { "${it.totalMedia} " }.orEmpty() + stringResource(R.string.media)
+                val audiosTitle = counts?.let { "${it.totalAudios} " }.orEmpty() + stringResource(R.string.audios)
+                val songsTitle = counts?.let { "${it.totalSongs} " }.orEmpty() + stringResource(R.string.songs)
+
                 JuneConnectedItem(
-                    title = stringResource(R.string.media),
+                    title = mediaTitle,
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(R.drawable.photo_24px),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
                     index = 0,
                     count = 3,
                     containerColor = mediaContainerColor,
@@ -260,7 +377,14 @@ fun ExportMarkdownBottomSheet(
                     onClick = { includeMedia = !includeMedia }
                 )
                 JuneConnectedItem(
-                    title = stringResource(R.string.audios),
+                    title = audiosTitle,
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(R.drawable.mic_24px),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
                     index = 1,
                     count = 3,
                     containerColor = audiosContainerColor,
@@ -274,7 +398,14 @@ fun ExportMarkdownBottomSheet(
                     onClick = { includeAudios = !includeAudios }
                 )
                 JuneConnectedItem(
-                    title = stringResource(R.string.songs),
+                    title = songsTitle,
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(R.drawable.music_note_24px),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
                     index = 2,
                     count = 3,
                     containerColor = songsContainerColor,

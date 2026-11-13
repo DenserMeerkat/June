@@ -7,9 +7,11 @@ import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.preferences.ThemePreferences
 import com.denser.june.core.domain.preferences.FontPreferences
+import com.denser.june.core.domain.backup.BackupCoordinator
 import com.denser.june.core.domain.backup.ExportRepo
 import com.denser.june.core.domain.backup.MarkdownImportRepo
 import com.denser.june.core.domain.backup.RestoreRepo
+import com.denser.june.core.domain.backup.SettingsBackupRepo
 import com.denser.june.core.domain.importers.AppImportRepo
 import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.presentation.utils.AsyncOp
@@ -42,10 +44,44 @@ class SettingsVM(
     private val restoreRepo: RestoreRepo,
     private val markdownImportRepo: MarkdownImportRepo,
     private val appImportRepo: AppImportRepo,
-    private val billingHandler: BillingHandler
+    private val billingHandler: BillingHandler,
+    private val backupCoordinator: BackupCoordinator,
+    private val settingsBackupRepo: SettingsBackupRepo
 ) : ViewModel() {
 
     private val _localState = MutableStateFlow(SettingsState())
+
+    init {
+        viewModelScope.launch {
+            backupCoordinator.backupStatus.collect { status ->
+                _localState.update { it.copy(backupOperationStatus = status) }
+            }
+        }
+        viewModelScope.launch {
+            backupCoordinator.restoreStatus.collect { status ->
+                _localState.update { it.copy(restoreOperationStatus = status) }
+            }
+        }
+        viewModelScope.launch {
+            settingsBackupRepo.hasExportableMapKeys().collect { hasKeys ->
+                _localState.update { it.copy(hasMapKeys = hasKeys) }
+            }
+        }
+        viewModelScope.launch {
+            loadPreBackupCounts()
+        }
+    }
+
+    private suspend fun loadPreBackupCounts() {
+        val counts = runCatching { backupCoordinator.getPreBackupCounts() }.getOrNull()
+        if (counts != null) {
+            _localState.update { it.copy(preBackupCounts = counts) }
+        }
+    }
+
+    suspend fun exportSettingsJson(includeMapKeys: Boolean): Result<String> {
+        return settingsBackupRepo.exportSettingsJson(includeMapKeys)
+    }
 
     val state = combine<Any?, SettingsState>(
         listOf(
@@ -140,14 +176,21 @@ class SettingsVM(
                     }
                 }
 
+                SettingsAction.LoadPreBackupCounts -> {
+                    loadPreBackupCounts()
+                }
+
                 is SettingsAction.OnExportJournals -> {
                     _localState.update { it.copy(exportState = AsyncOp.Loading) }
-                    val result = exportRepo.exportData(
+                    backupCoordinator.startBackup(
                         includeMedia = action.includeMedia,
                         includeAudios = action.includeAudios,
-                        includeSongFiles = action.includeSongFiles
-                    )
-                    _localState.update { it.copy(exportState = result.toAsyncOp()) }
+                        includeSongFiles = action.includeSongFiles,
+                        includeSettings = action.includeSettings,
+                        includeMapKeys = action.includeMapKeys
+                    ) { result ->
+                        _localState.update { it.copy(exportState = result.toAsyncOp()) }
+                    }
                 }
 
                 is SettingsAction.OnExportMarkdown -> {
@@ -162,9 +205,21 @@ class SettingsVM(
 
                 is SettingsAction.OnRestoreJournals -> {
                     _localState.update { it.copy(restoreState = AsyncOp.Loading) }
-                    val result = restoreRepo.restoreData(action.path)
-                    _localState.update { it.copy(restoreState = result.toAsyncOp()) }
+                    backupCoordinator.startRestore(action.path) { result ->
+                        _localState.update { it.copy(restoreState = result.map {}.toAsyncOp()) }
+                    }
                 }
+
+                is SettingsAction.OnRestoreSettings -> {
+                    _localState.update { it.copy(settingsRestoreState = AsyncOp.Loading) }
+                    val result = settingsBackupRepo.restoreSettingsJson(action.json)
+                    _localState.update { it.copy(settingsRestoreState = result.toAsyncOp()) }
+                }
+
+                SettingsAction.ResetSettingsRestore -> _localState.update {
+                    it.copy(settingsRestoreState = AsyncOp.Idle)
+                }
+
                 is SettingsAction.OnImportMarkdownFiles -> {
                     _localState.update { it.copy(importMarkdownState = AsyncOp.Loading) }
                     val result = markdownImportRepo.importMarkdownFiles(action.uris)
@@ -186,14 +241,19 @@ class SettingsVM(
                 SettingsAction.ResetAppImport -> _localState.update {
                     it.copy(appImportState = AsyncOp.Idle)
                 }
-                SettingsAction.ResetBackup -> _localState.update {
-                    it.copy(
-                        restoreState = AsyncOp.Idle,
-                        exportState = AsyncOp.Idle,
-                        exportMarkdownState = AsyncOp.Idle,
-                        importMarkdownState = AsyncOp.Idle,
-                        appImportState = AsyncOp.Idle
-                    )
+                SettingsAction.ResetBackup -> {
+                    backupCoordinator.resetBackupStatus()
+                    backupCoordinator.resetRestoreStatus()
+                    _localState.update {
+                        it.copy(
+                            restoreState = AsyncOp.Idle,
+                            exportState = AsyncOp.Idle,
+                            exportMarkdownState = AsyncOp.Idle,
+                            importMarkdownState = AsyncOp.Idle,
+                            appImportState = AsyncOp.Idle,
+                            settingsRestoreState = AsyncOp.Idle
+                        )
+                    }
                 }
                 is SettingsAction.OnSeedColorChange -> themePrefs.updateSeedColor(action.color)
                 is SettingsAction.OnAmoledSwitch -> themePrefs.updateAmoledPref(action.amoled)

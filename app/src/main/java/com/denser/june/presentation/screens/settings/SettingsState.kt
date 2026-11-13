@@ -2,6 +2,8 @@ package com.denser.june.presentation.screens.settings
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import com.denser.june.core.domain.backup.BackupOperationStatus
+import com.denser.june.core.domain.backup.PreBackupCounts
 import com.denser.june.core.domain.importers.ImportSummary
 import com.denser.june.core.domain.model.AppTheme
 import com.denser.june.core.domain.model.enums.LockType
@@ -51,4 +53,9 @@ data class SettingsState(
     val videoCompressionQuality: Int = 1080,
     val isCompressAudioEnabled: Boolean = false,
     val audioCompressionQuality: Int = 128,
+    val preBackupCounts: PreBackupCounts? = null,
+    val backupOperationStatus: BackupOperationStatus = BackupOperationStatus.Idle,
+    val restoreOperationStatus: BackupOperationStatus = BackupOperationStatus.Idle,
+    val hasMapKeys: Boolean = false,
+    val settingsRestoreState: AsyncOp<Unit> = AsyncOp.Idle
 )
