@@ -39,7 +39,7 @@ import com.denser.june.presentation.screens.home.tags.components.DeleteTagDialog
 import com.denser.june.presentation.screens.home.tags.components.FilterBottomSheet
 import com.denser.june.presentation.screens.home.tags.components.FilterFab
 import com.denser.june.presentation.screens.home.tags.components.RenameTagDialog
-import com.denser.june.presentation.utils.TagUtils
+import com.denser.june.presentation.utils.TagUiUtils
 import com.denser.june.presentation.utils.UiUtils
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -82,7 +82,7 @@ fun TagsPage() {
 
     val hasAvailableFilters = availableFilters.isNotEmpty() || selectedFilters.isNotEmpty()
     val activeFilterCount = selectedFilters.size
-    val currentCategorySpec = TagUtils.getCategoryUiSpec(selectedCategory)
+    val currentCategorySpec = TagUiUtils.getCategoryUiSpec(selectedCategory)
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -92,7 +92,7 @@ fun TagsPage() {
                 divider = {}
             ) {
                 TagCategory.entries.forEach { category ->
-                    val spec = TagUtils.getCategoryUiSpec(category)
+                    val spec = TagUiUtils.getCategoryUiSpec(category)
                     val isSelected = selectedCategory == category
 
                     Tab(

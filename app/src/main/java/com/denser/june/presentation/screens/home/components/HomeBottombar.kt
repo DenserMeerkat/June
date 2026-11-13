@@ -39,8 +39,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TagCategory
+import com.denser.june.core.utils.TagUtils
 import com.denser.june.presentation.screens.home.HomeTab
-import com.denser.june.presentation.utils.TagUtils
+import com.denser.june.presentation.utils.TagUiUtils
 import kotlinx.coroutines.launch
 
 private data class HomeFabConfig(
@@ -66,7 +67,7 @@ private fun rememberHomeFabConfig(
     }
 
     val (containerColor, contentColor, badgeColor) = if (activeTagCategory != null) {
-        val spec = TagUtils.getCategoryUiSpec(activeTagCategory)
+        val spec = TagUiUtils.getCategoryUiSpec(activeTagCategory)
         Triple(spec.containerColor, contentColorFor(spec.containerColor), spec.color)
     } else {
         Triple(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary, Color.Transparent)

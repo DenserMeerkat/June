@@ -17,9 +17,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TagCategory
+import com.denser.june.core.utils.TagUtils
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
-import com.denser.june.presentation.utils.TagUtils
+import com.denser.june.presentation.utils.TagUiUtils
 
 @Composable
 fun FilterFab(
@@ -173,7 +174,7 @@ private fun FilterCategorySection(
     selectedFilters: Set<String>,
     onToggle: (String) -> Unit
 ) {
-    val spec = TagUtils.getCategoryUiSpec(category)
+    val spec = TagUiUtils.getCategoryUiSpec(category)
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {

@@ -30,7 +30,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TagCategory
 import com.denser.june.presentation.components.JuneDialog
-import com.denser.june.presentation.utils.TagUtils
+import com.denser.june.presentation.utils.TagUiUtils
 
 @Composable
 fun TagInfoDialog(onDismiss: () -> Unit) {
@@ -53,7 +53,7 @@ fun TagInfoDialog(onDismiss: () -> Unit) {
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     TagCategory.entries.forEach { category ->
-                        val spec = TagUtils.getCategoryUiSpec(category)
+                        val spec = TagUiUtils.getCategoryUiSpec(category)
                         TagInfoRow(
                             iconRes = spec.iconRes,
                             prefix = category.prefix,
