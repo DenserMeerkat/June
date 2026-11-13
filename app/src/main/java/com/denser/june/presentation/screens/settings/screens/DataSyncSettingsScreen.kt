@@ -43,6 +43,7 @@ fun DataSyncSettingsScreen() {
 
     var showCreateBackupSheet by remember { mutableStateOf(false) }
     var showExportMarkdownSheet by remember { mutableStateOf(false) }
+    var showAppImportSheet by remember { mutableStateOf(false) }
     var showRestoreWarning by remember { mutableStateOf<String?>(null) }
 
     val backupSavedMsg = stringResource(R.string.backup_saved_successfully)
@@ -109,6 +110,14 @@ fun DataSyncSettingsScreen() {
             } else {
                 onAction(SettingsAction.OnImportMarkdownFiles(uris))
             }
+        }
+    }
+
+    val appImportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            onAction(SettingsAction.OnAppImport(it))
         }
     }
 
@@ -186,6 +195,40 @@ fun DataSyncSettingsScreen() {
         }
     }
 
+    LaunchedEffect(state.appImportState) {
+        when (val importState = state.appImportState) {
+            is AsyncOp.Success -> {
+                val summary = importState.data
+                val countMsg = context.getString(
+                    R.string.app_import_summary_success,
+                    summary.importedJournals,
+                    summary.updatedJournals,
+                    summary.mediaExtracted,
+                    summary.audiosExtracted
+                )
+                val finalMsg = if (summary.versionWarning != null) {
+                    "${summary.versionWarning}\n$countMsg"
+                } else {
+                    countMsg
+                }
+                Toast.makeText(context, finalMsg, Toast.LENGTH_LONG).show()
+                onAction(SettingsAction.ResetAppImport)
+            }
+
+            is AsyncOp.Error -> {
+                val err = importState.message ?: context.getString(R.string.invalid_or_corrupted_backup_file)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.app_import_failed, err),
+                    Toast.LENGTH_LONG
+                ).show()
+                onAction(SettingsAction.ResetAppImport)
+            }
+
+            else -> Unit
+        }
+    }
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -217,12 +260,13 @@ fun DataSyncSettingsScreen() {
                     val isBackingUp = state.exportState.isLoading
                     SettingsItem(
                         title = stringResource(R.string.action_backup),
-                        subtitle = if (isBackingUp) stringResource(R.string.exporting) else stringResource(R.string.create_backup_desc),
+                        subtitle = if (isBackingUp) stringResource(R.string.exporting) else null,
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.upload_24px),
                                 null,
-                                tint = MaterialTheme.colorScheme.secondary
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                             )
                         },
                         trailingContent = if (isBackingUp) {
@@ -239,12 +283,13 @@ fun DataSyncSettingsScreen() {
                     val isRestoring = state.restoreState.isLoading
                     SettingsItem(
                         title = stringResource(R.string.action_restore),
-                        subtitle = if (isRestoring) stringResource(R.string.restoring) else stringResource(R.string.restore_backup_desc),
+                        subtitle = if (isRestoring) stringResource(R.string.restoring) else null,
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.download_24px),
                                 null,
-                                tint = MaterialTheme.colorScheme.secondary
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                             )
                         },
                         trailingContent = if (isRestoring) {
@@ -272,12 +317,13 @@ fun DataSyncSettingsScreen() {
                     val isExportingMarkdown = state.exportMarkdownState.isLoading
                     SettingsItem(
                         title = stringResource(R.string.export_markdown_archive),
-                        subtitle = if (isExportingMarkdown) stringResource(R.string.exporting) else stringResource(R.string.export_markdown_archive_desc),
+                        subtitle = if (isExportingMarkdown) stringResource(R.string.exporting) else null,
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.file_save_24px),
                                 null,
-                                tint = MaterialTheme.colorScheme.secondary
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                             )
                         },
                         trailingContent = if (isExportingMarkdown) {
@@ -294,12 +340,13 @@ fun DataSyncSettingsScreen() {
                     val isImportingMarkdown = state.importMarkdownState.isLoading
                     SettingsItem(
                         title = stringResource(R.string.import_markdown),
-                        subtitle = if (isImportingMarkdown) stringResource(R.string.restoring) else stringResource(R.string.import_markdown_desc),
+                        subtitle = if (isImportingMarkdown) stringResource(R.string.restoring) else null,
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.folder_open_24px),
                                 null,
-                                tint = MaterialTheme.colorScheme.secondary
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                             )
                         },
                         trailingContent = if (isImportingMarkdown) {
@@ -320,6 +367,29 @@ fun DataSyncSettingsScreen() {
                             }
                         }
                     )
+
+                    val isImportingApp = state.appImportState.isLoading
+                    SettingsItem(
+                        title = stringResource(R.string.import_other_apps),
+                        subtitle = if (isImportingApp) stringResource(R.string.restoring) else null,
+                        leadingContent = {
+                            Icon(
+                                painterResource(R.drawable.book_5_24px),
+                                null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                            )
+                        },
+                        trailingContent = if (isImportingApp) {
+                            { CircularWavyProgressIndicator(modifier = Modifier.size(20.dp)) }
+                        } else null,
+                        enabled = !isImportingApp,
+                        onClick = {
+                            if (!isImportingApp) {
+                                showAppImportSheet = true
+                            }
+                        }
+                    )
                 }
             }
             item {
@@ -331,8 +401,8 @@ fun DataSyncSettingsScreen() {
     if (showCreateBackupSheet) {
         CreateBackupBottomSheet(
             onDismiss = { showCreateBackupSheet = false },
-            onBackup = { includeMedia ->
-                onAction(SettingsAction.OnExportJournals(includeMedia))
+            onBackup = { includeMedia, includeAudios, includeSongs ->
+                onAction(SettingsAction.OnExportJournals(includeMedia, includeAudios, includeSongs))
             }
         )
     }
@@ -340,8 +410,24 @@ fun DataSyncSettingsScreen() {
     if (showExportMarkdownSheet) {
         ExportMarkdownBottomSheet(
             onDismiss = { showExportMarkdownSheet = false },
-            onExport = { includeMedia ->
-                onAction(SettingsAction.OnExportMarkdown(includeMedia))
+            onExport = { includeMedia, includeAudios, includeSongs ->
+                onAction(SettingsAction.OnExportMarkdown(includeMedia, includeAudios, includeSongs))
+            }
+        )
+    }
+
+    if (showAppImportSheet) {
+        AppImportSheet(
+            onDismiss = { showAppImportSheet = false },
+            onSelectFile = {
+                appImportLauncher.launch(
+                    arrayOf(
+                        "application/zip",
+                        "application/json",
+                        "application/octet-stream",
+                        "*/*"
+                    )
+                )
             }
         )
     }

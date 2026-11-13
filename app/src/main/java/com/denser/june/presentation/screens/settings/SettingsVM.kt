@@ -10,6 +10,7 @@ import com.denser.june.core.domain.preferences.FontPreferences
 import com.denser.june.core.domain.backup.ExportRepo
 import com.denser.june.core.domain.backup.MarkdownImportRepo
 import com.denser.june.core.domain.backup.RestoreRepo
+import com.denser.june.core.domain.importers.AppImportRepo
 import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.presentation.utils.AsyncOp
 import com.denser.june.presentation.utils.toAsyncOp
@@ -40,6 +41,7 @@ class SettingsVM(
     private val exportRepo: ExportRepo,
     private val restoreRepo: RestoreRepo,
     private val markdownImportRepo: MarkdownImportRepo,
+    private val appImportRepo: AppImportRepo,
     private val billingHandler: BillingHandler
 ) : ViewModel() {
 
@@ -140,13 +142,21 @@ class SettingsVM(
 
                 is SettingsAction.OnExportJournals -> {
                     _localState.update { it.copy(exportState = AsyncOp.Loading) }
-                    val result = exportRepo.exportData(includeMedia = action.includeMedia, includeSongFiles = action.includeMedia)
+                    val result = exportRepo.exportData(
+                        includeMedia = action.includeMedia,
+                        includeAudios = action.includeAudios,
+                        includeSongFiles = action.includeSongFiles
+                    )
                     _localState.update { it.copy(exportState = result.toAsyncOp()) }
                 }
 
                 is SettingsAction.OnExportMarkdown -> {
                     _localState.update { it.copy(exportMarkdownState = AsyncOp.Loading) }
-                    val result = exportRepo.exportAsMarkdown(includeMedia = action.includeMedia)
+                    val result = exportRepo.exportAsMarkdown(
+                        includeMedia = action.includeMedia,
+                        includeAudios = action.includeAudios,
+                        includeSongFiles = action.includeSongs
+                    )
                     _localState.update { it.copy(exportMarkdownState = result.toAsyncOp()) }
                 }
 
@@ -168,12 +178,21 @@ class SettingsVM(
                 SettingsAction.ResetMarkdownImport -> _localState.update {
                     it.copy(importMarkdownState = AsyncOp.Idle)
                 }
+                is SettingsAction.OnAppImport -> {
+                    _localState.update { it.copy(appImportState = AsyncOp.Loading) }
+                    val result = appImportRepo.importFromUri(action.uri)
+                    _localState.update { it.copy(appImportState = result.toAsyncOp()) }
+                }
+                SettingsAction.ResetAppImport -> _localState.update {
+                    it.copy(appImportState = AsyncOp.Idle)
+                }
                 SettingsAction.ResetBackup -> _localState.update {
                     it.copy(
                         restoreState = AsyncOp.Idle,
                         exportState = AsyncOp.Idle,
                         exportMarkdownState = AsyncOp.Idle,
-                        importMarkdownState = AsyncOp.Idle
+                        importMarkdownState = AsyncOp.Idle,
+                        appImportState = AsyncOp.Idle
                     )
                 }
                 is SettingsAction.OnSeedColorChange -> themePrefs.updateSeedColor(action.color)

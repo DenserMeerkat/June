@@ -26,11 +26,21 @@ sealed interface SettingsAction {
     data object OnDeleteJournals: SettingsAction
     data object ResetBackup: SettingsAction
     data class OnRestoreJournals(val path: String): SettingsAction
-    data class OnExportJournals(val includeMedia: Boolean = true) : SettingsAction
-    data class OnExportMarkdown(val includeMedia: Boolean = true) : SettingsAction
+    data class OnExportJournals(
+        val includeMedia: Boolean = true,
+        val includeAudios: Boolean = true,
+        val includeSongFiles: Boolean = true
+    ) : SettingsAction
+    data class OnExportMarkdown(
+        val includeMedia: Boolean = true,
+        val includeAudios: Boolean = true,
+        val includeSongs: Boolean = true
+    ) : SettingsAction
     data class OnImportMarkdownFiles(val uris: List<Uri>) : SettingsAction
     data class OnImportMarkdownZip(val uri: Uri) : SettingsAction
     data object ResetMarkdownImport : SettingsAction
+    data class OnAppImport(val uri: Uri) : SettingsAction
+    data object ResetAppImport : SettingsAction
     data class OnAppLockToggle(val enabled: Boolean) : SettingsAction
     data class UpdateLockType(val type: LockType) : SettingsAction
     data class UpdatePinHash(val hash: String?) : SettingsAction

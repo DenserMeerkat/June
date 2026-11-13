@@ -2,6 +2,7 @@ package com.denser.june.presentation.screens.settings
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import com.denser.june.core.domain.importers.ImportSummary
 import com.denser.june.core.domain.model.AppTheme
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.core.domain.model.enums.MapTheme
@@ -21,6 +22,7 @@ data class SettingsState(
     val exportMarkdownState: AsyncOp<File> = AsyncOp.Idle,
     val restoreState: AsyncOp<Unit> = AsyncOp.Idle,
     val importMarkdownState: AsyncOp<Int> = AsyncOp.Idle,
+    val appImportState: AsyncOp<ImportSummary> = AsyncOp.Idle,
     val isAppLockEnabled: Boolean = false,
     val lockType: LockType = LockType.BIOMETRIC,
     val pinHash: String? = null,

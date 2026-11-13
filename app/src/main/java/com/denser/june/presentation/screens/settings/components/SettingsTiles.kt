@@ -324,7 +324,7 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "CLOUD_SYNC",
                 title = stringResource(R.string.cloud_sync),
-                subtitle = { context, _ -> context.getString(R.string.cloud_sync_desc) },
+                subtitle = { _, _ -> null },
                 category = "Sync & Backup",
                 keywords = listOf("cloud", "sync", "google", "drive", "backup", "webdav"),
                 content = { CloudSyncTile() }

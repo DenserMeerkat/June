@@ -8,6 +8,10 @@
     <string name="brand_buy_me_a_coffee" translatable="false">Buy Me a Coffee</string>
     <string name="brand_material_you" translatable="false">Material You</string>
     <string name="brand_email" translatable="false">Email</string>
+    <string name="brand_daily_you" translatable="false">Daily You</string>
+    <string name="brand_diarium" translatable="false">Diarium</string>
+    <string name="brand_day_one" translatable="false">Day One</string>
+    <string name="brand_storypad" translatable="false">StoryPad</string>
     <string name="url_server_placeholder" translatable="false">https://example.com/dav/user/</string>
     <string name="url_web_placeholder" translatable="false">https://example.com</string>
 
@@ -394,8 +398,7 @@
     <string name="data_portability">Export &amp; Import</string>
     <string name="create_backup_desc">Save all journals and media to a backup file</string>
     <string name="create_backup_dialog_title">Backup Data</string>
-    <string name="create_backup_dialog_desc">Creates a complete backup of all journals, media, and songs to restore later.</string>
-    <string name="backup_include_media_desc">Photos, videos, and songs attached to entries</string>
+    <string name="create_backup_sheet_desc">Full app backup to restore anytime in June</string>
     <string name="restore_backup_desc">Restore journals from a backup file</string>
     <string name="backup_format_too_old">Backup format is too old</string>
     <string name="backup_logging">Backup Logging</string>
@@ -412,8 +415,8 @@
     <string name="logging">Logging</string>
     <string name="export_as_markdown">Export as Markdown</string>
     <string name="export_markdown_archive">Export Markdown</string>
+    <string name="export_markdown_sheet_desc">Portable Markdown notes for other apps and viewers</string>
     <string name="export_markdown_archive_desc">Export notes in an open format for easy reading and viewing</string>
-    <string name="export_markdown_dialog_desc">Exports all your entries as Markdown files for offline reading and viewing.</string>
     <string name="export_journal_title">Export Journal</string>
     <string name="export_journal_has_media_desc">This note has media attachments. Choose how you would like to export it:</string>
     <string name="export_option_package_zip">Package (.zip)</string>
@@ -421,12 +424,16 @@
     <string name="export_option_package_zip_desc">Bundles note and media files together for viewing.</string>
     <string name="export_option_clean_text_md">Text note (.md)</string>
     <string name="export_option_clean_text_md_desc">Plain text note without media attachments.</string>
-    <string name="media_options">Media Attachments</string>
-    <string name="include_media">Include media</string>
-    <string name="export_include_media_desc">Photos and videos attached to entries</string>
-    <string name="export_exclude_media_desc">Text only (faster and smaller)</string>
+    <string name="include">Include</string>
+    <string name="songs">Songs</string>
     <string name="import_markdown">Import Markdown</string>
     <string name="import_markdown_desc">Import .md files or a Markdown backup zip</string>
+    <string name="import_other_apps">Import from other apps</string>
+    <string name="app_import_sheet_desc">Select an export file to migrate into June</string>
+    <string name="supported_apps">Supported apps</string>
+    <string name="select_file">Select file</string>
+    <string name="app_import_summary_success">%1$d imported, %2$d updated (%3$d photos, %4$d audios)</string>
+    <string name="app_import_failed">Import failed: %1$s</string>
     <string name="journal_exported_successfully">Journal exported successfully</string>
     <string name="markdown_export_saved_successfully">Markdown export saved successfully</string>
     <string name="markdown_imported_successfully">%1$d journal(s) imported successfully</string>

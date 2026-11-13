@@ -1,5 +1,6 @@
 package com.denser.june.presentation.screens.settings.components.sheets
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -12,6 +13,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
+import com.denser.june.presentation.components.JuneConnectedItem
+import com.denser.june.presentation.components.JuneConnectedList
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
 
@@ -19,10 +22,12 @@ import com.denser.june.presentation.components.JuneFloatingActionBar
 @Composable
 fun CreateBackupBottomSheet(
     onDismiss: () -> Unit,
-    onBackup: (includeMedia: Boolean) -> Unit
+    onBackup: (includeMedia: Boolean, includeAudios: Boolean, includeSongs: Boolean) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var includeMedia by remember { mutableStateOf(true) }
+    var includeAudios by remember { mutableStateOf(true) }
+    var includeSongs by remember { mutableStateOf(true) }
 
     ModalBottomSheet(
         sheetState = sheetState,
@@ -57,44 +62,84 @@ fun CreateBackupBottomSheet(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.create_backup_sheet_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
-            Text(
-                text = stringResource(R.string.create_backup_dialog_desc),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = stringResource(R.string.media_options),
+                text = stringResource(R.string.include),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+
+            val mediaContainerColor by animateColorAsState(
+                targetValue = if (includeMedia) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
+                label = "backupMediaColor"
+            )
+            val audiosContainerColor by animateColorAsState(
+                targetValue = if (includeAudios) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
+                label = "backupAudiosColor"
+            )
+            val songsContainerColor by animateColorAsState(
+                targetValue = if (includeSongs) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
+                label = "backupSongsColor"
+            )
+
+            JuneConnectedList(
+                spacing = 2.dp,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = stringResource(R.string.include_media),
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
+                JuneConnectedItem(
+                    title = stringResource(R.string.media),
+                    index = 0,
+                    count = 3,
+                    containerColor = mediaContainerColor,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                    trailingContent = {
+                        Checkbox(
+                            checked = includeMedia,
+                            onCheckedChange = null
+                        )
+                    },
+                    onClick = { includeMedia = !includeMedia }
                 )
-                Switch(
-                    checked = includeMedia,
-                    onCheckedChange = { includeMedia = it }
+                JuneConnectedItem(
+                    title = stringResource(R.string.audios),
+                    index = 1,
+                    count = 3,
+                    containerColor = audiosContainerColor,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                    trailingContent = {
+                        Checkbox(
+                            checked = includeAudios,
+                            onCheckedChange = null
+                        )
+                    },
+                    onClick = { includeAudios = !includeAudios }
+                )
+                JuneConnectedItem(
+                    title = stringResource(R.string.songs),
+                    index = 2,
+                    count = 3,
+                    containerColor = songsContainerColor,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                    trailingContent = {
+                        Checkbox(
+                            checked = includeSongs,
+                            onCheckedChange = null
+                        )
+                    },
+                    onClick = { includeSongs = !includeSongs }
                 )
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = if (includeMedia) stringResource(R.string.backup_include_media_desc) else stringResource(R.string.export_exclude_media_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -111,7 +156,7 @@ fun CreateBackupBottomSheet(
                 JuneFloatingAction(
                     onClick = {
                         onDismiss()
-                        onBackup(includeMedia)
+                        onBackup(includeMedia, includeAudios, includeSongs)
                     },
                     label = stringResource(R.string.action_backup),
                     icon = { Icon(painterResource(R.drawable.check_24px), contentDescription = null) }
@@ -125,10 +170,12 @@ fun CreateBackupBottomSheet(
 @Composable
 fun ExportMarkdownBottomSheet(
     onDismiss: () -> Unit,
-    onExport: (includeMedia: Boolean) -> Unit
+    onExport: (includeMedia: Boolean, includeAudios: Boolean, includeSongs: Boolean) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var includeMedia by remember { mutableStateOf(true) }
+    var includeAudios by remember { mutableStateOf(true) }
+    var includeSongs by remember { mutableStateOf(true) }
 
     ModalBottomSheet(
         sheetState = sheetState,
@@ -163,44 +210,84 @@ fun ExportMarkdownBottomSheet(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.export_markdown_sheet_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
-            Text(
-                text = stringResource(R.string.export_markdown_dialog_desc),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = stringResource(R.string.media_options),
+                text = stringResource(R.string.include),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+
+            val mediaContainerColor by animateColorAsState(
+                targetValue = if (includeMedia) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
+                label = "backupMediaColor"
+            )
+            val audiosContainerColor by animateColorAsState(
+                targetValue = if (includeAudios) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
+                label = "backupAudiosColor"
+            )
+            val songsContainerColor by animateColorAsState(
+                targetValue = if (includeSongs) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
+                label = "backupSongsColor"
+            )
+
+            JuneConnectedList(
+                spacing = 2.dp,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = stringResource(R.string.include_media),
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
+                JuneConnectedItem(
+                    title = stringResource(R.string.media),
+                    index = 0,
+                    count = 3,
+                    containerColor = mediaContainerColor,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                    trailingContent = {
+                        Checkbox(
+                            checked = includeMedia,
+                            onCheckedChange = null
+                        )
+                    },
+                    onClick = { includeMedia = !includeMedia }
                 )
-                Switch(
-                    checked = includeMedia,
-                    onCheckedChange = { includeMedia = it }
+                JuneConnectedItem(
+                    title = stringResource(R.string.audios),
+                    index = 1,
+                    count = 3,
+                    containerColor = audiosContainerColor,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                    trailingContent = {
+                        Checkbox(
+                            checked = includeAudios,
+                            onCheckedChange = null
+                        )
+                    },
+                    onClick = { includeAudios = !includeAudios }
+                )
+                JuneConnectedItem(
+                    title = stringResource(R.string.songs),
+                    index = 2,
+                    count = 3,
+                    containerColor = songsContainerColor,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                    trailingContent = {
+                        Checkbox(
+                            checked = includeSongs,
+                            onCheckedChange = null
+                        )
+                    },
+                    onClick = { includeSongs = !includeSongs }
                 )
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = if (includeMedia) stringResource(R.string.export_include_media_desc) else stringResource(R.string.export_exclude_media_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -217,7 +304,7 @@ fun ExportMarkdownBottomSheet(
                 JuneFloatingAction(
                     onClick = {
                         onDismiss()
-                        onExport(includeMedia)
+                        onExport(includeMedia, includeAudios, includeSongs)
                     },
                     label = stringResource(R.string.action_export),
                     icon = { Icon(painterResource(R.drawable.check_24px), contentDescription = null) }
