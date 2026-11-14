@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.presentation.components.JuneConnectedItem
 import com.denser.june.presentation.components.JuneConnectedList
+import com.denser.june.presentation.components.JuneCheckboxTile
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
 
@@ -32,8 +33,7 @@ fun SettingsBackupBottomSheet(
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        dragHandle = null
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Column(
             modifier = Modifier
@@ -44,19 +44,9 @@ fun SettingsBackupBottomSheet(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp, bottom = if (hasMapKeys) 16.dp else 24.dp),
+                    .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .width(36.dp)
-                        .height(4.dp)
-                        .background(
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            CircleShape
-                        )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.settings_backup),
                     style = MaterialTheme.typography.headlineSmall,
@@ -64,42 +54,35 @@ fun SettingsBackupBottomSheet(
                 )
             }
 
-            if (hasMapKeys) {
-                val mapKeysColor by animateColorAsState(
-                    targetValue = if (includeMapKeys) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
-                    label = "settingsBackupMapKeysColor"
+            val mapKeysColor by animateColorAsState(
+                targetValue = if (includeMapKeys) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer,
+                label = "settingsBackupMapKeysColor"
+            )
+
+            JuneConnectedList(
+                spacing = 2.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                JuneCheckboxTile(
+                    checked = includeMapKeys,
+                    title = stringResource(R.string.include_api_keys),
+                    onCheckedChange = { includeMapKeys = it },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(R.drawable.warning_24px),
+                            contentDescription = null,
+                            tint = if (hasMapKeys) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    enabled = hasMapKeys,
+                    index = 0,
+                    count = 1,
+                    containerColor = mapKeysColor
                 )
-
-                JuneConnectedList(
-                    spacing = 2.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    JuneConnectedItem(
-                        title = stringResource(R.string.include_api_keys),
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(R.drawable.warning_24px),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        },
-                        index = 0,
-                        count = 1,
-                        containerColor = mapKeysColor,
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                        trailingContent = {
-                            Checkbox(
-                                checked = includeMapKeys,
-                                onCheckedChange = null
-                            )
-                        },
-                        onClick = { includeMapKeys = !includeMapKeys }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             JuneFloatingActionBar(
                 modifier = Modifier.align(Alignment.CenterHorizontally)

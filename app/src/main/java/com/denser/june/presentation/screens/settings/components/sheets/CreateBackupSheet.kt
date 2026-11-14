@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.presentation.components.JuneConnectedItem
 import com.denser.june.presentation.components.JuneConnectedList
+import com.denser.june.presentation.components.JuneCheckboxTile
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
 
@@ -37,8 +38,7 @@ fun CreateBackupBottomSheet(
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        dragHandle = null
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Column(
             modifier = Modifier
@@ -49,19 +49,9 @@ fun CreateBackupBottomSheet(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp, bottom = 16.dp),
+                    .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .width(36.dp)
-                        .height(4.dp)
-                        .background(
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            CircleShape
-                        )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.action_backup),
                     style = MaterialTheme.typography.headlineSmall,
@@ -106,7 +96,6 @@ fun CreateBackupBottomSheet(
                 label = "backupMapKeysColor"
             )
 
-            val showMapKeysToggle = counts?.hasMapKeys == true && includeSettings
             JuneConnectedList(
                 spacing = 2.dp,
                 modifier = Modifier.fillMaxWidth()
@@ -115,8 +104,10 @@ fun CreateBackupBottomSheet(
                 val audiosTitle = counts?.let { "${it.totalAudios} " }.orEmpty() + stringResource(R.string.audios)
                 val songsTitle = counts?.let { "${it.totalSongs} " }.orEmpty() + stringResource(R.string.songs)
 
-                JuneConnectedItem(
+                JuneCheckboxTile(
+                    checked = includeMedia,
                     title = mediaTitle,
+                    onCheckedChange = { includeMedia = it },
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.photo_24px),
@@ -126,18 +117,12 @@ fun CreateBackupBottomSheet(
                     },
                     index = 0,
                     count = 3,
-                    containerColor = mediaContainerColor,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    trailingContent = {
-                        Checkbox(
-                            checked = includeMedia,
-                            onCheckedChange = null
-                        )
-                    },
-                    onClick = { includeMedia = !includeMedia }
+                    containerColor = mediaContainerColor
                 )
-                JuneConnectedItem(
+                JuneCheckboxTile(
+                    checked = includeAudios,
                     title = audiosTitle,
+                    onCheckedChange = { includeAudios = it },
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.mic_24px),
@@ -147,18 +132,12 @@ fun CreateBackupBottomSheet(
                     },
                     index = 1,
                     count = 3,
-                    containerColor = audiosContainerColor,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    trailingContent = {
-                        Checkbox(
-                            checked = includeAudios,
-                            onCheckedChange = null
-                        )
-                    },
-                    onClick = { includeAudios = !includeAudios }
+                    containerColor = audiosContainerColor
                 )
-                JuneConnectedItem(
+                JuneCheckboxTile(
+                    checked = includeSongs,
                     title = songsTitle,
+                    onCheckedChange = { includeSongs = it },
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.music_note_24px),
@@ -168,27 +147,28 @@ fun CreateBackupBottomSheet(
                     },
                     index = 2,
                     count = 3,
-                    containerColor = songsContainerColor,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    trailingContent = {
-                        Checkbox(
-                            checked = includeSongs,
-                            onCheckedChange = null
-                        )
-                    },
-                    onClick = { includeSongs = !includeSongs }
+                    containerColor = songsContainerColor
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val settingsItemCount = if (showMapKeysToggle) 2 else 1
+            val hasMapKeys = counts?.hasMapKeys == true
+            val isMapKeysEnabled = includeSettings && hasMapKeys
+
             JuneConnectedList(
                 spacing = 2.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                JuneConnectedItem(
+                JuneCheckboxTile(
+                    checked = includeSettings,
                     title = stringResource(R.string.include_settings),
+                    onCheckedChange = { next ->
+                        includeSettings = next
+                        if (!next) {
+                            includeMapKeys = false
+                        }
+                    },
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.rule_settings),
@@ -197,53 +177,26 @@ fun CreateBackupBottomSheet(
                         )
                     },
                     index = 0,
-                    count = settingsItemCount,
-                    containerColor = settingsContainerColor,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    trailingContent = {
-                        Checkbox(
-                            checked = includeSettings,
-                            onCheckedChange = null
+                    count = 2,
+                    containerColor = settingsContainerColor
+                )
+                JuneCheckboxTile(
+                    checked = includeMapKeys,
+                    title = stringResource(R.string.include_api_keys),
+                    onCheckedChange = { includeMapKeys = it },
+                    leadingContent = {
+                        Icon(
+                            painter = painterResource(R.drawable.warning_24px),
+                            contentDescription = null,
+                            tint = if (isMapKeysEnabled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                            modifier = Modifier.size(20.dp)
                         )
                     },
-                    onClick = {
-                        val next = !includeSettings
-                        includeSettings = next
-                        if (!next) {
-                            includeMapKeys = false
-                        }
-                    }
+                    enabled = isMapKeysEnabled,
+                    index = 1,
+                    count = 2,
+                    containerColor = mapKeysContainerColor
                 )
-                if (showMapKeysToggle) {
-                    JuneConnectedItem(
-                        title = stringResource(R.string.include_api_keys),
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(R.drawable.warning_24px),
-                                contentDescription = null,
-                                tint = if (includeSettings) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        },
-                        enabled = includeSettings,
-                        index = 1,
-                        count = settingsItemCount,
-                        containerColor = mapKeysContainerColor,
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                        trailingContent = {
-                            Checkbox(
-                                checked = includeMapKeys,
-                                onCheckedChange = null,
-                                enabled = includeSettings
-                            )
-                        },
-                        onClick = {
-                            if (includeSettings) {
-                                includeMapKeys = !includeMapKeys
-                            }
-                        }
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -286,8 +239,7 @@ fun ExportMarkdownBottomSheet(
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        dragHandle = null
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Column(
             modifier = Modifier
@@ -298,19 +250,9 @@ fun ExportMarkdownBottomSheet(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp, bottom = 16.dp),
+                    .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .width(36.dp)
-                        .height(4.dp)
-                        .background(
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            CircleShape
-                        )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.export_markdown_archive),
                     style = MaterialTheme.typography.headlineSmall,
@@ -355,8 +297,10 @@ fun ExportMarkdownBottomSheet(
                 val audiosTitle = counts?.let { "${it.totalAudios} " }.orEmpty() + stringResource(R.string.audios)
                 val songsTitle = counts?.let { "${it.totalSongs} " }.orEmpty() + stringResource(R.string.songs)
 
-                JuneConnectedItem(
+                JuneCheckboxTile(
+                    checked = includeMedia,
                     title = mediaTitle,
+                    onCheckedChange = { includeMedia = it },
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.photo_24px),
@@ -366,18 +310,12 @@ fun ExportMarkdownBottomSheet(
                     },
                     index = 0,
                     count = 3,
-                    containerColor = mediaContainerColor,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    trailingContent = {
-                        Checkbox(
-                            checked = includeMedia,
-                            onCheckedChange = null
-                        )
-                    },
-                    onClick = { includeMedia = !includeMedia }
+                    containerColor = mediaContainerColor
                 )
-                JuneConnectedItem(
+                JuneCheckboxTile(
+                    checked = includeAudios,
                     title = audiosTitle,
+                    onCheckedChange = { includeAudios = it },
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.mic_24px),
@@ -387,18 +325,12 @@ fun ExportMarkdownBottomSheet(
                     },
                     index = 1,
                     count = 3,
-                    containerColor = audiosContainerColor,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    trailingContent = {
-                        Checkbox(
-                            checked = includeAudios,
-                            onCheckedChange = null
-                        )
-                    },
-                    onClick = { includeAudios = !includeAudios }
+                    containerColor = audiosContainerColor
                 )
-                JuneConnectedItem(
+                JuneCheckboxTile(
+                    checked = includeSongs,
                     title = songsTitle,
+                    onCheckedChange = { includeSongs = it },
                     leadingContent = {
                         Icon(
                             painter = painterResource(R.drawable.music_note_24px),
@@ -408,15 +340,7 @@ fun ExportMarkdownBottomSheet(
                     },
                     index = 2,
                     count = 3,
-                    containerColor = songsContainerColor,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    trailingContent = {
-                        Checkbox(
-                            checked = includeSongs,
-                            onCheckedChange = null
-                        )
-                    },
-                    onClick = { includeSongs = !includeSongs }
+                    containerColor = songsContainerColor
                 )
             }
 

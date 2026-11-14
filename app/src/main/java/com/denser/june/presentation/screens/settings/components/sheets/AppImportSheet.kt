@@ -38,8 +38,7 @@ fun AppImportSheet(
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        dragHandle = null
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Column(
             modifier = Modifier
@@ -50,19 +49,9 @@ fun AppImportSheet(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp, bottom = 16.dp),
+                    .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .width(36.dp)
-                        .height(4.dp)
-                        .background(
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                            CircleShape
-                        )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.import_other_apps),
                     style = MaterialTheme.typography.headlineSmall,

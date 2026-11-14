@@ -2,6 +2,7 @@ package com.denser.june.presentation.screens.settings
 
 import android.net.Uri
 import com.denser.june.core.domain.model.FontVariationConfig
+import com.denser.june.core.domain.model.enums.AutoBackupInterval
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.ThemeMode
@@ -69,4 +70,15 @@ sealed interface SettingsAction {
     data class OnVideoQualityChange(val quality: Int) : SettingsAction
     data class OnCompressAudioToggle(val enabled: Boolean) : SettingsAction
     data class OnAudioQualityChange(val quality: Int) : SettingsAction
+    data class OnAutoBackupToggle(val enabled: Boolean) : SettingsAction
+    data class OnAutoBackupFolderSelected(val uri: Uri) : SettingsAction
+    data class OnAutoBackupIntervalChange(val interval: AutoBackupInterval) : SettingsAction
+    data class OnAutoBackupRetentionChange(val count: Int) : SettingsAction
+    data class OnAutoBackupRequireChargingToggle(val require: Boolean) : SettingsAction
+    data class OnAutoBackupIncludeMediaToggle(val include: Boolean) : SettingsAction
+    data class OnAutoBackupIncludeAudiosToggle(val include: Boolean) : SettingsAction
+    data class OnAutoBackupIncludeSongsToggle(val include: Boolean) : SettingsAction
+    data class OnAutoBackupIncludeSettingsToggle(val include: Boolean) : SettingsAction
+    data object OnAutoBackupFolderCleared : SettingsAction
+    data object OnTriggerAutoBackupNow : SettingsAction
 }

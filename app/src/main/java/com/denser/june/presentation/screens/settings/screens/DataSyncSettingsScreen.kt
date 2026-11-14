@@ -1,25 +1,26 @@
 package com.denser.june.presentation.screens.settings.screens
 
-import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.backup.BackupOperationStatus
 import com.denser.june.core.domain.backup.RestoreException
+import com.denser.june.presentation.components.BackupRestoreIndicator
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneBackButton
 import com.denser.june.presentation.components.JuneDialog
@@ -42,12 +43,12 @@ fun DataSyncSettingsScreen() {
     val state = settingsVM.state.collectAsStateWithLifecycle().value
     val onAction = settingsVM::onAction
     val context = LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
     val navigator = koinInject<AppNavigator>()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     var showCreateBackupSheet by remember { mutableStateOf(false) }
+    var showAutoBackupOptionsSheet by remember { mutableStateOf(false) }
     var showSettingsBackupSheet by remember { mutableStateOf(false) }
     var showExportMarkdownSheet by remember { mutableStateOf(false) }
     var showAppImportSheet by remember { mutableStateOf(false) }
@@ -55,8 +56,19 @@ fun DataSyncSettingsScreen() {
     var pendingSettingsJsonToRestore by remember { mutableStateOf<String?>(null) }
     var pendingSettingsJsonToSave by remember { mutableStateOf<String?>(null) }
 
+    val autoBackupFolderLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        uri?.let {
+            onAction(SettingsAction.OnAutoBackupFolderSelected(it))
+            onAction(SettingsAction.OnAutoBackupToggle(true))
+        }
+    }
+
     val backupSavedMsg = stringResource(R.string.backup_saved_successfully)
     val markdownExportSavedMsg = stringResource(R.string.markdown_export_saved_successfully)
+    val settingsSavedMsg = stringResource(R.string.settings_saved_successfully)
+    val settingsRestoredMsg = stringResource(R.string.settings_restored_successfully)
     val failedToSaveMsg = stringResource(R.string.failed_to_save_file)
     val restoreCompleteMsg = stringResource(R.string.restore_complete)
     val invalidBackupMsg = stringResource(R.string.invalid_or_corrupted_backup_file)
@@ -73,7 +85,7 @@ fun DataSyncSettingsScreen() {
                         tempFile.inputStream().use { input -> input.copyTo(output) }
                     }
                     Toast.makeText(context, backupSavedMsg, Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     Toast.makeText(context, failedToSaveMsg, Toast.LENGTH_SHORT).show()
                 } finally {
                     onAction(SettingsAction.ResetBackup)
@@ -91,8 +103,8 @@ fun DataSyncSettingsScreen() {
                     context.contentResolver.openOutputStream(targetUri)?.use { output ->
                         output.write(jsonString.toByteArray(Charsets.UTF_8))
                     }
-                    Toast.makeText(context, context.getString(R.string.settings_saved_successfully), Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
+                    Toast.makeText(context, settingsSavedMsg, Toast.LENGTH_SHORT).show()
+                } catch (_: Exception) {
                     Toast.makeText(context, failedToSaveMsg, Toast.LENGTH_SHORT).show()
                 } finally {
                     pendingSettingsJsonToSave = null
@@ -112,7 +124,7 @@ fun DataSyncSettingsScreen() {
                         tempFile.inputStream().use { input -> input.copyTo(output) }
                     }
                     Toast.makeText(context, markdownExportSavedMsg, Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     Toast.makeText(context, failedToSaveMsg, Toast.LENGTH_SHORT).show()
                 } finally {
                     onAction(SettingsAction.ResetBackup)
@@ -140,7 +152,7 @@ fun DataSyncSettingsScreen() {
                 if (!jsonString.isNullOrBlank()) {
                     pendingSettingsJsonToRestore = jsonString
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 Toast.makeText(context, invalidBackupMsg, Toast.LENGTH_SHORT).show()
             }
         }
@@ -199,17 +211,17 @@ fun DataSyncSettingsScreen() {
             is AsyncOp.Success -> {
                 Toast.makeText(
                     context,
-                    context.getString(R.string.markdown_imported_successfully, importState.data),
+                    context.resources.getString(R.string.markdown_imported_successfully, importState.data),
                     Toast.LENGTH_SHORT
                 ).show()
                 onAction(SettingsAction.ResetMarkdownImport)
             }
 
             is AsyncOp.Error -> {
-                val err = importState.message ?: context.getString(R.string.invalid_or_corrupted_backup_file)
+                val err = importState.message ?: invalidBackupMsg
                 Toast.makeText(
                     context,
-                    context.getString(R.string.markdown_import_failed, err),
+                    context.resources.getString(R.string.markdown_import_failed, err),
                     Toast.LENGTH_LONG
                 ).show()
                 onAction(SettingsAction.ResetMarkdownImport)
@@ -232,7 +244,7 @@ fun DataSyncSettingsScreen() {
                     RestoreException.OldSchema -> oldSchemaMsg
                     else -> restoreState.message ?: invalidBackupMsg
                 }
-                Toast.makeText(context, context.getString(R.string.restore_failed, errorMsg), Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.resources.getString(R.string.restore_failed, errorMsg), Toast.LENGTH_LONG).show()
                 onAction(SettingsAction.ResetBackup)
             }
 
@@ -243,7 +255,7 @@ fun DataSyncSettingsScreen() {
     LaunchedEffect(state.settingsRestoreState) {
         when (val settingsState = state.settingsRestoreState) {
             is AsyncOp.Success -> {
-                Toast.makeText(context, context.getString(R.string.settings_restored_successfully), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, settingsRestoredMsg, Toast.LENGTH_SHORT).show()
                 onAction(SettingsAction.ResetSettingsRestore)
             }
             is AsyncOp.Error -> {
@@ -259,7 +271,7 @@ fun DataSyncSettingsScreen() {
         when (val importState = state.appImportState) {
             is AsyncOp.Success -> {
                 val summary = importState.data
-                val countMsg = context.getString(
+                val countMsg = context.resources.getString(
                     R.string.app_import_summary_success,
                     summary.importedJournals,
                     summary.updatedJournals,
@@ -276,10 +288,10 @@ fun DataSyncSettingsScreen() {
             }
 
             is AsyncOp.Error -> {
-                val err = importState.message ?: context.getString(R.string.invalid_or_corrupted_backup_file)
+                val err = importState.message ?: invalidBackupMsg
                 Toast.makeText(
                     context,
-                    context.getString(R.string.app_import_failed, err),
+                    context.resources.getString(R.string.app_import_failed, err),
                     Toast.LENGTH_LONG
                 ).show()
                 onAction(SettingsAction.ResetAppImport)
@@ -298,6 +310,18 @@ fun DataSyncSettingsScreen() {
                 title = { Text(text = stringResource(R.string.data_and_sync)) },
                 navigationIcon = {
                     JuneBackButton(onClick = { navigator.navigateBack() })
+                },
+                actions = {
+                    BackupRestoreIndicator(
+                        backupStatus = state.backupOperationStatus,
+                        autoBackupStatus = state.autoBackupOperationStatus,
+                        restoreStatus = state.restoreOperationStatus,
+                        isExporting = state.exportState.isLoading,
+                        isRestoring = state.restoreState.isLoading,
+                        isExportingMarkdown = state.exportMarkdownState.isLoading,
+                        isImportingMarkdown = state.importMarkdownState.isLoading,
+                        isAppImporting = state.appImportState.isLoading
+                    )
                 }
             )
         }
@@ -317,19 +341,9 @@ fun DataSyncSettingsScreen() {
                 SettingSection(
                     title = stringResource(R.string.backup_and_restore)
                 ) {
-                    BackupRestoreProgressCard(
-                        status = state.backupOperationStatus,
-                        title = stringResource(R.string.backup_progress_title)
-                    )
-                    BackupRestoreProgressCard(
-                        status = state.restoreOperationStatus,
-                        title = stringResource(R.string.restore_progress_title)
-                    )
-
                     val isBackingUp = state.exportState.isLoading || state.backupOperationStatus is BackupOperationStatus.InProgress
                     SettingsItem(
                         title = stringResource(R.string.action_backup),
-                        subtitle = if (isBackingUp) stringResource(R.string.exporting) else null,
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.upload_24px),
@@ -353,7 +367,6 @@ fun DataSyncSettingsScreen() {
                     val isRestoring = state.restoreState.isLoading || state.restoreOperationStatus is BackupOperationStatus.InProgress
                     SettingsItem(
                         title = stringResource(R.string.action_restore),
-                        subtitle = if (isRestoring) stringResource(R.string.restoring) else null,
                         leadingContent = {
                             Icon(
                                 painterResource(R.drawable.download_24px),
@@ -391,6 +404,48 @@ fun DataSyncSettingsScreen() {
                         },
                         onClick = {
                             showSettingsBackupSheet = true
+                        }
+                    )
+
+                    SettingsItem(
+                        title = stringResource(R.string.auto_backup),
+                        leadingContent = {
+                            Icon(
+                                painterResource(R.drawable.settings_backup_restore),
+                                null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                            )
+                        },
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        trailingContent = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                VerticalDivider(
+                                    modifier = Modifier
+                                        .height(20.dp)
+                                        .padding(start = 6.dp, end = 14.dp)
+                                        .clip(CircleShape),
+                                    thickness = 2.dp,
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.8f)
+                                )
+                                Switch(
+                                    checked = state.isAutoBackupEnabled,
+                                    onCheckedChange = { enabled ->
+                                        if (enabled) {
+                                            if (state.autoBackupFolderUri == null) {
+                                                autoBackupFolderLauncher.launch(null)
+                                            } else {
+                                                onAction(SettingsAction.OnAutoBackupToggle(true))
+                                            }
+                                        } else {
+                                            onAction(SettingsAction.OnAutoBackupToggle(false))
+                                        }
+                                    }
+                                )
+                            }
+                        },
+                        onClick = {
+                            showAutoBackupOptionsSheet = true
                         }
                     )
                 }
@@ -498,6 +553,52 @@ fun DataSyncSettingsScreen() {
                         includeMapKeys = includeMapKeys
                     )
                 )
+            }
+        )
+    }
+
+    if (showAutoBackupOptionsSheet) {
+        AutoBackupOptionsBottomSheet(
+            onDismiss = { showAutoBackupOptionsSheet = false },
+            folderName = state.autoBackupFolderName,
+            onSelectFolder = {
+                autoBackupFolderLauncher.launch(null)
+            },
+            onClearFolder = {
+                onAction(SettingsAction.OnAutoBackupFolderCleared)
+            },
+            interval = state.autoBackupInterval,
+            retentionCount = state.autoBackupRetentionCount,
+            requireCharging = state.autoBackupRequireCharging,
+            includeMedia = state.autoBackupIncludeMedia,
+            includeAudios = state.autoBackupIncludeAudios,
+            includeSongs = state.autoBackupIncludeSongs,
+            includeSettings = state.autoBackupIncludeSettings,
+            onTriggerBackupNow = {
+                onAction(SettingsAction.OnTriggerAutoBackupNow)
+            },
+            onSave = { interval, retention, charging, media, audios, songs, settings ->
+                if (interval != state.autoBackupInterval) {
+                    onAction(SettingsAction.OnAutoBackupIntervalChange(interval))
+                }
+                if (retention != state.autoBackupRetentionCount) {
+                    onAction(SettingsAction.OnAutoBackupRetentionChange(retention))
+                }
+                if (charging != state.autoBackupRequireCharging) {
+                    onAction(SettingsAction.OnAutoBackupRequireChargingToggle(charging))
+                }
+                if (media != state.autoBackupIncludeMedia) {
+                    onAction(SettingsAction.OnAutoBackupIncludeMediaToggle(media))
+                }
+                if (audios != state.autoBackupIncludeAudios) {
+                    onAction(SettingsAction.OnAutoBackupIncludeAudiosToggle(audios))
+                }
+                if (songs != state.autoBackupIncludeSongs) {
+                    onAction(SettingsAction.OnAutoBackupIncludeSongsToggle(songs))
+                }
+                if (settings != state.autoBackupIncludeSettings) {
+                    onAction(SettingsAction.OnAutoBackupIncludeSettingsToggle(settings))
+                }
             }
         )
     }

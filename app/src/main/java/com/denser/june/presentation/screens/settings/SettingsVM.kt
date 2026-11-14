@@ -1,7 +1,15 @@
 package com.denser.june.presentation.screens.settings
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.denser.june.core.domain.backup.AutoBackupManager
+import com.denser.june.core.domain.backup.AutoBackupScheduler
+import com.denser.june.core.domain.model.enums.AutoBackupInterval
+import com.denser.june.core.domain.preferences.AutoBackupPreferences
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.preferences.PrivacyPreferences
@@ -28,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,7 +55,11 @@ class SettingsVM(
     private val appImportRepo: AppImportRepo,
     private val billingHandler: BillingHandler,
     private val backupCoordinator: BackupCoordinator,
-    private val settingsBackupRepo: SettingsBackupRepo
+    private val settingsBackupRepo: SettingsBackupRepo,
+    private val autoBackupPrefs: AutoBackupPreferences,
+    private val autoBackupScheduler: AutoBackupScheduler,
+    private val autoBackupManager: AutoBackupManager,
+    private val context: Context
 ) : ViewModel() {
 
     private val _localState = MutableStateFlow(SettingsState())
@@ -55,6 +68,11 @@ class SettingsVM(
         viewModelScope.launch {
             backupCoordinator.backupStatus.collect { status ->
                 _localState.update { it.copy(backupOperationStatus = status) }
+            }
+        }
+        viewModelScope.launch {
+            autoBackupManager.status.collect { status ->
+                _localState.update { it.copy(autoBackupOperationStatus = status) }
             }
         }
         viewModelScope.launch {
@@ -70,6 +88,23 @@ class SettingsVM(
         viewModelScope.launch {
             loadPreBackupCounts()
         }
+        viewModelScope.launch {
+            val isEnabled = autoBackupPrefs.isAutoBackupEnabled().first()
+            if (isEnabled) {
+                val interval = autoBackupPrefs.getInterval().first()
+                val charging = autoBackupPrefs.isRequireCharging().first()
+                autoBackupScheduler.schedule(interval, charging)
+            }
+        }
+    }
+
+    private fun getFolderDisplayName(uriString: String?): String? {
+        if (uriString.isNullOrBlank()) return null
+        return runCatching {
+            val uri = Uri.parse(uriString)
+            val doc = DocumentFile.fromTreeUri(context, uri)
+            doc?.name?.takeIf { it.isNotBlank() } ?: Uri.decode(uri.lastPathSegment ?: uriString)
+        }.getOrNull() ?: uriString
     }
 
     private suspend fun loadPreBackupCounts() {
@@ -118,7 +153,17 @@ class SettingsVM(
             journalPrefs.getAudioCompressionQuality(),
             privacyPrefs.getPasswordHashFlow(),
             privacyPrefs.getPatternHashFlow(),
-            billingHandler.isPlus
+            billingHandler.isPlus,
+            autoBackupPrefs.isAutoBackupEnabled(),
+            autoBackupPrefs.getFolderUri(),
+            autoBackupPrefs.getInterval(),
+            autoBackupPrefs.getRetentionCount(),
+            autoBackupPrefs.isRequireCharging(),
+            autoBackupPrefs.getLastAutoBackupTime(),
+            autoBackupPrefs.getIncludeMedia(),
+            autoBackupPrefs.getIncludeAudios(),
+            autoBackupPrefs.getIncludeSongs(),
+            autoBackupPrefs.getIncludeSettings()
         )
     ) { array ->
         val local = array[0] as SettingsState
@@ -150,6 +195,17 @@ class SettingsVM(
             videoCompressionQuality = array[28] as Int,
             isCompressAudioEnabled = array[29] as Boolean,
             audioCompressionQuality = array[30] as Int,
+            isAutoBackupEnabled = array[34] as Boolean,
+            autoBackupFolderUri = array[35] as String?,
+            autoBackupFolderName = getFolderDisplayName(array[35] as String?),
+            autoBackupInterval = array[36] as AutoBackupInterval,
+            autoBackupRetentionCount = array[37] as Int,
+            autoBackupRequireCharging = array[38] as Boolean,
+            autoBackupLastTime = array[39] as Long,
+            autoBackupIncludeMedia = array[40] as Boolean,
+            autoBackupIncludeAudios = array[41] as Boolean,
+            autoBackupIncludeSongs = array[42] as Boolean,
+            autoBackupIncludeSettings = array[43] as Boolean,
 
             appTheme = local.appTheme.copy(
                 seedColor = array[1] as Int,
@@ -304,6 +360,81 @@ class SettingsVM(
                 is SettingsAction.OnVideoQualityChange -> journalPrefs.setVideoCompressionQuality(action.quality)
                 is SettingsAction.OnCompressAudioToggle -> journalPrefs.setCompressAudioEnabled(action.enabled)
                 is SettingsAction.OnAudioQualityChange -> journalPrefs.setAudioCompressionQuality(action.quality)
+                is SettingsAction.OnAutoBackupToggle -> {
+                    if (action.enabled) {
+                        val folderUri = autoBackupPrefs.getFolderUri().first()
+                        if (!folderUri.isNullOrBlank()) {
+                            autoBackupPrefs.setAutoBackupEnabled(true)
+                            val interval = autoBackupPrefs.getInterval().first()
+                            val charging = autoBackupPrefs.isRequireCharging().first()
+                            autoBackupScheduler.schedule(interval, charging)
+                        }
+                    } else {
+                        autoBackupPrefs.setAutoBackupEnabled(false)
+                        autoBackupScheduler.cancel()
+                    }
+                }
+                is SettingsAction.OnAutoBackupFolderSelected -> {
+                    val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    runCatching {
+                        context.contentResolver.takePersistableUriPermission(action.uri, flags)
+                    }
+                    autoBackupPrefs.setFolderUri(action.uri.toString())
+                    val isEnabled = autoBackupPrefs.isAutoBackupEnabled().first()
+                    if (isEnabled) {
+                        val interval = autoBackupPrefs.getInterval().first()
+                        val charging = autoBackupPrefs.isRequireCharging().first()
+                        autoBackupScheduler.schedule(interval, charging)
+                    }
+                }
+                is SettingsAction.OnAutoBackupIntervalChange -> {
+                    autoBackupPrefs.setInterval(action.interval)
+                    val isEnabled = autoBackupPrefs.isAutoBackupEnabled().first()
+                    if (isEnabled) {
+                        val charging = autoBackupPrefs.isRequireCharging().first()
+                        autoBackupScheduler.schedule(action.interval, charging)
+                    }
+                }
+                is SettingsAction.OnAutoBackupRetentionChange -> {
+                    autoBackupPrefs.setRetentionCount(action.count)
+                }
+                is SettingsAction.OnAutoBackupRequireChargingToggle -> {
+                    autoBackupPrefs.setRequireCharging(action.require)
+                    val isEnabled = autoBackupPrefs.isAutoBackupEnabled().first()
+                    if (isEnabled) {
+                        val interval = autoBackupPrefs.getInterval().first()
+                        autoBackupScheduler.schedule(interval, action.require)
+                    }
+                }
+                is SettingsAction.OnAutoBackupIncludeMediaToggle -> {
+                    autoBackupPrefs.setIncludeMedia(action.include)
+                }
+                is SettingsAction.OnAutoBackupIncludeAudiosToggle -> {
+                    autoBackupPrefs.setIncludeAudios(action.include)
+                }
+                is SettingsAction.OnAutoBackupIncludeSongsToggle -> {
+                    autoBackupPrefs.setIncludeSongs(action.include)
+                }
+                is SettingsAction.OnAutoBackupIncludeSettingsToggle -> {
+                    autoBackupPrefs.setIncludeSettings(action.include)
+                }
+                SettingsAction.OnAutoBackupFolderCleared -> {
+                    val oldUriString = autoBackupPrefs.getFolderUri().first()
+                    if (!oldUriString.isNullOrBlank()) {
+                        runCatching {
+                            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            context.contentResolver.releasePersistableUriPermission(Uri.parse(oldUriString), flags)
+                        }
+                    }
+                    autoBackupPrefs.setFolderUri(null)
+                    autoBackupPrefs.setAutoBackupEnabled(false)
+                    autoBackupScheduler.cancel()
+                }
+                SettingsAction.OnTriggerAutoBackupNow -> {
+                    viewModelScope.launch {
+                        autoBackupManager.performAutoBackup(ignoreEnabledCheck = true)
+                    }
+                }
             }
         }
     }
