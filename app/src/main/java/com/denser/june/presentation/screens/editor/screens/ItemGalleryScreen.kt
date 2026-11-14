@@ -40,6 +40,7 @@ import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.screens.editor.EditorAction
 import com.denser.june.presentation.screens.editor.components.dialogs.AddLocationDialog
+import com.denser.june.presentation.screens.editor.components.JournalAudioItem
 import com.denser.june.presentation.screens.editor.components.JournalMapItem
 import com.denser.june.presentation.components.journal.JournalMediaItem
 import com.denser.june.presentation.screens.editor.components.JournalSongItem
@@ -67,7 +68,7 @@ fun ItemGalleryScreen(
 
     var showLocationDialog by remember { mutableStateOf(false) }
 
-    val mediaOperations = remember(state.images, state.songDetails, state.journalId, state.dateTime) {
+    val mediaOperations = remember(state.images, state.songDetails, state.audios, state.journalId, state.dateTime) {
         MediaOperations(
             onRemoveMedia = { viewModel.onAction(EditorAction.RemoveImage(it)) },
             onMoveToFront = { viewModel.onAction(EditorAction.MoveImageToFront(it)) },
@@ -95,6 +96,10 @@ fun ItemGalleryScreen(
             },
             onRemoveLocation = { viewModel.onAction(EditorAction.RemoveLocation) },
             onLocationDialogToggle = { showLocationDialog = true },
+            onAudioClick = { initialAudioId ->
+                navigator.navigateTo(Route.RecordAudio(initialAudioId), isSingleTop = true)
+            },
+            onRemoveAudio = { viewModel.onAction(EditorAction.RemoveAudio(it)) }
         )
     }
 
@@ -145,6 +150,17 @@ fun ItemGalleryScreen(
                         isInLibrary = isInLibrary,
                         onAddToLibrary = { viewModel.onAction(EditorAction.AddSongToLibrary(currentSong)) },
                         theme = state.theme
+                    )
+                }
+            }
+            if (state.audios.isNotEmpty()) {
+                item(key = "audio_card", span = { GridItemSpan(2) }) {
+                    JournalAudioItem(
+                        audios = state.audios,
+                        onOpenStudio = mediaOperations.onAudioClick,
+                        onRemove = mediaOperations.onRemoveAudio,
+                        theme = state.theme,
+                        processingAudioIds = state.processingAudioIds
                     )
                 }
             }

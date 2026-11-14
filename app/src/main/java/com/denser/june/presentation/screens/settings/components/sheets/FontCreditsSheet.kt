@@ -27,6 +27,7 @@ fun FontCreditsBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = { setShowSheet(false) },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         modifier = modifier
     ) {
         val fontCredits = listOf(
@@ -86,7 +87,7 @@ fun FontCreditsBottomSheet(
                         JuneConnectedItem(
                             title = item.font.fullName,
                             subtitle = item.designer,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             trailingContent = {
                                 Icon(
                                     painter = painterResource(R.drawable.open_in_new_24px),

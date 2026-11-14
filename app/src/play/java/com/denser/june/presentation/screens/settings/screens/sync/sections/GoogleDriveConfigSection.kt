@@ -415,7 +415,7 @@ fun GoogleDrivePrivacyBottomSheet(
                                             bottomEnd = 4.dp
                                         )
                                     )
-                                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -446,7 +446,7 @@ fun GoogleDrivePrivacyBottomSheet(
                                             bottomEnd = 20.dp
                                         )
                                     )
-                                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
                                     .padding(horizontal = 16.dp, vertical = 14.dp)
                             ) {
                                 Text(
