@@ -436,7 +436,6 @@
     <string name="backup_format_too_old">El formato de la copia de seguridad es muy antiguo</string>
     <string name="database_logging">Registros de Base de Datos</string>
     <string name="backup_logging">Registros de Copia de Seguridad</string>
-    <string name="logging"></string>
     <string name="export_option_package_zip">Paquete (.zip)</string>
     <string name="restore_backup_title">¿Restaurar Copia de Seguridad?</string>
     <string name="restore_complete">¡Restauración Completada!</string>
