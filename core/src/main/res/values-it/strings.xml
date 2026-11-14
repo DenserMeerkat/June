@@ -41,7 +41,6 @@
     <string name="cloud">Cloud</string>
     <string name="not_synced">Non sincronizzato</string>
     <string name="search_settings_placeholder">Cerca impostazioni...</string>
-    <string name="sync_required">Sincronizzazione richiesta</string>
     <string name="synced">Sincronizzato</string>
     <string name="test_api_key">Testa Chiave API</string>
     <string name="test_connection">Testa Connessione</string>
