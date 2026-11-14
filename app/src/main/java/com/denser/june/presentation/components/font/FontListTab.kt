@@ -63,7 +63,7 @@ fun FontListTab(
         if (!isInternetAllowed) {
             item(key = "__internet_restricted_banner__") {
                 InternetRestrictedBanner(
-                    description = stringResource(R.string.online_fonts_require_internet),
+                    description = stringResource(R.string.internet_maybe_required),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }

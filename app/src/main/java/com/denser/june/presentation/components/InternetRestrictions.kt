@@ -141,7 +141,7 @@ fun InternetRestrictedIndicator(
 @Composable
 fun InternetRestrictedBanner(
     modifier: Modifier = Modifier,
-    description: String = stringResource(R.string.internet_access_restricted),
+    description: String = stringResource(R.string.internet_access_disabled),
     useCompactSettingsButton: Boolean = true,
     onNavigateToSettings: (() -> Unit)? = null
 ) {

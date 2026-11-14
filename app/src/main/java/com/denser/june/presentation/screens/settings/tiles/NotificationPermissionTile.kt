@@ -1,9 +1,11 @@
 package com.denser.june.presentation.screens.settings.tiles
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
-import android.widget.Toast
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Icon
@@ -17,25 +19,30 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.denser.june.core.R
-import com.denser.june.presentation.screens.settings.components.SettingsItem
+import com.denser.june.presentation.components.JuneSwitchTile
 
 @Composable
 fun NotificationPermissionTile() {
     val context = LocalContext.current
-    val permissionAlreadyGrantedMessage = stringResource(R.string.permission_already_granted)
 
-    var hasNotificationPermission by remember {
-        mutableStateOf(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED
-            } else {
-                true
-            }
-        )
+    fun checkPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
+    var hasNotificationPermission by remember { mutableStateOf(checkPermission()) }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        hasNotificationPermission = checkPermission()
     }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -44,37 +51,34 @@ fun NotificationPermissionTile() {
         hasNotificationPermission = isGranted
     }
 
-    SettingsItem(
+    val handleToggle = {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!hasNotificationPermission) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                }
+                context.startActivity(intent)
+            }
+        } else {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", context.packageName, null)
+            }
+            context.startActivity(intent)
+        }
+    }
+
+    JuneSwitchTile(
         title = stringResource(R.string.notification),
-        subtitle = if (hasNotificationPermission)
-            stringResource(R.string.notification_permission_granted)
-        else
-            stringResource(R.string.notification_permission_needed),
+        checked = hasNotificationPermission,
+        onCheckedChange = { handleToggle() },
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.notifications_24px),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.secondary
             )
-        },
-        onClick = {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (!hasNotificationPermission) {
-                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                } else {
-                    Toast.makeText(
-                        context,
-                        permissionAlreadyGrantedMessage,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            } else {
-                Toast.makeText(
-                    context,
-                    permissionAlreadyGrantedMessage,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
         }
     )
 }

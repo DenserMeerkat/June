@@ -354,8 +354,7 @@ fun TimelineMapTab(
                 InternetRestrictedIndicator(
                     modifier = Modifier
                         .padding(horizontal = 24.dp)
-                        .padding(bottom = bottomPadding),
-                    description = stringResource(R.string.maps_require_internet_locations)
+                        .padding(bottom = bottomPadding)
                 )
             }
         }

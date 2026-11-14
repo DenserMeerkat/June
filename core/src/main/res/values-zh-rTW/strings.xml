@@ -60,7 +60,6 @@
     <string name="created">已建立</string>
     <string name="developer_options">開發者選項</string>
     <string name="disabled">已停用</string>
-    <string name="internet_disabled_update_notice">June 的隱私設定中已停用網路存取。請在「權限」中啟用該功能以檢查更新。</string>
     <string name="journal_media">日記媒體</string>
     <string name="journals_and_media_pending">%1$d 篇日記與 %2$d 則媒體</string>
     <string name="local">本地</string>
@@ -97,9 +96,9 @@
     <string name="diagnostics">診斷</string>
     <string name="enter_pin">輸入 PIN</string>
     <string name="incorrect_answer_try_again">回答不正確。請重新嘗試。</string>
-    <string name="internet_access_disabled">網路存取已停用</string>
-    <string name="internet_access_restricted">網路存取已受限</string>
-    <string name="internet_restricted_desc">若要使用此功能，請在應用程式設定中啟用網路存取權限。</string>
+    <string name="internet_access_disabled">需要連線至網際網路</string>
+    <string name="internet_maybe_required">可能需要連線至網際網路</string>
+    <string name="internet_restricted_desc">請啟用網路以繼續</string>
     <string name="move_all_to_bin">全部移至回收桶</string>
     <string name="move_all_to_bin_desc">這會將你所有的日記條目移至回收桶。你可以在 30 天內將其恢復。</string>
     <string name="move_all_to_bin_title">全部移至回收桶？</string>

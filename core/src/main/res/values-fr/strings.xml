@@ -58,7 +58,6 @@
     <string name="created">Créé</string>
     <string name="developer_options">Options développeurs</string>
     <string name="disabled">Désactivé</string>
-    <string name="internet_disabled_update_notice">L\'accès à Internet est désactivé dans les paramètres de confidentialité de June. Veuillez l\'activer dans la section « Autorisations » pour rechercher des mises à jour.</string>
     <string name="journal_media">Médias des journaux</string>
     <string name="journals_and_media_pending">Journaux et médias</string>
     <string name="local">Local</string>

@@ -431,6 +431,7 @@ fun AddSongScreen(
                         if (!isInternetAllowed) {
                             item {
                                 InternetRestrictedBanner(
+                                    description = stringResource(R.string.internet_maybe_required),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(bottom = 4.dp)

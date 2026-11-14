@@ -222,7 +222,7 @@ fun UpdateBottomSheet(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = stringResource(R.string.internet_disabled_update_notice),
+                            text = stringResource(R.string.internet_restricted_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

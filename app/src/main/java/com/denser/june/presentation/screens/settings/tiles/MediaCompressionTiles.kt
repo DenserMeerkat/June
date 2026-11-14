@@ -27,7 +27,11 @@ fun CompressPhotosTile() {
 
     SettingsItem(
         title = stringResource(R.string.compress_photos),
-        subtitle = stringResource(R.string.compress_photos_desc),
+        contentPadding = if (state.isCompressPhotosEnabled) {
+            PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+        } else {
+            PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        },
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.photo_24px),
@@ -80,7 +84,11 @@ fun CompressVideosTile() {
 
     SettingsItem(
         title = stringResource(R.string.compress_videos),
-        subtitle = stringResource(R.string.compress_videos_desc),
+        contentPadding = if (state.isCompressVideosEnabled) {
+            PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+        } else {
+            PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        },
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.videocam_24px),
@@ -127,7 +135,11 @@ fun CompressAudioTile() {
 
     SettingsItem(
         title = stringResource(R.string.compress_audio),
-        subtitle = stringResource(R.string.compress_audio_desc),
+        contentPadding = if (state.isCompressAudioEnabled) {
+            PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+        } else {
+            PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        },
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.mic_24px),

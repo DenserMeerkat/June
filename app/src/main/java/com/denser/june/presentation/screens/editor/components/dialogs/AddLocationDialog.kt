@@ -588,9 +588,7 @@ fun AddLocationDialog(
                 }
 
                 if (!isInternetAllowed) {
-                    InternetRestrictedBanner(
-                        description = stringResource(R.string.maps_search_require_internet)
-                    )
+                    InternetRestrictedBanner()
                 }
             }
         }

@@ -128,8 +128,7 @@ fun SyncScreen() {
             if (!isInternetAllowed) {
                 item {
                     InternetRestrictedBanner(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        description = stringResource(R.string.sync_internet_required_desc)
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
             }
