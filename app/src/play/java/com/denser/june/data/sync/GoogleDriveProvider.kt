@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.OkHttpClient
 import okhttp3.Headers
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -42,6 +44,7 @@ import java.io.InputStream
 import com.denser.june.core.domain.logging.AppLogger
 import com.denser.june.core.domain.sync.serialize
 import com.denser.june.core.domain.sync.deserializeJournal
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
 
 class GoogleDriveProvider(
     private val context: Context,
@@ -55,12 +58,14 @@ class GoogleDriveProvider(
     private var syncFolderId: String? = null
     private var journalsFolderId: String? = null
     private var mediaFolderId: String? = null
-    private var songMediaFolderId: String? = null
+    private var songsFolderId: String? = null
+    private var audiosFolderId: String? = null
+    private val folderMutex = Mutex()
     private val journalFolderCache = java.util.concurrent.ConcurrentHashMap<String, String>()
     private val folderValidityCache = java.util.concurrent.ConcurrentHashMap<String, Long>()
     private val folderFilesCache = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.ConcurrentHashMap<String, String>>()
     private val _folderUrl = MutableStateFlow<String?>(null)
-    val folderUrl: Flow<String?> = _folderUrl.asStateFlow()
+    override val folderUrl: Flow<String?> = _folderUrl.asStateFlow()
 
     init {
         val account = GoogleSignIn.getLastSignedInAccount(context)
@@ -134,7 +139,8 @@ class GoogleDriveProvider(
             syncFolderId = null
             journalsFolderId = null
             mediaFolderId = null
-            songMediaFolderId = null
+            songsFolderId = null
+            audiosFolderId = null
             journalFolderCache.clear()
             folderValidityCache.clear()
             folderFilesCache.clear()
@@ -145,7 +151,7 @@ class GoogleDriveProvider(
         }
     }
 
-    private suspend fun isFolderTrashed(id: String): Boolean {
+    private fun isFolderTrashed(id: String): Boolean {
         val now = System.currentTimeMillis()
         val validUntil = folderValidityCache[id]
         if (validUntil != null && now < validUntil) return false
@@ -155,46 +161,83 @@ class GoogleDriveProvider(
             val trashed = file.trashed ?: false
             if (!trashed) folderValidityCache[id] = now + 60_000L
             trashed
+        } catch (e: GoogleJsonResponseException) {
+            folderValidityCache.remove(id)
+            if (e.statusCode == 404) true else false
         } catch (e: Exception) {
             folderValidityCache.remove(id)
-            true
+            false
+        }
+    }
+
+    override suspend fun reconnectFolder(): Result<Unit> = withContext(Dispatchers.IO) {
+        folderMutex.withLock {
+            syncFolderId = null
+            journalsFolderId = null
+            mediaFolderId = null
+            songsFolderId = null
+            audiosFolderId = null
+            journalFolderCache.clear()
+            folderValidityCache.clear()
+            folderFilesCache.clear()
+            _folderUrl.value = null
+            syncPrefs.setGoogleDriveSyncFolderId(null)
+            syncPrefs.setGoogleDriveJournalsFolderId(null)
+            syncPrefs.setGoogleDriveMediaFolderId(null)
+            syncPrefs.setGoogleDriveSongsFolderId(null)
+            syncPrefs.setGoogleDriveAudiosFolderId(null)
+            getOrCreateSyncFolderLocked().map { Unit }
         }
     }
 
     private suspend fun getOrCreateSyncFolder(): Result<String> = withContext(Dispatchers.IO) {
         if (syncFolderId != null && !isFolderTrashed(syncFolderId!!)) return@withContext Result.success(syncFolderId!!)
+        folderMutex.withLock {
+            getOrCreateSyncFolderLocked()
+        }
+    }
+
+    private suspend fun getOrCreateSyncFolderLocked(): Result<String> {
+        if (syncFolderId != null && !isFolderTrashed(syncFolderId!!)) return Result.success(syncFolderId!!)
         val cachedId = syncPrefs.getGoogleDriveSyncFolderId().first()
         if (cachedId != null && !isFolderTrashed(cachedId)) {
             syncFolderId = cachedId
             _folderUrl.value = "https://drive.google.com/drive/folders/$cachedId"
-            return@withContext Result.success(cachedId)
+            return Result.success(cachedId)
         }
 
-        val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
-        try {
+        val service = getDriveService() ?: return Result.failure(Exception("Not authenticated"))
+        return try {
             val result = service.files().list()
                 .setQ("mimeType = 'application/vnd.google-apps.folder' and name = 'June' and trashed = false")
                 .setFields("files(id, createdTime)")
                 .execute()
             val files = result.files ?: emptyList()
             if (files.size > 1) {
-                AppLogger.w(AppLogger.Category.SYNC, "GoogleDriveProvider", "Multiple June folders found (${files.size}). Deduplicating...")
-                val sorted = files.sortedBy { it.createdTime?.value ?: 0L }
-                val winner = sorted.first()
-                for (dup in sorted.drop(1)) {
-                    try { service.files().delete(dup.id).execute() } catch (e: Exception) {}
+                AppLogger.w(AppLogger.Category.SYNC, "GoogleDriveProvider", "Multiple June folders found (${files.size}). Inspecting candidates...")
+                var bestFolderId = files.first().id
+                for (candidate in files) {
+                    val candidateId = candidate.id ?: continue
+                    val checkManifest = service.files().list()
+                        .setQ("'$candidateId' in parents and name = 'sync_manifest.json' and trashed = false")
+                        .setFields("files(id)")
+                        .execute()
+                    if (!checkManifest.files.isNullOrEmpty()) {
+                        bestFolderId = candidateId
+                        break
+                    }
                 }
-                syncFolderId = winner.id
-                syncPrefs.setGoogleDriveSyncFolderId(winner.id)
-                _folderUrl.value = "https://drive.google.com/drive/folders/${winner.id}"
-                return@withContext Result.success(winner.id)
+                syncFolderId = bestFolderId
+                syncPrefs.setGoogleDriveSyncFolderId(bestFolderId)
+                _folderUrl.value = "https://drive.google.com/drive/folders/$bestFolderId"
+                return Result.success(bestFolderId)
             }
             val existingId = files.firstOrNull()?.id
             if (existingId != null) {
                 syncFolderId = existingId
                 syncPrefs.setGoogleDriveSyncFolderId(existingId)
                 _folderUrl.value = "https://drive.google.com/drive/folders/$existingId"
-                return@withContext Result.success(existingId)
+                return Result.success(existingId)
             }
 
             val metadata = DriveFile().apply {
@@ -214,106 +257,118 @@ class GoogleDriveProvider(
     }
 
     private suspend fun getOrCreateSubfolder(name: String): Result<String> = withContext(Dispatchers.IO) {
-        if (name == "journals" && journalsFolderId != null && !isFolderTrashed(journalsFolderId!!)) return@withContext Result.success(journalsFolderId!!)
-        if (name == "media" && mediaFolderId != null && !isFolderTrashed(mediaFolderId!!)) return@withContext Result.success(mediaFolderId!!)
-        if (name == "song_media" && songMediaFolderId != null && !isFolderTrashed(songMediaFolderId!!)) return@withContext Result.success(songMediaFolderId!!)
-
-        val cachedId = when (name) {
-            "journals" -> syncPrefs.getGoogleDriveJournalsFolderId().first()
-            "media" -> syncPrefs.getGoogleDriveMediaFolderId().first()
-            "song_media" -> syncPrefs.getGoogleDriveSongMediaFolderId().first()
-            else -> null
+        val normalizedName = when (name) {
+            "song_media" -> "songs"
+            "journal_audio" -> "audios"
+            else -> name
         }
-        if (cachedId != null && !isFolderTrashed(cachedId)) {
-            when (name) {
-                "journals" -> journalsFolderId = cachedId
-                "media" -> mediaFolderId = cachedId
-                "song_media" -> songMediaFolderId = cachedId
+        if (normalizedName == "journals" && journalsFolderId != null && !isFolderTrashed(journalsFolderId!!)) return@withContext Result.success(journalsFolderId!!)
+        if (normalizedName == "media" && mediaFolderId != null && !isFolderTrashed(mediaFolderId!!)) return@withContext Result.success(mediaFolderId!!)
+        if (normalizedName == "songs" && songsFolderId != null && !isFolderTrashed(songsFolderId!!)) return@withContext Result.success(songsFolderId!!)
+        if (normalizedName == "audios" && audiosFolderId != null && !isFolderTrashed(audiosFolderId!!)) return@withContext Result.success(audiosFolderId!!)
+
+        folderMutex.withLock {
+            if (normalizedName == "journals" && journalsFolderId != null && !isFolderTrashed(journalsFolderId!!)) return@withLock Result.success(journalsFolderId!!)
+            if (normalizedName == "media" && mediaFolderId != null && !isFolderTrashed(mediaFolderId!!)) return@withLock Result.success(mediaFolderId!!)
+            if (normalizedName == "songs" && songsFolderId != null && !isFolderTrashed(songsFolderId!!)) return@withLock Result.success(songsFolderId!!)
+            if (normalizedName == "audios" && audiosFolderId != null && !isFolderTrashed(audiosFolderId!!)) return@withLock Result.success(audiosFolderId!!)
+
+            val cachedId = when (normalizedName) {
+                "journals" -> syncPrefs.getGoogleDriveJournalsFolderId().first()
+                "media" -> syncPrefs.getGoogleDriveMediaFolderId().first()
+                "songs" -> syncPrefs.getGoogleDriveSongsFolderId().first()
+                "audios" -> syncPrefs.getGoogleDriveAudiosFolderId().first()
+                else -> null
             }
-            return@withContext Result.success(cachedId)
-        }
+            if (cachedId != null && !isFolderTrashed(cachedId)) {
+                when (normalizedName) {
+                    "journals" -> journalsFolderId = cachedId
+                    "media" -> mediaFolderId = cachedId
+                    "songs" -> songsFolderId = cachedId
+                    "audios" -> audiosFolderId = cachedId
+                }
+                return@withLock Result.success(cachedId)
+            }
 
-        val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
-        val rootId = getOrCreateSyncFolder().getOrElse { return@withContext Result.failure(it) }
+            val service = getDriveService() ?: return@withLock Result.failure(Exception("Not authenticated"))
+            val rootId = getOrCreateSyncFolderLocked().getOrElse { return@withLock Result.failure(it) }
 
-        try {
-            val result = service.files().list()
-                .setQ("mimeType = 'application/vnd.google-apps.folder' and '$rootId' in parents and name = '$name' and trashed = false")
-                .setFields("files(id)")
-                .execute()
-            val existingId = result.files?.firstOrNull()?.id
-            if (existingId != null) {
-                when (name) {
+            try {
+                val queryName = when (normalizedName) {
+                    "songs" -> "(name = 'songs' or name = 'song_media')"
+                    "audios" -> "(name = 'audios' or name = 'journal_audio')"
+                    else -> "name = '$normalizedName'"
+                }
+                val result = service.files().list()
+                    .setQ("mimeType = 'application/vnd.google-apps.folder' and '$rootId' in parents and $queryName and trashed = false")
+                    .setFields("files(id, name)")
+                    .execute()
+                val files = result.files ?: emptyList()
+                val existingFolder = when (normalizedName) {
+                    "songs" -> files.find { it.name == "songs" } ?: files.find { it.name == "song_media" }
+                    "audios" -> files.find { it.name == "audios" } ?: files.find { it.name == "journal_audio" }
+                    else -> files.firstOrNull()
+                }
+                if (existingFolder != null && existingFolder.id != null) {
+                    val folderId = existingFolder.id
+                    if (existingFolder.name != normalizedName) {
+                        try {
+                            val updateMeta = DriveFile().apply { this.name = normalizedName }
+                            service.files().update(folderId, updateMeta).execute()
+                        } catch (e: Exception) {
+                        }
+                    }
+                    when (normalizedName) {
+                        "journals" -> {
+                            journalsFolderId = folderId
+                            syncPrefs.setGoogleDriveJournalsFolderId(folderId)
+                        }
+                        "media" -> {
+                            mediaFolderId = folderId
+                            syncPrefs.setGoogleDriveMediaFolderId(folderId)
+                        }
+                        "songs" -> {
+                            songsFolderId = folderId
+                            syncPrefs.setGoogleDriveSongsFolderId(folderId)
+                        }
+                        "audios" -> {
+                            audiosFolderId = folderId
+                            syncPrefs.setGoogleDriveAudiosFolderId(folderId)
+                        }
+                    }
+                    return@withLock Result.success(folderId)
+                }
+
+                val metadata = DriveFile().apply {
+                    this.name = normalizedName
+                    mimeType = "application/vnd.google-apps.folder"
+                    parents = listOf(rootId)
+                }
+                val created = service.files().create(metadata).setFields("id").execute()
+                val createdId = created.id ?: throw Exception("Folder creation returned empty ID for subfolder $normalizedName")
+                when (normalizedName) {
                     "journals" -> {
-                        journalsFolderId = existingId
-                        syncPrefs.setGoogleDriveJournalsFolderId(existingId)
+                        journalsFolderId = createdId
+                        syncPrefs.setGoogleDriveJournalsFolderId(createdId)
                     }
                     "media" -> {
-                        mediaFolderId = existingId
-                        syncPrefs.setGoogleDriveMediaFolderId(existingId)
+                        mediaFolderId = createdId
+                        syncPrefs.setGoogleDriveMediaFolderId(createdId)
                     }
-                    "song_media" -> {
-                        songMediaFolderId = existingId
-                        syncPrefs.setGoogleDriveSongMediaFolderId(existingId)
+                    "songs" -> {
+                        songsFolderId = createdId
+                        syncPrefs.setGoogleDriveSongsFolderId(createdId)
+                    }
+                    "audios" -> {
+                        audiosFolderId = createdId
+                        syncPrefs.setGoogleDriveAudiosFolderId(createdId)
                     }
                 }
-                return@withContext Result.success(existingId)
+                Result.success(createdId)
+            } catch (e: Exception) {
+                android.util.Log.e("JuneAuth", "Failed to get or create subfolder $normalizedName", e)
+                Result.failure(e)
             }
-
-            val metadata = DriveFile().apply {
-                this.name = name
-                mimeType = "application/vnd.google-apps.folder"
-                parents = listOf(rootId)
-            }
-            val created = service.files().create(metadata).setFields("id").execute()
-            val createdId = created.id ?: throw Exception("Folder creation returned empty ID for subfolder $name")
-            when (name) {
-                "journals" -> {
-                    journalsFolderId = createdId
-                    syncPrefs.setGoogleDriveJournalsFolderId(createdId)
-                }
-                "media" -> {
-                    mediaFolderId = createdId
-                    syncPrefs.setGoogleDriveMediaFolderId(createdId)
-                }
-                "song_media" -> {
-                    songMediaFolderId = createdId
-                    syncPrefs.setGoogleDriveSongMediaFolderId(createdId)
-                }
-            }
-            Result.success(createdId)
-        } catch (e: Exception) {
-            android.util.Log.e("JuneAuth", "Failed to get or create subfolder $name", e)
-            Result.failure(e)
-        }
-    }
-
-    private suspend fun getOrCreateJournalMediaFolder(journalId: String, mediaRootId: String): Result<String> = withContext(Dispatchers.IO) {
-        val cachedId = journalFolderCache[journalId]
-        if (cachedId != null) return@withContext Result.success(cachedId)
-
-        val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
-        try {
-            val result = service.files().list()
-                .setQ("mimeType = 'application/vnd.google-apps.folder' and '$mediaRootId' in parents and name = '$journalId' and trashed = false")
-                .setFields("files(id)")
-                .execute()
-            val existingId = result.files?.firstOrNull()?.id
-            if (existingId != null) {
-                journalFolderCache[journalId] = existingId
-                return@withContext Result.success(existingId)
-            }
-            val metadata = DriveFile().apply {
-                this.name = journalId
-                mimeType = "application/vnd.google-apps.folder"
-                parents = listOf(mediaRootId)
-            }
-            val created = service.files().create(metadata).setFields("id").execute()
-            val createdId = created.id ?: throw Exception("Folder creation returned empty ID for journal subfolder $journalId")
-            journalFolderCache[journalId] = createdId
-            Result.success(createdId)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
@@ -601,8 +656,8 @@ class GoogleDriveProvider(
             "webp" -> "image/webp"
             else -> "application/octet-stream"
         }
-        val folderId = getOrCreateSubfolder("song_media").getOrElse {
-            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve song_media root folder", it)
+        val folderId = getOrCreateSubfolder("songs").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve songs root folder", it)
             return Result.failure(it)
         }
         return uploadFile(file.name, mimeType, file, folderId)
@@ -610,8 +665,8 @@ class GoogleDriveProvider(
 
     override suspend fun downloadSongMedia(filename: String, targetFile: File): Result<File> = withContext(Dispatchers.IO) {
         AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Downloading song media file $filename from flat song pool...")
-        val folderId = getOrCreateSubfolder("song_media").getOrElse {
-            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve song_media root folder", it)
+        val folderId = getOrCreateSubfolder("songs").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve songs root folder", it)
             return@withContext Result.failure(it)
         }
         downloadFileTo(filename, folderId, targetFile)
@@ -619,7 +674,7 @@ class GoogleDriveProvider(
 
     override suspend fun listSongMedia(): Result<List<String>> = withContext(Dispatchers.IO) {
         val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
-        val folderId = getOrCreateSubfolder("song_media").getOrElse { return@withContext Result.failure(it) }
+        val folderId = getOrCreateSubfolder("songs").getOrElse { return@withContext Result.failure(it) }
         try {
             val list = mutableListOf<String>()
             val cache = folderFilesCache.getOrPut(folderId) { java.util.concurrent.ConcurrentHashMap() }
@@ -647,8 +702,60 @@ class GoogleDriveProvider(
 
     override suspend fun deleteSongMedia(filename: String): Result<Unit> {
         AppLogger.d(AppLogger.Category.SYNC, "GoogleDriveProvider", "Deleting song media file $filename from flat song pool...")
-        val folderId = getOrCreateSubfolder("song_media").getOrElse {
-            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve song_media folder", it)
+        val folderId = getOrCreateSubfolder("songs").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve songs folder", it)
+            return Result.failure(it)
+        }
+        return deleteFileByName(filename, folderId)
+    }
+
+    override suspend fun uploadAudio(file: File): Result<String> {
+        val folderId = getOrCreateSubfolder("audios").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve audios folder", it)
+            return Result.failure(it)
+        }
+        return uploadFile(file.name, "audio/m4a", file, folderId)
+    }
+
+    override suspend fun downloadAudio(filename: String, targetFile: File): Result<File> = withContext(Dispatchers.IO) {
+        val folderId = getOrCreateSubfolder("audios").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve audios folder", it)
+            return@withContext Result.failure(it)
+        }
+        downloadFileTo(filename, folderId, targetFile)
+    }
+
+    override suspend fun listAudios(): Result<List<String>> = withContext(Dispatchers.IO) {
+        val service = getDriveService() ?: return@withContext Result.failure(Exception("Not authenticated"))
+        val folderId = getOrCreateSubfolder("audios").getOrElse { return@withContext Result.failure(it) }
+        try {
+            val list = mutableListOf<String>()
+            val cache = folderFilesCache.getOrPut(folderId) { java.util.concurrent.ConcurrentHashMap() }
+            var pageToken: String? = null
+            do {
+                val result = service.files().list()
+                    .setQ("'$folderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false")
+                    .setFields("nextPageToken, files(id, name)")
+                    .setPageSize(1000)
+                    .setPageToken(pageToken)
+                    .execute()
+                result.files?.forEach { file ->
+                    if (file.name != null) {
+                        if (file.id != null) cache[file.name] = file.id
+                        list.add(file.name)
+                    }
+                }
+                pageToken = result.nextPageToken
+            } while (pageToken != null)
+            Result.success(list)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteAudio(filename: String): Result<Unit> {
+        val folderId = getOrCreateSubfolder("audios").getOrElse {
+            AppLogger.e(AppLogger.Category.SYNC, "GoogleDriveProvider", "Failed to resolve audios folder", it)
             return Result.failure(it)
         }
         return deleteFileByName(filename, folderId)

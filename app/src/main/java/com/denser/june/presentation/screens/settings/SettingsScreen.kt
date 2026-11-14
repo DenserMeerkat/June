@@ -62,6 +62,7 @@ fun SettingsScreen() {
     var showAboutLibrariesSheet by remember { mutableStateOf(false) }
     var showChangelogSheet by remember { mutableStateOf(false) }
     var showCheckingUpdatesDialog by remember { mutableStateOf(false) }
+    var lastVaultClickTime by remember { mutableLongStateOf(0L) }
 
     val updateChecker = koinInject<UpdateChecker>()
     var updateInfo by remember { mutableStateOf<Triple<String, String, String>?>(null) }
@@ -336,9 +337,13 @@ fun SettingsScreen() {
                                         }
                                     },
                                     onClick = {
-                                        focusManager.clearFocus()
-                                        keyboardController?.hide()
-                                        navigator.navigateTo(Route.Vault)
+                                        val now = android.os.SystemClock.elapsedRealtime()
+                                        if (now - lastVaultClickTime >= 500L) {
+                                            lastVaultClickTime = now
+                                            focusManager.clearFocus()
+                                            keyboardController?.hide()
+                                            navigator.navigateTo(Route.Vault)
+                                        }
                                     }
                                 )
                                 SettingsItem(

@@ -50,6 +50,14 @@ sealed interface EditorAction {
     data class SaveClip(val startMs: Long, val endMs: Long?, val songDetails: SongDetails? = null) : EditorAction
     data object RemoveSong : EditorAction
 
+    data class AddAudio(val audio: com.denser.june.core.domain.model.JournalAudio) : EditorAction
+    data class ImportAudio(val uri: Uri, val placeholderAudio: com.denser.june.core.domain.model.JournalAudio) : EditorAction
+    data class ReplaceAudio(val oldId: String, val audio: com.denser.june.core.domain.model.JournalAudio) : EditorAction
+    data class SetAudioProcessing(val audioId: String, val isProcessing: Boolean) : EditorAction
+    data class RemoveAudio(val id: String) : EditorAction
+    data class UpdateAudioTitle(val id: String, val title: String) : EditorAction
+    data class ReorderAudios(val audios: List<com.denser.june.core.domain.model.JournalAudio>) : EditorAction
+
     data class SetLocation(val location: JournalLocation) : EditorAction
     data object RemoveLocation : EditorAction
 
@@ -58,6 +66,7 @@ sealed interface EditorAction {
     data object ToggleArchive : EditorAction
 
     data object SaveJournal : EditorAction
+    data object DiscardChanges : EditorAction
     data object NavigateBack : EditorAction
     data object DeleteJournal : EditorAction
     data object RestoreJournal : EditorAction

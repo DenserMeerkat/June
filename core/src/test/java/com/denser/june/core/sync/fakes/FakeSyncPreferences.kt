@@ -32,6 +32,8 @@ class FakeSyncPreferences(
     var googleDriveJournalsFolderId: String? = null
     var googleDriveMediaFolderId: String? = null
     var googleDriveSongMediaFolderId: String? = null
+    var googleDriveAudiosFolderId: String? = null
+    var googleDriveSongsFolderId: String? = null
 
     private val _syncEnabled = MutableStateFlow(syncEnabled)
     private val _autoSync = MutableStateFlow(false)
@@ -51,6 +53,8 @@ class FakeSyncPreferences(
     private val _gdriveJournalsFolder = MutableStateFlow<String?>(null)
     private val _gdriveMediaFolder = MutableStateFlow<String?>(null)
     private val _gdriveSongMediaFolder = MutableStateFlow<String?>(null)
+    private val _gdriveAudiosFolder = MutableStateFlow<String?>(null)
+    private val _gdriveSongsFolder = MutableStateFlow<String?>(null)
 
     override fun getLastSyncTime(): Flow<Long> = _lastSyncTime
     override suspend fun setLastSyncTime(time: Long) { lastSyncTime = time; _lastSyncTime.value = time }
@@ -77,6 +81,10 @@ class FakeSyncPreferences(
     override suspend fun setGoogleDriveMediaFolderId(id: String?) { googleDriveMediaFolderId = id; _gdriveMediaFolder.value = id }
     override fun getGoogleDriveSongMediaFolderId(): Flow<String?> = _gdriveSongMediaFolder
     override suspend fun setGoogleDriveSongMediaFolderId(id: String?) { googleDriveSongMediaFolderId = id; _gdriveSongMediaFolder.value = id }
+    override fun getGoogleDriveAudiosFolderId(): Flow<String?> = _gdriveAudiosFolder
+    override suspend fun setGoogleDriveAudiosFolderId(id: String?) { googleDriveAudiosFolderId = id; _gdriveAudiosFolder.value = id }
+    override fun getGoogleDriveSongsFolderId(): Flow<String?> = _gdriveSongsFolder
+    override suspend fun setGoogleDriveSongsFolderId(id: String?) { googleDriveSongsFolderId = id; _gdriveSongsFolder.value = id }
     override fun getSyncLoggingEnabled(): Flow<Boolean> = _syncLogging
     override suspend fun setSyncLoggingEnabled(enabled: Boolean) { syncLoggingEnabled = enabled; _syncLogging.value = enabled }
     override fun getBackupLoggingEnabled(): Flow<Boolean> = _backupLogging

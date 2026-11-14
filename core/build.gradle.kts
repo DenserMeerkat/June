@@ -51,6 +51,7 @@ dependencies {
     api(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.documentfile)
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kaml)

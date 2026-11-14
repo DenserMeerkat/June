@@ -21,7 +21,7 @@ class MarkdownImportImpl(
 
     companion object {
         private const val TAG = "MarkdownImportImpl"
-        private const val MEDIA_FOLDER = "journal_media"
+        private const val MEDIA_FOLDER = "media"
     }
 
     override suspend fun importMarkdownFiles(uris: List<Uri>): Result<Int> = withContext(Dispatchers.IO) {
@@ -81,7 +81,7 @@ class MarkdownImportImpl(
                     while (entry != null) {
                         val entryName = entry.name
                         if (!entry.isDirectory) {
-                            if (entryName.startsWith("media/")) {
+                            if (entryName.startsWith("media/") || entryName.startsWith("journal_media/")) {
                                 val originalFileName = File(entryName).name
                                 val safeFileName = if (originalFileName.startsWith("media_")) {
                                     originalFileName
@@ -94,7 +94,7 @@ class MarkdownImportImpl(
                                 }
                                 val absPath = targetFile.absolutePath
                                 extractedMediaMap[entryName] = absPath
-                                extractedMediaMap[entryName.removePrefix("media/").trimStart('/')] = absPath
+                                extractedMediaMap[entryName.removePrefix("media/").removePrefix("journal_media/").trimStart('/')] = absPath
                                 extractedMediaMap["../$entryName"] = absPath
                                 extractedMediaMap[originalFileName] = absPath
                             } else if (entryName.endsWith(".md", ignoreCase = true) || entryName.endsWith(".markdown", ignoreCase = true)) {
@@ -150,6 +150,7 @@ class MarkdownImportImpl(
             val mapped = extractedMediaMap[clean]
                 ?: extractedMediaMap[clean.removePrefix("../")]
                 ?: extractedMediaMap[clean.removePrefix("media/")]
+                ?: extractedMediaMap[clean.removePrefix("journal_media/")]
                 ?: extractedMediaMap["${journal.id}/$fileName"]
                 ?: extractedMediaMap[fileName]
 

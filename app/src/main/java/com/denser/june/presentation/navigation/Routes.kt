@@ -27,6 +27,9 @@ sealed interface Route : NavKey {
     data object AddSong : Route
 
     @Serializable
+    data class RecordAudio(val initialAudioId: String? = null) : Route
+
+    @Serializable
     data class JournalMediaDetail(
         val journalId: String,
         val initialIndex: Int,

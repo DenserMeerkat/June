@@ -213,8 +213,7 @@ fun JournalMapItem(
 
             if (!isInternetAllowed) {
                 InternetRestrictedIndicator(
-                    modifier = Modifier.fillMaxSize().padding(top = 32.dp),
-                    description = stringResource(R.string.maps_require_internet_tiles)
+                    modifier = Modifier.fillMaxSize().padding(top = 32.dp)
                 )
             }
 

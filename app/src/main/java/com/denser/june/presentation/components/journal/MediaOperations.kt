@@ -5,6 +5,7 @@ data class MediaOperations(
     val onRemoveMedia: (String) -> Unit = {},
     val onMoveToFront: (String) -> Unit = {},
     val onMediaClick: ((String) -> Unit)? = {},
+    val onMediaLongClick: ((String) -> Unit)? = null,
     val frontMediaPath: String? = null,
     val onRemoveSong: () -> Unit = {},
     val onSongSheetToggle: (Boolean) -> Unit = {},
@@ -12,4 +13,6 @@ data class MediaOperations(
     val onEditJournalSong: () -> Unit = {},
     val onRemoveLocation: () -> Unit = {},
     val onLocationDialogToggle: (Boolean) -> Unit = {},
+    val onAudioClick: (String?) -> Unit = {},
+    val onRemoveAudio: ((String) -> Unit)? = null
 )

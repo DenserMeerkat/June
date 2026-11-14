@@ -1,9 +1,19 @@
 package com.denser.june.core.di
 
+import com.denser.june.core.data.backup.AutoBackupNotificationHelper
 import com.denser.june.core.data.backup.ExportImpl
 import com.denser.june.core.data.backup.MarkdownImportImpl
 import com.denser.june.core.data.backup.RestoreImpl
+import com.denser.june.core.data.backup.SettingsBackupRepoImpl
+import com.denser.june.core.data.backup.WorkManagerAutoBackupScheduler
+import com.denser.june.core.data.importers.AppImportImpl
+import com.denser.june.core.data.preferences.AutoBackupPreferencesImpl
+import com.denser.june.core.domain.backup.AutoBackupManager
+import com.denser.june.core.domain.backup.AutoBackupScheduler
+import com.denser.june.core.domain.backup.BackupCoordinator
 import com.denser.june.core.domain.backup.MarkdownImportRepo
+import com.denser.june.core.domain.backup.SettingsBackupRepo
+import com.denser.june.core.domain.importers.AppImportRepo
 import com.denser.june.core.data.database.DatabaseFactory
 import com.denser.june.core.data.database.journal.JournalDatabase
 import com.denser.june.core.data.datastore.DatastoreFactory
@@ -22,6 +32,7 @@ import com.denser.june.core.domain.reminder.ReminderScheduler
 import com.denser.june.core.data.reminder.ReminderSchedulerImpl
 import com.denser.june.core.domain.backup.ExportRepo
 import com.denser.june.core.domain.backup.RestoreRepo
+import com.denser.june.core.domain.preferences.AutoBackupPreferences
 import com.denser.june.core.domain.preferences.EmojiPreferences
 import com.denser.june.core.domain.preferences.FontPreferences
 import com.denser.june.core.domain.preferences.JournalPreferences
@@ -33,6 +44,7 @@ import com.denser.june.core.data.preferences.FontPreferencesImpl
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.repository.SongRepository
 import com.denser.june.core.domain.sync.CloudProvider
+import com.denser.june.core.domain.sync.SyncHashCache
 import com.denser.june.core.domain.sync.SyncManager
 import java.io.File
 import okhttp3.OkHttpClient
@@ -55,7 +67,10 @@ val coreModule = module {
 
     singleOf(::ExportImpl).bind<ExportRepo>()
     singleOf(::RestoreImpl).bind<RestoreRepo>()
+    singleOf(::SettingsBackupRepoImpl).bind<SettingsBackupRepo>()
+    single { BackupCoordinator(get(), get(), get(named("ApplicationScope"))) }
     singleOf(::MarkdownImportImpl).bind<MarkdownImportRepo>()
+    singleOf(::AppImportImpl).bind<AppImportRepo>()
 
     singleOf(::JournalRepositoryImpl).bind<JournalRepository>()
     singleOf(::ReminderSchedulerImpl).bind<ReminderScheduler>()
@@ -66,6 +81,10 @@ val coreModule = module {
     single { FontPreferencesImpl(get(named("PreferencesDataStore"))) }.bind<FontPreferences>()
     single { JournalPreferencesImpl(get(named("PreferencesDataStore"))) }.bind<JournalPreferences>()
     single { EmojiPreferencesImpl(get()) }.bind<EmojiPreferences>()
+    single { AutoBackupPreferencesImpl(get(named("PreferencesDataStore"))) }.bind<AutoBackupPreferences>()
+    singleOf(::AutoBackupNotificationHelper)
+    singleOf(::WorkManagerAutoBackupScheduler).bind<AutoBackupScheduler>()
+    singleOf(::AutoBackupManager)
 
     single {
         OkHttpClient.Builder()
@@ -87,6 +106,8 @@ val coreModule = module {
         com.denser.june.core.data.sync.WorkManagerSyncScheduler(get())
     }
 
+    single { SyncHashCache(File(get<Context>().filesDir, "sync")) }
+
     single {
         val context = get<Context>()
         val providers = mutableMapOf<String, CloudProvider>()
@@ -97,14 +118,16 @@ val coreModule = module {
         }
         
         SyncManager(
-            get(),
-            get(),
-            providers,
-            File(context.filesDir, "journal_media"),
-            get(),
-            get(named("ApplicationScope")),
-            get(),
-            File(context.filesDir, "song_media")
+            journalRepo = get(),
+            syncPrefs = get(),
+            providers = providers,
+            mediaDir = File(context.filesDir, "media"),
+            syncScheduler = get(),
+            applicationScope = get(named("ApplicationScope")),
+            songLibraryDao = get(),
+            songMediaDir = File(context.filesDir, "songs"),
+            audioDir = File(context.filesDir, "audios"),
+            syncHashCache = get()
         )
     }
 }

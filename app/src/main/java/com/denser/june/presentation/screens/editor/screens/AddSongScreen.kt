@@ -39,7 +39,7 @@ import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.components.JuneBackButton
 import com.denser.june.presentation.screens.editor.EditorAction
 import com.denser.june.presentation.screens.editor.EditorVM
-import com.denser.june.presentation.screens.editor.components.audio.*
+import com.denser.june.presentation.screens.editor.components.song.*
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -431,6 +431,7 @@ fun AddSongScreen(
                         if (!isInternetAllowed) {
                             item {
                                 InternetRestrictedBanner(
+                                    description = stringResource(R.string.internet_maybe_required),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(bottom = 4.dp)

@@ -10,6 +10,7 @@ import com.denser.june.core.domain.sync.SyncAnalysis
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.domain.repository.JournalRepository
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -42,9 +43,11 @@ data class SyncSettingsState(
     val isGoogleDriveConnected: Boolean = false,
     val showProviderSwitchDialog: Boolean = false,
     val pendingProvider: String? = null,
-    val showRepairConfirmationDialog: Boolean = false
+    val showRepairConfirmationDialog: Boolean = false,
+    val folderUrl: String? = null
 )
 
+@OptIn(FlowPreview::class)
 class SyncVM(
     private val syncPrefs: SyncPreferences,
     private val privacyPreferences: PrivacyPreferences,
@@ -65,7 +68,26 @@ class SyncVM(
     private val _effect = MutableSharedFlow<SyncEffect>()
     val effect = _effect.asSharedFlow()
 
+    private val urlUpdates = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    private val userUpdates = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    private val passUpdates = MutableSharedFlow<String>(extraBufferCapacity = 1)
+
     init {
+        viewModelScope.launch {
+            urlUpdates.debounce(400L).collectLatest { url ->
+                syncPrefs.setWebDavUrl(url)
+            }
+        }
+        viewModelScope.launch {
+            userUpdates.debounce(400L).collectLatest { user ->
+                syncPrefs.setWebDavUsername(user)
+            }
+        }
+        viewModelScope.launch {
+            passUpdates.debounce(400L).collectLatest { pass ->
+                syncPrefs.setWebDavPassword(pass)
+            }
+        }
         viewModelScope.launch {
             privacyPreferences.getIsInternetAllowedFlow().collect { allowed ->
                 _state.update { it.copy(isInternetAllowed = allowed) }
@@ -100,13 +122,10 @@ class SyncVM(
                             isAutoSyncOn = args[1] as Boolean,
                             syncOnlyOnWifi = args[2] as Boolean,
                             lastSyncTime = args[3] as Long,
-                            webDavUrl = url,
-                            webDavUser = user,
-                            webDavPass = pass,
+                            webDavUrl = if (isInitialLoad) url else it.webDavUrl,
+                            webDavUser = if (isInitialLoad) user else it.webDavUser,
+                            webDavPass = if (isInitialLoad) pass else it.webDavPass,
                             selectedProvider = provider,
-                            webDavUrlError = null,
-                            webDavUserError = null,
-                            webDavPassError = null,
                             isConfigLocked = if (isInitialLoad) {
                                 url.isNotBlank() && user.isNotBlank() && pass.isNotBlank()
                             } else {
@@ -198,22 +217,32 @@ class SyncVM(
 
     fun updateUrl(url: String) {
         _state.update { it.copy(webDavUrl = url, webDavUrlError = null) }
-        viewModelScope.launch { syncPrefs.setWebDavUrl(url) }
+        urlUpdates.tryEmit(url)
     }
 
     fun updateUser(user: String) {
         _state.update { it.copy(webDavUser = user, webDavUserError = null) }
-        viewModelScope.launch { syncPrefs.setWebDavUsername(user) }
+        userUpdates.tryEmit(user)
     }
 
     fun updatePass(pass: String) {
         _state.update { it.copy(webDavPass = pass, webDavPassError = null) }
-        viewModelScope.launch { syncPrefs.setWebDavPassword(pass) }
+        passUpdates.tryEmit(pass)
     }
 
     fun manualSync() {
         if (!validateInputs()) return
+        flushPendingCredentials()
         syncManager.launchSync()
+    }
+
+    private fun flushPendingCredentials() {
+        val current = _state.value
+        viewModelScope.launch {
+            syncPrefs.setWebDavUrl(current.webDavUrl)
+            syncPrefs.setWebDavUsername(current.webDavUser)
+            syncPrefs.setWebDavPassword(current.webDavPass)
+        }
     }
 
     fun stopSync() {
@@ -230,7 +259,7 @@ class SyncVM(
     }
 
     fun confirmRepairSync(context: android.content.Context) {
-        _state.update { it.copy(showRepairConfirmationDialog = false) }
+        _state.update { it.copy(showRepairConfirmationDialog = false, status = SyncStatus.Preparing) }
         syncManager.repairSync(context)
     }
 
@@ -251,6 +280,7 @@ class SyncVM(
 
     fun testConnection() {
         if (!validateInputs()) return
+        flushPendingCredentials()
 
         viewModelScope.launch {
             try {
@@ -322,10 +352,20 @@ class SyncVM(
     }
 
     fun toggleAdvancedOptions() {
-        _state.update { it.copy(showAdvancedOptions = !it.showAdvancedOptions) }
+        val willShow = !_state.value.showAdvancedOptions
+        _state.update { it.copy(showAdvancedOptions = willShow) }
+        if (willShow && _state.value.analysis == null && !_state.value.isAnalyzing) {
+            analyzeSync()
+        }
     }
 
     fun setShowAnalysisDetails(show: Boolean) {
         _state.update { it.copy(showAnalysisDetails = show) }
+        if (show) {
+            viewModelScope.launch {
+                val url = syncManager.getActiveProviderFolderUrl()
+                _state.update { it.copy(folderUrl = url) }
+            }
+        }
     }
 }

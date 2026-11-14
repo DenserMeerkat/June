@@ -10,7 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
-import com.denser.june.presentation.utils.TagUtils
+import com.denser.june.presentation.utils.TagUiUtils
 import com.denser.june.presentation.components.JuneDialog
 
 @Composable
@@ -45,7 +45,7 @@ fun DeleteTagDialog(
                         )
                     },
                     shape = RoundedCornerShape(12.dp),
-                    colors = TagUtils.getTagInputChipColors(tagName),
+                    colors = TagUiUtils.getTagInputChipColors(tagName),
                     border = null
                 )
                 Text(

@@ -2,6 +2,7 @@ package com.denser.june.core.markdown
 
 import com.denser.june.core.domain.markdown.MarkdownEngine
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.JournalAudio
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.SongDetails
 import org.junit.Assert.assertEquals
@@ -255,5 +256,55 @@ class MarkdownEngineTest {
         assertEquals("Madison Square Garden", parsed.location?.name)
         assertEquals("Fix You", parsed.songDetails?.title)
         assertEquals("Great music and atmosphere!", parsed.content)
+    }
+
+    @Test
+    fun testExportMarkdown_AudioAndSongHtmlElements() {
+        val tempSongFile = java.io.File.createTempFile("preview", ".mp3")
+        tempSongFile.deleteOnExit()
+
+        val journal = Journal(
+            id = "test-audio-song",
+            title = "Voice and Music",
+            content = "Recording memories today.",
+            audios = listOf(
+                JournalAudio(id = "a1", path = "/storage/audios/memo1.m4a", durationMs = 12000L)
+            ),
+            songDetails = SongDetails(
+                title = "Viva La Vida",
+                artistName = "Coldplay",
+                localPreviewPath = tempSongFile.absolutePath
+            ),
+            createdAt = 1773000000000L,
+            updatedAt = null,
+            dateTime = 1773000000000L
+        )
+
+        val fullMd = MarkdownEngine.toMarkdown(
+            journal = journal,
+            relativeAudioPathPrefix = "audios/test-audio-song",
+            relativeSongPathPrefix = "songs",
+            includeAudios = true,
+            includeSongFiles = true
+        )
+
+        assertTrue(fullMd.contains("## Audio"))
+        assertTrue(fullMd.contains("<audio controls src=\"audios/test-audio-song/memo1.m4a\"></audio>"))
+        assertTrue(fullMd.contains("## Song"))
+        assertTrue(fullMd.contains("**Viva La Vida** — Coldplay"))
+        assertTrue(fullMd.contains("<audio controls src=\"songs/${tempSongFile.name}\"></audio>"))
+
+        val withoutAudioOrSong = MarkdownEngine.toMarkdown(
+            journal = journal,
+            includeAudios = false,
+            includeSongFiles = false
+        )
+        assertFalse(withoutAudioOrSong.contains("## Audio"))
+        assertFalse(withoutAudioOrSong.contains("## Song"))
+        assertFalse(withoutAudioOrSong.contains("<audio controls"))
+
+        val parsed = MarkdownEngine.fromMarkdown(fullMd)
+        assertEquals("Voice and Music", parsed.title)
+        assertEquals("Recording memories today.", parsed.content)
     }
 }

@@ -5,15 +5,30 @@ import androidx.lifecycle.viewModelScope
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.presentation.screens.settings.screens.lock.LockSessionVM
+import com.denser.june.core.domain.preferences.PrivacyPreferences
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class VaultVM(
     private val journalRepository: JournalRepository,
-    private val lockSessionVM: LockSessionVM
+    private val lockSessionVM: LockSessionVM,
+    private val privacyPreferences: PrivacyPreferences
 ) : ViewModel() {
+
+    val isVaultProtected: StateFlow<Boolean?> = combine(
+        privacyPreferences.getVaultUseCustomLockFlow(),
+        privacyPreferences.getVaultLockTypeFlow(),
+        privacyPreferences.getAppLockFlow()
+    ) { useCustomLock, vaultLockType, isAppLockEnabled ->
+        (useCustomLock && vaultLockType != null) || isAppLockEnabled
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = null
+    )
 
     val isVaultUnlocked: StateFlow<Boolean> = lockSessionVM.isVaultUnlocked
 

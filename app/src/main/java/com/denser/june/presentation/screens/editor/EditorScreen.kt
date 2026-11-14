@@ -25,19 +25,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.media.compress.CompressUtils
+import com.denser.june.core.media.exif.ExifUtils
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.TimeFormat
 import com.denser.june.core.utils.toDateWithDay
+import com.denser.june.core.utils.toMediumDate
 import com.denser.june.core.utils.toFullTime
 import com.denser.june.core.utils.toLocalTime
 import com.denser.june.core.utils.LanguageHelper
-import com.denser.june.presentation.components.journal.ExportJournalSheet
 import com.denser.june.presentation.components.font.FontPanel
 import com.denser.june.presentation.components.color.ThemePanel
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.screens.editor.components.*
-import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import com.denser.june.presentation.theme.JuneThemeWrapper
 import com.denser.june.core.media.color.ExtractedMediaColor
 import com.denser.june.core.media.color.ExtractedMediaTheme
@@ -73,7 +73,6 @@ fun EditorScreen(
     val context = LocalContext.current
 
     val dialogState = rememberEditorDialogState()
-    var showOptionsSheet by remember { mutableStateOf(false) }
     val hyphenState = viewModel.hyphenState
 
     val activeTrigger = hyphenState.activeTrigger
@@ -109,19 +108,21 @@ fun EditorScreen(
 
     LaunchedEffect(state.images, state.songDetails?.localThumbnailPath) {
         val songThumbnail = state.songDetails?.localThumbnailPath
+        val photoPathsOnly = state.images.filterNot { ExifUtils.isVideoPath(it) }
         extractedMediaColors = MediaColorExtractor.extractColors(
             context = context,
-            imagePaths = state.images,
+            imagePaths = photoPathsOnly,
             songThumbnailPath = songThumbnail
         )
         extractedMediaThemes = MediaColorExtractor.extractThemes(
             context = context,
-            imagePaths = state.images,
+            imagePaths = photoPathsOnly,
             songThumbnailPath = songThumbnail
         )
     }
 
     val formattedDate = remember(state.dateTime) { state.dateTime.toDateWithDay() }
+    val compactFormattedDate = remember(state.dateTime) { state.dateTime.toMediumDate() }
     val formattedTime = remember(state.dateTime, state.timeFormat) {
         val time = state.dateTime.toLocalTime()
         if (time != LocalTime.MIDNIGHT) time.toFullTime(is24Hour = state.timeFormat == TimeFormat.TWENTY_FOUR_HOUR) else null
@@ -199,6 +200,10 @@ fun EditorScreen(
             },
             onRemoveLocation = { if (!isCustomizing) viewModel.onAction(EditorAction.RemoveLocation) },
             onLocationDialogToggle = { if (!isCustomizing) dialogState.showLocationDialog = true },
+            onAudioClick = { initialAudioId ->
+                if (!isCustomizing) navigator.navigateTo(Route.RecordAudio(initialAudioId), isSingleTop = true)
+            },
+            onRemoveAudio = { if (!isCustomizing) viewModel.onAction(EditorAction.RemoveAudio(it)) }
         )
     }
 
@@ -265,7 +270,7 @@ fun EditorScreen(
                     onOptionsClick = {
                         keyboardController?.hide()
                         focusManager.clearFocus(force = true)
-                        showOptionsSheet = true
+                        dialogState.showOptionsSheet = true
                     }
                 )
             },
@@ -327,18 +332,25 @@ fun EditorScreen(
                                     animationSpec = tween(fontAnimDuration, easing = fontEasing)
                                 ) + fadeOut(animationSpec = tween(fontAnimDuration, easing = fontEasing))
                             ) {
-                                if (state.images.isNotEmpty() || state.songDetails != null || state.location != null) {
+                                if (state.images.isNotEmpty() || state.audios.isNotEmpty() || state.songDetails != null || state.location != null) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     JournalItemsPreview(
                                         mediaPaths = state.images,
+                                        audios = state.audios,
                                         mediaOperations = mediaOperations,
                                         songDetails = state.songDetails,
                                         location = state.location,
                                         processingMediaPaths = state.processingMediaPaths,
+                                        processingAudioIds = state.processingAudioIds,
                                         readOnly = isCustomizing,
                                         selectedSlideIndex = previewSlideIndex,
                                         onSlideIndexChange = { previewSlideIndex = it },
                                         theme = state.theme,
+                                        onAudioClick = { initialAudioId ->
+                                            if (!isCustomizing) {
+                                                navigator.navigateTo(Route.RecordAudio(initialAudioId), isSingleTop = true)
+                                            }
+                                        },
                                         onShowAllClick = {
                                             if (!isCustomizing) {
                                                 navigator.navigateTo(
@@ -398,6 +410,7 @@ fun EditorScreen(
                                 EditorMetadataBar(
                                     emoji = state.emoji,
                                     formattedDate = formattedDate,
+                                    compactFormattedDate = compactFormattedDate,
                                     formattedTime = formattedTime,
                                     tagCount = state.tags.size,
                                     onEmojiClick = {
@@ -540,64 +553,5 @@ fun EditorScreen(
             editorState = state,
             onAction = viewModel::onAction
         )
-
-        var journalToExport by remember { mutableStateOf<Journal?>(null) }
-
-        ExportJournalSheet(
-            journal = journalToExport,
-            onDismiss = { journalToExport = null }
-        )
-
-        if (showOptionsSheet) {
-            val journalPreview = remember(state) {
-                Journal(
-                    id = state.journalId ?: "",
-                    title = state.title,
-                    content = state.content,
-                    emoji = state.emoji,
-                    images = state.images,
-                    location = state.location,
-                    songDetails = state.songDetails,
-                    tags = state.tags,
-                    createdAt = state.createdAt,
-                    updatedAt = state.updatedAt,
-                    dateTime = state.dateTime,
-                    isBookmarked = state.isBookmarked,
-                    isArchived = state.isArchived,
-                    isDraft = state.isDraft,
-                    isLocked = state.isLocked,
-                    deletedAt = state.deletedAt,
-                    syncedAt = state.syncedAt,
-                    cloudId = state.cloudId
-                )
-            }
-            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-            val scope = rememberCoroutineScope()
-
-            ModalBottomSheet(
-                onDismissRequest = { showOptionsSheet = false },
-                sheetState = sheetState,
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            ) {
-                JournalOptionsSheet(
-                    journal = journalPreview,
-                    is24Hour = state.timeFormat == TimeFormat.TWENTY_FOUR_HOUR,
-                    onDismiss = { showOptionsSheet = false },
-                    onToggleBookmark = { viewModel.onAction(EditorAction.ToggleBookmark) },
-                    onToggleLock = { viewModel.onAction(EditorAction.ToggleLock) },
-                    onExportMarkdown = {
-                        showOptionsSheet = false
-                        journalToExport = journalPreview
-                    },
-                    onDeleteOrRestore = {
-                        if (state.isDeleted) {
-                            viewModel.onAction(EditorAction.RestoreJournal)
-                        } else {
-                            viewModel.onAction(EditorAction.DeleteJournal)
-                        }
-                    }
-                )
-            }
-        }
     }
 }

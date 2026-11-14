@@ -23,6 +23,7 @@ import com.denser.june.core.domain.preferences.SyncPreferences
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneBackButton
 import com.denser.june.presentation.components.JuneConnectedItemShape
+import com.denser.june.presentation.components.JuneSwitchTile
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -98,69 +99,30 @@ fun DeveloperSettingsScreen() {
         ) {
             item {
                 SettingSection(stringResource(R.string.logging)) {
-                    SettingsItem(
+                    JuneSwitchTile(
                         title = stringResource(R.string.sync_logging),
-                        onClick = {
-                            scope.launch { syncPrefs.setSyncLoggingEnabled(!isSyncLoggingEnabled) }
-                        },
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(R.drawable.sync_24px),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
-                        },
-                        trailingContent = {
-                            Switch(
-                                checked = isSyncLoggingEnabled,
-                                onCheckedChange = { enabled ->
-                                    scope.launch { syncPrefs.setSyncLoggingEnabled(enabled) }
-                                }
-                            )
+                        iconRes = R.drawable.sync_24px,
+                        checked = isSyncLoggingEnabled,
+                        onCheckedChange = { enabled ->
+                            scope.launch { syncPrefs.setSyncLoggingEnabled(enabled) }
                         }
                     )
 
-                    SettingsItem(
+                    JuneSwitchTile(
                         title = stringResource(R.string.backup_logging),
-                        onClick = {
-                            scope.launch { syncPrefs.setBackupLoggingEnabled(!isBackupLoggingEnabled) }
-                        },
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(R.drawable.drive_folder_upload_24px),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
-                        },
-                        trailingContent = {
-                            Switch(
-                                checked = isBackupLoggingEnabled,
-                                onCheckedChange = { enabled ->
-                                    scope.launch { syncPrefs.setBackupLoggingEnabled(enabled) }
-                                }
-                            )
+                        iconRes = R.drawable.drive_folder_upload_24px,
+                        checked = isBackupLoggingEnabled,
+                        onCheckedChange = { enabled ->
+                            scope.launch { syncPrefs.setBackupLoggingEnabled(enabled) }
                         }
                     )
 
-                    SettingsItem(
+                    JuneSwitchTile(
                         title = stringResource(R.string.database_logging),
-                        onClick = {
-                            scope.launch { syncPrefs.setDatabaseLoggingEnabled(!isDatabaseLoggingEnabled) }
-                        },
-                        leadingContent = {
-                            Icon(
-                                painter = painterResource(R.drawable.database_24px),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
-                        },
-                        trailingContent = {
-                            Switch(
-                                checked = isDatabaseLoggingEnabled,
-                                onCheckedChange = { enabled ->
-                                    scope.launch { syncPrefs.setDatabaseLoggingEnabled(enabled) }
-                                }
-                            )
+                        iconRes = R.drawable.database_24px,
+                        checked = isDatabaseLoggingEnabled,
+                        onCheckedChange = { enabled ->
+                            scope.launch { syncPrefs.setDatabaseLoggingEnabled(enabled) }
                         }
                     )
 

@@ -39,3 +39,6 @@ proguard-project.txt
 
 # Emoji build script cache
 tools/emojis/cache/
+
+# Local temporary test files
+scratch/

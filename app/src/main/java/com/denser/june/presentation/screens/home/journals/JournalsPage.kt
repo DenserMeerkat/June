@@ -88,8 +88,6 @@ fun JournalsPage(
     }
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val scope = rememberCoroutineScope()
 
     var journalToExport by remember { mutableStateOf<Journal?>(null) }
 
@@ -103,36 +101,30 @@ fun JournalsPage(
         feedState.journals.find { it.id == id }
     }
 
-    if (currentJournalForOptions != null) {
-        ModalBottomSheet(
-            onDismissRequest = { selectedJournalForOptions = null },
-            sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        ) {
-            JournalOptionsSheet(
-                journal = currentJournalForOptions,
-                is24Hour = is24Hour,
-                onDismiss = { selectedJournalForOptions = null },
-                onToggleBookmark = {
-                    viewModel.toggleBookmark(currentJournalForOptions.id)
-                },
-                onToggleLock = {
-                    viewModel.toggleLock(currentJournalForOptions.id)
-                },
-                onExportMarkdown = {
-                    journalToExport = currentJournalForOptions
-                    selectedJournalForOptions = null
-                },
-                onDeleteOrRestore = {
-                    if (currentJournalForOptions.isDeleted) {
-                        viewModel.restoreJournal(currentJournalForOptions.id)
-                    } else {
-                        viewModel.deleteJournal(currentJournalForOptions.id)
-                    }
+    JournalOptionsSheet(
+        journal = currentJournalForOptions,
+        is24Hour = is24Hour,
+        onDismiss = { selectedJournalForOptions = null },
+        onToggleBookmark = {
+            currentJournalForOptions?.id?.let { viewModel.toggleBookmark(it) }
+        },
+        onToggleLock = {
+            currentJournalForOptions?.id?.let { viewModel.toggleLock(it) }
+        },
+        onExportMarkdown = {
+            journalToExport = currentJournalForOptions
+            selectedJournalForOptions = null
+        },
+        onDeleteOrRestore = {
+            currentJournalForOptions?.let {
+                if (it.isDeleted) {
+                    viewModel.restoreJournal(it.id)
+                } else {
+                    viewModel.deleteJournal(it.id)
                 }
-            )
+            }
         }
-    }
+    )
 
     val journals = feedState.journals
 
@@ -251,7 +243,24 @@ fun JournalsPage(
                             ),
                             subtitle = stringResource(
                                 if (hasActiveFilters) R.string.no_matches_found_desc else R.string.no_journals_yet_desc
-                            )
+                            ),
+                            action = if (hasActiveFilters) {
+                                {
+                                    Button(
+                                        onClick = { viewModel.resetAllFilters() }
+                                    ) {
+                                        Text(stringResource(R.string.clear_filters))
+                                    }
+                                }
+                            } else {
+                                {
+                                    Button(
+                                        onClick = { navigator.navigateTo(Route.Editor()) }
+                                    ) {
+                                        Text(stringResource(R.string.new_journal))
+                                    }
+                                }
+                            }
                         )
                     }
                 } else {

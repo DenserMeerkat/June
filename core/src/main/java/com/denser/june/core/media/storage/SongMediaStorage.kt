@@ -14,7 +14,7 @@ object SongMediaStorage {
     fun persistSongArt(context: Context, uri: Uri, maxDimension: Int = 1024, quality: Int = 80): String? {
         return try {
             val contentResolver = context.contentResolver
-            val songArtDir = File(context.filesDir, "song_media/art").apply { if (!exists()) mkdirs() }
+            val songArtDir = File(context.filesDir, "songs/art").apply { if (!exists()) mkdirs() }
             val fileName = "art_${System.currentTimeMillis()}_${(0..999).random()}.jpg"
             val file = File(songArtDir, fileName)
 
@@ -119,7 +119,30 @@ object SongMediaStorage {
         if (path.isNullOrBlank()) return null
         val file = File(path)
         if (file.exists() && file.length() > 0L) return file
-        val candidate = File(File(context.filesDir, "song_media/$subDir"), file.name)
-        return candidate.takeIf { it.exists() && it.length() > 0L }
+        val candidate = File(File(context.filesDir, "songs/$subDir"), file.name)
+        if (candidate.exists() && candidate.length() > 0L) return candidate
+        val legacy = File(File(context.filesDir, "song_media/$subDir"), file.name)
+        return legacy.takeIf { it.exists() && it.length() > 0L }
+    }
+
+    fun migrateLegacySongStorage(context: Context) {
+        val legacyDir = File(context.filesDir, "song_media")
+        if (!legacyDir.exists() || !legacyDir.isDirectory) return
+        val targetDir = File(context.filesDir, "songs").apply { if (!exists()) mkdirs() }
+        listOf("library", "art").forEach { sub ->
+            val legacySub = File(legacyDir, sub)
+            if (legacySub.exists() && legacySub.isDirectory) {
+                val targetSub = File(targetDir, sub).apply { if (!exists()) mkdirs() }
+                legacySub.listFiles()?.forEach { file ->
+                    val dest = File(targetSub, file.name)
+                    if (!dest.exists() || dest.length() == 0L) {
+                        file.copyTo(dest, overwrite = true)
+                    }
+                    file.delete()
+                }
+                legacySub.delete()
+            }
+        }
+        legacyDir.delete()
     }
 }

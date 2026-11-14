@@ -17,6 +17,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.denser.june.MainVM
 import com.denser.june.core.domain.model.AppTheme
 import com.denser.june.presentation.navigation.AppNavigator
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.denser.june.presentation.navigation.JuneNavHost
 import com.denser.june.presentation.navigation.NavigationIntent
 import com.denser.june.presentation.navigation.Route
@@ -26,6 +29,7 @@ import com.denser.june.presentation.theme.LocalInternetAllowed
 import com.denser.june.presentation.theme.LocalSyncEnabled
 import com.denser.june.presentation.utils.StartupManager
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import org.koin.compose.koinInject
 import com.denser.june.core.domain.billing.BillingHandler
 import com.denser.june.presentation.plus.JunePlusPaywallScreen
@@ -49,7 +53,21 @@ fun JuneApp(
     val appState by mainVM.state.collectAsStateWithLifecycle()
 
     val navigator = koinInject<AppNavigator>()
-    val backStack = remember { mutableStateListOf<Route>(Route.Home) }
+    val backStack = rememberSaveable(
+        saver = listSaver<SnapshotStateList<Route>, String>(
+            save = { list -> list.map { Json.encodeToString(Route.serializer(), it) } },
+            restore = { savedList ->
+                mutableStateListOf<Route>().apply {
+                    val restored = savedList.mapNotNull {
+                        runCatching { Json.decodeFromString(Route.serializer(), it) }.getOrNull()
+                    }
+                    addAll(if (restored.isEmpty()) listOf(Route.Home) else restored)
+                }
+            }
+        )
+    ) {
+        mutableStateListOf<Route>(Route.Home)
+    }
 
     val startupManager = koinInject<StartupManager>()
     val pendingWhatsChanged by startupManager.pendingWhatsChanged.collectAsStateWithLifecycle(initialValue = null)

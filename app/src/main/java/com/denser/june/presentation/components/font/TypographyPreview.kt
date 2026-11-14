@@ -29,7 +29,7 @@ import com.denser.june.core.domain.model.FontVariationConfig
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.presentation.screens.editor.components.EditorMetadataBar
-import com.denser.june.presentation.screens.home.timeline.components.TimelineJournalCard
+import com.denser.june.presentation.screens.home.timeline.components.journal.TimelineJournalCard
 import com.denser.june.presentation.theme.provideTypography
 import com.denser.june.presentation.utils.UiUtils
 import java.time.LocalDateTime

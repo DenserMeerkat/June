@@ -16,6 +16,7 @@ data class Journal(
     val images: List<String> = emptyList(),
     val location: JournalLocation? = null,
     val songDetails: SongDetails? = null,
+    val audios: List<JournalAudio> = emptyList(),
     val tags: List<String> = emptyList(),
     val createdAt: Long,
     val updatedAt: Long?,
@@ -43,12 +44,15 @@ data class Journal(
             localPreviewPath = other.songDetails.localPreviewPath?.let { File(it).name },
             localThumbnailPath = other.songDetails.localThumbnailPath?.let { File(it).name }
         )
+        val thisAudios = this.audios.map { it.copy(path = File(it.path).name) }
+        val otherAudios = other.audios.map { it.copy(path = File(it.path).name) }
         return this.title == other.title &&
                this.content == other.content &&
                this.emoji == other.emoji &&
                this.images.map { File(it).name } == other.images.map { File(it).name } &&
                this.location == other.location &&
                thisSongNormalized == otherSongNormalized &&
+               thisAudios == otherAudios &&
                this.tags == other.tags &&
                this.isBookmarked == other.isBookmarked &&
                this.isArchived == other.isArchived &&
@@ -71,7 +75,10 @@ data class Journal(
             songDetails = songDetails?.copy(
                 localPreviewPath = songDetails.localPreviewPath?.let { File(it).name },
                 localThumbnailPath = songDetails.localThumbnailPath?.let { File(it).name }
-            )
+            ),
+            audios = audios.map {
+                it.copy(path = File(it.path).name)
+            }.sortedBy { it.id }
         )
         val jsonString = canonicalJsonFormatter.encodeToString(serializer(), normalized)
         val bytes = java.security.MessageDigest.getInstance("SHA-256")

@@ -93,12 +93,14 @@ object SyncFixtures {
         totalJournals: Int = 0,
         totalMedia: Int = 0,
         totalSongMedia: Int = 0,
+        totalAudio: Int = 0,
         deletedIds: List<String> = emptyList(),
         schemaVersion: Int = SyncManifest.CURRENT_SCHEMA_VERSION,
         deviceId: String = "test-device-A",
         journalMetadata: Map<String, com.denser.june.core.domain.sync.JournalSyncMeta> = emptyMap(),
         mediaMetadata: Map<String, com.denser.june.core.domain.sync.MediaSyncMeta> = emptyMap(),
-        songMediaMetadata: Map<String, com.denser.june.core.domain.sync.MediaSyncMeta> = emptyMap()
+        songMediaMetadata: Map<String, com.denser.june.core.domain.sync.MediaSyncMeta> = emptyMap(),
+        audioMetadata: Map<String, com.denser.june.core.domain.sync.MediaSyncMeta> = emptyMap()
     ) = SyncManifest(
         lastSyncTime = T1,
         lastSyncDeviceId = deviceId,
@@ -107,9 +109,11 @@ object SyncFixtures {
         totalJournals = totalJournals,
         totalMedia = totalMedia,
         totalSongMedia = totalSongMedia,
+        totalAudio = totalAudio,
         deletedIds = deletedIds,
         journalMetadata = journalMetadata,
         mediaMetadata = mediaMetadata,
-        songMediaMetadata = songMediaMetadata
+        songMediaMetadata = songMediaMetadata,
+        audioMetadata = audioMetadata
     )
 }

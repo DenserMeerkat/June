@@ -39,7 +39,7 @@ import com.denser.june.presentation.screens.home.tags.components.DeleteTagDialog
 import com.denser.june.presentation.screens.home.tags.components.FilterBottomSheet
 import com.denser.june.presentation.screens.home.tags.components.FilterFab
 import com.denser.june.presentation.screens.home.tags.components.RenameTagDialog
-import com.denser.june.presentation.utils.TagUtils
+import com.denser.june.presentation.utils.TagUiUtils
 import com.denser.june.presentation.utils.UiUtils
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -76,14 +76,13 @@ fun TagsPage() {
     var showFilterSheet by remember { mutableStateOf(false) }
 
     var selectedJournalForOptions by remember { mutableStateOf<Journal?>(null) }
-    val optionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
     val filterSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val hasAvailableFilters = availableFilters.isNotEmpty() || selectedFilters.isNotEmpty()
     val activeFilterCount = selectedFilters.size
-    val currentCategorySpec = TagUtils.getCategoryUiSpec(selectedCategory)
+    val currentCategorySpec = TagUiUtils.getCategoryUiSpec(selectedCategory)
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -93,7 +92,7 @@ fun TagsPage() {
                 divider = {}
             ) {
                 TagCategory.entries.forEach { category ->
-                    val spec = TagUtils.getCategoryUiSpec(category)
+                    val spec = TagUiUtils.getCategoryUiSpec(category)
                     val isSelected = selectedCategory == category
 
                     Tab(
@@ -355,36 +354,30 @@ fun TagsPage() {
             onDismiss = { journalToExport = null }
         )
 
-        if (currentJournalForOptions != null) {
-            ModalBottomSheet(
-                onDismissRequest = { selectedJournalForOptions = null },
-                sheetState = optionsSheetState,
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            ) {
-                JournalOptionsSheet(
-                    journal = currentJournalForOptions,
-                    is24Hour = is24Hour,
-                    onDismiss = { selectedJournalForOptions = null },
-                    onToggleBookmark = {
-                        viewModel.toggleBookmark(currentJournalForOptions.id)
-                    },
-                    onToggleLock = {
-                        viewModel.toggleLock(currentJournalForOptions.id)
-                    },
-                    onExportMarkdown = {
-                        journalToExport = currentJournalForOptions
-                        selectedJournalForOptions = null
-                    },
-                    onDeleteOrRestore = {
-                        if (currentJournalForOptions.isDeleted) {
-                            viewModel.restoreJournal(currentJournalForOptions.id)
-                        } else {
-                            viewModel.softDelete(currentJournalForOptions.id)
-                        }
+        JournalOptionsSheet(
+            journal = currentJournalForOptions,
+            is24Hour = is24Hour,
+            onDismiss = { selectedJournalForOptions = null },
+            onToggleBookmark = {
+                currentJournalForOptions?.id?.let { viewModel.toggleBookmark(it) }
+            },
+            onToggleLock = {
+                currentJournalForOptions?.id?.let { viewModel.toggleLock(it) }
+            },
+            onExportMarkdown = {
+                journalToExport = currentJournalForOptions
+                selectedJournalForOptions = null
+            },
+            onDeleteOrRestore = {
+                currentJournalForOptions?.let {
+                    if (it.isDeleted) {
+                        viewModel.restoreJournal(it.id)
+                    } else {
+                        viewModel.softDelete(it.id)
                     }
-                )
+                }
             }
-        }
+        )
 
         if (selectedPrimaryTag != null && allTags != null) {
             if (showRenameDialog) {

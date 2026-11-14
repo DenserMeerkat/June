@@ -29,6 +29,7 @@ fun MapCreditsBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = { setShowSheet(false) },
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         modifier = modifier
     ) {
         val items = listOf(
@@ -70,7 +71,7 @@ fun MapCreditsBottomSheet(
                         JuneConnectedItem(
                             title = item.name,
                             subtitle = item.credit,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             trailingContent = {
                                 Icon(
                                     painter = painterResource(R.drawable.open_in_new_24px),

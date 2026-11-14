@@ -22,7 +22,7 @@ abstract class JournalDatabase : RoomDatabase() {
     abstract fun songLibraryDao(): SongLibraryDao
 
     companion object {
-        const val VERSION = 6
+        const val VERSION = 7
         const val DB_NAME = "journal_database"
     }
 }

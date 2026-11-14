@@ -1,0 +1,6 @@
+- Built-in audio recorder with live waveform and recording preview.
+- Audio attachment cards with playback controls in editor and journal entries.
+- Cloud sync fixes and performance optimizations.
+- Cloud sync overview breakdown and UI improvements.
+- UI polish and refinements.
+

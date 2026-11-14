@@ -1,0 +1,17 @@
+<resources>
+    <string name="connected">已連線</string>
+    <string name="direct_connection">直接連線</string>
+    <string name="direct_connection_desc">June 直接與 Google 雲端硬碟連線，絕不經過中轉伺服器。</string>
+    <string name="google_account">Google 帳號</string>
+    <string name="link_google_drive">連結 Google 雲端硬碟</string>
+    <string name="link_google_drive_desc">將日記隱私同步至 Google 雲端硬碟中的專用應用程式資料夾。</string>
+    <string name="no_server_tracking">零追蹤</string>
+    <string name="no_server_tracking_desc">無外部資料庫、追蹤或數據分析。所有日記嚴格保持私密。</string>
+    <string name="profile_and_email">帳號資訊</string>
+    <string name="profile_and_email_desc">僅在本機用於顯示登入狀態，絕不保存或與他人分享。</string>
+    <string name="sandboxed_storage">沙盒隔離存取</string>
+    <string name="sandboxed_storage_desc">僅限存取 June 專用資料夾，無法檢視或讀取其他雲端檔案。</string>
+    <string name="sign_in_with_google">透過 Google 登入</string>
+    <string name="privacy_and_data_security">隱私與資料安全</string>
+    <string name="privacy_and_data_security_desc">June 在與 Google 雲端硬碟同步時保護您資料的方式：</string>
+</resources>

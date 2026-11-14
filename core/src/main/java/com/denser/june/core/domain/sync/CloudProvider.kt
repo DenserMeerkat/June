@@ -76,7 +76,6 @@ interface CloudProvider {
      */
     suspend fun downloadMedia(journalId: String, cloudId: String, targetFile: File): Result<File>
 
-
     /**
      * Update the sync manifest in the cloud.
      */
@@ -107,10 +106,55 @@ interface CloudProvider {
      */
     suspend fun deleteJournal(cloudId: String): Result<Unit>
 
+    /**
+     * Upload a song media file to the cloud.
+     */
     suspend fun uploadSongMedia(file: File): Result<String>
+
+    /**
+     * Download a song media file from the cloud.
+     */
     suspend fun downloadSongMedia(filename: String, targetFile: File): Result<File>
+
+    /**
+     * List all song media filenames in the cloud.
+     */
     suspend fun listSongMedia(): Result<List<String>>
+
+    /**
+     * Delete a song media file from the cloud.
+     */
     suspend fun deleteSongMedia(filename: String): Result<Unit>
+
+    /**
+     * Upload an audio recording to the cloud.
+     */
+    suspend fun uploadAudio(file: File): Result<String>
+
+    /**
+     * Download an audio recording from the cloud.
+     */
+    suspend fun downloadAudio(filename: String, targetFile: File): Result<File>
+
+    /**
+     * List all audio recording filenames in the cloud.
+     */
+    suspend fun listAudios(): Result<List<String>>
+
+    /**
+     * Delete an audio recording from the cloud.
+     */
+    suspend fun deleteAudio(filename: String): Result<Unit>
+
+    /**
+     * Flow of the remote folder URL (e.g., Google Drive folder web link) if supported.
+     */
+    val folderUrl: Flow<String?> get() = kotlinx.coroutines.flow.flowOf(null)
+
+    /**
+     * Reconnect or rediscover the cloud folder if corrupted or missing.
+     */
+    suspend fun reconnectFolder(): Result<Unit> = Result.success(Unit)
 }
 
 @Serializable
@@ -122,12 +166,14 @@ data class SyncManifest(
     val totalJournals: Int,
     val totalMedia: Int = 0,
     val totalSongMedia: Int = 0,
+    val totalAudio: Int = 0,
     val deletedIds: List<String> = emptyList(),
     val journalMetadata: Map<String, JournalSyncMeta> = emptyMap(),
     val mediaMetadata: Map<String, MediaSyncMeta> = emptyMap(),
-    val songMediaMetadata: Map<String, MediaSyncMeta> = emptyMap()
+    val songMediaMetadata: Map<String, MediaSyncMeta> = emptyMap(),
+    val audioMetadata: Map<String, MediaSyncMeta> = emptyMap()
 ) {
     companion object {
-        const val CURRENT_SCHEMA_VERSION = 4
+        const val CURRENT_SCHEMA_VERSION = 5
     }
 }

@@ -44,7 +44,7 @@ class SongRepositoryImpl(
     private val context: Context
 ) : SongRepository {
 
-    private val songMediaDir = File(context.filesDir, "song_media")
+    private val songMediaDir = File(context.filesDir, "songs")
     private val libraryDir = File(songMediaDir, "library").apply { if (!exists()) mkdirs() }
     private val artDir = File(songMediaDir, "art").apply { if (!exists()) mkdirs() }
 

@@ -25,6 +25,7 @@ data class ParsedVideoInfo(
 
 object VideoMetadataParser {
     private const val METADATA_KEY_VIDEO_CODEC_MIME_TYPE = 40
+    private const val MIN_VALID_EPOCH_MILLIS = 946684800000L
 
     fun parseVideoMetadata(
         retriever: MediaMetadataRetriever,
@@ -43,7 +44,12 @@ object VideoMetadataParser {
         val durationStr = if (vDuration > 0L) vDuration.toSongTimestamp() else null
 
         val dateStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE)
-        val dateTakenMillis = parseIsoDate(dateStr) ?: fallbackDateTime ?: System.currentTimeMillis()
+        val parsedDate = if (!dateStr.isNullOrBlank() && !dateStr.startsWith("1904") && !dateStr.startsWith("1970")) {
+            parseIsoDate(dateStr)
+        } else null
+        val dateTakenMillis = parsedDate
+            ?: fallbackDateTime?.takeIf { it > MIN_VALID_EPOCH_MILLIS }
+            ?: System.currentTimeMillis()
 
         val fps = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)?.toFloatOrNull()?.let {
             "${round(it).toInt()} fps"
@@ -138,13 +144,26 @@ object VideoMetadataParser {
 
     private fun parseIsoDate(dateStr: String?): Long? {
         if (dateStr.isNullOrBlank()) return null
-        return try {
-            val sdf = SimpleDateFormat("yyyyMMdd'T'HHmmss.SSS'Z'", Locale.US).apply {
-                timeZone = TimeZone.getTimeZone("UTC")
-            }
-            sdf.parse(dateStr)?.time
-        } catch (_: Exception) {
-            null
+        val patterns = arrayOf(
+            "yyyyMMdd'T'HHmmss.SSS'Z'",
+            "yyyyMMdd'T'HHmmss'Z'",
+            "yyyyMMdd'T'HHmmss",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd"
+        )
+        for (pattern in patterns) {
+            try {
+                val sdf = SimpleDateFormat(pattern, Locale.US).apply {
+                    if (pattern.endsWith("'Z'")) {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }
+                }
+                val parsed = sdf.parse(dateStr)
+                if (parsed != null && parsed.time > MIN_VALID_EPOCH_MILLIS) return parsed.time
+            } catch (_: Exception) {}
         }
+        return null
     }
 }

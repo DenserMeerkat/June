@@ -12,8 +12,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TagCategory
+import com.denser.june.core.utils.TagUtils
 import com.denser.june.presentation.components.JuneDialog
-import com.denser.june.presentation.utils.TagUtils
+import com.denser.june.presentation.utils.TagUiUtils
 
 private enum class WarningType {
     None, Switch, Merge
@@ -67,7 +68,7 @@ fun RenameTagDialog(
                         shape = RoundedCornerShape(14.dp),
                         isError = isConflict,
                         leadingIcon = {
-                            val spec = TagUtils.getCategoryUiSpec(targetCategory)
+                            val spec = TagUiUtils.getCategoryUiSpec(targetCategory)
                             Icon(
                                 painter = painterResource(spec.iconRes),
                                 contentDescription = null,

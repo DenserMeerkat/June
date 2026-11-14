@@ -10,15 +10,18 @@ import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.repository.SongRepository
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.domain.model.JournalAudio
 import com.denser.june.core.domain.model.JournalTheme
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongFetchEvent
 import com.denser.june.core.domain.model.SongFetchProgress
+import com.denser.june.core.media.storage.AudioStorageManager
 import com.denser.june.core.media.storage.MediaStorageManager
 import com.denser.june.core.utils.getTodayAtMidnight
 import com.denser.hyphen.model.TriggerConfig
 import com.denser.hyphen.state.HyphenTextState
 import android.content.Context
+import com.denser.june.core.media.compress.AudioCompressor
 import com.denser.june.core.media.compress.CompressUtils
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -56,6 +59,7 @@ class EditorVM(
     )
 
     private var existingJournal: Journal? = null
+    private val sessionCreatedAudioPaths = mutableSetOf<String>()
 
     private var searchTagsJob: Job? = null
 
@@ -342,10 +346,100 @@ class EditorVM(
             is EditorAction.SetLocation -> updateState { it.copy(location = action.location) }
             is EditorAction.RemoveLocation -> updateState { it.copy(location = null) }
 
+            is EditorAction.AddAudio -> {
+                sessionCreatedAudioPaths.add(action.audio.path)
+                updateState { it.copy(audios = it.audios + action.audio) }
+            }
+            is EditorAction.ImportAudio -> {
+                val placeholder = action.placeholderAudio
+                updateState {
+                    it.copy(
+                        audios = it.audios + placeholder,
+                        processingAudioIds = it.processingAudioIds + placeholder.id
+                    )
+                }
+                viewModelScope.launch {
+                    val isCompressEnabled = journalPrefs.isCompressAudioEnabled().first()
+                    val targetQuality = journalPrefs.getAudioCompressionQuality().first()
+                    val targetBitrate = if (isCompressEnabled) {
+                        AudioCompressor.getBitrateForQuality(targetQuality)
+                    } else null
+
+                    val result = AudioStorageManager.persistAudio(
+                        context = context,
+                        sourceUri = action.uri,
+                        title = placeholder.title,
+                        targetBitrate = targetBitrate,
+                        existingId = placeholder.id,
+                        fallbackDateTime = placeholder.createdAt
+                    )
+
+                    if (result != null) {
+                        sessionCreatedAudioPaths.add(result.path)
+                        updateState { state ->
+                            state.copy(
+                                audios = state.audios.map { if (it.id == placeholder.id) result else it },
+                                processingAudioIds = state.processingAudioIds - placeholder.id
+                            )
+                        }
+                    } else {
+                        updateState { state ->
+                            state.copy(
+                                audios = state.audios.filterNot { it.id == placeholder.id },
+                                processingAudioIds = state.processingAudioIds - placeholder.id
+                            )
+                        }
+                        _uiEvent.send("Failed to import audio")
+                    }
+                }
+            }
+            is EditorAction.ReplaceAudio -> {
+                updateState { state ->
+                    state.copy(
+                        audios = state.audios.map { if (it.id == action.oldId) action.audio else it },
+                        processingAudioIds = state.processingAudioIds - action.oldId
+                    )
+                }
+            }
+            is EditorAction.SetAudioProcessing -> {
+                updateState { state ->
+                    val updated = if (action.isProcessing) {
+                        state.processingAudioIds + action.audioId
+                    } else {
+                        state.processingAudioIds - action.audioId
+                    }
+                    state.copy(processingAudioIds = updated)
+                }
+            }
+            is EditorAction.RemoveAudio -> {
+                val target = _state.value.audios.firstOrNull { it.id == action.id }
+                if (target != null) {
+                    val isNewlyCreatedInSession = target.path in sessionCreatedAudioPaths
+                    val wasInExistingJournal = existingJournal?.audios.orEmpty().any { it.path == target.path }
+                    if (isNewlyCreatedInSession && !wasInExistingJournal) {
+                        AudioStorageManager.deleteAudio(target.path)
+                        sessionCreatedAudioPaths.remove(target.path)
+                    }
+                }
+                updateState { it.copy(
+                    audios = it.audios.filterNot { a -> a.id == action.id },
+                    processingAudioIds = it.processingAudioIds - action.id
+                ) }
+            }
+            is EditorAction.UpdateAudioTitle -> {
+                updateState { state ->
+                    state.copy(audios = state.audios.map {
+                        if (it.id == action.id) it.copy(title = action.title.trim().takeIf { t -> t.isNotBlank() }) else it
+                    })
+                }
+            }
+            is EditorAction.ReorderAudios -> updateState { it.copy(audios = action.audios) }
+
             is EditorAction.ToggleBookmark -> toggleBookmark()
             is EditorAction.ToggleLock -> toggleLock()
             is EditorAction.ToggleArchive -> toggleArchive()
             is EditorAction.SaveJournal -> saveJournal()
+            is EditorAction.DiscardChanges -> discardChanges()
             is EditorAction.NavigateBack -> {
                 if (_state.value.isDraft && _state.value.isDirty) {
                     saveDraft(_state.value)
@@ -377,6 +471,7 @@ class EditorVM(
         val original = existingJournal ?: return currentState.title.isNotBlank() ||
                 currentState.content.isNotBlank() ||
                 currentState.images.isNotEmpty() ||
+                currentState.audios.isNotEmpty() ||
                 currentState.emoji != null ||
                 currentState.tags.isNotEmpty() ||
                 currentState.songDetails != null ||
@@ -390,6 +485,7 @@ class EditorVM(
                 original.tags != currentState.tags ||
                 original.emoji != currentState.emoji ||
                 original.images != currentState.images ||
+                original.audios != currentState.audios ||
                 original.location != currentState.location ||
                 original.dateTime != currentState.dateTime ||
                 original.songDetails != currentState.songDetails ||
@@ -506,6 +602,7 @@ class EditorVM(
                         content = parsedContent,
                         emoji = journal.emoji,
                         images = journal.images,
+                        audios = journal.audios,
                         location = journal.location,
                         songDetails = details,
                         tags = journal.tags,
@@ -577,6 +674,7 @@ class EditorVM(
                 currentMarkdown.isBlank() &&
                 currentState.emoji == null &&
                 currentState.images.isEmpty() &&
+                currentState.audios.isEmpty() &&
                 currentState.songDetails == null &&
                 currentState.location == null &&
                 currentState.tags.isEmpty()
@@ -591,6 +689,7 @@ class EditorVM(
                 content = currentMarkdown,
                 emoji = currentState.emoji,
                 images = currentState.images,
+                audios = currentState.audios,
                 location = currentState.location,
                 songDetails = currentState.songDetails,
                 tags = currentState.tags,
@@ -610,12 +709,16 @@ class EditorVM(
                 val newId = journalRepo.insertJournal(journalToSave)
                 val savedDraft = journalToSave.copy(id = newId)
                 existingJournal = savedDraft
+                sessionCreatedAudioPaths.clear()
                 _state.update { it.copy(journalId = newId, content = currentMarkdown, isDirty = false, isDraft = true) }
             } else {
                 val imagesToDelete = existingJournal?.images.orEmpty().toSet() - currentState.images.toSet()
                 imagesToDelete.forEach { MediaStorageManager.deleteMedia(it) }
+                val audiosToDelete = existingJournal?.audios.orEmpty().map { it.path }.toSet() - currentState.audios.map { it.path }.toSet()
+                audiosToDelete.forEach { AudioStorageManager.deleteAudio(it) }
                 journalRepo.updateJournal(journalToSave)
                 existingJournal = journalToSave
+                sessionCreatedAudioPaths.clear()
                 _state.update { it.copy(content = currentMarkdown, isDirty = false) }
             }
         }
@@ -623,8 +726,8 @@ class EditorVM(
 
     private fun saveJournal() {
         viewModelScope.launch {
-            if (_state.value.processingMediaPaths.any { it.startsWith("content://") }) {
-                _state.first { current -> current.processingMediaPaths.none { it.startsWith("content://") } }
+            if (_state.value.processingMediaPaths.any { it.startsWith("content://") } || _state.value.processingAudioIds.isNotEmpty()) {
+                _state.first { current -> current.processingMediaPaths.none { it.startsWith("content://") } && current.processingAudioIds.isEmpty() }
             }
             val currentState = _state.value
             val currentTime = System.currentTimeMillis()
@@ -662,6 +765,7 @@ class EditorVM(
                 content = currentMarkdown,
                 emoji = currentState.emoji,
                 images = currentState.images,
+                audios = currentState.audios,
                 location = currentState.location,
                 songDetails = currentState.songDetails,
                 tags = currentState.tags,
@@ -680,6 +784,8 @@ class EditorVM(
             )
 
             if (existingJournal != null) {
+                val audiosToDelete = existingJournal?.audios.orEmpty().map { it.path }.toSet() - currentState.audios.map { it.path }.toSet()
+                audiosToDelete.forEach { AudioStorageManager.deleteAudio(it) }
                 journalRepo.updateJournal(journalToSave)
                 existingJournal = journalToSave
             } else {
@@ -687,6 +793,7 @@ class EditorVM(
                 existingJournal = journalToSave.copy(id = newId)
                 _state.update { it.copy(journalId = newId) }
             }
+            sessionCreatedAudioPaths.clear()
 
             _state.update {
                 it.copy(
@@ -802,5 +909,19 @@ class EditorVM(
         val currentSong = songDetails ?: _state.value.clipTrimmerSong ?: _state.value.pendingStagedSong ?: _state.value.songDetails ?: return
         val updatedSong = currentSong.copy(clipStartMs = startMs, clipEndMs = endMs)
         updateState { it.copy(songDetails = updatedSong, clipTrimmerSong = null, pendingStagedSong = null) }
+    }
+
+    private fun discardChanges() {
+        val existingAudioPaths = existingJournal?.audios.orEmpty().map { it.path }.toSet()
+        val toDelete = sessionCreatedAudioPaths - existingAudioPaths
+        toDelete.forEach { AudioStorageManager.deleteAudio(it) }
+        sessionCreatedAudioPaths.clear()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        if (_state.value.isDirty && !_state.value.isDraft) {
+            discardChanges()
+        }
     }
 }

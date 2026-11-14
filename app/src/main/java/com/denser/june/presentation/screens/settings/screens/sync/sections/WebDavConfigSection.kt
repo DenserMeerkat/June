@@ -2,6 +2,7 @@ package com.denser.june.presentation.screens.settings.screens.sync.sections
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,7 +21,6 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.sync.SyncStatus
 import com.denser.june.presentation.components.JuneTextField
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun WebDavConfigSection(
     isVisible: Boolean,
@@ -28,7 +28,6 @@ fun WebDavConfigSection(
     webDavUser: String,
     webDavPass: String,
     isConfigLocked: Boolean,
-    isTestingConnection: Boolean,
     status: SyncStatus,
     urlError: String? = null,
     userError: String? = null,
@@ -36,14 +35,10 @@ fun WebDavConfigSection(
     onUrlChange: (String) -> Unit,
     onUserChange: (String) -> Unit,
     onPassChange: (String) -> Unit,
-    onToggleLock: () -> Unit,
-    onTestConnection: () -> Unit,
-    onManualSync: () -> Unit,
-    onStopSync: (() -> Unit)? = null
+    onToggleLock: () -> Unit
 ) {
     var passVisible by remember { mutableStateOf(false) }
     val isSyncing = status is SyncStatus.Syncing || status is SyncStatus.Preparing
-    val isAnyBusy = isSyncing || isTestingConnection
 
     AnimatedVisibility(
         visible = isVisible,
@@ -101,7 +96,7 @@ fun WebDavConfigSection(
                     placeholder = stringResource(R.string.server_url_placeholder),
                     leadingIcon = R.drawable.link_24px,
                     keyboardType = KeyboardType.Uri,
-                    enabled = !isAnyBusy && !isConfigLocked,
+                    enabled = !isSyncing && !isConfigLocked,
                     errorText = urlError
                 )
                 JuneTextField(
@@ -110,7 +105,7 @@ fun WebDavConfigSection(
                     label = stringResource(R.string.username_label),
                     placeholder = stringResource(R.string.username_placeholder),
                     leadingIcon = R.drawable.person_24px,
-                    enabled = !isAnyBusy && !isConfigLocked,
+                    enabled = !isSyncing && !isConfigLocked,
                     errorText = userError
                 )
                 JuneTextField(
@@ -120,7 +115,7 @@ fun WebDavConfigSection(
                     placeholder = "••••••••••",
                     leadingIcon = R.drawable.lock_24px,
                     keyboardType = KeyboardType.Password,
-                    enabled = !isAnyBusy && !isConfigLocked,
+                    enabled = !isSyncing && !isConfigLocked,
                     errorText = passError,
                     visualTransformation = if (passVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
@@ -137,73 +132,6 @@ fun WebDavConfigSection(
                         }
                     }
                 )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                OutlinedButton(
-                    onClick = onTestConnection,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isAnyBusy,
-                    shape = RoundedCornerShape(14.dp),
-                    contentPadding = PaddingValues(vertical = 12.dp)
-                ) {
-                    if (isTestingConnection) {
-                        CircularWavyProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.testing_connection))
-                    } else {
-                        Icon(
-                            painterResource(if (status is SyncStatus.Error) R.drawable.sync_problem_24px else R.drawable.backup_24px),
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(stringResource(R.string.test_connection))
-                    }
-                }
-            }
-
-            Button(
-                onClick = {
-                    if (isSyncing) {
-                        onStopSync?.invoke()
-                    } else {
-                        onManualSync()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = if (isSyncing) true else !isTestingConnection,
-                shape = RoundedCornerShape(14.dp),
-                contentPadding = PaddingValues(vertical = 14.dp),
-                colors = if (isSyncing) {
-                    ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                } else {
-                    ButtonDefaults.buttonColors()
-                }
-            ) {
-                if (isSyncing) {
-                    Icon(
-                        painterResource(R.drawable.close_24px),
-                        contentDescription = stringResource(R.string.stop_sync),
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(stringResource(R.string.stop_sync), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                } else {
-                    Icon(
-                        painterResource(R.drawable.sync_24px),
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(stringResource(R.string.sync_now), style = MaterialTheme.typography.labelLarge)
-                }
             }
         }
     }

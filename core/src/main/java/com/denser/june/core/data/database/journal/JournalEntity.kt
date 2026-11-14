@@ -5,6 +5,7 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.denser.june.core.data.database.converters.JournalTypeConverters
 import com.denser.june.core.domain.model.FontVariationConfig
+import com.denser.june.core.domain.model.JournalAudio
 import com.denser.june.core.domain.model.JournalLocation
 import com.denser.june.core.domain.model.JournalTheme
 import com.denser.june.core.domain.model.SongDetails
@@ -20,6 +21,7 @@ data class JournalEntity(
     val images: List<String> = emptyList(),
     val location: JournalLocation? = null,
     val songDetails: SongDetails? = null,
+    val audios: List<JournalAudio> = emptyList(),
     val tags: List<String> = emptyList(),
     val createdAt: Long = 0,
     val updatedAt: Long? = null,

@@ -22,7 +22,6 @@ fun SeedColorTile() {
 
     SettingsItem(
         title = stringResource(R.string.seed_color),
-        subtitle = stringResource(R.string.seed_color_desc),
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.colors_24px),
@@ -34,3 +33,4 @@ fun SeedColorTile() {
         onClick = { triggers.onThemeSheetClick(ColorTab.COLOR) }
     )
 }
+

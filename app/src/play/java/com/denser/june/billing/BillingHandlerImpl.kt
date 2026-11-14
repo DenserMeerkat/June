@@ -8,6 +8,8 @@ import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Package
 import com.revenuecat.purchases.PurchaseParams
 import com.revenuecat.purchases.Purchases
+import com.revenuecat.purchases.PurchasesErrorCode
+import com.revenuecat.purchases.PurchasesException
 import com.revenuecat.purchases.PurchasesTransactionException
 import com.revenuecat.purchases.awaitOfferings
 import com.revenuecat.purchases.awaitPurchase
@@ -94,8 +96,7 @@ class BillingHandlerImpl(
     }
 
     private fun updatePlusStatus(customerInfo: CustomerInfo) {
-        val plusEntitlement = customerInfo.entitlements[ENTITLEMENT_ID]
-        val active = plusEntitlement?.isActive == true
+        val active = customerInfo.entitlements[ENTITLEMENT_ID]?.isActive == true
         AppLogger.d(
             AppLogger.Category.BILLING,
             TAG,
@@ -137,8 +138,19 @@ class BillingHandlerImpl(
         } catch (e: PurchasesTransactionException) {
             if (e.userCancelled) {
                 Result.failure(Exception("Purchase cancelled"))
+            } else if (e.error.code == PurchasesErrorCode.ProductAlreadyPurchasedError) {
+                AppLogger.d(AppLogger.Category.BILLING, TAG, "Product already purchased in Google Play; restoring purchases automatically.")
+                restorePurchases()
             } else {
                 AppLogger.e(AppLogger.Category.BILLING, TAG, "Purchase transaction exception", e)
+                Result.failure(e)
+            }
+        } catch (e: PurchasesException) {
+            if (e.error.code == PurchasesErrorCode.ProductAlreadyPurchasedError) {
+                AppLogger.d(AppLogger.Category.BILLING, TAG, "Product already purchased in Google Play; restoring purchases automatically.")
+                restorePurchases()
+            } else {
+                AppLogger.e(AppLogger.Category.BILLING, TAG, "Purchases error in purchasePlus", e)
                 Result.failure(e)
             }
         } catch (e: Exception) {

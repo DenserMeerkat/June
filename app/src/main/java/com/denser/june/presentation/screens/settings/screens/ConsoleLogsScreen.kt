@@ -11,6 +11,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -191,17 +192,17 @@ fun ConsoleLogsScreen() {
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(
+                        itemsIndexed(
                             items = filteredLogs,
-                            key = { it.hashCode() }
-                        ) { log ->
+                            key = { index, log -> "$index-${log.hashCode()}" }
+                        ) { _, log ->
                             ConsoleLogItem(log = log)
                         }
                     }
 
                     LaunchedEffect(filteredLogs.size) {
                         if (filteredLogs.isNotEmpty()) {
-                            listState.animateScrollToItem(filteredLogs.size - 1)
+                            listState.scrollToItem(filteredLogs.size - 1)
                         }
                     }
                 }

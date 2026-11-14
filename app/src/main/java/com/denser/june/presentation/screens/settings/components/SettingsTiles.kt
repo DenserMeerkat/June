@@ -43,7 +43,7 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "ALWAYS_OPEN_NEW_NOTE",
                 title = stringResource(R.string.always_open_new_note),
-                subtitle = { context, _ -> context.getString(R.string.always_open_new_note_desc) },
+                subtitle = { _, _ -> null },
                 category = "General",
                 keywords = listOf("open", "new", "note", "start", "startup", "always", "editor"),
                 content = { AlwaysOpenNewNoteTile() }
@@ -59,7 +59,7 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "INCLUDE_TIME",
                 title = stringResource(R.string.include_time),
-                subtitle = { context, _ -> context.getString(R.string.include_time_desc) },
+                subtitle = { _, _ -> null },
                 category = "General",
                 keywords = listOf("time", "include", "journal", "auto"),
                 content = { IncludeTimeTile() }
@@ -101,12 +101,7 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "KEYBOARD_CAPITALIZATION",
                 title = stringResource(R.string.keyboard_capitalization),
-                subtitle = { context, state ->
-                    if (state.isKeyboardCapitalizationEnabled)
-                        context.getString(R.string.keyboard_capitalization_desc)
-                    else
-                        context.getString(R.string.disabled)
-                },
+                subtitle = { _, _ -> null },
                 category = "General",
                 keywords = listOf("keyboard", "capitalization", "casing", "auto", "letters", "sentences"),
                 content = { KeyboardCapitalizationTile() }
@@ -114,12 +109,7 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "KEYBOARD_AUTOCORRECT",
                 title = stringResource(R.string.keyboard_autocorrect),
-                subtitle = { context, state ->
-                    if (state.isKeyboardAutocorrectEnabled)
-                        context.getString(R.string.keyboard_autocorrect_desc)
-                    else
-                        context.getString(R.string.disabled)
-                },
+                subtitle = { _, _ -> null },
                 category = "General",
                 keywords = listOf("keyboard", "autocorrect", "correction", "spellcheck", "spelling", "auto"),
                 content = { KeyboardAutocorrectTile() }
@@ -170,6 +160,18 @@ object SettingsTileRegistry {
                 content = { CompressVideosTile() }
             ),
             SettingTile(
+                key = "COMPRESS_AUDIO",
+                title = stringResource(R.string.compress_audio),
+                subtitle = { _, state ->
+                    if (state.isCompressAudioEnabled) {
+                        "${state.audioCompressionQuality} kbps"
+                    } else null
+                },
+                category = "General",
+                keywords = listOf("compress", "audio", "voice", "quality", "size", "bitrate", "recording"),
+                content = { CompressAudioTile() }
+            ),
+            SettingTile(
                 key = "START_OF_WEEK",
                 title = stringResource(R.string.start_of_week),
                 subtitle = { _, state -> state.startOfWeek.getDisplayName(TextStyle.FULL, java.util.Locale.getDefault()) },
@@ -196,7 +198,7 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "FORCE_LTR_APP_LAYOUT",
                 title = stringResource(R.string.force_ltr_layout),
-                subtitle = { context, _ -> context.getString(R.string.force_ltr_layout_desc) },
+                subtitle = { _, _ -> null },
                 category = "Appearance",
                 keywords = listOf("force", "ltr", "rtl", "layout", "direction", "app", "navigation", "arabic", "persian", "hebrew"),
                 content = { ForceLtrAppLayoutTile() }
@@ -220,7 +222,7 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "AMOLED",
                 title = stringResource(R.string.amoled),
-                subtitle = { context, _ -> context.getString(R.string.amoled_desc) },
+                subtitle = { _, _ -> null },
                 category = "Appearance",
                 keywords = listOf("amoled", "black", "dark", "oled", "battery"),
                 content = { AmoledTile() }
@@ -228,7 +230,7 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "MATERIAL_THEME",
                 title = stringResource(R.string.material_theme),
-                subtitle = { context, _ -> context.getString(R.string.material_theme_desc) },
+                subtitle = { _, _ -> null },
                 category = "Appearance",
                 keywords = listOf("material", "you", "dynamic", "color", "wallpaper"),
                 content = { MaterialThemeTile() }
@@ -236,7 +238,7 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "SEED_COLOR",
                 title = stringResource(R.string.seed_color),
-                subtitle = { context, _ -> context.getString(R.string.seed_color_desc) },
+                subtitle = { _, _ -> null },
                 category = "Appearance",
                 keywords = listOf("seed", "color", "picker", "accent", "custom"),
                 content = { SeedColorTile() }
@@ -287,7 +289,7 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "INTERNET_ACCESS",
                 title = stringResource(R.string.internet_access),
-                subtitle = { context, _ -> context.getString(R.string.internet_access_desc) },
+                subtitle = { _, _ -> null },
                 category = "Privacy & Security",
                 keywords = listOf("internet", "network", "wifi", "offline", "data"),
                 content = { InternetAccessTile() }
@@ -295,7 +297,7 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "LOCATION_PERMISSION",
                 title = stringResource(R.string.location),
-                subtitle = { context, _ -> context.getString(R.string.location_permission_needed) },
+                subtitle = { _, _ -> null },
                 category = "Privacy & Security",
                 keywords = listOf("location", "permission", "gps", "map", "place"),
                 content = { LocationPermissionTile() }
@@ -303,19 +305,83 @@ object SettingsTileRegistry {
             SettingTile(
                 key = "NOTIFICATION_PERMISSION",
                 title = stringResource(R.string.notification),
-                subtitle = { context, _ -> context.getString(R.string.notification_permission_needed) },
+                subtitle = { _, _ -> null },
                 category = "Privacy & Security",
                 keywords = listOf("notification", "permission", "alert", "reminder"),
                 content = { NotificationPermissionTile() }
+            ),
+            SettingTile(
+                key = "MICROPHONE_PERMISSION",
+                title = stringResource(R.string.microphone),
+                subtitle = { _, _ -> null },
+                category = "Privacy & Security",
+                keywords = listOf("microphone", "mic", "audio", "record", "permission"),
+                content = { MicrophonePermissionTile() }
             ),
 
             SettingTile(
                 key = "CLOUD_SYNC",
                 title = stringResource(R.string.cloud_sync),
-                subtitle = { context, _ -> context.getString(R.string.cloud_sync_desc) },
-                category = "Sync & Backup",
+                subtitle = { _, _ -> null },
+                category = "Data & Sync",
                 keywords = listOf("cloud", "sync", "google", "drive", "backup", "webdav"),
                 content = { CloudSyncTile() }
+            ),
+            SettingTile(
+                key = "BACKUP",
+                title = stringResource(R.string.action_backup),
+                subtitle = { _, _ -> null },
+                category = "Data & Sync",
+                keywords = listOf("backup", "export", "save", "data", "zip", "archive"),
+                content = { BackupTile() }
+            ),
+            SettingTile(
+                key = "RESTORE",
+                title = stringResource(R.string.action_restore),
+                subtitle = { _, _ -> null },
+                category = "Data & Sync",
+                keywords = listOf("restore", "import", "load", "recover", "data", "backup"),
+                content = { RestoreTile() }
+            ),
+            SettingTile(
+                key = "AUTO_BACKUP",
+                title = stringResource(R.string.auto_backup),
+                subtitle = { _, _ -> null },
+                category = "Data & Sync",
+                keywords = listOf("auto", "backup", "automatic", "schedule", "daily", "charging"),
+                content = { AutoBackupTile() }
+            ),
+            SettingTile(
+                key = "SETTINGS_BACKUP",
+                title = stringResource(R.string.settings_backup),
+                subtitle = { _, _ -> null },
+                category = "Data & Sync",
+                keywords = listOf("settings", "backup", "preferences", "config", "restore"),
+                content = { SettingsBackupTile() }
+            ),
+            SettingTile(
+                key = "EXPORT_MARKDOWN",
+                title = stringResource(R.string.export_markdown_archive),
+                subtitle = { context, _ -> context.getString(R.string.export_markdown_archive_desc) },
+                category = "Data & Sync",
+                keywords = listOf("markdown", "export", "md", "archive", "notes", "text"),
+                content = { ExportMarkdownTile() }
+            ),
+            SettingTile(
+                key = "IMPORT_MARKDOWN",
+                title = stringResource(R.string.import_markdown),
+                subtitle = { context, _ -> context.getString(R.string.import_markdown_desc) },
+                category = "Data & Sync",
+                keywords = listOf("markdown", "import", "md", "notes", "text", "zip"),
+                content = { ImportMarkdownTile() }
+            ),
+            SettingTile(
+                key = "IMPORT_OTHER_APPS",
+                title = stringResource(R.string.import_other_apps),
+                subtitle = { _, _ -> null },
+                category = "Data & Sync",
+                keywords = listOf("import", "migrate", "apps", "day one", "journey", "diarium", "storypad", "daily", "you"),
+                content = { ImportOtherAppsTile() }
             ),
             SettingTile(
                 key = "ABOUT_HEADER",

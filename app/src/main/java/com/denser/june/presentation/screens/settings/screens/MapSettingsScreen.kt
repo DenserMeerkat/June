@@ -165,7 +165,6 @@ fun MapSettingsScreen() {
         ) {
             if (!isInternetAllowed) {
                 InternetRestrictedBanner(
-                    description = stringResource(R.string.maps_require_internet),
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
@@ -521,14 +520,14 @@ fun MapSettingsScreen() {
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = stringResource(R.string.internet_connection_required),
+                                text = stringResource(R.string.internet_access_disabled),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = previewOnSurfaceColor.copy(alpha = 0.8f)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = stringResource(R.string.connect_internet_for_map),
+                                text = stringResource(R.string.internet_restricted_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = previewOnSurfaceColor.copy(alpha = 0.7f),
                                 modifier = Modifier.padding(horizontal = 24.dp),
@@ -729,7 +728,7 @@ fun InlineKeyTestSection(
                 Text(stringResource(R.string.testing_key))
             } else {
                 Icon(
-                    painter = painterResource(R.drawable.sync_24px),
+                    painter = painterResource(R.drawable.cable_24px),
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )

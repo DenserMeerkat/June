@@ -40,6 +40,7 @@ import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.denser.june.core.R
+import com.denser.june.core.media.exif.ExifUtils
 import com.denser.june.core.media.storage.MediaStorageManager
 import com.denser.june.core.utils.toHoursMinutesSeconds
 import com.denser.june.presentation.utils.rememberManagedExoPlayer
@@ -67,7 +68,7 @@ fun JournalMediaItem(
         if (path.startsWith("content://")) {
             context.contentResolver.getType(Uri.parse(path))?.startsWith("video") == true
         } else {
-            path.endsWith("mp4", ignoreCase = true)
+            ExifUtils.isVideoPath(path)
         }
     }
     var isPlaying by remember { mutableStateOf(false) }
@@ -77,7 +78,7 @@ fun JournalMediaItem(
     val showVideoPlayer = isVideo && enablePlayback && !isProcessing
 
     val shouldShowMoveToFront = path != operations.frontMediaPath
-    val shouldCaptureTouch = !isProcessing && (enablePlayback || operations.onMediaClick != null)
+    val shouldCaptureTouch = !isProcessing && (enablePlayback || operations.onMediaClick != null || operations.onMediaLongClick != null)
 
     val resolvedFile = remember(path) {
         if (path.startsWith("content://") || path.startsWith("file://")) null
@@ -102,13 +103,15 @@ fun JournalMediaItem(
             .indication(interactionSource, LocalIndication.current)
             .then(
                 if (shouldCaptureTouch) {
-                    Modifier.pointerInput(operations.onMediaClick, enableContextMenu) {
+                    Modifier.pointerInput(operations.onMediaClick, operations.onMediaLongClick, enableContextMenu) {
                         detectTapGestures(
                             onTap = { operations.onMediaClick?.invoke(path) },
                             onLongPress = { offset ->
                                 if (enableContextMenu) {
                                     showMenu = true
                                     pressOffset = DpOffset(offset.x.toDp(), offset.y.toDp())
+                                } else {
+                                    operations.onMediaLongClick?.invoke(path)
                                 }
                             },
                             onPress = { offset ->

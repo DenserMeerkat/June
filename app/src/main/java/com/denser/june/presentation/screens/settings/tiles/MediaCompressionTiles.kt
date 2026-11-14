@@ -27,7 +27,11 @@ fun CompressPhotosTile() {
 
     SettingsItem(
         title = stringResource(R.string.compress_photos),
-        subtitle = stringResource(R.string.compress_photos_desc),
+        contentPadding = if (state.isCompressPhotosEnabled) {
+            PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+        } else {
+            PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        },
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.photo_24px),
@@ -80,7 +84,11 @@ fun CompressVideosTile() {
 
     SettingsItem(
         title = stringResource(R.string.compress_videos),
-        subtitle = stringResource(R.string.compress_videos_desc),
+        contentPadding = if (state.isCompressVideosEnabled) {
+            PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+        } else {
+            PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        },
         leadingContent = {
             Icon(
                 painter = painterResource(R.drawable.videocam_24px),
@@ -108,6 +116,57 @@ fun CompressVideosTile() {
                         selected = { (_, target) -> state.videoCompressionQuality == target },
                         onSelect = { (_, target) ->
                             viewModel.onAction(SettingsAction.OnVideoQualityChange(target))
+                        },
+                        label = { (name, _) -> name },
+                        equalWeight = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CompressAudioTile() {
+    val viewModel: SettingsVM = koinViewModel()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    SettingsItem(
+        title = stringResource(R.string.compress_audio),
+        contentPadding = if (state.isCompressAudioEnabled) {
+            PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+        } else {
+            PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        },
+        leadingContent = {
+            Icon(
+                painter = painterResource(R.drawable.mic_24px),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondary
+            )
+        },
+        trailingContent = {
+            Switch(
+                checked = state.isCompressAudioEnabled,
+                onCheckedChange = { viewModel.onAction(SettingsAction.OnCompressAudioToggle(it)) }
+            )
+        },
+        onClick = { viewModel.onAction(SettingsAction.OnCompressAudioToggle(!state.isCompressAudioEnabled)) },
+        content = {
+            AnimatedVisibility(
+                visible = state.isCompressAudioEnabled,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    JuneConnectedButtonGroup(
+                        options = listOf("64 kbps" to 64, "128 kbps" to 128, "192 kbps" to 192),
+                        selected = { (_, target) -> state.audioCompressionQuality == target },
+                        onSelect = { (_, target) ->
+                            viewModel.onAction(SettingsAction.OnAudioQualityChange(target))
                         },
                         label = { (name, _) -> name },
                         equalWeight = true,

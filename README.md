@@ -1,6 +1,6 @@
 <picture>
   <source srcset="fastlane/metadata/android/en-US/images/banner.jpg">
-  <img alt="June: Capture, Express and Own your Memories!" src="fastlane/metadata/android/en-US/images/banner.jpg">
+  <img alt="June: Capture, Express and Own your Memories!" src="fastlane/metadata/android/en-US/images/banner.jpg" style="border-radius:48px;">
 </picture>
 
 <br>
@@ -29,8 +29,17 @@
   <a href="https://play.google.com/store/apps/details?id=com.denser.june.play">
     <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="70" alt="Get it on Google Play">
   </a>
+  <a href="https://f-droid.org/packages/com.denser.june/">
+    <img src="https://f-droid.org/badge/get-it-on.svg" height="70" alt="Get it on F-Droid">
+  </a>
   <a href="https://github.com/DenserMeerkat/June/releases/latest">
     <img src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" height="70" alt="Get it on GitHub">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://hosted.weblate.org/engage/june/">
+    <img src="https://hosted.weblate.org/widget/june/287x66-black.png" alt="Contribute on Weblate" />
   </a>
 </p>
 
@@ -48,6 +57,7 @@
 ## Features
 
 - **Multimedia Capsules:** Attach photos, videos, and precise locations, complete with full-screen media viewer, EXIF inspection, and built-in compression.
+- **Voice Audio Recordings:** Record voice memos with a live waveform visualizer and inline playback cards in entries.
 - **Smart Organization:** Categorize entries using three distinct tag groups: Spaces, People (`@`), and Topics (`#`).
 - **Soundtracks & Song Library:** Attach streaming music links or import local audio files with built-in waveform scrubbing and trimming.
 - **Variable Typography:** Fine-tune bundled variable fonts (Google Sans Flex, Roboto Flex, Recursive, Shantell Sans) with real-time sliders for weight, optical size, and slant.
@@ -56,7 +66,7 @@
 - **Unified Timeline & Streaks:** Navigate past memories through a month-view calendar with writing indicators and consistency streaks.
 - **Rich Text & Markdown:** Format text with bold, italics, highlights, blockquotes, checklists, and full Markdown import/export.
 - **Mood Tracking:** Log emotional journeys using a built-in searchable emoji picker.
-- **Cloud Sync & Privacy:** 100% offline-first architecture with optional end-to-end sync via WebDAV or Google Drive.
+- **Cloud Sync & Privacy:** 100% offline-first architecture with optional end-to-end sync via WebDAV or Google Drive (Google Drive sync is only available in the Play Store version).
 - **Private Vault & App Lock:** Keep sensitive entries hidden in an isolated vault protected by Biometrics, PIN, Password, or Pattern.
 
 ## Translations
@@ -66,12 +76,6 @@ June is localized by community contributors on [Hosted Weblate](https://hosted.w
 <p align="center">
   <a href="https://hosted.weblate.org/engage/june/">
     <img src="https://hosted.weblate.org/widgets/june/-/app/multi-auto.svg" alt="Translation status" />
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://hosted.weblate.org/engage/june/">
-    <img src="https://hosted.weblate.org/widget/june/287x66-black.png" alt="Contribute on Weblate" />
   </a>
 </p>
 

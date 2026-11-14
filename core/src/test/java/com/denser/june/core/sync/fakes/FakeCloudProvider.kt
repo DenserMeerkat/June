@@ -11,9 +11,7 @@ import java.io.File
 /**
  * In-memory FakeCloudProvider for unit testing.
  */
-class FakeCloudProvider : CloudProvider {
-
-    override val name: String = "FakeCloud"
+class FakeCloudProvider(override val name: String = "FakeCloud") : CloudProvider {
 
     private val _journals = mutableMapOf<String, Pair<Journal, Long>>()
     private val _media = mutableMapOf<String, ByteArray>()
@@ -26,6 +24,18 @@ class FakeCloudProvider : CloudProvider {
     var failNextDeleteMedia = false
     var failNextManifestRead = false
     var failNextManifestWrite = false
+
+    var simulateNetworkError = false
+    var simulateAuthRevocation = false
+    var manifestWriteCollision = false
+
+    var remoteManifest: SyncManifest?
+        get() = manifest
+        set(value) { manifest = value }
+    val remoteJournals get() = _journals
+    val remoteMedia get() = _media
+    val remoteSongMedia get() = _songMedia
+    val remoteAudios get() = _audios
 
     var partialListingSize: Int = -1
 
@@ -93,6 +103,11 @@ class FakeCloudProvider : CloudProvider {
     var failNextDownloadMedia = false
 
     override suspend fun uploadMedia(journalId: String, file: File): Result<String> {
+        if (simulateAuthRevocation) {
+            _isConnected.value = false
+            return Result.failure(Exception("401 Unauthorized"))
+        }
+        if (simulateNetworkError) return Result.failure(Exception("Network error"))
         if (failNextUploadMedia) { failNextUploadMedia = false; return Result.failure(Exception("Media upload failed")) }
         if (failNextUpload) { failNextUpload = false; return Result.failure(Exception("Media upload failed")) }
         uploadMediaCallCount++
@@ -101,6 +116,11 @@ class FakeCloudProvider : CloudProvider {
     }
 
     override suspend fun downloadMedia(journalId: String, cloudId: String, targetFile: File): Result<File> {
+        if (simulateAuthRevocation) {
+            _isConnected.value = false
+            return Result.failure(Exception("401 Unauthorized"))
+        }
+        if (simulateNetworkError) return Result.failure(Exception("Network error"))
         if (failNextDownloadMedia) { failNextDownloadMedia = false; return Result.failure(Exception("Media download failed")) }
         if (failNextDownload) { failNextDownload = false; return Result.failure(Exception("Media download failed")) }
         val bytes = _media["$journalId/$cloudId"] ?: return Result.failure(Exception("Media not found"))
@@ -111,7 +131,12 @@ class FakeCloudProvider : CloudProvider {
 
     override suspend fun deleteMedia(journalId: String, filename: String): Result<Unit> {
         if (failNextDeleteMedia) { failNextDeleteMedia = false; return Result.failure(Exception("Media delete failed")) }
-        _media.remove("$journalId/$filename")
+        if (journalId.isNotBlank()) {
+            _media.remove("$journalId/$filename")
+        } else {
+            val keyToRemove = _media.keys.firstOrNull { it.endsWith("/$filename") || it == filename }
+            if (keyToRemove != null) _media.remove(keyToRemove)
+        }
         return Result.success(Unit)
     }
 
@@ -125,6 +150,14 @@ class FakeCloudProvider : CloudProvider {
     }
 
     override suspend fun updateManifest(manifest: SyncManifest): Result<Unit> {
+        if (simulateAuthRevocation) {
+            _isConnected.value = false
+            return Result.failure(Exception("401 Unauthorized: Authentication revoked"))
+        }
+        if (manifestWriteCollision) {
+            manifestWriteCollision = false
+            return Result.failure(Exception("412 Precondition Failed: Remote manifest updated by another device"))
+        }
         if (failNextManifestWrite) { failNextManifestWrite = false; return Result.failure(Exception("Manifest write failed")) }
         this.manifest = manifest
         return Result.success(Unit)
@@ -163,5 +196,40 @@ class FakeCloudProvider : CloudProvider {
 
     override suspend fun listSongMedia(): Result<List<String>> {
         return Result.success(_songMedia.keys.toList())
+    }
+
+    private val _audios = mutableMapOf<String, ByteArray>()
+    var failNextUploadAudio = false
+    var failNextDownloadAudio = false
+    var failNextDeleteAudio = false
+
+    fun putAudio(filename: String, bytes: ByteArray = byteArrayOf(1, 2, 3)) {
+        _audios[filename] = bytes
+    }
+
+    fun allAudioKeys(): Set<String> = _audios.keys.toSet()
+
+    override suspend fun uploadAudio(file: File): Result<String> {
+        if (failNextUploadAudio) { failNextUploadAudio = false; return Result.failure(Exception("Audio upload failed")) }
+        _audios[file.name] = file.readBytes()
+        return Result.success(file.name)
+    }
+
+    override suspend fun downloadAudio(filename: String, targetFile: File): Result<File> {
+        if (failNextDownloadAudio) { failNextDownloadAudio = false; return Result.failure(Exception("Audio download failed")) }
+        val bytes = _audios[filename] ?: return Result.failure(Exception("Audio not found"))
+        targetFile.parentFile?.mkdirs()
+        targetFile.writeBytes(bytes)
+        return Result.success(targetFile)
+    }
+
+    override suspend fun deleteAudio(filename: String): Result<Unit> {
+        if (failNextDeleteAudio) { failNextDeleteAudio = false; return Result.failure(Exception("Audio delete failed")) }
+        _audios.remove(filename)
+        return Result.success(Unit)
+    }
+
+    override suspend fun listAudios(): Result<List<String>> {
+        return Result.success(_audios.keys.toList())
     }
 }

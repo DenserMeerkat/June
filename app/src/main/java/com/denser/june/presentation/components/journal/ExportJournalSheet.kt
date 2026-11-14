@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
+import com.denser.june.presentation.components.JuneConnectedList
 import com.denser.june.presentation.components.JuneRadioTile
 import com.denser.june.presentation.components.JuneRadioTilePosition
 import org.koin.compose.koinInject
@@ -161,8 +162,8 @@ fun ExportJournalSheet(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                JuneConnectedList(
+                    spacing = 2.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     JuneRadioTile(
@@ -171,6 +172,8 @@ fun ExportJournalSheet(
                         subtitle = stringResource(R.string.export_option_package_zip_desc),
                         badge = stringResource(R.string.recommended),
                         radioPosition = JuneRadioTilePosition.Trailing,
+                        index = 0,
+                        count = 2,
                         onClick = { selectedOption = SingleExportOption.PACKAGE_ZIP }
                     )
 
@@ -179,6 +182,8 @@ fun ExportJournalSheet(
                         title = stringResource(R.string.export_option_clean_text_md),
                         subtitle = stringResource(R.string.export_option_clean_text_md_desc),
                         radioPosition = JuneRadioTilePosition.Trailing,
+                        index = 1,
+                        count = 2,
                         onClick = { selectedOption = SingleExportOption.TEXT_ONLY_MD }
                     )
                 }

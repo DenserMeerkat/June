@@ -1,0 +1,17 @@
+<resources>
+    <string name="connected">Verbunden</string>
+    <string name="direct_connection">Direkte Verbindung</string>
+    <string name="direct_connection_desc">June verbindet sich direkt mit Google Drive ohne Zwischenserver.</string>
+    <string name="google_account">Google-Konto</string>
+    <string name="link_google_drive">Google Drive verknüpfen</string>
+    <string name="link_google_drive_desc">Tagebücher privat in einem dedizierten App-Ordner auf deinem Google Drive synchronisieren.</string>
+    <string name="no_server_tracking">Kein Tracking</string>
+    <string name="no_server_tracking_desc">Keine externen Datenbanken, Tracking oder Analysen. Deine Gedanken bleiben privat.</string>
+    <string name="profile_and_email">Kontoidentität</string>
+    <string name="profile_and_email_desc">Wird nur lokal zur Anzeige des Status genutzt. Niemals gespeichert oder geteilt.</string>
+    <string name="sandboxed_storage">Isolierter Zugriff</string>
+    <string name="sandboxed_storage_desc">Beschränkt auf Junes Ordner. Die App kann keine weiteren Drive-Dateien lesen.</string>
+    <string name="sign_in_with_google">Mit Google anmelden</string>
+    <string name="privacy_and_data_security">Datenschutz &amp; Datensicherheit</string>
+    <string name="privacy_and_data_security_desc">So schützt June deine Daten bei der Synchronisierung mit Google Drive:</string>
+</resources>

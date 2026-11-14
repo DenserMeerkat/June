@@ -39,7 +39,7 @@ import com.denser.hyphen.model.MarkupStyle
 import com.denser.hyphen.model.TriggerState
 import com.denser.hyphen.state.HyphenTextState
 import com.denser.june.core.R
-import com.denser.june.presentation.utils.TagUtils
+import com.denser.june.presentation.utils.TagUiUtils
 
 @Composable
 fun EditorToolbar(
@@ -197,7 +197,7 @@ private fun TagChipsContent(
                         fontWeight = FontWeight.SemiBold,
                     )
                 },
-                colors = TagUtils.getTagSuggestionChipColors(fullTag),
+                colors = TagUiUtils.getTagSuggestionChipColors(fullTag),
                 border = null,
                 shape = RoundedCornerShape(8.dp),
             )

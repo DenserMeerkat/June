@@ -1,0 +1,17 @@
+<resources>
+    <string name="connected">已连接</string>
+    <string name="direct_connection">直接连接</string>
+    <string name="direct_connection_desc">June 直接与 Google Drive 连接，绝不经过中转服务器。</string>
+    <string name="google_account">Google 账号</string>
+    <string name="link_google_drive">绑定 Google Drive</string>
+    <string name="link_google_drive_desc">将日记私密同步至 Google Drive 上的专用应用文件夹。</string>
+    <string name="no_server_tracking">零数据跟踪</string>
+    <string name="no_server_tracking_desc">无外部数据库、跟踪或数据分析。所有日记严格保持私密。</string>
+    <string name="profile_and_email">账号信息</string>
+    <string name="profile_and_email_desc">仅在本地用于显示登录状态，绝不保存或向外分享。</string>
+    <string name="sandboxed_storage">沙盒隔离访问</string>
+    <string name="sandboxed_storage_desc">仅限访问 June 专属文件夹，无法查看或读取其他云端文件。</string>
+    <string name="sign_in_with_google">使用 Google 登录</string>
+    <string name="privacy_and_data_security">隐私与数据安全</string>
+    <string name="privacy_and_data_security_desc">June 在与 Google Drive 同步时保护您数据的方式：</string>
+</resources>

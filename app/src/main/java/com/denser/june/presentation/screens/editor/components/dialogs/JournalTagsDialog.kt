@@ -27,13 +27,14 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TagCategory
+import com.denser.june.core.utils.TagUtils
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneDialog
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
 import com.denser.june.presentation.components.JuneFullScreenDialog
 import com.denser.june.presentation.components.JuneTopAppBar
-import com.denser.june.presentation.utils.TagUtils
+import com.denser.june.presentation.utils.TagUiUtils
 import com.denser.june.presentation.utils.UiUtils
 
 
@@ -188,7 +189,7 @@ fun JournalTagsDialog(
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
                 TagCategory.entries.forEach { category ->
-                    val spec = TagUtils.getCategoryUiSpec(category)
+                    val spec = TagUiUtils.getCategoryUiSpec(category)
                     val categoryTags = TagUtils.filterTagsByCategory(localTags, category)
                     TagSectionCard(
                         title = category.label,
@@ -313,7 +314,7 @@ fun TagSectionCard(
                                 )
                             },
                             shape = RoundedCornerShape(12.dp),
-                            colors = TagUtils.getTagInputChipColors(tag),
+                            colors = TagUiUtils.getTagInputChipColors(tag),
                             border = null
                         )
                     }
@@ -391,7 +392,7 @@ fun TagInputArea(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     TagCategory.entries.filter { it.prefix != null }.forEach { category ->
-                        val spec = TagUtils.getCategoryUiSpec(category)
+                        val spec = TagUiUtils.getCategoryUiSpec(category)
                         SuggestionChip(
                             onClick = {
                                 onInsertPrefix(category.prefix!!)

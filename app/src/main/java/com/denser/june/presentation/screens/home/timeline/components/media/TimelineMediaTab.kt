@@ -1,0 +1,168 @@
+package com.denser.june.presentation.screens.home.timeline.components.media
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.denser.june.core.R
+import com.denser.june.core.domain.model.Journal
+import com.denser.june.core.media.exif.MediaMetadataReader
+import com.denser.june.core.utils.toFullDate
+import com.denser.june.presentation.components.journal.JournalMediaItem
+import com.denser.june.presentation.components.journal.MediaOperations
+import com.denser.june.presentation.components.sheets.MediaInfoSheet
+import com.denser.june.presentation.navigation.AppNavigator
+import com.denser.june.presentation.navigation.Route
+import com.denser.june.presentation.screens.home.timeline.TimelineVM
+import com.denser.june.presentation.screens.home.timeline.components.common.EmptyStateMessage
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun TimelineMediaTab(
+    journals: List<Journal>,
+    bottomPadding: Dp,
+    viewModel: TimelineVM = koinViewModel()
+) {
+    val navigator = koinInject<AppNavigator>()
+    val allMedia = remember(journals) { journals.flatMap { it.images } }
+    val groupedMedia = remember(journals) {
+        journals.filter { it.images.isNotEmpty() }
+            .groupBy { it.dateTime.toFullDate() }
+    }
+
+    var selectedMediaForOptions by remember { mutableStateOf<Pair<Journal, String>?>(null) }
+    val currentMediaForOptions = remember(selectedMediaForOptions, journals) {
+        val (selectedJournal, selectedPath) = selectedMediaForOptions ?: return@remember null
+        val updatedJournal = journals.find { it.id == selectedJournal.id } ?: selectedJournal
+        updatedJournal to selectedPath
+    }
+
+    if (allMedia.isEmpty()) {
+        EmptyStateMessage(stringResource(R.string.no_media_this_month))
+    } else {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val screenWidth = maxWidth
+            val minSize = 100.dp
+            val spacing = 4.dp
+
+            val density = LocalDensity.current
+            val columns = remember(screenWidth) {
+                val availableWidth = screenWidth - 32.dp
+                val minSizePx = with(density) { minSize.toPx() }
+                val spacingPx = with(density) { spacing.toPx() }
+                val availableWidthPx = with(density) { availableWidth.toPx() }
+
+                maxOf(1, (availableWidthPx / (minSizePx + spacingPx)).toInt())
+            }
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = bottomPadding),
+            ) {
+                groupedMedia.forEach { (date, journalsInDate) ->
+                    val dayImages = journalsInDate.flatMap { it.images }
+
+                    stickyHeader {
+                        MediaDateHeader(dateString = date)
+                    }
+                    val rows = dayImages.chunked(columns)
+                    items(rows) { rowImages ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            rowImages.forEach { mediaPath ->
+                                val parentJournal = journalsInDate.find { it.images.contains(mediaPath) } ?: journalsInDate.first()
+                                Box(modifier = Modifier.weight(1f)) {
+                                    JournalMediaItem(
+                                        path = mediaPath,
+                                        modifier = Modifier
+                                            .aspectRatio(1f),
+                                        isLargeItem = true,
+                                        enablePlayback = false,
+                                        enableContextMenu = false,
+                                        operations = MediaOperations(
+                                            onMediaClick = {
+                                                val globalIndex = allMedia.indexOf(mediaPath)
+                                                navigator.navigateTo(
+                                                    Route.MediaViewerRoute(
+                                                        allMedia,
+                                                        globalIndex.coerceAtLeast(0)
+                                                    ),
+                                                    isSingleTop = true,
+                                                )
+                                            },
+                                            onMediaLongClick = {
+                                                selectedMediaForOptions = parentJournal to mediaPath
+                                            }
+                                        ),
+                                    )
+                                }
+                            }
+                            val emptySlots = columns - rowImages.size
+                            repeat(emptySlots) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                    item { Spacer(modifier = Modifier.height(12.dp)) }
+                }
+            }
+        }
+    }
+
+    if (currentMediaForOptions != null) {
+        val (journal, mediaPath) = currentMediaForOptions
+        val context = LocalContext.current
+        val metadata = remember(mediaPath, journal) {
+            MediaMetadataReader.readMediaMetadata(
+                context = context,
+                path = mediaPath,
+                fallbackDateTime = journal.dateTime.takeIf { it > 946684800000L } ?: System.currentTimeMillis(),
+                journalTitle = journal.title
+            )
+        }
+        MediaInfoSheet(
+            metadata = metadata,
+            parentJournal = journal,
+            dateTime = journal.dateTime,
+            isJournalNavigationEnabled = true,
+            onDismiss = { selectedMediaForOptions = null },
+            onJournalClick = {
+                selectedMediaForOptions = null
+                navigator.navigateTo(Route.Editor(journal.id), isSingleTop = true)
+            }
+        )
+    }
+}
+
+@Composable
+fun MediaDateHeader(dateString: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = dateString,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.tertiary
+        )
+    }
+}

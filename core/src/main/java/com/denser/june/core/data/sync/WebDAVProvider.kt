@@ -131,9 +131,15 @@ class WebDAVProvider(
             if (result.isFailure) return result
         }
 
-        val songMediaFolder = juneFolder + "song_media/"
+        val songMediaFolder = juneFolder + "songs/"
         if (!checkRemoteResourceExists(songMediaFolder, authInfo.auth)) {
             val result = createRemoteFolder(songMediaFolder, authInfo.auth)
+            if (result.isFailure) return result
+        }
+
+        val audiosFolder = juneFolder + "audios/"
+        if (!checkRemoteResourceExists(audiosFolder, authInfo.auth)) {
+            val result = createRemoteFolder(audiosFolder, authInfo.auth)
             if (result.isFailure) return result
         }
         
@@ -604,11 +610,11 @@ class WebDAVProvider(
         val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
         AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Uploading song media ${file.name}...")
-        val folderUrl = "${authInfo.baseUrl.trimEnd('/')}/June/song_media/"
+        val folderUrl = "${authInfo.baseUrl.trimEnd('/')}/June/songs/"
         if (!checkRemoteResourceExists(folderUrl, authInfo.auth)) {
             val createRes = createRemoteFolder(folderUrl, authInfo.auth)
             if (createRes.isFailure) {
-                return@withContext Result.failure(createRes.exceptionOrNull() ?: Exception("Failed to create song_media folder"))
+                return@withContext Result.failure(createRes.exceptionOrNull() ?: Exception("Failed to create songs folder"))
             }
         }
 
@@ -639,79 +645,90 @@ class WebDAVProvider(
         val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
         AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Downloading song media file: $filename...")
-        val songUrl = "${authInfo.baseUrl.trimEnd('/')}/June/song_media/$filename"
-        val request = Request.Builder()
-            .url(songUrl)
-            .webDavHeaders(authInfo.auth, depth = null)
-            .get()
-            .build()
+        val primaryUrl = "${authInfo.baseUrl.trimEnd('/')}/June/songs/$filename"
+        val fallbackUrl = "${authInfo.baseUrl.trimEnd('/')}/June/song_media/$filename"
 
-        try {
-            client.newCall(request).execute().use { response ->
-                if (response.isSuccessful) {
-                    response.body?.source()?.let { source ->
-                        targetFile.parentFile?.mkdirs()
-                        targetFile.sink().buffer().use { it.writeAll(source) }
-                        AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Successfully downloaded song media $filename.")
-                        return@withContext Result.success(targetFile)
+        suspend fun tryDownload(url: String): Result<File>? {
+            val request = Request.Builder()
+                .url(url)
+                .webDavHeaders(authInfo.auth, depth = null)
+                .get()
+                .build()
+            return try {
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        response.body?.source()?.let { source ->
+                            targetFile.parentFile?.mkdirs()
+                            targetFile.sink().buffer().use { it.writeAll(source) }
+                            AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Successfully downloaded song media $filename.")
+                            Result.success(targetFile)
+                        } ?: Result.failure(Exception("Empty song media response body"))
+                    } else if (response.code == 404) {
+                        null
+                    } else {
+                        Result.failure(Exception("Song media download failed: ${response.code}"))
                     }
-                    Result.failure(Exception("Empty song media response body"))
-                } else {
-                    AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Failed to download song media $filename. Status: ${response.code}")
-                    Result.failure(Exception("Song media download failed: ${response.code}"))
                 }
+            } catch (e: Exception) {
+                Result.failure(e)
             }
-        } catch (e: Exception) {
-            AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Exception downloading song media $filename", e)
-            Result.failure(e)
         }
+
+        val primaryResult = tryDownload(primaryUrl)
+        if (primaryResult != null) return@withContext primaryResult
+
+        val fallbackResult = tryDownload(fallbackUrl)
+        if (fallbackResult != null) return@withContext fallbackResult
+
+        Result.failure(Exception("Song media file not found: $filename"))
     }
 
     override suspend fun listSongMedia(): Result<List<String>> = withContext(Dispatchers.IO) {
         val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
-        val songFolder = "${authInfo.baseUrl.trimEnd('/')}/June/song_media/"
-        val request = Request.Builder()
-            .url(songFolder)
-            .method("PROPFIND", XML_PROPFIND_BODY.trimIndent().toRequestBody("application/xml; charset=utf-8".toMediaType()))
-            .webDavHeaders(authInfo.auth, depth = "1")
-            .header("Accept", "application/xml")
-            .build()
+        suspend fun listFolder(folderPath: String, excludeName: String): List<String> {
+            val request = Request.Builder()
+                .url(folderPath)
+                .method("PROPFIND", XML_PROPFIND_BODY.trimIndent().toRequestBody("application/xml; charset=utf-8".toMediaType()))
+                .webDavHeaders(authInfo.auth, depth = "1")
+                .header("Accept", "application/xml")
+                .build()
 
-        try {
-            client.newCall(request).execute().use { response ->
-                if (response.isSuccessful) {
-                    val body = response.body?.string() ?: ""
-                    val parsed = parseWebDavPropfind(body)
-                    val files = parsed.mapNotNull { (href, _) ->
-                        val decodedHref = try {
-                            java.net.URLDecoder.decode(href, "UTF-8")
-                        } catch (e: Exception) {
-                            href
+            return try {
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        val body = response.body?.string() ?: ""
+                        val parsed = parseWebDavPropfind(body)
+                        parsed.mapNotNull { (href, _) ->
+                            val decodedHref = try {
+                                java.net.URLDecoder.decode(href, "UTF-8")
+                            } catch (e: Exception) {
+                                href
+                            }
+                            val name = File(decodedHref.trimEnd('/')).name
+                            if (name.isNotBlank() && !name.equals(excludeName, ignoreCase = true) && name.contains(".")) {
+                                name
+                            } else null
                         }
-                        val name = File(decodedHref.trimEnd('/')).name
-                        if (name.isNotBlank() && !name.equals("song_media", ignoreCase = true) && name.contains(".")) {
-                            name
-                        } else null
-                    }.distinct()
-                    AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Listed ${files.size} song media files: $files")
-                    Result.success(files)
-                } else {
-                    AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Failed to list song media files. Status: ${response.code}")
-                    Result.failure(Exception("List song media failed: ${response.code}"))
+                    } else emptyList()
                 }
+            } catch (_: Exception) {
+                emptyList()
             }
-        } catch (e: Exception) {
-            AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Exception listing song media files", e)
-            Result.failure(e)
         }
+
+        val songs = listFolder("${authInfo.baseUrl.trimEnd('/')}/June/songs/", "songs")
+        val legacy = listFolder("${authInfo.baseUrl.trimEnd('/')}/June/song_media/", "song_media")
+        val all = (songs + legacy).distinct()
+        AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Listed ${all.size} song media files: $all")
+        Result.success(all)
     }
 
     override suspend fun deleteSongMedia(filename: String): Result<Unit> = withContext(Dispatchers.IO) {
         val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
 
         AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Deleting song media: $filename...")
-        val songUrl = "${authInfo.baseUrl.trimEnd('/')}/June/song_media/$filename"
+        val songUrl = "${authInfo.baseUrl.trimEnd('/')}/June/songs/$filename"
         val request = Request.Builder()
             .url(songUrl)
             .delete()
@@ -729,6 +746,150 @@ class WebDAVProvider(
             }
         } catch (e: Exception) {
             AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Exception deleting song media $filename", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun uploadAudio(file: File): Result<String> = withContext(Dispatchers.IO) {
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
+
+        AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Uploading audio ${file.name}...")
+        val folderUrl = "${authInfo.baseUrl.trimEnd('/')}/June/audios/"
+        if (!checkRemoteResourceExists(folderUrl, authInfo.auth)) {
+            val createRes = createRemoteFolder(folderUrl, authInfo.auth)
+            if (createRes.isFailure) {
+                return@withContext Result.failure(createRes.exceptionOrNull() ?: Exception("Failed to create audios folder"))
+            }
+        }
+
+        val audioUrl = "$folderUrl${file.name}"
+        val request = Request.Builder()
+            .url(audioUrl)
+            .put(file.asRequestBody("application/octet-stream".toMediaType()))
+            .webDavHeaders(authInfo.auth, depth = null)
+            .build()
+
+        try {
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Successfully uploaded audio ${file.name}.")
+                    Result.success(file.name)
+                } else {
+                    AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Failed to upload audio ${file.name}. Status: ${response.code}")
+                    Result.failure(Exception("Audio upload failed: ${response.code}"))
+                }
+            }
+        } catch (e: Exception) {
+            AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Exception uploading audio ${file.name}", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun downloadAudio(filename: String, targetFile: File): Result<File> = withContext(Dispatchers.IO) {
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
+
+        AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Downloading audio file: $filename...")
+        val primaryUrl = "${authInfo.baseUrl.trimEnd('/')}/June/audios/$filename"
+        val fallbackUrl = "${authInfo.baseUrl.trimEnd('/')}/June/journal_audio/$filename"
+
+        suspend fun tryDownload(url: String): Result<File>? {
+            val request = Request.Builder()
+                .url(url)
+                .webDavHeaders(authInfo.auth, depth = null)
+                .get()
+                .build()
+            return try {
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        response.body?.source()?.let { source ->
+                            targetFile.parentFile?.mkdirs()
+                            targetFile.sink().buffer().use { it.writeAll(source) }
+                            AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Successfully downloaded audio $filename.")
+                            Result.success(targetFile)
+                        } ?: Result.failure(Exception("Empty audio response body"))
+                    } else if (response.code == 404) {
+                        null
+                    } else {
+                        Result.failure(Exception("Audio download failed: ${response.code}"))
+                    }
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
+        val primaryResult = tryDownload(primaryUrl)
+        if (primaryResult != null) return@withContext primaryResult
+
+        val fallbackResult = tryDownload(fallbackUrl)
+        if (fallbackResult != null) return@withContext fallbackResult
+
+        Result.failure(Exception("Audio file not found: $filename"))
+    }
+
+    override suspend fun listAudios(): Result<List<String>> = withContext(Dispatchers.IO) {
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
+
+        suspend fun listFolder(folderPath: String, excludeName: String): List<String> {
+            val request = Request.Builder()
+                .url(folderPath)
+                .method("PROPFIND", XML_PROPFIND_BODY.trimIndent().toRequestBody("application/xml; charset=utf-8".toMediaType()))
+                .webDavHeaders(authInfo.auth, depth = "1")
+                .header("Accept", "application/xml")
+                .build()
+
+            return try {
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        val body = response.body?.string() ?: ""
+                        val parsed = parseWebDavPropfind(body)
+                        parsed.mapNotNull { (href, _) ->
+                            val decodedHref = try {
+                                java.net.URLDecoder.decode(href, "UTF-8")
+                            } catch (e: Exception) {
+                                href
+                            }
+                            val name = File(decodedHref.trimEnd('/')).name
+                            if (name.isNotBlank() && !name.equals(excludeName, ignoreCase = true) && name.contains(".")) {
+                                name
+                            } else null
+                        }
+                    } else emptyList()
+                }
+            } catch (_: Exception) {
+                emptyList()
+            }
+        }
+
+        val audios = listFolder("${authInfo.baseUrl.trimEnd('/')}/June/audios/", "audios")
+        val legacy = listFolder("${authInfo.baseUrl.trimEnd('/')}/June/journal_audio/", "journal_audio")
+        val all = (audios + legacy).distinct()
+        AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Listed ${all.size} audio files: $all")
+        Result.success(all)
+    }
+
+    override suspend fun deleteAudio(filename: String): Result<Unit> = withContext(Dispatchers.IO) {
+        val authInfo = getAuth() ?: return@withContext Result.failure(Exception("Missing WebDAV credentials"))
+
+        AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Deleting audio: $filename...")
+        val audioUrl = "${authInfo.baseUrl.trimEnd('/')}/June/audios/$filename"
+        val request = Request.Builder()
+            .url(audioUrl)
+            .delete()
+            .webDavHeaders(authInfo.auth, depth = null)
+            .build()
+
+        try {
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful || response.code == 404) {
+                    Result.success(Unit)
+                } else {
+                    AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Failed to delete audio $filename. Status: ${response.code}")
+                    Result.failure(Exception("Delete audio failed: ${response.code}"))
+                }
+            }
+        } catch (e: Exception) {
+            AppLogger.e(AppLogger.Category.SYNC, "WebDAVProvider", "Exception deleting audio $filename", e)
             Result.failure(e)
         }
     }

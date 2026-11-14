@@ -41,6 +41,12 @@ interface SyncPreferences {
     fun getGoogleDriveSongMediaFolderId(): Flow<String?>
     suspend fun setGoogleDriveSongMediaFolderId(id: String?)
 
+    fun getGoogleDriveAudiosFolderId(): Flow<String?>
+    suspend fun setGoogleDriveAudiosFolderId(id: String?)
+
+    fun getGoogleDriveSongsFolderId(): Flow<String?>
+    suspend fun setGoogleDriveSongsFolderId(id: String?)
+
     fun getSyncLoggingEnabled(): Flow<Boolean>
     suspend fun setSyncLoggingEnabled(enabled: Boolean)
 
