@@ -61,7 +61,11 @@ object MarkdownEngine {
     fun toMarkdown(
         journal: Journal,
         relativeMediaPathPrefix: String? = null,
-        includeMedia: Boolean = true
+        relativeAudioPathPrefix: String? = null,
+        relativeSongPathPrefix: String? = null,
+        includeMedia: Boolean = true,
+        includeAudios: Boolean = true,
+        includeSongFiles: Boolean = true
     ): String {
         val frontmatter = JournalFrontmatter(
             id = journal.id,
@@ -133,6 +137,36 @@ object MarkdownEngine {
             }
         }
 
+        if (includeAudios && journal.audios.isNotEmpty()) {
+            sb.append("\n\n## Audio\n")
+            journal.audios.forEach { audio ->
+                val fileName = File(audio.path).name
+                val displayPath = if (!relativeAudioPathPrefix.isNullOrBlank()) {
+                    "$relativeAudioPathPrefix/$fileName"
+                } else {
+                    audio.path
+                }
+                sb.append("<audio controls src=\"").append(displayPath).append("\"></audio>\n")
+            }
+        }
+
+        if (includeSongFiles && journal.songDetails != null) {
+            val song = journal.songDetails
+            val hasSongAudio = !song.localPreviewPath.isNullOrBlank() && File(song.localPreviewPath).exists()
+            if (hasSongAudio) {
+                sb.append("\n\n## Song\n")
+                val songText = if (song.artistName.isNotBlank()) "**${song.title}** — ${song.artistName}" else "**${song.title}**"
+                sb.append(songText).append("\n")
+                val fileName = File(song.localPreviewPath!!).name
+                val displayPath = if (!relativeSongPathPrefix.isNullOrBlank()) {
+                    "$relativeSongPathPrefix/$fileName"
+                } else {
+                    song.localPreviewPath
+                }
+                sb.append("<audio controls src=\"").append(displayPath).append("\"></audio>\n")
+            }
+        }
+
         return sb.toString()
     }
 
@@ -154,8 +188,10 @@ object MarkdownEngine {
             null to normalized.trim()
         }
 
-        val mediaHeaderIdx = rawBody.lastIndexOf("\n## Media")
-        var content = if (mediaHeaderIdx != -1) rawBody.substring(0, mediaHeaderIdx).trimEnd() else rawBody
+        val trailingSectionHeaders = listOf("\n## Media", "\n## Audio", "\n## Song")
+        val headerIndices = trailingSectionHeaders.map { rawBody.indexOf(it) }.filter { it != -1 }
+        val cutoffIdx = if (headerIndices.isNotEmpty()) headerIndices.minOrNull() ?: -1 else -1
+        var content = if (cutoffIdx != -1) rawBody.substring(0, cutoffIdx).trimEnd() else rawBody
 
         var title = frontmatter?.title ?: ""
         if (title.isBlank()) {
@@ -265,9 +301,7 @@ object MarkdownEngine {
                     return Instant.from(parsed).toEpochMilli()
                 }
             } catch (_: DateTimeParseException) {
-                // Try next
             } catch (_: Exception) {
-                // Try next
             }
         }
         return null

@@ -2,13 +2,17 @@ package com.denser.june.core.data.backup
 
 import android.content.Context
 import com.denser.june.core.data.database.journal.JournalDatabase
+import com.denser.june.core.domain.backup.BackupOperationStatus
+import com.denser.june.core.domain.backup.ExportRepo
+import com.denser.june.core.domain.backup.PreBackupCounts
+import com.denser.june.core.domain.backup.SettingsBackupRepo
 import com.denser.june.core.domain.logging.AppLogger
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.repository.JournalRepository
-import com.denser.june.core.domain.backup.ExportRepo
 import com.denser.june.core.domain.sync.JournalSyncMeta
 import com.denser.june.core.domain.sync.SyncManifest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.BufferedOutputStream
@@ -17,18 +21,46 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 class ExportImpl(
     private val journalRepo: JournalRepository,
+    private val settingsBackupRepo: SettingsBackupRepo,
     private val context: Context
 ) : ExportRepo {
 
-    override suspend fun exportData(includeMedia: Boolean, includeSongFiles: Boolean): Result<File> = withContext(Dispatchers.IO) {
+    override suspend fun getPreBackupCounts(): PreBackupCounts = withContext(Dispatchers.IO) {
+        val journals = journalRepo.getAllJournals()
+        val mediaCount = journals.flatMap { it.images }.map { File(it).name }.distinct().size
+        val audiosCount = journals.flatMap { it.audios }.map { File(it.path).name }.distinct().size
+        val songCount = journals.mapNotNull { it.songDetails }.flatMap {
+            listOfNotNull(it.localPreviewPath?.let { p -> File(p).name }, it.localThumbnailPath?.let { p -> File(p).name })
+        }.distinct().size
+        val hasMapKeys = runCatching { settingsBackupRepo.hasExportableMapKeys().first() }.getOrDefault(false)
+
+        PreBackupCounts(
+            totalJournals = journals.size,
+            totalMedia = mediaCount,
+            totalAudios = audiosCount,
+            totalSongs = songCount,
+            hasSettings = true,
+            hasMapKeys = hasMapKeys
+        )
+    }
+
+    override suspend fun exportData(
+        includeMedia: Boolean,
+        includeAudios: Boolean,
+        includeSongFiles: Boolean,
+        includeSettings: Boolean,
+        includeMapKeys: Boolean,
+        onProgress: ((BackupOperationStatus.InProgress) -> Unit)?
+    ): Result<File> = withContext(Dispatchers.IO) {
         return@withContext try {
-            AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Starting export process. Include media: $includeMedia, includeSongFiles: $includeSongFiles")
+            AppLogger.d(
+                AppLogger.Category.BACKUP,
+                "ExportImpl",
+                "Starting export process. Include media: $includeMedia, includeAudios: $includeAudios, includeSongFiles: $includeSongFiles, includeSettings: $includeSettings, includeMapKeys: $includeMapKeys"
+            )
             val journals = journalRepo.getAllJournals()
 
             AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Found ${journals.size} journals to export")
@@ -58,13 +90,24 @@ class ExportImpl(
                 j.id to JournalSyncMeta(rev = 1, contentHash = j.computeContentHash())
             }
 
-            val totalMedia = cleanedJournals.flatMap { it.images }.map { File(it).name }.distinct().size
-            val totalAudios = cleanedJournals.flatMap { it.audios }.map { File(it.path).name }.distinct().size
+            val totalMedia = if (includeMedia) {
+                cleanedJournals.flatMap { it.images }.map { File(it).name }.distinct().size
+            } else 0
+            val totalAudios = if (includeAudios) {
+                cleanedJournals.flatMap { it.audios }.map { File(it.path).name }.distinct().size
+            } else 0
             val totalSongMedia = if (includeSongFiles) {
                 cleanedJournals.mapNotNull { it.songDetails }.flatMap {
                     listOfNotNull(it.localPreviewPath?.let { p -> File(p).name }, it.localThumbnailPath?.let { p -> File(p).name })
                 }.distinct().size
             } else 0
+
+            val totalOps = 1 + cleanedJournals.size +
+                    (if (includeMedia) totalMedia else 0) +
+                    (if (includeAudios) totalAudios else 0) +
+                    (if (includeSongFiles) totalSongMedia else 0) +
+                    (if (includeSettings) 1 else 0)
+            var currentOp = 0
 
             val manifest = SyncManifest(
                 lastSyncTime = System.currentTimeMillis(),
@@ -88,7 +131,18 @@ class ExportImpl(
                 zos.write(manifestJson.toByteArray())
                 zos.closeEntry()
 
-                cleanedJournals.forEach { journal ->
+                currentOp++
+                onProgress?.invoke(
+                    BackupOperationStatus.InProgress(
+                        phase = "Manifest",
+                        current = currentOp,
+                        total = totalOps,
+                        percentage = currentOp.toFloat() / totalOps,
+                        currentItemName = "manifest.json"
+                    )
+                )
+
+                cleanedJournals.forEachIndexed { idx, journal ->
                     val sanitizedSong = journal.songDetails?.copy(
                         localPreviewPath = journal.songDetails.localPreviewPath?.let { File(it).name },
                         localThumbnailPath = journal.songDetails.localThumbnailPath?.let { File(it).name }
@@ -106,6 +160,17 @@ class ExportImpl(
                     zos.putNextEntry(journalEntry)
                     zos.write(journalJson.toByteArray())
                     zos.closeEntry()
+
+                    currentOp++
+                    onProgress?.invoke(
+                        BackupOperationStatus.InProgress(
+                            phase = "Journals",
+                            current = currentOp,
+                            total = totalOps,
+                            percentage = currentOp.toFloat() / totalOps,
+                            currentItemName = journal.title.ifBlank { "Journal ${idx + 1}" }
+                        )
+                    )
                 }
 
                 if (includeMedia) {
@@ -125,14 +190,34 @@ class ExportImpl(
                                     }
                                     zos.closeEntry()
                                     packedMediaCount++
+
+                                    currentOp++
+                                    onProgress?.invoke(
+                                        BackupOperationStatus.InProgress(
+                                            phase = "Media",
+                                            current = currentOp,
+                                            total = totalOps,
+                                            percentage = currentOp.toFloat() / totalOps,
+                                            currentItemName = file.name
+                                        )
+                                    )
                                 } catch (e: Exception) {
                                     AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack media file: ${file.name}", e)
                                 }
                             }
                         }
+                    }
+                    AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Packed $packedMediaCount media files")
+                }
+
+                if (includeAudios) {
+                    val processedAudioNames = mutableSetOf<String>()
+                    var packedAudioCount = 0
+
+                    cleanedJournals.forEach { journal ->
                         journal.audios.forEach { audio ->
                             val file = File(audio.path)
-                            if (file.exists() && processedFileNames.add("audio_${file.name}")) {
+                            if (file.exists() && processedAudioNames.add(file.name)) {
                                 try {
                                     val audioEntry = ZipEntry("audios/${file.name}")
                                     zos.putNextEntry(audioEntry)
@@ -140,14 +225,25 @@ class ExportImpl(
                                         fis.copyTo(zos)
                                     }
                                     zos.closeEntry()
-                                    packedMediaCount++
+                                    packedAudioCount++
+
+                                    currentOp++
+                                    onProgress?.invoke(
+                                        BackupOperationStatus.InProgress(
+                                            phase = "Audios",
+                                            current = currentOp,
+                                            total = totalOps,
+                                            percentage = currentOp.toFloat() / totalOps,
+                                            currentItemName = file.name
+                                        )
+                                    )
                                 } catch (e: Exception) {
                                     AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack audio file: ${file.name}", e)
                                 }
                             }
                         }
                     }
-                    AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Packed $packedMediaCount media files")
+                    AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Packed $packedAudioCount audio files")
                 }
 
                 if (includeSongFiles) {
@@ -164,6 +260,17 @@ class ExportImpl(
                                     FileInputStream(file).use { it.copyTo(zos) }
                                     zos.closeEntry()
                                     packedSongCount++
+
+                                    currentOp++
+                                    onProgress?.invoke(
+                                        BackupOperationStatus.InProgress(
+                                            phase = "Songs",
+                                            current = currentOp,
+                                            total = totalOps,
+                                            percentage = currentOp.toFloat() / totalOps,
+                                            currentItemName = file.name
+                                        )
+                                    )
                                 } catch (e: Exception) {
                                     AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack song file: ${file.name}", e)
                                 }
@@ -178,6 +285,17 @@ class ExportImpl(
                                     FileInputStream(file).use { it.copyTo(zos) }
                                     zos.closeEntry()
                                     packedSongCount++
+
+                                    currentOp++
+                                    onProgress?.invoke(
+                                        BackupOperationStatus.InProgress(
+                                            phase = "Songs",
+                                            current = currentOp,
+                                            total = totalOps,
+                                            percentage = currentOp.toFloat() / totalOps,
+                                            currentItemName = file.name
+                                        )
+                                    )
                                 } catch (e: Exception) {
                                     AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack song art: ${file.name}", e)
                                 }
@@ -185,6 +303,33 @@ class ExportImpl(
                         }
                     }
                     AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Packed $packedSongCount song files")
+                }
+
+                if (includeSettings) {
+                    try {
+                        val settingsJsonResult = settingsBackupRepo.exportSettingsJson(includeMapKeys)
+                        val settingsJson = settingsJsonResult.getOrNull()
+                        if (settingsJson != null) {
+                            val settingsEntry = ZipEntry("settings.json")
+                            zos.putNextEntry(settingsEntry)
+                            zos.write(settingsJson.toByteArray(Charsets.UTF_8))
+                            zos.closeEntry()
+                            AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Packed settings.json into backup zip")
+                        }
+                    } catch (e: Exception) {
+                        AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack settings.json", e)
+                    }
+
+                    currentOp++
+                    onProgress?.invoke(
+                        BackupOperationStatus.InProgress(
+                            phase = "Settings",
+                            current = currentOp,
+                            total = totalOps,
+                            percentage = 1.0f,
+                            currentItemName = "settings.json"
+                        )
+                    )
                 }
             }
 
@@ -200,33 +345,58 @@ class ExportImpl(
         }
     }
 
-    override suspend fun exportAsMarkdown(includeMedia: Boolean): Result<File> = withContext(Dispatchers.IO) {
+    override suspend fun exportAsMarkdown(
+        includeMedia: Boolean,
+        includeAudios: Boolean,
+        includeSongFiles: Boolean,
+        onProgress: ((BackupOperationStatus.InProgress) -> Unit)?
+    ): Result<File> = withContext(Dispatchers.IO) {
         return@withContext try {
-            AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Starting markdown export. Include media: $includeMedia")
+            AppLogger.d(
+                AppLogger.Category.BACKUP,
+                "ExportImpl",
+                "Starting markdown export. Include media: $includeMedia, audios: $includeAudios, songs: $includeSongFiles"
+            )
             val journals = journalRepo.getAllJournals()
 
             AppLogger.d(AppLogger.Category.BACKUP, "ExportImpl", "Found ${journals.size} journals to export as markdown")
 
             val mediaDir = File(context.filesDir, "media")
+            val audioDir = File(context.filesDir, "audios")
             val cleanedJournals = journals.map { journal ->
                 val cleanedImages = journal.images.map { path ->
                     val file = File(path)
                     File(mediaDir, file.name).absolutePath
                 }
-                journal.copy(images = cleanedImages)
+                val cleanedAudios = journal.audios.map { audio ->
+                    val file = File(audio.path)
+                    audio.copy(path = File(audioDir, file.name).absolutePath)
+                }
+                journal.copy(images = cleanedImages, audios = cleanedAudios)
             }
 
             val backupFile = File(context.cacheDir, "JuneMarkdownExport_${System.currentTimeMillis()}.zip")
             val zipOutputStream = ZipOutputStream(BufferedOutputStream(FileOutputStream(backupFile)))
 
+            val totalOps = cleanedJournals.size
+            var currentOp = 0
+
             val usedFileNames = mutableSetOf<String>()
+            val processedSongNames = mutableSetOf<String>()
             zipOutputStream.use { zos ->
                 cleanedJournals.forEach { journal ->
                     val mediaPrefix = if (includeMedia) "media/${journal.id}" else null
+                    val audioPrefix = if (includeAudios) "audios/${journal.id}" else null
+                    val songPrefix = if (includeSongFiles) "songs" else null
+
                     val markdownText = com.denser.june.core.domain.markdown.MarkdownEngine.toMarkdown(
                         journal = journal,
                         relativeMediaPathPrefix = mediaPrefix,
-                        includeMedia = includeMedia
+                        relativeAudioPathPrefix = audioPrefix,
+                        relativeSongPathPrefix = songPrefix,
+                        includeMedia = includeMedia,
+                        includeAudios = includeAudios,
+                        includeSongFiles = includeSongFiles
                     )
 
                     var fileName = com.denser.june.core.domain.markdown.MarkdownEngine.generateFileName(journal)
@@ -255,11 +425,69 @@ class ExportImpl(
                                     }
                                     zos.closeEntry()
                                 } catch (e: Exception) {
-                                    AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack media file for markdown export: ${file.name}", e)
+                                    AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack media file for markdown: ${file.name}", e)
                                 }
                             }
                         }
                     }
+
+                    if (includeAudios) {
+                        journal.audios.forEach { audio ->
+                            val file = File(audio.path)
+                            if (file.exists()) {
+                                try {
+                                    val audioEntry = ZipEntry("audios/${journal.id}/${file.name}")
+                                    zos.putNextEntry(audioEntry)
+                                    FileInputStream(file).use { fis ->
+                                        fis.copyTo(zos)
+                                    }
+                                    zos.closeEntry()
+                                } catch (e: Exception) {
+                                    AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack audio file for markdown: ${file.name}", e)
+                                }
+                            }
+                        }
+                    }
+
+                    if (includeSongFiles) {
+                        journal.songDetails?.localPreviewPath?.let { path ->
+                            val file = File(path)
+                            if (file.exists() && processedSongNames.add("songs/${file.name}")) {
+                                try {
+                                    val songEntry = ZipEntry("songs/${file.name}")
+                                    zos.putNextEntry(songEntry)
+                                    FileInputStream(file).use { it.copyTo(zos) }
+                                    zos.closeEntry()
+                                } catch (e: Exception) {
+                                    AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack song file for markdown: ${file.name}", e)
+                                }
+                            }
+                        }
+                        journal.songDetails?.localThumbnailPath?.let { path ->
+                            val file = File(path)
+                            if (file.exists() && processedSongNames.add("songs/${file.name}")) {
+                                try {
+                                    val songEntry = ZipEntry("songs/${file.name}")
+                                    zos.putNextEntry(songEntry)
+                                    FileInputStream(file).use { it.copyTo(zos) }
+                                    zos.closeEntry()
+                                } catch (e: Exception) {
+                                    AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack song art for markdown: ${file.name}", e)
+                                }
+                            }
+                        }
+                    }
+
+                    currentOp++
+                    onProgress?.invoke(
+                        BackupOperationStatus.InProgress(
+                            phase = "Markdown",
+                            current = currentOp,
+                            total = totalOps,
+                            percentage = currentOp.toFloat() / totalOps,
+                            currentItemName = fileName
+                        )
+                    )
                 }
             }
 
@@ -284,7 +512,11 @@ class ExportImpl(
             val markdownText = com.denser.june.core.domain.markdown.MarkdownEngine.toMarkdown(
                 journal = journal,
                 relativeMediaPathPrefix = "media",
-                includeMedia = true
+                relativeAudioPathPrefix = "audios",
+                relativeSongPathPrefix = "songs",
+                includeMedia = true,
+                includeAudios = true,
+                includeSongFiles = true
             )
 
             ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zos ->
@@ -296,7 +528,7 @@ class ExportImpl(
                 val processedFileNames = mutableSetOf<String>()
                 journal.images.forEach { imagePath ->
                     val file = File(imagePath)
-                    if (file.exists() && processedFileNames.add(file.name)) {
+                    if (file.exists() && processedFileNames.add("media/${file.name}")) {
                         try {
                             val mediaEntry = ZipEntry("media/${file.name}")
                             zos.putNextEntry(mediaEntry)
@@ -306,6 +538,38 @@ class ExportImpl(
                             zos.closeEntry()
                         } catch (e: Exception) {
                             AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack media file for single export: ${file.name}", e)
+                        }
+                    }
+                }
+
+                journal.audios.forEach { audio ->
+                    val file = File(audio.path)
+                    if (file.exists() && processedFileNames.add("audios/${file.name}")) {
+                        try {
+                            val audioEntry = ZipEntry("audios/${file.name}")
+                            zos.putNextEntry(audioEntry)
+                            FileInputStream(file).use { fis ->
+                                fis.copyTo(zos)
+                            }
+                            zos.closeEntry()
+                        } catch (e: Exception) {
+                            AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack audio file for single export: ${file.name}", e)
+                        }
+                    }
+                }
+
+                journal.songDetails?.localPreviewPath?.let { path ->
+                    val file = File(path)
+                    if (file.exists() && processedFileNames.add("songs/${file.name}")) {
+                        try {
+                            val songEntry = ZipEntry("songs/${file.name}")
+                            zos.putNextEntry(songEntry)
+                            FileInputStream(file).use { fis ->
+                                fis.copyTo(zos)
+                            }
+                            zos.closeEntry()
+                        } catch (e: Exception) {
+                            AppLogger.e(AppLogger.Category.BACKUP, "ExportImpl", "Failed to pack song file for single export: ${file.name}", e)
                         }
                     }
                 }

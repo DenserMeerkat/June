@@ -2,7 +2,11 @@ package com.denser.june.presentation.screens.settings
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import com.denser.june.core.domain.backup.BackupOperationStatus
+import com.denser.june.core.domain.backup.PreBackupCounts
+import com.denser.june.core.domain.importers.ImportSummary
 import com.denser.june.core.domain.model.AppTheme
+import com.denser.june.core.domain.model.enums.AutoBackupInterval
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.TimeFormat
@@ -21,6 +25,7 @@ data class SettingsState(
     val exportMarkdownState: AsyncOp<File> = AsyncOp.Idle,
     val restoreState: AsyncOp<Unit> = AsyncOp.Idle,
     val importMarkdownState: AsyncOp<Int> = AsyncOp.Idle,
+    val appImportState: AsyncOp<ImportSummary> = AsyncOp.Idle,
     val isAppLockEnabled: Boolean = false,
     val lockType: LockType = LockType.BIOMETRIC,
     val pinHash: String? = null,
@@ -49,4 +54,21 @@ data class SettingsState(
     val videoCompressionQuality: Int = 1080,
     val isCompressAudioEnabled: Boolean = false,
     val audioCompressionQuality: Int = 128,
+    val preBackupCounts: PreBackupCounts? = null,
+    val backupOperationStatus: BackupOperationStatus = BackupOperationStatus.Idle,
+    val autoBackupOperationStatus: BackupOperationStatus = BackupOperationStatus.Idle,
+    val restoreOperationStatus: BackupOperationStatus = BackupOperationStatus.Idle,
+    val hasMapKeys: Boolean = false,
+    val settingsRestoreState: AsyncOp<Unit> = AsyncOp.Idle,
+    val isAutoBackupEnabled: Boolean = false,
+    val autoBackupFolderUri: String? = null,
+    val autoBackupFolderName: String? = null,
+    val autoBackupInterval: AutoBackupInterval = AutoBackupInterval.WEEKLY,
+    val autoBackupRetentionCount: Int = 3,
+    val autoBackupRequireCharging: Boolean = false,
+    val autoBackupLastTime: Long = 0L,
+    val autoBackupIncludeMedia: Boolean = true,
+    val autoBackupIncludeAudios: Boolean = true,
+    val autoBackupIncludeSongs: Boolean = true,
+    val autoBackupIncludeSettings: Boolean = true
 )

@@ -242,7 +242,7 @@ fun JuneConnectedRowItem(
                 if (trailingContent != null) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
-                        modifier = Modifier.defaultMinSize(minWidth = 40.dp, minHeight = 40.dp),
+                        modifier = Modifier.defaultMinSize(minWidth = 32.dp, minHeight = 32.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         trailingContent()

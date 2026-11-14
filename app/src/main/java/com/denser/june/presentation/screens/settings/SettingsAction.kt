@@ -2,6 +2,7 @@ package com.denser.june.presentation.screens.settings
 
 import android.net.Uri
 import com.denser.june.core.domain.model.FontVariationConfig
+import com.denser.june.core.domain.model.enums.AutoBackupInterval
 import com.denser.june.core.domain.model.enums.EditorLayoutDirection
 import com.denser.june.core.domain.model.enums.MapTheme
 import com.denser.june.core.domain.model.enums.ThemeMode
@@ -26,11 +27,26 @@ sealed interface SettingsAction {
     data object OnDeleteJournals: SettingsAction
     data object ResetBackup: SettingsAction
     data class OnRestoreJournals(val path: String): SettingsAction
-    data class OnExportJournals(val includeMedia: Boolean = true) : SettingsAction
-    data class OnExportMarkdown(val includeMedia: Boolean = true) : SettingsAction
+    data class OnExportJournals(
+        val includeMedia: Boolean = true,
+        val includeAudios: Boolean = true,
+        val includeSongFiles: Boolean = true,
+        val includeSettings: Boolean = true,
+        val includeMapKeys: Boolean = false
+    ) : SettingsAction
+    data object LoadPreBackupCounts : SettingsAction
+    data class OnRestoreSettings(val json: String) : SettingsAction
+    data object ResetSettingsRestore : SettingsAction
+    data class OnExportMarkdown(
+        val includeMedia: Boolean = true,
+        val includeAudios: Boolean = true,
+        val includeSongs: Boolean = true
+    ) : SettingsAction
     data class OnImportMarkdownFiles(val uris: List<Uri>) : SettingsAction
     data class OnImportMarkdownZip(val uri: Uri) : SettingsAction
     data object ResetMarkdownImport : SettingsAction
+    data class OnAppImport(val uri: Uri) : SettingsAction
+    data object ResetAppImport : SettingsAction
     data class OnAppLockToggle(val enabled: Boolean) : SettingsAction
     data class UpdateLockType(val type: LockType) : SettingsAction
     data class UpdatePinHash(val hash: String?) : SettingsAction
@@ -54,4 +70,15 @@ sealed interface SettingsAction {
     data class OnVideoQualityChange(val quality: Int) : SettingsAction
     data class OnCompressAudioToggle(val enabled: Boolean) : SettingsAction
     data class OnAudioQualityChange(val quality: Int) : SettingsAction
+    data class OnAutoBackupToggle(val enabled: Boolean) : SettingsAction
+    data class OnAutoBackupFolderSelected(val uri: Uri) : SettingsAction
+    data class OnAutoBackupIntervalChange(val interval: AutoBackupInterval) : SettingsAction
+    data class OnAutoBackupRetentionChange(val count: Int) : SettingsAction
+    data class OnAutoBackupRequireChargingToggle(val require: Boolean) : SettingsAction
+    data class OnAutoBackupIncludeMediaToggle(val include: Boolean) : SettingsAction
+    data class OnAutoBackupIncludeAudiosToggle(val include: Boolean) : SettingsAction
+    data class OnAutoBackupIncludeSongsToggle(val include: Boolean) : SettingsAction
+    data class OnAutoBackupIncludeSettingsToggle(val include: Boolean) : SettingsAction
+    data object OnAutoBackupFolderCleared : SettingsAction
+    data object OnTriggerAutoBackupNow : SettingsAction
 }

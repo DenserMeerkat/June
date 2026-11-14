@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 enum class JuneRadioTilePosition {
@@ -31,13 +32,17 @@ fun JuneRadioTile(
     prefixContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     radioPosition: JuneRadioTilePosition = JuneRadioTilePosition.Leading,
-    shape: Shape = RoundedCornerShape(12.dp),
-    titleTextStyle: TextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+    shape: Shape? = null,
+    titleTextStyle: TextStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
     titleColor: Color? = null,
-    selectedContainerColor: Color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
-    unselectedContainerColor: Color = Color.Transparent,
+    selectedContainerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    unselectedContainerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     border: BorderStroke? = null,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+    index: Int? = null,
+    count: Int? = null,
+    pressedRadius: Dp = 28.dp,
+    selectedRadius: Dp = 28.dp
 ) {
     val resolvedTitleColor = titleColor ?: if (selected) {
         MaterialTheme.colorScheme.primary
@@ -45,90 +50,87 @@ fun JuneRadioTile(
         MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f)
     }
 
-    Surface(
-        onClick = onClick,
+    val radioComposable = @Composable {
+        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+            RadioButton(
+                selected = selected,
+                onClick = onClick,
+                enabled = enabled,
+                modifier = if (subtitle != null && radioPosition == JuneRadioTilePosition.Leading) {
+                    Modifier.padding(top = 2.dp)
+                } else Modifier,
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = MaterialTheme.colorScheme.primary,
+                    unselectedColor = MaterialTheme.colorScheme.outlineVariant
+                )
+            )
+        }
+    }
+
+    val leadingContent: (@Composable () -> Unit)? = when {
+        radioPosition == JuneRadioTilePosition.Leading -> radioComposable
+        prefixContent != null -> prefixContent
+        else -> null
+    }
+
+    val trailingContent: (@Composable () -> Unit)? = when {
+        radioPosition == JuneRadioTilePosition.Trailing -> radioComposable
+        else -> null
+    }
+
+    JuneConnectedRowItem(
+        modifier = modifier,
+        leadingContent = leadingContent,
+        trailingContent = trailingContent,
         enabled = enabled,
         shape = shape,
-        color = if (selected) selectedContainerColor else unselectedContainerColor,
-        border = border,
-        modifier = modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 48.dp)
+        containerColor = if (selected) selectedContainerColor else unselectedContainerColor,
+        contentPadding = contentPadding,
+        onClick = onClick,
+        index = index,
+        count = count,
+        pressedRadius = pressedRadius,
+        selected = selected,
+        selectedRadius = selectedRadius
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(contentPadding),
-            verticalAlignment = if (subtitle != null && radioPosition == JuneRadioTilePosition.Leading) {
-                Alignment.Top
-            } else {
-                Alignment.CenterVertically
-            }
-        ) {
-            val radioComposable = @Composable {
-                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-                    RadioButton(
-                        selected = selected,
-                        onClick = onClick,
-                        enabled = enabled,
-                        modifier = if (subtitle != null && radioPosition == JuneRadioTilePosition.Leading) {
-                            Modifier.padding(top = 2.dp)
-                        } else Modifier,
-                        colors = RadioButtonDefaults.colors(
-                            selectedColor = MaterialTheme.colorScheme.primary,
-                            unselectedColor = MaterialTheme.colorScheme.outlineVariant
-                        )
-                    )
-                }
-            }
-
-            if (radioPosition == JuneRadioTilePosition.Leading) {
-                radioComposable()
-                Spacer(modifier = Modifier.width(10.dp))
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (radioPosition == JuneRadioTilePosition.Leading) {
                     prefixContent?.invoke()
-                    Text(
-                        text = title,
-                        style = titleTextStyle,
-                        color = resolvedTitleColor
-                    )
-                    if (badgeContent != null) {
-                        badgeContent()
-                    } else if (badge != null) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = badge,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
+                }
+                Text(
+                    text = title,
+                    style = titleTextStyle,
+                    color = resolvedTitleColor
+                )
+                if (badgeContent != null) {
+                    badgeContent()
+                } else if (badge != null) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = badge,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
                     }
                 }
-                if (!subtitle.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
-
-            if (radioPosition == JuneRadioTilePosition.Trailing) {
-                Spacer(modifier = Modifier.width(8.dp))
-                radioComposable()
+            if (!subtitle.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

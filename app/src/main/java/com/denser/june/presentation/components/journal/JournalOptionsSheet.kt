@@ -22,13 +22,14 @@ import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.model.enums.TagCategory
+import com.denser.june.core.utils.TagUtils
 import com.denser.june.core.utils.toDayOfMonth
 import com.denser.june.core.utils.toFullDateTime
 import com.denser.june.core.utils.toShortMonth
 import com.denser.june.presentation.plus.LocalIsPlus
 import com.denser.june.presentation.plus.LocalPlusSheetController
 import com.denser.june.presentation.theme.LocalSyncEnabled
-import com.denser.june.presentation.utils.TagUtils
+import com.denser.june.presentation.utils.TagUiUtils
 import java.util.Date
 import java.util.Locale
 
@@ -443,7 +444,7 @@ fun JournalOptionsMetadataDetails(
                         onClick = {},
                         label = { Text(tag, style = MaterialTheme.typography.labelMedium) },
                         shape = RoundedCornerShape(12.dp),
-                        colors = TagUtils.getTagSuggestionChipColors(tag),
+                        colors = TagUiUtils.getTagSuggestionChipColors(tag),
                         border = null
                     )
                 }
@@ -452,7 +453,7 @@ fun JournalOptionsMetadataDetails(
                         onClick = {},
                         label = { Text(tag, style = MaterialTheme.typography.labelMedium) },
                         shape = RoundedCornerShape(12.dp),
-                        colors = TagUtils.getTagSuggestionChipColors(tag),
+                        colors = TagUiUtils.getTagSuggestionChipColors(tag),
                         border = null
                     )
                 }
@@ -461,7 +462,7 @@ fun JournalOptionsMetadataDetails(
                         onClick = {},
                         label = { Text(tag, style = MaterialTheme.typography.labelMedium) },
                         shape = RoundedCornerShape(12.dp),
-                        colors = TagUtils.getTagSuggestionChipColors(tag),
+                        colors = TagUiUtils.getTagSuggestionChipColors(tag),
                         border = null
                     )
                 }

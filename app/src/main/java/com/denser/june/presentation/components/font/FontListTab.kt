@@ -3,6 +3,7 @@ package com.denser.june.presentation.components.font
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -57,7 +58,7 @@ fun FontListTab(
             end = 16.dp,
             bottom = 8.dp + bottomPadding
         ),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         if (!isInternetAllowed) {
             item(key = "__internet_restricted_banner__") {
@@ -119,7 +120,7 @@ fun FontListTab(
             }
         }
 
-        items(allFontNames, key = { it }) { name ->
+        itemsIndexed(allFontNames, key = { _, name -> name }) { index, name ->
             val fontFamily = getAppFontFamily(name)
             val isVariableFont = remember(name) {
                 FontUtils.isVariableFont(name)
@@ -133,6 +134,8 @@ fun FontListTab(
                 selected = fontsEnabled && name == selectedFontName,
                 enabled = fontsEnabled,
                 title = name,
+                index = index,
+                count = allFontNames.size,
                 prefixContent = if (isProFont && !isPlus) {
                     {
                         PlusBadge(
@@ -144,33 +147,21 @@ fun FontListTab(
                 badge = null,
                 badgeContent = if (isVariableFont) {
                     {
-                        Surface(
-                            color = MaterialTheme.colorScheme.secondaryContainer.copy(
-                                alpha = if (fontsEnabled) 0.5f else 0.25f
-                            ),
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.tune_24px),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .padding(horizontal = 6.dp, vertical = 4.dp)
-                                    .size(14.dp),
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(
-                                    alpha = if (fontsEnabled) 1f else 0.38f
-                                )
+                        Icon(
+                            painter = painterResource(R.drawable.tune_24px),
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = if (fontsEnabled) 0.7f else 0.38f
                             )
-                        }
+                        )
                     }
                 } else null,
                 titleTextStyle = TextStyle(
                     fontFamily = fontFamily,
-                    fontSize = 18.sp
+                    fontSize = 16.sp
                 ),
                 radioPosition = JuneRadioTilePosition.Trailing,
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 onClick = { onFontSelect(name) }
             )
         }
