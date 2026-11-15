@@ -1,0 +1,5 @@
+- Automatic backups to local folder.
+- Import from Day One, Diarium, Daily You, and StoryPad.
+- Settings backup and restore.
+- Added and updated translations.
+- UI refinements and bug fixes.

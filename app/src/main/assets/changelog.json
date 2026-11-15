@@ -1,5 +1,15 @@
 [
   {
+    "version": "v2.2.0",
+    "changes": [
+      "Automatic backups to local folder.",
+      "Import from Day One, Diarium, Daily You, and StoryPad.",
+      "Settings backup and restore.",
+      "Added and updated translations.",
+      "UI refinements and bug fixes."
+    ]
+  },
+  {
     "version": "v2.1.0",
     "changes": [
       "Built-in audio recorder with live waveform and recording preview.",

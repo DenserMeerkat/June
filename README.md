@@ -1,6 +1,6 @@
 <picture>
   <source srcset="fastlane/metadata/android/en-US/images/banner.jpg">
-  <img alt="June: Capture, Express and Own your Memories!" src="fastlane/metadata/android/en-US/images/banner.jpg" style="border-radius:48px;">
+  <img alt="June: Capture, Express and Own your Memories!" src="fastlane/metadata/android/en-US/images/banner.jpg" style="border-radius:32px;">
 </picture>
 
 <br>
@@ -68,6 +68,7 @@
 - **Mood Tracking:** Log emotional journeys using a built-in searchable emoji picker.
 - **Cloud Sync & Privacy:** 100% offline-first architecture with optional end-to-end sync via WebDAV or Google Drive (Google Drive sync is only available in the Play Store version).
 - **Private Vault & App Lock:** Keep sensitive entries hidden in an isolated vault protected by Biometrics, PIN, Password, or Pattern.
+- **Automated Backups & Migration:** Automatic backups to local folder with full data portability and one-tap import from Day One, Diarium, Daily You, and StoryPad.
 
 ## Translations
 
@@ -89,6 +90,7 @@ June is localized by community contributors on [Hosted Weblate](https://hosted.w
 - [Media3 (ExoPlayer)](https://developer.android.com/media/media3)
 - [Wavy Slider](https://github.com/mahozad/wavy-slider)
 - [Koin](https://insert-koin.io/)
+- [Daily You](https://github.com/Demizo/Daily_You)
 - Maps & Tiles: [OpenStreetMap](https://www.openstreetmap.org/), [OpenFreeMap](https://openfreemap.org/), [CARTO](https://carto.com/), [MapTiler](https://www.maptiler.com/), [Stadia Maps](https://stadiamaps.com/)
 - Fonts: [Google Sans Flex](https://github.com/google/fonts), [Roboto Flex](https://github.com/googlefonts/roboto-flex), [Recursive](https://www.recursive.design/), [Shantell Sans](https://shantellsans.com/)
 

@@ -11,5 +11,5 @@ Features:
 * Timeline & Streaks: Navigate history via a Month View calendar timeline and view writing streaks.
 * Privacy Vault: Secure entries using Biometrics, PIN, Password, or Pattern.
 * Expressive Theming: Supports Dynamic Wallpaper Colors (Material You) and custom font selection.
-* Total Ownership: 100% offline architecture with local Backup & Restore.
+* Total Ownership: 100% offline architecture with automatic local backups and migration from Day One, Diarium, Daily You, and StoryPad.
 * Cloud Sync: Keep journal in sync across devices using WebDAV (e.g. Nextcloud, ownCloud).
