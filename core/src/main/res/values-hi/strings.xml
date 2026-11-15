@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="advanced">उन्नत</string>
+    <string name="bookmark">बुकमार्क</string>
+    <string name="action_cancel">रद्द करें</string>
+    <string name="action_save">सहेजें</string>
+    <string name="action_done">हो गया</string>
+    <string name="action_delete">मिटाना</string>
+</resources>

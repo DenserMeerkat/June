@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Note: Translations supplemented with AI assistance; community review welcome on Hosted Weblate -->
+<resources>
+
+    <!-- Common Actions -->
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_done">Hecho</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_remove">Quitar</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_export">Exportar</string>
+    <string name="action_backup">Copia de seguridad</string>
+    <string name="action_restore">Restaurar</string>
+    <string name="action_share">Compartir</string>
+    <string name="action_copy">Copiar</string>
+    <string name="action_clear">Limpiar</string>
+    <string name="action_reset">Reiniciar</string>
+    <string name="action_confirm">Confirmar</string>
+    <string name="action_discard">Descartar</string>
+    <string name="action_back">Atrás</string>
+    <string name="action_close">Cerrar</string>
+    <string name="action_lock">Bloquear</string>
+    <string name="action_unlock">Desbloquear</string>
+    <string name="action_pause">Pausar</string>
+    <string name="action_resume">Reanudar</string>
+    <string name="action_stop">Detener</string>
+
+    <!-- Common Labels -->
+    <string name="label_overview">Resumen</string>
+    <string name="label_settings">Ajustes</string>
+
+    <!-- Accessibility -->
+    <string name="cd_more_options">Más opciones</string>
+
+    <!-- Feature Actions -->
+    <string name="advanced">Avanzado</string>
+    <string name="bookmark">Marcador</string>
+    <string name="change">Cambiar</string>
+    <string name="change_location">Cambiar Ubicación</string>
+    <string name="copy_url">Copiar URL</string>
+    <string name="disconnect">Desconectar</string>
+    <string name="next">Siguiente</string>
+    <string name="edit_link">Editar Enlace</string>
+    <string name="enable">Habilitar</string>
+    <string name="filter">Filtrar</string>
+    <string name="got_it">Lo tengo</string>
+    <string name="later">Después</string>
+    <string name="manage_in_settings">Gestionar en Ajustes</string>
+    <string name="merge_and_save">Fusionar &amp; Guardar</string>
+    <string name="move_to_front">Mover al Frente</string>
+    <string name="new_journal">Nuevo Diario</string>
+    <string name="ok">OK</string>
+    <string name="okay">Okay</string>
+    <string name="open_folder">Abrir carpeta</string>
+    <string name="open_hosted_weblate">Abrir Hosted Weblate</string>
+    <string name="open_link">Abrir enlance</string>
+    <string name="options">Opciones</string>
+    <string name="paste_link_placeholder">Pega el enlace aquí...</string>
+    <string name="permanently_delete">Eliminar permanentemente</string>
+    <string name="permanently_delete_all">Eliminar Todo Permanentemente</string>
+    <string name="record_video">Grabar video</string>
+    <string name="refresh">Recargar</string>
+    <string name="remove_bookmark">Eliminar marcador</string>
+    <string name="rename">Renombrar</string>
+    <string name="restore_all">Restaurar Todo</string>
+    <string name="save_and_enable_lock">Guardar y Habilitar Bloqueo</string>
+    <string name="unlock_june">Desbloquear June</string>
+    <string name="unlock_vault">Desbloquear Bóveda</string>
+    <string name="skip_and_enable_lock">Saltar &amp; Habilitar Bloqueo</string>
+    <string name="stop_sync">Detener Sincronización</string>
+    <string name="sync_now">Sincronizar Ahora</string>
+    <string name="take_photo">Tomar Foto</string>
+
+    <!-- Status Labels -->
+    <string name="already_latest_version">Estás utilizando la última versión de June.</string>
+    <string name="api_key_invalid">Clave API inválida. Por favor verifícala.</string>
+    <string name="api_key_valid">¡La llave API es válida y verificada!</string>
+    <string name="camera_options_message">¿Te gustaría tomar una foto o grabar un video?</string>
+    <string name="cloud">Nube</string>
+    <string name="console_logs">Registros de Consola</string>
+    <string name="created">Creado</string>
+    <string name="developer_options">Opciones de desarrollador</string>
+    <string name="disabled">Deshabilitado</string>
+    <string name="journal_media">Multimedia de diarios</string>
+    <string name="local">Local</string>
+    <string name="more_entries">Más entradas</string>
+    <string name="name">Nombre</string>
+    <string name="no_journals_this_month">No hubo diarios este mes.</string>
+    <string name="no_journals_yet">Sin diarios aún</string>
+    <string name="no_journals_yet_desc">Comienza tu diario hoy. Crea tu primera entrada para empezar.</string>
+    <string name="no_links_available">No hay enlaces disponibles</string>
+    <string name="no_locations_this_month">No hay ubicaciones en este mes.</string>
+    <string name="no_locations_found">Localizaciones no encontradas</string>
+    <string name="no_media_this_month">Sin multimedia este mes.</string>
+    <string name="no_audio_this_month">Sin notas de audio este mes.</string>
+    <string name="no_music_this_month">No se registró música este mes.</string>
+    <string name="empty_library">Tu biblioteca está vacía</string>
+    <string name="empty_library_desc">Agrega canciones pegando un enlace o seleccionando un archivo de audio desde tu dispositivo mediante los botones de arriba.</string>
+    <string name="scope_affects_library">Los cambios afectarán a la biblioteca y a los futuros diarios</string>
+    <string name="scope_affects_journal_only">Los cambios solo afectarán al diario actual</string>
+    <string name="not_synced">No sincronizado</string>
+    <string name="now">Ahora</string>
+    <string name="recent">Reciente</string>
+    <string name="save_progress_message">¿Quieres guardar tu progreso antes de salir?</string>
+    <string name="search_settings_placeholder">Buscar ajustes...</string>
+    <string name="synced">Sincronizado</string>
+    <string name="test">Probar</string>
+    <string name="test_api_key">Probar llave API</string>
+    <string name="test_connection">Probar Conexión</string>
+    <string name="testing_connection">Probando Conexión...</string>
+    <string name="testing_key">Probando Clave...</string>
+    <string name="today">Hoy</string>
+    <string name="unsaved_tags_message">Tienes cambios sin guardar en tus etiquetas. ¿Quieres guardarlos antes de salir?</string>
+    <string name="untitled">Sin título</string>
+    <string name="updated">Actualizado</string>
+    <string name="whats_new">Novedades</string>
+
+    <!-- Dialogs & Banners -->
+    <string name="save_entry">¿Guardar Entrada?</string>
+    <string name="change_lock_title">Cambiar bloqueo?</string>
+    <string name="checking_for_updates">Buscando actualizaciones</string>
+    <string name="diagnostics">Diagnósticos</string>
+    <string name="enter_pin">Ingresar PIN</string>
+    <string name="locked">Bloqueado</string>
+    <string name="incorrect_answer_try_again">Respuesta incorrecta. Por favor, inténtalo de nuevo.</string>
+    <string name="internet_access_disabled">Acceso a Internet Deshabilitado</string>
+    <string name="internet_maybe_required">Es posible que se requiera internet</string>
+    <string name="internet_restricted_desc">Para usar esta función, habilita la conexión a internet en los ajustes de la aplicación.</string>
+    <string name="move_to_bin">Mover a la papelera</string>
+    <string name="move_all_to_bin">Mover todo a la papelera</string>
+    <string name="move_all_to_bin_desc">Todas tus entradas de diario se moverán a la Papelera. Puedes restaurarlas durante los próximos 30 días.</string>
+    <string name="move_all_to_bin_title">¿Mover todo a Papelera?</string>
+    <string name="move_to_bin_default_desc">¿Mover todo a Papelera? Se eliminará permanentemente después de 30 días.</string>
+    <string name="no_license_text_available">No hay texto de licencia disponible.</string>
+    <string name="no_settings_found">No se encontró el ajuste</string>
+    <string name="no_settings_found_desc">No pudimos encontrar ningún ajuste que coincida con \"%1$s\".</string>
+    <string name="open_source_licenses_desc">Licencias y Dependencias de Código Abierto</string>
+    <string name="search_emojis">Buscar emojis…</string>
+    <string name="no_emojis_found">Sin emojis encontrados</string>
+    <string name="emoji_category_recent">Emojis recientes</string>
+    <string name="emoji_category_smileys">Emoticonos y emociones</string>
+    <string name="emoji_category_people">Personas</string>
+    <string name="emoji_category_animals">Animales &amp; Naturaleza</string>
+    <string name="emoji_category_food">Comida &amp; Bebidas</string>
+    <string name="emoji_category_travel">Viajes &amp; Lugares</string>
+    <string name="emoji_category_activities">Actividades &amp; Eventos</string>
+    <string name="emoji_category_objects">Objetos</string>
+    <string name="emoji_category_symbols">Símbolos</string>
+    <string name="emoji_category_flags">Banderas</string>
+    <string name="repair_sync">Reparar Sincronización</string>
+    <string name="repair_sync_desc">Esto auditará los registros locales, reparará rutas de imágenes, limpiará archivos huérfanos y realizará una reverificación completa en la nube. Puede tardar más que una sincronización habitual.</string>
+    <string name="repair_sync_title">¿Reparar Sincronización y Revalidar?</string>
+    <string name="type_to_confirm">\n\nEscribe \'%1$s\' abajo para confirmar.</string>
+    <string name="unknown_license">Licencia Desconocida</string>
+    <string name="wrong_pin_try_again">Incorrecto, inténtalo de nuevo</string>
+    <string name="switch_provider">Cambiar Proveedor</string>
+    <string name="switch_provider_desc">Cambiar tu destino en la nube activo a %1$s volverá a verificar tu biblioteca local con el estado del nuevo proveedor.</string>
+    <string name="switch_provider_title">¿Cambiar Proveedor?</string>
+    <string name="update_available">Actualización Disponible</string>
+    <string name="update_available_foss">Hay una nueva versión de June disponible. Estas son las novedades:</string>
+    <string name="update_available_play_store">Hay una nueva versión de June disponible en la Google Play Store.</string>
+    <string name="update_check_failed">Error al buscar actualizaciones</string>
+    <string name="up_to_date">Actualizado</string>
+
+    <!-- Plurals -->
+    <plurals name="active_filters_count">
+        <item quantity="one">%1$d etiqueta</item>
+        <item quantity="other">%1$d etiquetas</item>
+    </plurals>
+    <plurals name="journals_pending_count">
+        <item quantity="one">%1$d diario pendiente</item>
+        <item quantity="other">%1$d diarios pendientes</item>
+    </plurals>
+    <plurals name="journals_stat_count">
+        <item quantity="one">%1$d diario</item>
+        <item quantity="other">%1$d diarios</item>
+    </plurals>
+    <plurals name="media_pending_count">
+        <item quantity="one">%1$d archivo multimedia pendiente</item>
+        <item quantity="other">%1$d archivos multimedia pendientes</item>
+    </plurals>
+    <plurals name="media_stat_count">
+        <item quantity="one">%1$d multimedia</item>
+        <item quantity="other">%1$d multimedia</item>
+    </plurals>
+    <plurals name="words_count">
+        <item quantity="one">%1$d palabra</item>
+        <item quantity="other">%1$d palabras</item>
+    </plurals>
+
+    <!-- Settings Categories -->
+    <string name="about">Acerca de</string>
+    <string name="appearance">Apariencia</string>
+    <string name="bin">Papelera</string>
+    <string name="editor">Editor</string>
+    <string name="general">General</string>
+    <string name="privacy_and_security">Privacidad y Seguridad</string>
+    <string name="data_and_sync">Datos y Sincronización</string>
+
+    <!-- Settings - General -->
+    <string name="always_open_new_note">Abrir el editor al inicio</string>
+    <string name="delete_all_journals">Eliminar todos los diarios</string>
+    <string name="delete_all_journals_desc">Mover todas las entradas a la Papelera</string>
+    <string name="include_time">Incluir hora</string>
+    <string name="keyboard_autocorrect">Corrección automática</string>
+    <string name="keyboard_capitalization">Mayúscula automática</string>
+    <string name="map_settings">Ajustes del mapa</string>
+    <string name="map_settings_desc">Estilo y claves de API</string>
+    <string name="compress_photos">Comprimir fotos</string>
+    <string name="compress_videos">Comprimir vídeos</string>
+    <string name="compress_audio">Comprimir audios</string>
+    <string name="importing_audio">Importando audio…</string>
+    <string name="markdown_editor">Editor Markdown</string>
+    <string name="markdown_editor_desc">Formato de texto enriquecido habilitado</string>
+    <string name="plain_text_mode">Modo de texto plano</string>
+    <string name="reminders">Recordatorios</string>
+    <string name="reminders_desc">Configurar recordatorios para escribir</string>
+    <string name="start_of_week">Inicio de la semana</string>
+    <string name="time_format">Formato de hora</string>
+    <string name="time_format_12h">12 Horas</string>
+    <string name="time_format_24h">24 Horas</string>
+
+    <!-- Settings - Appearance -->
+    <string name="amoled">Modo Negro Puro</string>
+    <string name="app_follow_theme">Aplicación</string>
+    <string name="app_font">Fuente de la Aplicación</string>
+    <string name="app_theme">Tema de la Aplicación</string>
+    <string name="dark">Oscuro</string>
+    <string name="journal_font">Fuente del diario</string>
+    <string name="reset_font">Restablecer fuente</string>
+    <string name="journal_theme">Tema del Diario</string>
+    <string name="reset_theme">Reiniciar TemaPIN Incorrecto. Intenta de nuevo.</string>
+    <string name="light">Claro</string>
+    <string name="material_theme">Tema Material</string>
+    <string name="palette_selection">Selección de Paleta</string>
+    <string name="palette_selection_desc">Elige la paleta de variantes del tema</string>
+    <string name="palette_style">Paleta de Estilos</string>
+    <string name="seed_color">Color semilla</string>
+    <string name="system">Sistema</string>
+
+    <!-- Settings - Language & Weblate -->
+    <string name="editor_direction">Dirección del editor</string>
+    <string name="editor_direction_auto">Automático (Segun configuración regional)</string>
+    <string name="editor_direction_ltr">De Izquierda a Derecha (LTR)</string>
+    <string name="editor_direction_rtl">De Derecha a Izquierda (RTL)</string>
+    <string name="force_ltr_layout">Forzar Interfaz LTR</string>
+    <string name="help_translate_desc">Contribuir con traducciones en Weblate</string>
+    <string name="language">Idioma</string>
+    <string name="translate_app">Ayuda a traducir June</string>
+    <string name="translate_dialog_desc">Las traducciones de June son colaborativas y están alojadas en Hosted Weblate, una plataforma web de código abierto para la traducción.\n\nPuedes añadir fácilmente traducciones para tu idioma o sugerir mejoras directamente desde tu navegador, sin necesidad de conocimientos de programación.</string>
+
+    <!-- Settings - Privacy & Security -->
+    <string name="app_lock">Bloqueo de la Aplicación</string>
+    <string name="app_lock_desc">Bloquea la app con biometría o credencial del dispositivo</string>
+    <string name="custom_pin">PIN</string>
+    <string name="custom_password">Contraseña</string>
+    <string name="custom_pattern">Patrón</string>
+    <string name="no_lock">Sin bloqueo</string>
+    <string name="permissions">Permisos</string>
+    <string name="same_as_screen_lock">Igual que la pantalla de bloqueo</string>
+    <string name="screen_privacy">Privacidad de Pantalla</string>
+    <string name="screen_privacy_desc">Previene capturas de pantalla y esconde el contenido de la app en recientes</string>
+    <string name="security_question">Pregunta de Seguridad</string>
+    <string name="switch_lock_warning">Cambiar el método de bloqueo restablecerá tus credenciales actuales.</string>
+    <string name="ways_to_lock">Métodos de bloqueo</string>
+    <string name="lock_method">Método de bloqueo</string>
+    <string name="vault">Bóveda</string>
+    <string name="vault_desc">Mantén los diarios confidenciales ocultos y protegidos</string>
+    <string name="move_to_vault">Mover a la Bóveda</string>
+    <string name="move_out_of_vault">Mover fuera de la Bóveda</string>
+    <string name="move_to_vault_desc">¿Mover a la bóveda? Quedará oculto y protegido tras tu bloqueo.</string>
+    <string name="move_out_of_vault_desc">¿Mover fuera de la bóveda? Volverá a ser visible en tu cronología de diarios.</string>
+    <string name="vault_empty_title">La bóveda está vacía</string>
+    <string name="vault_empty_desc">Los diarios que bloquees aparecerán aquí</string>
+    <string name="vault_notice">Los diarios en la bóveda se ocultan de las listas principales y no se sincronizan.</string>
+
+    <!-- Security - PIN, Password, Pattern & Recovery -->
+    <string name="answer_cannot_be_empty">La respuesta no puede estar vacía</string>
+    <string name="answer_label">Respuesta</string>
+    <string name="answer_placeholder">Escribe tu respuesta de recuperación</string>
+    <string name="change_recovery">Cambiar recuperación</string>
+    <string name="confirm_pin">Confirmar PIN</string>
+    <string name="create_pin">Crear PIN</string>
+    <string name="confirm_password">Confirmar Contraseña</string>
+    <string name="create_password">Crear Contraseña</string>
+    <string name="confirm_pattern">Confirmar Patrón</string>
+    <string name="draw_pattern">Dibujar Patrón</string>
+    <string name="enter_password">Ingresar Contraseña</string>
+    <string name="does_not_match">Sin coincidencias, inténtalo denuevo</string>
+    <string name="forgot_lock">¿Olvidaste?</string>
+    <string name="reset_lock">Restablecer bloqueo</string>
+    <string name="verify_and_reset_lock">Verificar y restablecer bloqueo</string>
+    <string name="lock_reset_successfully">Bloqueo restablecido con éxito</string>
+    <string name="lock_set_successfully">Bloqueo configurado con éxito</string>
+    <string name="lock_disabled_successfully">Bloqueo de aplicación desactivado</string>
+    <string name="lock_recovery_desc">Responde a tu pregunta de seguridad para restablecer el bloqueo.</string>
+    <string name="lock_no_recovery_warning_desc">Sin una pregunta de seguridad, no podrás restablecer credenciales olvidadas.</string>
+    <string name="lock_recovery_configured_desc">Puedes restablecer tu bloqueo usando tu pregunta de seguridad.</string>
+    <string name="custom_question_label">Pregunta Personalizada</string>
+    <string name="custom_question_placeholder">p. ej. ¿Cuál es tu apodo secreto?</string>
+    <string name="developer_options_disabled">Opciones de desarrollador desactivadas</string>
+    <string name="important">Importante</string>
+    <string name="setup_recovery">Configurar Recuperación</string>
+    <string name="placeholder_artist">p. ej. Coldplay, Taylor Swift</string>
+    <string name="placeholder_book">p. ej. El Alquimista, 1984</string>
+    <string name="placeholder_default_answer">p. ej. Escribe tu respuesta</string>
+    <string name="placeholder_first_entry_city">p. ej. Londres, París, Tokio</string>
+    <string name="placeholder_motto">p. ej. carpe diem, sigue adelante</string>
+    <string name="placeholder_perfect_day">p. ej. paz, creativo, acogedor</string>
+    <string name="placeholder_writing_place">p. ej., dormitorio, cafetería local</string>
+    <string name="question_artist">¿Quién es tu artista o banda favorita?</string>
+    <string name="question_book">¿Cuál es el nombre del libro que te ha inspirado profundamente?</string>
+    <string name="question_cannot_be_empty">La pregunta no puede estar vacía</string>
+    <string name="question_custom">Escribe una pregunta personalizada...</string>
+    <string name="question_first_entry_city">¿En qué ciudad escribiste tu primera entrada?</string>
+    <string name="question_motto">¿Cuál es el lema o la frase corta que te representa?</string>
+    <string name="question_perfect_day">¿Qué palabra describe tu día perfecto?</string>
+    <string name="question_writing_place">¿Cuál es tu lugar o santuario favorito para escribir?</string>
+    <string name="recovery_question">Pregunta de Recuperación</string>
+    <string name="recovery_setup_desc">Si olvidas tus credenciales, responder a esta pregunta te permitirá restablecer el bloqueo.</string>
+    <string name="your_answer_label">Tu Respuesta</string>
+
+    <!-- Settings - Permissions -->
+    <string name="internet_access">Acceso a Internet</string>
+    <string name="internet_access_desc">Usado para mapas, sincronización a la nube, metadatos de canciones, y fuente en línea.</string>
+    <string name="notification">Notificación</string>
+    <string name="microphone">Micrófono</string>
+    <string name="permissions_info_title">Permisos y uso</string>
+    <string name="permissions_info_desc">Por qué June solicita estos permisos:</string>
+    <string name="location_permission_reason">Se usa para seleccionar y adjuntar tu ubicación actual a diarios y mapas.</string>
+    <string name="notification_permission_reason">Se usa para enviar recordatorios programados de escritura y avisos.</string>
+    <string name="microphone_permission_reason">Se usa para grabar notas de voz y recordatorios de audio directamente en los diarios.</string>
+
+    <!-- Settings - Reminders -->
+    <string name="journaling_reminders">Recordatorios del Diario</string>
+    <string name="reminder_screen_desc">Mantén el hábito de escribir en tu diario configurando recordatorios</string>
+    <string name="reminder_time">Hora del recordatorio</string>
+    <string name="repeat">Repetir</string>
+    <string name="repeat_daily">Diario</string>
+    <string name="repeat_none">Nunca</string>
+    <string name="repeat_weekdays">Entre semana</string>
+    <string name="repeat_weekends">Fines de semana</string>
+    <string name="schedule">Programación</string>
+
+    <!-- Settings - Sync & Backup -->
+    <string name="advanced_sync_desc">Herramientas de análisis y reparación</string>
+    <string name="automatic_sync">Sincronización Automática</string>
+    <string name="backup_and_restore">Respaldar y Restaurar</string>
+    <string name="auto_backup">Copia automática</string>
+    <string name="auto_backup_select_folder">Seleccionar carpeta</string>
+    <string name="auto_backup_frequency">Frecuencia</string>
+    <string name="auto_backup_retention">Copias a conservar</string>
+    <string name="auto_backup_require_charging">Solo al cargar</string>
+    <string name="auto_backup_now">Respaldar ahora</string>
+    <string name="interval_daily">Diario</string>
+    <string name="interval_weekly">Semanal</string>
+    <string name="interval_monthly">Mensual</string>
+    <string name="auto_backup_success_title">Copia automática completada</string>
+    <string name="auto_backup_success_msg">Copia guardada con éxito en %1$s</string>
+    <string name="auto_backup_failed_title">Error en copia automática</string>
+    <string name="auto_backup_running">Creando copia de seguridad…</string>
+    <string name="auto_backup_channel_desc">Notificaciones para copias automáticas programadas</string>
+    <string name="data_portability">Exportar e Importar</string>
+    <string name="create_backup_sheet_desc">Copia completa de la app para restaurar en cualquier momento en June</string>
+    <string name="backup_format_too_old">El formato de la copia de seguridad es muy antiguo</string>
+    <string name="backup_logging">Registros de Copia de Seguridad</string>
+    <string name="backup_saved_successfully">Respaldo guardado con éxito</string>
+    <string name="cloud_sync">Sincronización en la Nube</string>
+    <string name="database_logging">Registros de Base de Datos</string>
+    <string name="enable_cloud_sync">Habilitar Sincronización en la Nube</string>
+    <string name="exporting">Exportando...</string>
+    <string name="failed_to_save_file">No se pudo guardar el archivo</string>
+    <string name="general_settings">Ajustes Generales</string>
+    <string name="invalid_or_corrupted_backup_file">Archivo de copia de seguridad no válido o dañado</string>
+    <string name="last_successful_sync">Última sincronización exitosa</string>
+    <string name="logging">Registro</string>
+    <string name="export_as_markdown">Exportar como Markdown</string>
+    <string name="export_markdown_archive">Exportar Markdown</string>
+    <string name="export_markdown_sheet_desc">Notas Markdown portátiles para otras apps y visores</string>
+    <string name="export_markdown_archive_desc">Exportar notas como archivo zip de Markdown</string>
+    <string name="export_journal_title">Exportar Diario</string>
+    <string name="export_journal_has_media_desc">Esta entrada contiene archivos multimedia. Elige cómo deseas exportarla:</string>
+    <string name="export_option_package_zip">Paquete (.zip)</string>
+    <string name="recommended">Recomendado</string>
+    <string name="export_option_package_zip_desc">Agrupa la nota y los archivos multimedia juntos para verlos.</string>
+    <string name="export_option_clean_text_md">Nota de texto (.md)</string>
+    <string name="export_option_clean_text_md_desc">Nota de solo texto sin archivos multimedia.</string>
+    <string name="include">Incluir</string>
+    <string name="songs">Canciones</string>
+    <string name="include_settings">Ajustes</string>
+    <string name="include_api_keys">Incluir claves de API</string>
+    <string name="settings_backup">Copia de ajustes</string>
+    <string name="restore_settings_title">¿Restaurar ajustes?</string>
+    <string name="restore_settings_desc">Esto actualizará la apariencia, preferencias y configuraciones del editor con los ajustes importados.</string>
+    <string name="settings_saved_successfully">Archivo de ajustes guardado con éxito</string>
+    <string name="settings_restored_successfully">Ajustes restaurados con éxito</string>
+    <string name="import_markdown">Importar Markdown</string>
+    <string name="import_markdown_desc">Importar archivos .md or un respaldo .zip de Markdown</string>
+    <string name="import_other_apps">Importar de otras apps</string>
+    <string name="app_import_sheet_desc">Selecciona un archivo de exportación para migrar a June</string>
+    <string name="supported_apps">Apps compatibles</string>
+    <string name="select_file">Seleccionar archivo</string>
+    <string name="app_import_summary_success">%1$d importadas, %2$d actualizadas (%3$d fotos, %4$d audios)</string>
+    <string name="app_import_failed">Error al importar: %1$s</string>
+    <string name="journal_exported_successfully">Diario exportado con éxito</string>
+    <string name="markdown_export_saved_successfully">Exportación a Markdown guardada con éxito</string>
+    <string name="markdown_imported_successfully">%1$d diario(s) importado(s) con éxito</string>
+    <string name="markdown_import_failed">Error al importar Markdown: %1$s</string>
+    <string name="never_synced">Nunca sincronizado</string>
+    <string name="repair_sync_short_desc">Revalidar estado de sincronización</string>
+    <string name="restore_backup_title">¿Restaurar Copia de Seguridad?</string>
+    <string name="restore_complete">¡Restauración Completada!</string>
+    <string name="restore_failed">Restauración Fallida: %1$s</string>
+    <string name="restore_warning_message">Esto combinará la copia de seguridad con tus datos actuales.\n\n• Las entradas con ID coincidentes se SOBREESCRIBIRÁN.\n• Las nuevas entradas se AGREGARÁN.\n\nEsta acción no se puede deshacer.</string>
+    <string name="restoring">Restaurando...</string>
+    <string name="sync_overview">Resumen de sincronización</string>
+    <string name="sync_logging">Registro de sincronización</string>
+    <string name="wifi_only_sync">Auto-sincronizar solo con Wi-Fi</string>
+    <string name="all_in_sync">Sincronizado</string>
+
+    <!-- Settings - WebDAV -->
+    <string name="password_app_token_label">Contraseña / Token de App</string>
+    <string name="server_url_label">URL del Servidor</string>
+    <string name="username_label">Nombre de Usuario</string>
+    <string name="username_placeholder">tu-nombre-de-usuario</string>
+    <string name="webdav_configuration">Configuración de WebDAV</string>
+
+    <!-- Settings - Bin & Deletion -->
+    <string name="bin_empty_desc">Los diarios eliminados aparecerán aquí durante 30 días antes de eliminarse de forma permanente.</string>
+    <string name="bin_is_empty">La papelera está vacía</string>
+    <string name="bin_retention_notice">Los elementos en la papelera se eliminarán permanentemente tras 30 días.</string>
+    <string name="delete_journal_local_desc">¿Eliminar este diario permanentemente? Esta acción no se puede deshacer.</string>
+    <string name="delete_journal_sync_desc">¿Eliminar este diario permanentemente de este dispositivo y de tu almacenamiento en la nube? Esta acción no se puede deshacer.</string>
+    <string name="empty_bin">Vaciar Papelera</string>
+    <string name="empty_bin_local_desc">Esto eliminará permanentemente todos los diarios de la papelera. Esta acción no se puede deshacer.</string>
+    <string name="empty_bin_sync_desc">Esto eliminará permanentemente todos los diarios de la papelera en este dispositivo y en la nube. Esta acción no se puede deshacer.</string>
+    <string name="empty_bin_title">¿Vaciar Papelera?</string>
+    <string name="restore_all_desc">Esto restaurará todas las entradas eliminadas a tu cronología.</string>
+    <string name="restore_all_title">¿Restaurar Todo?</string>
+
+    <!-- Tags & Categories -->
+    <string name="about_to_delete">Estás a punto de eliminar:</string>
+    <string name="delete_tag_title">¿Eliminar Etiqueta?</string>
+    <string name="delete_tag_warning">Esto eliminará la etiqueta de todas las entradas. Las entradas en sí no se eliminarán.</string>
+    <string name="filter_entries">Filtrar entradas</string>
+    <string name="how_tags_work">Cómo funcionan las etiquetas</string>
+    <string name="how_tags_work_desc">Etiqueta entradas por espacios, personas y temas para encontrarlas fácilmente después.</string>
+    <string name="move_to_tab_warning">Esto se moverá a la pestaña %1$s.</string>
+    <string name="no_entries">Sin entradas</string>
+    <string name="no_entries_filter_desc">Ningún diario coincide con los filtros actuales.</string>
+    <string name="no_tag_category_yet">Aún no hay %1$s</string>
+    <string name="no_tags_to_filter">No hay más etiquetas para filtrar.</string>
+    <string name="people_desc">Registra amigos, familiares o compañeros en las entradas.</string>
+    <string name="people_empty_msg">¿Quién estuvo ahí? (@nombre)</string>
+    <string name="rename_tag_title">Renombrar Etiqueta</string>
+    <string name="save_changes_title">¿Guardar Cambios?</string>
+    <string name="spaces_desc">Categorías amplias como Trabajo, Viajes o Sueños.</string>
+    <string name="spaces_empty_msg">Categoriza esta entrada</string>
+    <string name="tag_category_empty_desc">Etiqueta una entrada con un %1$s para empezar.</string>
+    <string name="tag_merge_warning">Ya existe en %1$s. Esto combinará todas las entradas.</string>
+    <string name="topics_desc">Anota estados de ánimo, lugares o detalles de tu día.</string>
+    <string name="topics_empty_msg">Registra detalles específicos (#tema)</string>
+
+    <!-- Reminders & Notifications -->
+    <string name="reminder_msg_1">No olvides anotar tus pensamientos de hoy.</string>
+    <string name="reminder_msg_2">Tu diario está esperando tu historia.</string>
+    <string name="reminder_msg_3">¡La constancia es clave! Escribe un poco hoy.</string>
+    <string name="reminder_msg_4">¿Cuál fue la mejor parte de tu día?</string>
+    <string name="reminder_msg_5">Tómate un momento para reflexionar sobre lo que sucedió hoy.</string>
+    <string name="reminder_msg_6">Unas pocas palabras ahora, toda una vida de recuerdos después.</string>
+    <string name="reminder_msg_7">Reflexiona sobre el día de hoy antes de descansar.</string>
+    <string name="reminder_title_1">¡Hora de escribir!</string>
+    <string name="reminder_title_2">Querido diario...</string>
+    <string name="reminder_title_3">Captura el momento</string>
+    <string name="reminder_title_4">¿Cómo estuvo tu día?</string>
+    <string name="reminder_title_5">Reflexión Diaria</string>
+    <string name="reminder_title_6">Nota para mí</string>
+    <string name="reminder_title_7">Relájate y escribe</string>
+
+    <!-- Maps & Location -->
+    <string name="api_credentials">Credenciales de API</string>
+    <string name="carto_auto_notice">CARTO no requiere una llave API y es automáticamente configurado.</string>
+    <string name="check_api_key_or_internet">Comprueba tu clave API o conexión a internet</string>
+    <string name="configure_api_key_for_preview">Configura y prueba la clave API aquí abajo para habilitar la vista previa</string>
+    <string name="default_map_theme">Tema por defecto del mapa</string>
+    <string name="map_theme_accents">Acentos del tema</string>
+    <string name="map_theme_accents_desc">Solo CARTO y Stadia</string>
+    <string name="failed_to_load_map">No se pudo cargar el mapa</string>
+    <string name="get_api_key_or_token">Obtener clave API or token de acceso</string>
+    <string name="map_credits_body">June utiliza teselas vectoriales y servicios de geocodificación de diversos proveedores de datos abiertos y mapas.</string>
+    <string name="openmap_auto_notice">OpenMap no requiere una llave API y es automáticamente configurado.</string>
+    <string name="maptiler_api_key_placeholder">Clave API de MapTiler</string>
+    <string name="preview">Vista previa</string>
+    <string name="collapse_map">Plegar mapa</string>
+    <string name="confirm_location">Confirmar Ubicación</string>
+    <string name="current_location">Ubicación Actual</string>
+    <string name="expand_map">Desplegar mapa</string>
+    <string name="fetching_address">Obteniendo dirección…</string>
+    <string name="locating">Localizando…</string>
+    <string name="move_map_to_select">Mueve el mapa para seleccionar</string>
+    <string name="network_restricted">Red restringida</string>
+    <string name="no_address_available">No hay dirección disponible</string>
+    <string name="pinned_location">Ubicación fijada</string>
+    <string name="remove_location">Eliminar ubicación</string>
+    <string name="search_location_placeholder">Buscar ubicación…</string>
+    <string name="stadia_api_key_placeholder">Clave API de Stadia</string>
+    <string name="toggle_dark_mode">Alternar modo oscuro</string>
+    <string name="unknown_place">Lugar Desconocido</string>
+    <string name="zoom_in">Acercar</string>
+    <string name="zoom_out">Alejar</string>
+
+    <!-- About & Diagnostics -->
+    <string name="about_june">Acerca de June</string>
+    <string name="about_june_desc">versión y enlace a github</string>
+    <string name="about_libraries">Acerca de Librerías</string>
+    <string name="about_libraries_desc">Consulta las licencias de las bibliotecas de terceros</string>
+    <string name="changelog">Cambios</string>
+    <string name="changelog_desc">Ver el historial de lanzamientos</string>
+    <string name="check_for_updates">Buscar Actualizaciones</string>
+    <string name="check_for_updates_desc">Comprueba si hay una nueva versión disponible</string>
+    <string name="developer_profile">Perfil del desarrollador</string>
+    <string name="license">Licencia</string>
+    <string name="map_credits">Créditos del mapa</string>
+    <string name="map_credits_desc">Créditos y licencias de los mapas y sus datos</string>
+
+    <!-- Home & Search -->
+    <string name="bookmarked">Marcado</string>
+    <string name="draft">Borrador</string>
+    <string name="journals">Diarios</string>
+    <string name="location">Ubicación</string>
+    <string name="media">Multimedia</string>
+    <string name="music">Música</string>
+    <string name="no_matches_found">No hay coincidencias</string>
+    <string name="no_matches_found_desc">No encontramos ningún diario que coincida con tu búsqueda o los filtros actuales.</string>
+    <string name="search">Buscar</string>
+    <string name="search_your_journal">Busca en tu diario</string>
+    <string name="tags">Etiquetas</string>
+    <string name="timeline">Cronología</string>
+
+    <!-- Editor & Formatting -->
+    <string name="add_attachment">Adjuntar Archivo</string>
+    <string name="add_emoji">Agregar Emoji</string>
+    <string name="add_item">Agregar ítem</string>
+    <string name="add_location_and_map">Agregar ubicación y mapa</string>
+    <string name="add_photo_or_video">Agregar foto / video</string>
+    <string name="add_song">Agregar Canción</string>
+    <string name="add_title">Agregar título</string>
+    <string name="capture_media">Capturar multimedia</string>
+    <string name="display_text_label">Texto a mostrar</string>
+    <string name="display_text_placeholder">Introduce texto a mostrar</string>
+    <string name="link_url_label">Enlace URL</string>
+    <string name="take_photo_or_video">Tomar foto / video</string>
+    <string name="whats_on_your_mind">¿En qué estás pensando?</string>
+
+    <!-- Font Variations -->
+    <string name="fonts">Fuentes</string>
+    <string name="style">Estilo</string>
+    <string name="presets">Preajustes</string>
+    <string name="default_font">Fuente Predeterminada</string>
+    <string name="custom_font">Personalizar Fuente</string>
+    <string name="default_theme">Tema Predeterminado</string>
+    <string name="custom_theme">Personalizar Tema</string>
+    <string name="font_credits">Créditos tipográficos</string>
+    <string name="font_credits_desc">Créditos y licencias de las fuentes incluidas</string>
+    <string name="font_credits_body">June incluye fuentes variables de código abierto de alta calidad para una experiencia de escritura expresiva.</string>
+    <string name="unlock_june_plus">Desbloquear June Plus</string>
+    <string name="unlock_plus">Desbloquear Plus</string>
+    <string name="save_with_default">Guardar con estilo predeterminado</string>
+    <string name="plus_styling_detected_title">Tema de June Plus</string>
+    <string name="plus_styling_detected_desc">Esta entrada usa fuentes o colores personalizados de June Plus. Desbloquea Plus para guardar con tu estilo o guarda con el tema predeterminado.</string>
+    <string name="entry_saved_default_theme">Entrada guardada con el tema predeterminado</string>
+    <string name="reset_plus_status">Reiniciar Estado Plus</string>
+    <string name="plus_status_reset">El estado de Plus ha sido reiniciado</string>
+    <string name="record_audio">Grabar audio</string>
+    <string name="attach_audio">Adjuntar audio</string>
+    <string name="add_or_record_audio">Agregar o grabar audio</string>
+    <string name="audio_notes">Notas de audio</string>
+    <string name="audios">Audios</string>
+    <string name="move_up">Mover arriba</string>
+    <string name="move_down">Mover abajo</string>
+    <string name="clear_filters">Limpiar filtros</string>
+    <string name="vault_no_lock_warning">No hay bloqueo de bóveda configurado</string>
+</resources>

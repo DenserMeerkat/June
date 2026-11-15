@@ -1,19 +1,13 @@
 <resources>
     <!-- Non-Translatable -->
     <string name="brand_app_name" translatable="false">June</string>
-    <string name="brand_google_drive" translatable="false">Google Drive</string>
-    <string name="brand_webdav" translatable="false">WebDAV</string>
     <string name="brand_github" translatable="false">GitHub</string>
-    <string name="brand_spotify" translatable="false">Spotify</string>
     <string name="brand_buy_me_a_coffee" translatable="false">Buy Me a Coffee</string>
-    <string name="brand_material_you" translatable="false">Material You</string>
     <string name="brand_email" translatable="false">Email</string>
     <string name="brand_daily_you" translatable="false">Daily You</string>
     <string name="brand_diarium" translatable="false">Diarium</string>
     <string name="brand_day_one" translatable="false">Day One</string>
     <string name="brand_storypad" translatable="false">StoryPad</string>
-    <string name="url_server_placeholder" translatable="false">https://example.com/dav/user/</string>
-    <string name="url_web_placeholder" translatable="false">https://example.com</string>
 
     <!-- Common Actions -->
     <string name="action_cancel">Cancel</string>
@@ -27,17 +21,14 @@
     <string name="action_restore">Restore</string>
     <string name="action_share">Share</string>
     <string name="action_copy">Copy</string>
-    <string name="action_paste">Paste</string>
     <string name="action_clear">Clear</string>
     <string name="action_reset">Reset</string>
     <string name="action_confirm">Confirm</string>
     <string name="action_discard">Discard</string>
-    <string name="action_retry">Retry</string>
     <string name="action_back">Back</string>
     <string name="action_close">Close</string>
     <string name="action_lock">Lock</string>
     <string name="action_unlock">Unlock</string>
-    <string name="action_play">Play</string>
     <string name="action_pause">Pause</string>
     <string name="action_resume">Resume</string>
     <string name="action_stop">Stop</string>
@@ -45,18 +36,9 @@
     <!-- Common Labels -->
     <string name="label_overview">Overview</string>
     <string name="label_settings">Settings</string>
-    <string name="label_timeline">Timeline</string>
-    <string name="label_vault">Vault</string>
-    <string name="label_bin">Bin</string>
-    <string name="label_backup">Backup</string>
-    <string name="label_restore">Restore</string>
 
     <!-- Accessibility -->
-    <string name="cd_back">Navigate back</string>
     <string name="cd_more_options">More options</string>
-    <string name="cd_expand">Expand</string>
-    <string name="cd_collapse">Collapse</string>
-    <string name="cd_add_journal">Add journal</string>
 
     <!-- Feature Actions -->
     <string name="advanced">Advanced</string>
@@ -89,7 +71,6 @@
     <string name="remove_bookmark">Remove Bookmark</string>
     <string name="rename">Rename</string>
     <string name="restore_all">Restore All</string>
-    <string name="review">Review</string>
     <string name="save_and_enable_lock">Save &amp; Enable Lock</string>
     <string name="unlock_june">Unlock June</string>
     <string name="unlock_vault">Unlock Vault</string>
@@ -99,22 +80,17 @@
     <string name="take_photo">Take Photo</string>
 
     <!-- Status Labels -->
-    <string name="all_caught_up">All caught up</string>
     <string name="already_latest_version">You are already using the latest version of June.</string>
-    <string name="analysis_pending">Analysis pending</string>
     <string name="api_key_invalid">Invalid API Key. Please verify.</string>
     <string name="api_key_valid">API Key is valid and verified!</string>
     <string name="camera_options_message">Would you like to take a photo or record a video?</string>
-    <string name="check_for_differences">Check for differences</string>
     <string name="cloud">Cloud</string>
     <string name="console_logs">Console Logs</string>
     <string name="created">Created</string>
     <string name="developer_options">Developer options</string>
     <string name="disabled">Disabled</string>
     <string name="journal_media">Journal Media</string>
-    <string name="journals_and_media_pending">%1$d journals &amp; %2$d media</string>
     <string name="local">Local</string>
-    <string name="local_and_cloud_matching">Local &amp; cloud are matching</string>
     <string name="more_entries">More entries</string>
     <string name="name">Name</string>
     <string name="no_journals_this_month">No journals this month.</string>
@@ -135,7 +111,6 @@
     <string name="recent">Recent</string>
     <string name="save_progress_message">Would you like to save your progress before leaving?</string>
     <string name="search_settings_placeholder">Search settings...</string>
-    <string name="sync_required">Sync required</string>
     <string name="synced">Synced</string>
     <string name="test">Test</string>
     <string name="test_api_key">Test API Key</string>
@@ -146,7 +121,6 @@
     <string name="unsaved_tags_message">You have unsaved changes to your tags. Do you want to save them before exiting?</string>
     <string name="untitled">Untitled</string>
     <string name="updated">Updated</string>
-    <string name="verifying_connection">Testing...</string>
     <string name="whats_new">What\'s New</string>
 
     <!-- Dialogs & Banners -->
@@ -264,8 +238,8 @@
     <string name="reset_font">Reset Font</string>
     <string name="journal_theme">Journal Theme</string>
     <string name="reset_theme">Reset Theme</string>
-    <string name="width">Width</string>
-    <string name="optical_size">Optical Size</string>
+    <string name="width" translatable="false">Width</string>
+    <string name="optical_size" translatable="false">Optical Size</string>
     <string name="light">Light</string>
     <string name="material_theme">Material Theme</string>
     <string name="palette_selection">Palette Selection</string>
@@ -397,14 +371,11 @@
     <string name="auto_backup_running">Backing up…</string>
     <string name="auto_backup_channel_desc">Notifications for scheduled auto backups</string>
     <string name="data_portability">Export &amp; Import</string>
-    <string name="create_backup_desc">Save all journals and media to a backup file</string>
     <string name="create_backup_sheet_desc">Full app backup to restore anytime in June</string>
-    <string name="restore_backup_desc">Restore journals from a backup file</string>
     <string name="backup_format_too_old">Backup format is too old</string>
     <string name="backup_logging">Backup Logging</string>
     <string name="backup_saved_successfully">Backup saved successfully</string>
     <string name="cloud_sync">Cloud Sync</string>
-    <string name="cloud_sync_desc">Sync across devices via Cloud</string>
     <string name="database_logging">Database Logging</string>
     <string name="enable_cloud_sync">Enable Cloud Sync</string>
     <string name="exporting">Exporting...</string>
@@ -611,25 +582,25 @@
     <string name="fonts">Fonts</string>
     <string name="style">Style</string>
     <string name="presets">Presets</string>
-    <string name="roundness">Roundness</string>
-    <string name="grade">Grade</string>
-    <string name="slant">Slant</string>
-    <string name="weight">Weight</string>
-    <string name="monospace">Monospace</string>
-    <string name="casual">Casual</string>
-    <string name="cursive">Cursive</string>
-    <string name="bounce">Bounce</string>
-    <string name="informality">Informality</string>
-    <string name="spacing">Spacing</string>
-    <string name="parametric_axes">Parametric Fine-Tuning</string>
-    <string name="counter_width">Counter Width</string>
-    <string name="thick_stroke">Thick Stroke (X)</string>
-    <string name="thin_stroke">Thin Stroke (Y)</string>
-    <string name="uppercase_height">Uppercase Height</string>
-    <string name="lowercase_height">Lowercase Height</string>
-    <string name="ascender_height">Ascender Height</string>
-    <string name="descender_depth">Descender Depth</string>
-    <string name="figure_height">Figure Height</string>
+    <string name="roundness" translatable="false">Roundness</string>
+    <string name="grade" translatable="false">Grade</string>
+    <string name="slant" translatable="false">Slant</string>
+    <string name="weight" translatable="false">Weight</string>
+    <string name="monospace" translatable="false">Monospace</string>
+    <string name="casual" translatable="false">Casual</string>
+    <string name="cursive" translatable="false">Cursive</string>
+    <string name="bounce" translatable="false">Bounce</string>
+    <string name="informality" translatable="false">Informality</string>
+    <string name="spacing" translatable="false">Spacing</string>
+    <string name="parametric_axes" translatable="false">Parametric Fine-Tuning</string>
+    <string name="counter_width" translatable="false">Counter Width</string>
+    <string name="thick_stroke" translatable="false">Thick Stroke (X)</string>
+    <string name="thin_stroke" translatable="false">Thin Stroke (Y)</string>
+    <string name="uppercase_height" translatable="false">Uppercase Height</string>
+    <string name="lowercase_height" translatable="false">Lowercase Height</string>
+    <string name="ascender_height" translatable="false">Ascender Height</string>
+    <string name="descender_depth" translatable="false">Descender Depth</string>
+    <string name="figure_height" translatable="false">Figure Height</string>
     <string name="default_font">Default Font</string>
     <string name="custom_font">Custom Font</string>
     <string name="default_theme">Default Theme</string>
@@ -645,7 +616,6 @@
     <string name="entry_saved_default_theme">Entry saved with default theme</string>
     <string name="reset_plus_status">Reset Plus Status</string>
     <string name="plus_status_reset">Plus status has been reset</string>
-    <string name="add_audio">Add Audio</string>
     <string name="record_audio">Record Audio</string>
     <string name="attach_audio">Attach Audio</string>
     <string name="add_or_record_audio">Add or record audio</string>

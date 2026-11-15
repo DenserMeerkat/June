@@ -34,7 +34,6 @@
     <string name="action_reset">மீட்டமை</string>
     <string name="action_restore">மீட்டமை</string>
     <string name="restore_all">அனைத்தையும் மீட்டமை</string>
-    <string name="review">மதிப்பாய்வு</string>
     <string name="action_save">சேமி</string>
     <string name="save_and_enable_lock">சேமி மற்றும் பூட்டை இயக்கு</string>
     <string name="stop_sync">ஒத்திசைவை நிறுத்து</string>
