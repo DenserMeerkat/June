@@ -1,20 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Note: Translations supplemented with AI assistance; community review welcome on Hosted Weblate -->
 <resources>
-    <string name="advanced">高级选项</string>
-    <string name="action_back">返回</string>
-    <string name="bookmark">书签</string>
+
+    <!-- Common Actions -->
     <string name="action_cancel">取消</string>
+    <string name="action_save">保存</string>
+    <string name="action_done">完成</string>
+    <string name="action_delete">删除</string>
+    <string name="action_remove">移除</string>
+    <string name="action_edit">编辑</string>
+    <string name="action_export">导出</string>
+    <string name="action_backup">备份</string>
+    <string name="action_restore">恢复</string>
+    <string name="action_share">分享</string>
+    <string name="action_copy">复制</string>
+    <string name="action_clear">清除</string>
+    <string name="action_reset">重置</string>
+    <string name="action_confirm">确认</string>
+    <string name="action_discard">丢弃</string>
+    <string name="action_back">返回</string>
+    <string name="action_close">关闭</string>
+    <string name="action_lock">锁定</string>
+    <string name="action_unlock">解锁</string>
+    <string name="action_pause">暂停</string>
+    <string name="action_resume">继续</string>
+    <string name="action_stop">停止</string>
+
+    <!-- Common Labels -->
+    <string name="label_overview">概览</string>
+    <string name="label_settings">设置</string>
+
+    <!-- Accessibility -->
+    <string name="cd_more_options">更多选项</string>
+
+    <!-- Feature Actions -->
+    <string name="advanced">高级选项</string>
+    <string name="bookmark">书签</string>
     <string name="change">更改</string>
     <string name="change_location">更改地点</string>
-    <string name="action_clear">清除</string>
-    <string name="action_close">关闭</string>
-    <string name="action_confirm">确认</string>
-    <string name="action_copy">复制</string>
     <string name="copy_url">复制 URL 链接</string>
-    <string name="action_delete">删除</string>
     <string name="disconnect">断开连接</string>
-    <string name="action_discard">丢弃</string>
-    <string name="action_done">完成</string>
     <string name="next">下一步</string>
     <string name="edit_link">编辑链接</string>
     <string name="enable">启用</string>
@@ -27,7 +52,6 @@
     <string name="new_journal">新日记</string>
     <string name="ok">确认</string>
     <string name="okay">确认</string>
-    <string name="label_overview">概览</string>
     <string name="open_folder">打开文件夹</string>
     <string name="open_hosted_weblate">打开托管的 Weblate</string>
     <string name="open_link">打开链接</string>
@@ -37,18 +61,18 @@
     <string name="permanently_delete_all">永久删除所有内容</string>
     <string name="record_video">录制视频</string>
     <string name="refresh">刷新</string>
-    <string name="action_remove">移除</string>
     <string name="remove_bookmark">移除书签</string>
     <string name="rename">重命名</string>
-    <string name="action_reset">重置</string>
-    <string name="action_restore">恢复</string>
     <string name="restore_all">恢复所有内容</string>
-    <string name="action_save">保存</string>
     <string name="save_and_enable_lock">保存并启用锁定</string>
+    <string name="unlock_june">解锁 June</string>
+    <string name="unlock_vault">解锁保险库</string>
     <string name="skip_and_enable_lock">跳过并启用锁定</string>
     <string name="stop_sync">停止同步</string>
     <string name="sync_now">立即同步</string>
     <string name="take_photo">拍照</string>
+
+    <!-- Status Labels -->
     <string name="already_latest_version">您已经在使用 June 的最新版本。</string>
     <string name="api_key_invalid">API 密钥无效。请确认。</string>
     <string name="api_key_valid">API 密钥有效且已通过验证！</string>
@@ -67,14 +91,21 @@
     <string name="no_journals_yet_desc">从今天开始记录你的旅程吧。创建第一篇日记，开启你的收藏。</string>
     <string name="no_links_available">无可用链接</string>
     <string name="no_locations_this_month">本月未添加任何地点。</string>
+    <string name="no_locations_found">未发现位置</string>
     <string name="no_media_this_month">本月未保存媒体文件。</string>
+    <string name="no_audio_this_month">本月没有音频笔记。</string>
     <string name="no_music_this_month">本月未录制任何音乐。</string>
+    <string name="empty_library">此库为空</string>
+    <string name="empty_library_desc">通过粘贴链接或使用上方按钮从设备中选择音频文件来添加歌曲。</string>
+    <string name="scope_affects_library">更改将会影响库和未来的日记</string>
+    <string name="scope_affects_journal_only">更改仅影响当前日记</string>
     <string name="not_synced">未同步</string>
     <string name="now">现在</string>
     <string name="recent">近期</string>
     <string name="save_progress_message">您是否要在离开前保存进度？</string>
     <string name="search_settings_placeholder">搜索设置...</string>
     <string name="synced">同步于</string>
+    <string name="test">测试</string>
     <string name="test_api_key">测试 API密钥</string>
     <string name="test_connection">测试连接</string>
     <string name="testing_connection">测试中...</string>
@@ -84,15 +115,19 @@
     <string name="untitled">无标题</string>
     <string name="updated">更新于</string>
     <string name="whats_new">更新日志</string>
+
+    <!-- Dialogs & Banners -->
     <string name="save_entry">保存条目？</string>
     <string name="change_lock_title">更改密码？</string>
     <string name="checking_for_updates">检查更新</string>
     <string name="diagnostics">诊断</string>
     <string name="enter_pin">输入 PIN</string>
+    <string name="locked">已锁定</string>
     <string name="incorrect_answer_try_again">答案错误。请重试。</string>
     <string name="internet_access_disabled">需要连接互联网</string>
     <string name="internet_maybe_required">可能需要连接互联网</string>
     <string name="internet_restricted_desc">请开启互联网以继续</string>
+    <string name="move_to_bin">移至回收站</string>
     <string name="move_all_to_bin">将此内容移至回收站</string>
     <string name="move_all_to_bin_desc">这将把您的所有日记条目移至回收站。您可以在30天内将其恢复。</string>
     <string name="move_all_to_bin_title">将所有内容移至回收站？</string>
@@ -101,10 +136,22 @@
     <string name="no_settings_found">未找到设置</string>
     <string name="no_settings_found_desc">找不到任何与“%1$s”匹配的设置。</string>
     <string name="open_source_licenses_desc">开源许可证与依赖项</string>
+    <string name="search_emojis">搜索表情符号…</string>
+    <string name="no_emojis_found">未发现表情符号</string>
+    <string name="emoji_category_recent">最近使用</string>
+    <string name="emoji_category_smileys">表情与心情</string>
+    <string name="emoji_category_people">人</string>
+    <string name="emoji_category_animals">动物与自然</string>
+    <string name="emoji_category_food">食物与饮料</string>
+    <string name="emoji_category_travel">旅行与地点</string>
+    <string name="emoji_category_activities">活动与事件</string>
+    <string name="emoji_category_objects">物品与物件</string>
+    <string name="emoji_category_symbols">符号与标志</string>
+    <string name="emoji_category_flags">旗帜</string>
     <string name="repair_sync">修复同步</string>
     <string name="repair_sync_desc">此操作将审核本地数据库记录、修复图片路径、清理孤立的媒体文件，并执行一次完整的云端重新验证。此过程可能比标准同步耗时更长。</string>
     <string name="repair_sync_title">修复同步并重新验证？</string>
-    <string name="type_to_confirm">\n\n请在下方输入“%1$s”以确认。</string>
+    <string name="type_to_confirm">\n\n请在下方输入 \'%1$s\' 以确认。</string>
     <string name="unknown_license">未知许可协议</string>
     <string name="wrong_pin_try_again">PIN 码错误。请重试。</string>
     <string name="switch_provider">切换服务提供商</string>
@@ -115,6 +162,8 @@
     <string name="update_available_play_store">Google Play 应用商店现已推出 June 的新版本。</string>
     <string name="update_check_failed">更新检查失败</string>
     <string name="up_to_date">最新</string>
+
+    <!-- Plurals -->
     <plurals name="active_filters_count">
         <item quantity="other">%1$d 个标签</item>
     </plurals>
@@ -133,13 +182,17 @@
     <plurals name="words_count">
         <item quantity="other">%1$d 个单词</item>
     </plurals>
+
+    <!-- Settings Categories -->
     <string name="about">关于</string>
     <string name="appearance">外观</string>
     <string name="bin">回收站</string>
     <string name="editor">编辑器</string>
     <string name="general">通用</string>
     <string name="privacy_and_security">隐私与安全</string>
-    <string name="label_settings">设置</string>
+    <string name="data_and_sync">数据与同步</string>
+
+    <!-- Settings - General -->
     <string name="always_open_new_note">启动时打开编辑器</string>
     <string name="delete_all_journals">删除所有日记</string>
     <string name="delete_all_journals_desc">将所有条目移至回收站</string>
@@ -148,6 +201,10 @@
     <string name="keyboard_capitalization">自动大写</string>
     <string name="map_settings">地图选项</string>
     <string name="map_settings_desc">样式与 API 密钥</string>
+    <string name="compress_photos">压缩照片</string>
+    <string name="compress_videos">压缩视频</string>
+    <string name="compress_audio">压缩音频</string>
+    <string name="importing_audio">正在导入音频…</string>
     <string name="markdown_editor">Markdown 编辑器</string>
     <string name="markdown_editor_desc">启用富文本格式</string>
     <string name="plain_text_mode">纯文本模式</string>
@@ -157,11 +214,17 @@
     <string name="time_format">时间格式</string>
     <string name="time_format_12h">12小时制</string>
     <string name="time_format_24h">24小时制</string>
+
+    <!-- Settings - Appearance -->
     <string name="amoled">纯黑模式</string>
     <string name="app_follow_theme">应用</string>
     <string name="app_font">应用字体</string>
     <string name="app_theme">应用主题</string>
     <string name="dark">深色</string>
+    <string name="journal_font">日记字体</string>
+    <string name="reset_font">重置字体</string>
+    <string name="journal_theme">日记主题</string>
+    <string name="reset_theme">重置样式</string>
     <string name="light">浅色</string>
     <string name="material_theme">Material 主题</string>
     <string name="palette_selection">颜色选择</string>
@@ -169,6 +232,8 @@
     <string name="palette_style">调色板样式</string>
     <string name="seed_color">颜色选择</string>
     <string name="system">跟随系统</string>
+
+    <!-- Settings - Language & Weblate -->
     <string name="editor_direction">编辑器文本方向</string>
     <string name="editor_direction_auto">自动（随应用语言设置）</string>
     <string name="editor_direction_ltr">从左到右（LTR）</string>
@@ -178,9 +243,13 @@
     <string name="language">语言</string>
     <string name="translate_app">帮助翻译 June</string>
     <string name="translate_dialog_desc">6月份的翻译内容由各位用户完成，并托管在 Hosted Weblate 上——这是一个基于网页的开源翻译平台。\n\n您无需任何编程知识，即可直接在浏览器中轻松添加您所在语言的翻译或提出改进建议。</string>
+
+    <!-- Settings - Privacy & Security -->
     <string name="app_lock">应用锁</string>
     <string name="app_lock_desc">使用生物识别或设备凭证锁定应用</string>
     <string name="custom_pin">PIN 码</string>
+    <string name="custom_password">密码</string>
+    <string name="custom_pattern">手势密码</string>
     <string name="no_lock">不锁定</string>
     <string name="permissions">权限</string>
     <string name="same_as_screen_lock">跟随屏幕锁定</string>
@@ -189,23 +258,46 @@
     <string name="security_question">安全问题</string>
     <string name="switch_lock_warning">更换锁定方式将重置您当前的凭据。</string>
     <string name="ways_to_lock">锁定方式</string>
+    <string name="lock_method">锁定方式</string>
+    <string name="vault">保险箱</string>
+    <string name="vault_desc">保持敏感日记隐藏和被保护</string>
+    <string name="move_to_vault">移入保险箱</string>
+    <string name="move_out_of_vault">移出保险箱</string>
+    <string name="move_to_vault_desc">是否移入保险箱？它将被隐藏，并被您的密码保护。</string>
+    <string name="move_out_of_vault_desc">是否移出保险箱？它将重新出现在您的日记时间线中。</string>
+    <string name="vault_empty_title">保险箱为空</string>
+    <string name="vault_empty_desc">您锁定的日记会在这里显示</string>
+    <string name="vault_notice">保险箱内的日记不会显示在动态中，也不会被同步。</string>
+
+    <!-- Security - PIN, Password, Pattern & Recovery -->
     <string name="answer_cannot_be_empty">答案不能为空</string>
     <string name="answer_label">回答</string>
     <string name="answer_placeholder">请输入您的安全问题答案</string>
     <string name="change_recovery">变更恢复</string>
     <string name="confirm_pin">确认 PIN 码</string>
     <string name="create_pin">创建 PIN 码</string>
+    <string name="confirm_password">确认密码</string>
+    <string name="create_password">设置密码</string>
+    <string name="confirm_pattern">确认手势密码</string>
+    <string name="draw_pattern">绘制手势密码</string>
+    <string name="enter_password">输入密码</string>
+    <string name="does_not_match">不匹配，请重试</string>
+    <string name="forgot_lock">忘记了？</string>
+    <string name="reset_lock">重置锁定</string>
+    <string name="verify_and_reset_lock">验证并重置锁定</string>
+    <string name="lock_reset_successfully">锁定重置成功</string>
+    <string name="lock_set_successfully">锁定方式设置成功</string>
+    <string name="lock_disabled_successfully">已停用应用锁定</string>
+    <string name="lock_recovery_desc">回答您的密保问题以重置锁定。</string>
+    <string name="lock_no_recovery_warning_desc">若无密保问题，忘记的密码将无法被重置。</string>
+    <string name="lock_recovery_configured_desc">您可以通过密保问题重置锁定。</string>
     <string name="custom_question_label">自定义问题</string>
     <string name="custom_question_placeholder">例如：你的私密昵称是什么？</string>
     <string name="developer_options_disabled">开发者选项已关闭</string>
-    <string name="does_not_match">不匹配，请重试</string>
-    <string name="forgot_lock">忘记了？</string>
-    <string name="lock_set_successfully">锁定方式设置成功</string>
-    <string name="lock_disabled_successfully">已停用应用锁定</string>
     <string name="important">注意</string>
     <string name="setup_recovery">重置设置</string>
     <string name="placeholder_artist">例如：Coldplay、Taylor Swift</string>
-    <string name="placeholder_book">例如：Alchemist, 1984</string>
+    <string name="placeholder_book">例如：《牧羊少年奇幻之旅》、1984</string>
     <string name="placeholder_default_answer">例如：输入您的答案</string>
     <string name="placeholder_first_entry_city">例如：伦敦、巴黎、东京</string>
     <string name="placeholder_motto">例如：及时行乐，坚持下去</string>
@@ -222,9 +314,19 @@
     <string name="recovery_question">安全问题</string>
     <string name="recovery_setup_desc">如果您忘记了密码，回答此问题即可重置锁定</string>
     <string name="your_answer_label">你的答案</string>
+
+    <!-- Settings - Permissions -->
     <string name="internet_access">联网权限</string>
     <string name="internet_access_desc">用于地图、云同步、歌曲元数据和在线字体。</string>
     <string name="notification">通知</string>
+    <string name="microphone">麦克风</string>
+    <string name="permissions_info_title">权限与用途说明</string>
+    <string name="permissions_info_desc">June 申请这些权限的原因：</string>
+    <string name="location_permission_reason">用于在日记和地图中选取并记录您的当前位置。</string>
+    <string name="notification_permission_reason">用于定时发送写日记的提醒通知。</string>
+    <string name="microphone_permission_reason">用于直接在日记条目中录制语音笔记与音频备忘。</string>
+
+    <!-- Settings - Reminders -->
     <string name="journaling_reminders">日记提醒</string>
     <string name="reminder_screen_desc">通过设置提醒养成写日记的习惯</string>
     <string name="reminder_time">提醒时间</string>
@@ -234,8 +336,27 @@
     <string name="repeat_weekdays">每周</string>
     <string name="repeat_weekends">周末</string>
     <string name="schedule">日程安排</string>
+
+    <!-- Settings - Sync & Backup -->
     <string name="advanced_sync_desc">分析与修复工具</string>
     <string name="automatic_sync">自动同步</string>
+    <string name="backup_and_restore">备份与重置</string>
+    <string name="auto_backup">自动备份</string>
+    <string name="auto_backup_select_folder">选择备份文件夹</string>
+    <string name="auto_backup_frequency">备份频率</string>
+    <string name="auto_backup_retention">保留备份份数</string>
+    <string name="auto_backup_require_charging">仅在充电时备份</string>
+    <string name="auto_backup_now">立即备份</string>
+    <string name="interval_daily">每天</string>
+    <string name="interval_weekly">每周</string>
+    <string name="interval_monthly">每月</string>
+    <string name="auto_backup_success_title">自动备份完成</string>
+    <string name="auto_backup_success_msg">备份文件已成功保存至 %1$s</string>
+    <string name="auto_backup_failed_title">自动备份失败</string>
+    <string name="auto_backup_running">正在备份中…</string>
+    <string name="auto_backup_channel_desc">计划自动备份的状态通知</string>
+    <string name="data_portability">导入与导出</string>
+    <string name="create_backup_sheet_desc">完整备份所有数据，随时可在 June 中恢复</string>
     <string name="backup_format_too_old">备份格式过时</string>
     <string name="backup_logging">备份记录</string>
     <string name="backup_saved_successfully">备份已成功保存</string>
@@ -248,7 +369,38 @@
     <string name="invalid_or_corrupted_backup_file">备份文件无效或已损坏</string>
     <string name="last_successful_sync">上次成功同步</string>
     <string name="logging">日志记录</string>
+    <string name="export_as_markdown">导出为 Markdown</string>
+    <string name="export_markdown_archive">导出 Markdown</string>
+    <string name="export_markdown_sheet_desc">便携式 Markdown 笔记，方便在其他阅读器中使用</string>
+    <string name="export_markdown_archive_desc">以开放格式导出笔记，便于阅读和查看</string>
+    <string name="export_journal_title">导出日记</string>
+    <string name="export_journal_has_media_desc">此内容包含媒体附件。请选择导出方式：</string>
+    <string name="export_option_package_zip">压缩包(.zip)</string>
+    <string name="recommended">推荐</string>
+    <string name="export_option_package_zip_desc">将内容和媒体文件打包在一起以便查看。</string>
+    <string name="export_option_clean_text_md">文字内容(.md)</string>
+    <string name="export_option_clean_text_md_desc">不含媒体附件的纯文本内容。</string>
+    <string name="include">包含项目</string>
+    <string name="songs">歌曲</string>
+    <string name="include_settings">应用设置</string>
+    <string name="include_api_keys">包含 API 密钥</string>
+    <string name="settings_backup">设置备份</string>
+    <string name="restore_settings_title">恢复设置？</string>
+    <string name="restore_settings_desc">这将把导入的设置应用到您的应用外观、偏好设置和编辑器配置中。</string>
+    <string name="settings_saved_successfully">设置文件保存成功</string>
+    <string name="settings_restored_successfully">设置恢复成功</string>
+    <string name="import_markdown">导入 Markdown</string>
+    <string name="import_markdown_desc">导入 .md 文件或 Markdown 备份压缩包</string>
+    <string name="import_other_apps">从其他应用导入</string>
+    <string name="app_import_sheet_desc">选择导出文件以迁移至 June</string>
+    <string name="supported_apps">支持的应用</string>
+    <string name="select_file">选择文件</string>
+    <string name="app_import_summary_success">成功导入 %1$d 篇，更新 %2$d 篇 (%3$d 张照片，%4$d 条音频)</string>
+    <string name="app_import_failed">导入失败：%1$s</string>
+    <string name="journal_exported_successfully">日记导出成功</string>
     <string name="markdown_export_saved_successfully">Markdown 导出已成功保存</string>
+    <string name="markdown_imported_successfully">成功导入 %1$d 篇日记</string>
+    <string name="markdown_import_failed">无法导入 Markdown: %1$s</string>
     <string name="never_synced">从未同步过</string>
     <string name="repair_sync_short_desc">重新验证同步状态</string>
     <string name="restore_backup_title">恢复备份？</string>
@@ -257,14 +409,18 @@
     <string name="restore_warning_message">这将把备份与您当前的数据合并。\n\n• ID 匹配的条目将被覆盖。\n• 新条目将被添加。\n\n此操作无法撤销。</string>
     <string name="restoring">正在恢复...</string>
     <string name="sync_overview">同步概览</string>
-    <string name="all_in_sync">已同步</string>
     <string name="sync_logging">同步日志记录</string>
     <string name="wifi_only_sync">仅在 Wi-Fi 环境下自动同步</string>
+    <string name="all_in_sync">已同步</string>
+
+    <!-- Settings - WebDAV -->
     <string name="password_app_token_label">密码 / 应用令牌</string>
     <string name="server_url_label">服务器 URL 链接</string>
     <string name="username_label">用户名</string>
     <string name="username_placeholder">你的用户名</string>
     <string name="webdav_configuration">WebDAV 配置</string>
+
+    <!-- Settings - Bin & Deletion -->
     <string name="bin_empty_desc">您删除的日记将在这里保留 30 天，之后才会被永久删除。</string>
     <string name="bin_is_empty">回收站为空</string>
     <string name="bin_retention_notice">回收站中的项目将在30天后被永久删除。</string>
@@ -276,6 +432,8 @@
     <string name="empty_bin_title">回收站是空的吗？</string>
     <string name="restore_all_desc">这将把所有已删除的条目恢复到您的时间轴上。</string>
     <string name="restore_all_title">恢复所有？</string>
+
+    <!-- Tags & Categories -->
     <string name="about_to_delete">您即将删除：</string>
     <string name="delete_tag_title">删除标签？</string>
     <string name="delete_tag_warning">这将从所有条目中移除该标签。条目本身不会被删除。</string>
@@ -288,7 +446,7 @@
     <string name="no_tag_category_yet">目前尚无 %1$s</string>
     <string name="no_tags_to_filter">没有其他可用于筛选的标签。</string>
     <string name="people_desc">在各个条目中追踪朋友、家人或同事的动向。</string>
-    <string name="people_empty_msg">谁在场？(@name)</string>
+    <string name="people_empty_msg">谁在场？(@名字)</string>
     <string name="rename_tag_title">重命名标签</string>
     <string name="save_changes_title">保存更改吗？</string>
     <string name="spaces_desc">诸如“工作”、“旅行”或“梦想”等大类。</string>
@@ -296,7 +454,9 @@
     <string name="tag_category_empty_desc">在日记条目中添加 %1$s 标签即可开始。</string>
     <string name="tag_merge_warning">%1$s 中已存在该条目。此操作将合并所有条目。</string>
     <string name="topics_desc">记录下你这一天的心情、场景或细节。</string>
-    <string name="topics_empty_msg">记录任何具体内容 (#topic)</string>
+    <string name="topics_empty_msg">记录具体细节 (#话题)</string>
+
+    <!-- Reminders & Notifications -->
     <string name="reminder_msg_1">别忘了记录下你今天的感想。</string>
     <string name="reminder_msg_2">你的日记本正等着你来记录。</string>
     <string name="reminder_msg_3">坚持才是关键！今天先写一点吧。</string>
@@ -311,18 +471,40 @@
     <string name="reminder_title_5">每日反思</string>
     <string name="reminder_title_6">备忘录</string>
     <string name="reminder_title_7">放松一下，提笔写写</string>
+
+    <!-- Maps & Location -->
     <string name="api_credentials">API 访问凭证</string>
     <string name="carto_auto_notice">CARTO 无需 API 密钥，已自动配置。</string>
-    <string name="openmap_auto_notice">OpenMap 无需 API 密钥，已自动配置。</string>
     <string name="check_api_key_or_internet">请检查您的 API 密钥或网络连接</string>
     <string name="configure_api_key_for_preview">请在下方配置并测试 API 密钥以启用预览功能</string>
     <string name="default_map_theme">默认地图主题</string>
+    <string name="map_theme_accents">主题配色</string>
+    <string name="map_theme_accents_desc">仅用于CARTO和Stadia地图</string>
     <string name="failed_to_load_map">无法加载地图</string>
     <string name="get_api_key_or_token">获取 API 密钥或访问令牌</string>
     <string name="map_credits_body">June 使用来自多个开放数据和地图服务提供商的矢量瓦片与地理编码服务。</string>
+    <string name="openmap_auto_notice">OpenMap 无需 API 密钥，已自动配置。</string>
     <string name="maptiler_api_key_placeholder">MapTiler API 密钥</string>
     <string name="preview">预览</string>
+    <string name="collapse_map">收起地图</string>
+    <string name="confirm_location">确认定位</string>
+    <string name="current_location">当前位置</string>
+    <string name="expand_map">展开地图</string>
+    <string name="fetching_address">正在获取地址…</string>
+    <string name="locating">定位中…</string>
+    <string name="move_map_to_select">移动地图以选择</string>
+    <string name="network_restricted">网络受限</string>
+    <string name="no_address_available">无可用地址</string>
+    <string name="pinned_location">已固定位置</string>
+    <string name="remove_location">移除位置</string>
+    <string name="search_location_placeholder">搜寻位置中…</string>
     <string name="stadia_api_key_placeholder">Stadia API 密钥</string>
+    <string name="toggle_dark_mode">切换深色模式</string>
+    <string name="unknown_place">未知地点</string>
+    <string name="zoom_in">放大</string>
+    <string name="zoom_out">缩小</string>
+
+    <!-- About & Diagnostics -->
     <string name="about_june">关于 June</string>
     <string name="about_june_desc">版本号和 GitHub 链接</string>
     <string name="about_libraries">关于许可协议</string>
@@ -335,6 +517,8 @@
     <string name="license">许可协议</string>
     <string name="map_credits">地图来源</string>
     <string name="map_credits_desc">地图数据的来源与许可信息</string>
+
+    <!-- Home & Search -->
     <string name="bookmarked">在书签中</string>
     <string name="draft">草稿</string>
     <string name="journals">日记</string>
@@ -347,6 +531,8 @@
     <string name="search_your_journal">在你的日记中搜索</string>
     <string name="tags">标签</string>
     <string name="timeline">时间线</string>
+
+    <!-- Editor & Formatting -->
     <string name="add_attachment">添加附件</string>
     <string name="add_emoji">添加表情</string>
     <string name="add_item">添加项目</string>
@@ -360,100 +546,33 @@
     <string name="link_url_label">链接地址</string>
     <string name="take_photo_or_video">拍摄照片/视频</string>
     <string name="whats_on_your_mind">脑海中回荡着什么呢？</string>
-    <string name="empty_library">此库为空</string>
-    <string name="empty_library_desc">通过粘贴链接或使用上方按钮从设备中选择音频文件来添加歌曲。</string>
-    <string name="scope_affects_library">更改将会影响库和未来的日记</string>
-    <string name="scope_affects_journal_only">更改仅影响当前日记</string>
-    <string name="move_to_bin">移至回收站</string>
-    <string name="data_and_sync">数据与同步</string>
-    <string name="backup_and_restore">备份与重置</string>
-    <string name="data_portability">导入与导出</string>
-    <string name="export_as_markdown">导出为 Markdown</string>
-    <string name="export_markdown_archive">导出 Markdown</string>
-    <string name="export_markdown_archive_desc">以开放格式导出笔记，便于阅读和查看</string>
-    <string name="export_journal_title">导出日记</string>
-    <string name="export_journal_has_media_desc">此内容包含媒体附件。请选择导出方式：</string>
-    <string name="export_option_package_zip">压缩包(.zip)</string>
-    <string name="recommended">推荐</string>
-    <string name="export_option_package_zip_desc">将内容和媒体文件打包在一起以便查看。</string>
-    <string name="export_option_clean_text_md">文字内容(.md)</string>
-    <string name="export_option_clean_text_md_desc">不含媒体附件的纯文本内容。</string>
-    <string name="import_markdown">导入 Markdown</string>
-    <string name="import_markdown_desc">导入 .md 文件或 Markdown 备份压缩包</string>
-    <string name="journal_exported_successfully">日记导出成功</string>
-    <string name="markdown_imported_successfully">成功导入 %1$d 篇日记</string>
-    <string name="markdown_import_failed">无法导入 Markdown: %1$s</string>
-    <string name="locked">已锁定</string>
-    <string name="action_edit">编辑</string>
-    <string name="action_export">导出</string>
-    <string name="action_backup">备份</string>
-    <string name="action_share">分享</string>
-    <string name="action_lock">锁定</string>
-    <string name="action_unlock">解锁</string>
-    <string name="cd_more_options">更多选项</string>
-    <string name="unlock_vault">解锁保险库</string>
-    <string name="unlock_june">解锁 June</string>
-    <string name="no_locations_found">未发现位置</string>
-    <string name="search_emojis">搜索表情符号…</string>
-    <string name="no_emojis_found">未发现表情符号</string>
-    <string name="emoji_category_animals">动物与自然</string>
-    <string name="emoji_category_food">食物与饮料</string>
-    <string name="emoji_category_travel">旅行与地点</string>
-    <string name="emoji_category_activities">活动与事件</string>
-    <string name="reset_font">重置字体</string>
-    <string name="reset_theme">重置样式</string>
-    <string name="width">宽度</string>
-    <string name="custom_password">密码</string>
-    <string name="vault_desc">保持敏感日记隐藏和被保护</string>
-    <string name="emoji_category_people">人</string>
-    <string name="emoji_category_flags">旗帜</string>
-    <string name="compress_videos">压缩视频</string>
-    <string name="journal_theme">日记主题</string>
-    <string name="optical_size">视觉大小</string>
-    <string name="lock_method">锁定方式</string>
-    <string name="vault">保险箱</string>
-    <string name="move_to_vault">移入保险箱</string>
-    <string name="move_out_of_vault">移出保险箱</string>
-    <string name="move_to_vault_desc">是否移入保险箱？它将被隐藏，并被您的密码保护。</string>
-    <string name="move_out_of_vault_desc">是否移出保险箱？它将重新出现在您的日记时间线中。</string>
-    <string name="vault_empty_title">保险箱为空</string>
-    <string name="vault_empty_desc">您锁定的日记会在这里显示</string>
-    <string name="confirm_password">确认密码</string>
-    <string name="create_password">设置密码</string>
-    <string name="enter_password">输入密码</string>
-    <string name="reset_lock">重置锁定</string>
-    <string name="lock_reset_successfully">锁定重置成功</string>
-    <string name="toggle_dark_mode">切换深色模式</string>
-    <string name="map_theme_accents">主题配色</string>
-    <string name="collapse_map">收起地图</string>
-    <string name="confirm_location">确认定位</string>
-    <string name="current_location">当前位置</string>
-    <string name="expand_map">展开地图</string>
-    <string name="locating">定位中…</string>
-    <string name="remove_location">移除位置</string>
-    <string name="search_location_placeholder">搜寻位置中…</string>
-    <string name="zoom_in">放大</string>
-    <string name="zoom_out">缩小</string>
+
+    <!-- Font Variations -->
+    <string name="fonts">字体</string>
+    <string name="style">样式</string>
     <string name="presets">预设</string>
-    <string name="roundness">圆形</string>
-    <string name="monospace">等宽字体</string>
-    <string name="cursive">手写体</string>
-    <string name="bounce">回弹</string>
-    <string name="thick_stroke">加粗字体 (X)</string>
-    <string name="custom_pattern">手势密码</string>
-    <string name="vault_notice">保险箱内的日记不会显示在动态中，也不会被同步。</string>
-    <string name="confirm_pattern">确认手势密码</string>
-    <string name="draw_pattern">绘制手势密码</string>
-    <string name="verify_and_reset_lock">验证并重置锁定</string>
-    <string name="lock_recovery_desc">回答您的密保问题以重置锁定。</string>
-    <string name="lock_no_recovery_warning_desc">若无密保问题，忘记的密码将无法被重置。</string>
-    <string name="lock_recovery_configured_desc">您可以通过密保问题重置锁定。</string>
-    <string name="map_theme_accents_desc">仅用于CARTO和Stadia地图</string>
-    <string name="fetching_address">正在获取地址…</string>
-    <string name="move_map_to_select">移动地图以选择</string>
-    <string name="network_restricted">网络受限</string>
-    <string name="no_address_available">无可用地址</string>
-    <string name="unknown_place">未知地点</string>
+    <string name="default_font">默认字体</string>
+    <string name="custom_font">自定义字体</string>
+    <string name="default_theme">默认主题</string>
+    <string name="custom_theme">自定义主题</string>
+    <string name="font_credits">字体致谢</string>
+    <string name="font_credits_desc">内置字体的许可证与致谢信息</string>
+    <string name="font_credits_body">June 内置高品质开源可变字体，为您提供更具表现力的日记排版体验。</string>
+    <string name="unlock_june_plus">解锁 June Plus</string>
+    <string name="unlock_plus">解锁 Plus</string>
+    <string name="save_with_default">以默认样式保存</string>
+    <string name="plus_styling_detected_title">June Plus 专属样式</string>
+    <string name="plus_styling_detected_desc">此篇日记使用了 June Plus 的自定义字体或色彩。解锁 Plus 即可完整保留您的个性化样式，或选择以默认样式保存。</string>
+    <string name="entry_saved_default_theme">已使用默认样式保存日记</string>
+    <string name="reset_plus_status">重置 Plus 状态</string>
+    <string name="plus_status_reset">Plus 状态已重置</string>
+    <string name="record_audio">录制音频</string>
+    <string name="attach_audio">附加音频</string>
+    <string name="add_or_record_audio">添加或录制音频</string>
+    <string name="audio_notes">音频笔记</string>
+    <string name="audios">条音频</string>
+    <string name="move_up">上移</string>
+    <string name="move_down">下移</string>
     <string name="clear_filters">清除筛选</string>
     <string name="vault_no_lock_warning">未设置保管库锁定</string>
 </resources>
