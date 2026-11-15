@@ -1,5 +1,12 @@
 [
   {
+    "version": "v2.2.1",
+    "changes": [
+      "Optimized cloud sync throughput and bulk imports.",
+      "Cloud sync fixes and improvements."
+    ]
+  },
+  {
     "version": "v2.2.0",
     "changes": [
       "Automatic backups to local folder.",
