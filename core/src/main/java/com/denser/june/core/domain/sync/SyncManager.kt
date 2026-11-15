@@ -113,7 +113,8 @@ class SyncManager(
     private val songMediaDir: File,
     private val audioDir: File = File(songMediaDir.parentFile ?: mediaDir, "audios"),
     val syncHashCache: SyncHashCache = SyncHashCache(File(songMediaDir.parentFile ?: mediaDir, "sync")),
-    val syncDir: File = File(songMediaDir.parentFile ?: mediaDir, "sync")
+    val syncDir: File = File(songMediaDir.parentFile ?: mediaDir, "sync"),
+    val syncGate: SyncGate = SyncGate()
 ) {
     private val songMediaLibraryDir = File(songMediaDir, "library").apply { if (!exists()) mkdirs() }
     private val songMediaArtDir = File(songMediaDir, "art").apply { if (!exists()) mkdirs() }
@@ -170,30 +171,35 @@ class SyncManager(
         }
 
         applicationScope.launch {
-            syncPrefs.getSyncEnabled().flatMapLatest { isSyncEnabled ->
+            combine(
+                syncPrefs.getSyncEnabled(),
+                syncGate.isHeld
+            ) { isSyncEnabled, isHeld ->
+                isSyncEnabled to isHeld
+            }.flatMapLatest { (isSyncEnabled, isHeld) ->
                 if (!isSyncEnabled) kotlinx.coroutines.flow.flowOf(null)
+                else if (isHeld) kotlinx.coroutines.flow.emptyFlow()
                 else {
                     combine(
                         journalRepo.observeHasUnsyncedJournals(SYNC_THRESHOLD_MS),
-                        journalRepo.observeHasTombstones(),
-                        songLibraryDao.observeAll(),
-                        syncPrefs.getLastSyncTime()
-                    ) { hasUnsynced, hasTombstones, songs, lastSyncTime ->
-                        val dirtySongs = songs.filter { it.addedAt > (lastSyncTime + SYNC_THRESHOLD_MS) }
-                        val isDirty = hasUnsynced || hasTombstones || dirtySongs.isNotEmpty()
+                        journalRepo.observeHasTombstones()
+                    ) { hasUnsynced, hasTombstones ->
+                        val isDirty = hasUnsynced || hasTombstones
                         if (isDirty) {
-                            val unsyncedJournals = if (hasUnsynced) journalRepo.getJournalsToSync(SYNC_THRESHOLD_MS) else emptyList()
-                            val tombstones = if (hasTombstones) journalRepo.getAllTombstones() else emptyList()
-                            AppLogger.d(
-                                AppLogger.Category.SYNC,
-                                "SyncManager",
-                                "Sync state evaluated as DIRTY: " +
-                                    "hasUnsynced=$hasUnsynced (count=${unsyncedJournals.size}, journals=${unsyncedJournals.map { "id=${it.id}, title='${it.title}', updatedAt=${it.updatedAt}, syncedAt=${it.syncedAt}, isLocked=${it.isLocked}, deletedAt=${it.deletedAt}" }}), " +
-                                    "hasTombstones=$hasTombstones (ids=$tombstones), " +
-                                    "dirtySongsCount=${dirtySongs.size} (songs=${dirtySongs.map { "hash=${it.contentHash}, title='${it.title}', addedAt=${it.addedAt}, lastSyncTime=$lastSyncTime, deltaMs=${it.addedAt - lastSyncTime}" }})"
-                            )
+                            if (AppLogger.isCategoryEnabled(AppLogger.Category.SYNC)) {
+                                val unsyncedJournals = if (hasUnsynced) journalRepo.getJournalsToSync(SYNC_THRESHOLD_MS) else emptyList()
+                                val tombstones = if (hasTombstones) journalRepo.getAllTombstones() else emptyList()
+                                val sample = unsyncedJournals.take(50).map { "id=${it.id}, title='${it.title}'" }
+                                AppLogger.d(
+                                    AppLogger.Category.SYNC,
+                                    "SyncManager",
+                                    "Sync state evaluated as DIRTY: hasUnsynced=$hasUnsynced (count=${unsyncedJournals.size}, sample=$sample), hasTombstones=$hasTombstones (ids=$tombstones)"
+                                )
+                            }
                         } else {
-                            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Sync state evaluated as CLEAN (hasUnsynced=false, hasTombstones=false, dirtySongs=0, lastSyncTime=$lastSyncTime)")
+                            if (AppLogger.isCategoryEnabled(AppLogger.Category.SYNC)) {
+                                AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "Sync state evaluated as CLEAN (hasUnsynced=false, hasTombstones=false)")
+                            }
                         }
                         isDirty
                     }
@@ -219,26 +225,48 @@ class SyncManager(
         applicationScope.launch {
             combine(
                 syncPrefs.getSyncEnabled(),
-                syncPrefs.isAutomaticSyncEnabled()
-            ) { enabled, auto -> enabled && auto }
-                .flatMapLatest { autoSyncReady ->
-                    if (!autoSyncReady) kotlinx.coroutines.flow.flowOf(false)
-                    else {
-                        combine(
-                            journalRepo.observeHasUnsyncedJournals(SYNC_THRESHOLD_MS),
-                            journalRepo.observeHasTombstones(),
-                            songLibraryDao.observeAll(),
-                            syncPrefs.getLastSyncTime()
-                        ) { hasUnsynced, hasTombstones, songs, lastSyncTime ->
-                            hasUnsynced || hasTombstones || songs.any { it.addedAt > (lastSyncTime + SYNC_THRESHOLD_MS) }
-                        }.debounce(10000L)
-                    }
-                }.collect { shouldSync ->
-                    if (shouldSync) {
-                        val onlyWifi = syncPrefs.getSyncOnlyOnWifi().first()
-                        syncScheduler.enqueue(onlyWifi)
+                syncPrefs.isAutomaticSyncEnabled(),
+                syncGate.isHeld
+            ) { enabled, auto, isHeld ->
+                Triple(enabled && auto, isHeld, Unit)
+            }.flatMapLatest { (autoSyncReady, isHeld, _) ->
+                if (!autoSyncReady || isHeld) kotlinx.coroutines.flow.flowOf(false)
+                else {
+                    combine(
+                        journalRepo.observeHasUnsyncedJournals(SYNC_THRESHOLD_MS),
+                        journalRepo.observeHasTombstones()
+                    ) { hasUnsynced, hasTombstones ->
+                        hasUnsynced || hasTombstones
+                    }.debounce(10000L)
+                }
+            }.collect { shouldSync ->
+                if (shouldSync) {
+                    val onlyWifi = syncPrefs.getSyncOnlyOnWifi().first()
+                    syncScheduler.enqueue(onlyWifi)
+                }
+            }
+        }
+
+        applicationScope.launch {
+            var wasHeld = false
+            syncGate.isHeld.collect { held ->
+                if (held) {
+                    wasHeld = true
+                } else if (wasHeld) {
+                    wasHeld = false
+                    val isSyncEnabled = syncPrefs.getSyncEnabled().first()
+                    val isAutoSync = syncPrefs.isAutomaticSyncEnabled().first()
+                    if (isSyncEnabled && isAutoSync) {
+                        val hasUnsynced = journalRepo.hasUnsyncedJournals(SYNC_THRESHOLD_MS)
+                        val hasTombstones = journalRepo.hasTombstones()
+                        if (hasUnsynced || hasTombstones) {
+                            val onlyWifi = syncPrefs.getSyncOnlyOnWifi().first()
+                            AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "SyncGate released with pending changes: triggering immediate auto-sync.")
+                            syncScheduler.enqueue(onlyWifi)
+                        }
                     }
                 }
+            }
         }
     }
 
@@ -639,21 +667,6 @@ class SyncManager(
             val allLocalSongs = songLibraryDao.getAll()
             val localSongFileNames = allLocalSongs.map { File(it.localPath).name }.toSet()
 
-            val attachedSongs = activeLocalJournals.mapNotNull { it.songDetails }
-            val uncatalogedSongs = attachedSongs.filter { song ->
-                val p = song.localPreviewPath
-                p != null && allLocalSongs.none { it.localPath.endsWith(File(p).name) }
-            }.map { song ->
-                val p = song.localPreviewPath!!
-                SongLibraryEntity(
-                    contentHash = File(p).name.substringBeforeLast('.'),
-                    localPath = p,
-                    title = song.title,
-                    artistName = song.artistName
-                )
-            }
-            val allLocalSongsCombined = allLocalSongs + uncatalogedSongs
-
             val isAudioFile: (String) -> Boolean = { name ->
                 name.endsWith(".mp3", ignoreCase = true) ||
                 name.endsWith(".m4a", ignoreCase = true) ||
@@ -663,43 +676,49 @@ class SyncManager(
                 name.endsWith(".flac", ignoreCase = true)
             }
 
-            val songsToUpload = allLocalSongsCombined.filter { entry ->
-                val fileName = File(entry.localPath).name
-                val file = if (File(entry.localPath).isAbsolute && File(entry.localPath).exists()) File(entry.localPath) else File(songMediaLibraryDir, fileName)
-                val isPhysicallyOnCloud = fileName.lowercase() in remoteSongMediaNames ||
-                    remoteSongMediaMeta.containsKey(fileName) ||
-                    remoteSongMediaMeta.containsKey(fileName.lowercase())
-                file.exists() && file.length() > 0L && !isPhysicallyOnCloud
-            }
+            val songsToUpload = mutableListOf<Pair<File, SongDetails>>()
+            val songArtToUpload = mutableListOf<Pair<File, SongDetails>>()
 
-            val songsToUploadSet = songsToUpload.map { File(it.localPath).name.lowercase() }.toSet()
-
-            val songArtToUpload = mutableListOf<Pair<String, File>>()
-            val localSongArtFilesForAnalysis = mutableMapOf<String, File>()
-            allLocalSongs.forEach { entry ->
-                entry.localArtPath?.let { path ->
-                    val artFile = if (File(path).isAbsolute && File(path).exists()) File(path) else File(songMediaArtDir, File(path).name)
-                    if (artFile.exists() && artFile.length() > 0L) {
-                        localSongArtFilesForAnalysis[artFile.name] = artFile
-                    }
-                }
-            }
             activeLocalJournals.mapNotNull { it.songDetails }.forEach { song ->
-                song.localThumbnailPath?.let { path ->
-                    val artFile = if (File(path).isAbsolute && File(path).exists()) File(path) else File(songMediaArtDir, File(path).name)
-                    if (artFile.exists() && artFile.length() > 0L) {
-                        localSongArtFilesForAnalysis[artFile.name] = artFile
+                var audioPath = song.localPreviewPath
+                var artPath = song.localThumbnailPath
+                if (audioPath == null || artPath == null) {
+                    val match = allLocalSongs.firstOrNull {
+                        it.title.trim().equals(song.title.trim(), ignoreCase = true) &&
+                        it.artistName.trim().equals(song.artistName.trim(), ignoreCase = true)
+                    }
+                    if (audioPath == null) audioPath = match?.localPath
+                    if (artPath == null) artPath = match?.localArtPath
+                }
+
+                audioPath?.let { path ->
+                    val file = if (File(path).isAbsolute && File(path).exists()) File(path) else File(songMediaLibraryDir, File(path).name)
+                    if (file.exists() && file.length() > 0L) {
+                        val fileName = file.name
+                        val isPhysicallyOnCloud = fileName.lowercase() in remoteSongMediaNames ||
+                            remoteSongMediaMeta.containsKey(fileName) ||
+                            remoteSongMediaMeta.containsKey(fileName.lowercase())
+                        if (!isPhysicallyOnCloud && songsToUpload.none { it.first.name.equals(fileName, ignoreCase = true) }) {
+                            songsToUpload.add(file to song)
+                        }
+                    }
+                }
+
+                artPath?.let { path ->
+                    val file = if (File(path).isAbsolute && File(path).exists()) File(path) else File(songMediaArtDir, File(path).name)
+                    if (file.exists() && file.length() > 0L) {
+                        val fileName = file.name
+                        val isPhysicallyOnCloud = fileName.lowercase() in remoteSongMediaNames ||
+                            remoteSongMediaMeta.containsKey(fileName) ||
+                            remoteSongMediaMeta.containsKey(fileName.lowercase())
+                        if (!isPhysicallyOnCloud && songArtToUpload.none { it.first.name.equals(fileName, ignoreCase = true) }) {
+                            songArtToUpload.add(file to song)
+                        }
                     }
                 }
             }
-            localSongArtFilesForAnalysis.forEach { (fileName, file) ->
-                val isPhysicallyOnCloud = fileName.lowercase() in remoteSongMediaNames ||
-                    remoteSongMediaMeta.containsKey(fileName) ||
-                    remoteSongMediaMeta.containsKey(fileName.lowercase())
-                if (!isPhysicallyOnCloud) {
-                    songArtToUpload.add(fileName to file)
-                }
-            }
+
+            val songsToUploadSet = songsToUpload.map { it.first.name.lowercase() }.toSet()
 
             val allJournalsForSongs = activeLocalJournals + peekedPendingJournals
             val allAttachedSongs = allJournalsForSongs.mapNotNull { it.songDetails }
@@ -715,13 +734,13 @@ class SyncManager(
                 val targetHash = song.localPreviewPath?.let { File(it).nameWithoutExtension }
                     ?: song.localThumbnailPath?.let { File(it).nameWithoutExtension }
                 if (targetHash != null) {
-                    remoteSongMedia.filter { isAudioFile(it) }.firstOrNull {
+                    (remoteSongMedia + remoteSongMediaMeta.keys).filter { isAudioFile(it) }.firstOrNull {
                         File(it).nameWithoutExtension.equals(targetHash, ignoreCase = true)
                     }?.let { referencedSongFileNames.add(it) }
                 }
             }
 
-            val candidateSongFileNames = (referencedSongFileNames + remoteSongMedia.filter { isAudioFile(it) } + remoteSongMediaMeta.keys.filter { isAudioFile(it) }).distinct()
+            val candidateSongFileNames = referencedSongFileNames.distinct()
 
             val songsToDownload = candidateSongFileNames.filter { fileName ->
                 if (songsToUploadSet.contains(fileName.lowercase())) return@filter false
@@ -926,22 +945,18 @@ class SyncManager(
                 } else null
             }
 
-            val songsWithPendingAudio = songsToUpload.map {
-                if (it.title.isNotBlank() || it.artistName.isNotBlank()) {
-                    "${it.title.trim().lowercase()}:::${it.artistName.trim().lowercase()}"
+            val songsWithPendingAudio = songsToUpload.map { (file, song) ->
+                if (song.title.isNotBlank() || song.artistName.isNotBlank()) {
+                    "${song.title.trim().lowercase()}:::${song.artistName.trim().lowercase()}"
                 } else {
-                    it.localPath
+                    file.name
                 }
             }
-            val songsWithPendingArt = songArtToUpload.map { (fileName, _) ->
-                val fromLib = allLocalSongsCombined.firstOrNull { it.localArtPath?.endsWith(fileName) == true }
-                val fromJournal = activeLocalJournals.mapNotNull { it.songDetails }.firstOrNull { it.localThumbnailPath?.endsWith(fileName) == true }
-                val title = fromLib?.title?.trim()?.lowercase() ?: fromJournal?.title?.trim()?.lowercase()
-                val artist = fromLib?.artistName?.trim()?.lowercase() ?: fromJournal?.artistName?.trim()?.lowercase()
-                if (!title.isNullOrBlank() || !artist.isNullOrBlank()) {
-                    "${title.orEmpty()}:::${artist.orEmpty()}"
+            val songsWithPendingArt = songArtToUpload.map { (file, song) ->
+                if (song.title.isNotBlank() || song.artistName.isNotBlank()) {
+                    "${song.title.trim().lowercase()}:::${song.artistName.trim().lowercase()}"
                 } else {
-                    fileName
+                    file.name
                 }
             }
             val distinctPendingSongsCount = (songsWithPendingAudio + songsWithPendingArt).distinct().size
@@ -954,7 +969,7 @@ class SyncManager(
                     "toDownload=${plan.toDownload.map { it.first }}, " +
                     "predictedConflictCopies=$predictedConflictCopies, " +
                     "mediaToUpload=$mediaToUpload, mediaToDownload=$mediaToDownload, " +
-                    "songsToUpload=${songsToUpload.map { it.title }}, songArtToUpload=${songArtToUpload.map { it.first }}, " +
+                    "songsToUpload=${songsToUpload.map { it.first.name }}, songArtToUpload=${songArtToUpload.map { it.first.name }}, " +
                     "songsToDownload=$songsToDownload, " +
                     "audiosToUpload=$audiosToUpload, audiosToDownload=$audiosToDownload"
             )
@@ -982,20 +997,14 @@ class SyncManager(
                     pendingMediaDownloadsCount = mediaToDownload.size,
                     pendingSongUploadsCount = distinctPendingSongsCount,
                     pendingSongDownloadsCount = songsToDownload.size,
-                    pendingSongUploadsList = (songsToUpload.map { song ->
-                        val title = song.title.ifBlank { File(song.localPath).nameWithoutExtension }
+                    pendingSongUploadsList = (songsToUpload.map { (file, song) ->
+                        val title = song.title.ifBlank { file.nameWithoutExtension }
                         val artist = song.artistName.ifBlank { "Unknown Artist" }
                         "$title — $artist"
-                    } + songArtToUpload.map { (fileName, _) ->
-                        val fromLib = allLocalSongsCombined.firstOrNull { it.localArtPath?.endsWith(fileName) == true }
-                        val fromJournal = activeLocalJournals.mapNotNull { it.songDetails }.firstOrNull { it.localThumbnailPath?.endsWith(fileName) == true }
-                        val title = fromLib?.title?.ifBlank { "Unknown Title" }
-                            ?: fromJournal?.title?.ifBlank { "Unknown Title" }
-                            ?: fileName
-                        val artist = fromLib?.artistName?.ifBlank { "Unknown Artist" }
-                            ?: fromJournal?.artistName?.ifBlank { "Unknown Artist" }
-                            ?: ""
-                        if (artist.isNotBlank()) "$title — $artist (Album Art)" else "$title (Album Art)"
+                    } + songArtToUpload.map { (file, song) ->
+                        val title = song.title.ifBlank { file.nameWithoutExtension }
+                        val artist = song.artistName.ifBlank { "Unknown Artist" }
+                        if (artist.isNotBlank() && artist != "Unknown Artist") "$title — $artist (Album Art)" else "$title (Album Art)"
                     }).distinct(),
                     pendingSongDownloadsList = pendingSongDownloadsDisplayList,
                     pendingAudioUploadsCount = audiosToUpload.size,
@@ -1139,6 +1148,7 @@ class SyncManager(
     }
 
     suspend fun sync(isFullRevalidation: Boolean = false): Result<Unit> = syncMutex.withLock {
+        syncGate.awaitReleased()
         val isSyncEnabled = syncPrefs.getSyncEnabled().first()
         if (!isSyncEnabled) return@withLock Result.failure(Exception("Sync is disabled"))
 
@@ -1198,9 +1208,11 @@ class SyncManager(
             }
 
             var allLocalJournals = journalRepo.getAllJournalsIncludeDeletedSync()
-            var localJournalsModified = false
+            val localJournalsModified = AtomicBoolean(false)
             val sha256Cache = ConcurrentHashMap<String, String>()
             val syncSemaphore = Semaphore(5)
+            val journalConcurrency = if (provider.name == "GoogleDrive") 5 else 8
+            val journalSemaphore = Semaphore(journalConcurrency)
             val statusMutex = Mutex()
 
             val remoteMedia = if (isFullRevalidation) {
@@ -1246,8 +1258,6 @@ class SyncManager(
                         remoteMediaMeta.containsKey(name.lowercase())
                     val needsUp = f.exists() && f.length() > 0L && (
                         !isOnCloud ||
-                        (remoteMeta != null && remoteMeta.size > 0L && f.length() != remoteMeta.size) ||
-                        (remoteMeta != null && remoteMeta.hash.isNotBlank() && syncHashCache.getOrCompute(f) != remoteMeta.hash) ||
                         (remoteMeta != null && remoteMeta.size > 0L && f.length() != remoteMeta.size)
                     )
                     if (needsUp) estimatedMediaUploadsList.add(name.lowercase())
@@ -1263,8 +1273,6 @@ class SyncManager(
                         remoteMediaMeta.containsKey(name.lowercase())
                     isOnCloud && !estimatedMediaUploadsList.contains(name.lowercase()) && (
                         !f.exists() || f.length() == 0L ||
-                        (remoteMeta != null && remoteMeta.size > 0L && f.length() != remoteMeta.size) ||
-                        (remoteMeta != null && remoteMeta.hash.isNotBlank() && syncHashCache.getOrCompute(f) != remoteMeta.hash) ||
                         (remoteMeta != null && remoteMeta.size > 0L && f.length() != remoteMeta.size)
                     )
                 }
@@ -1272,27 +1280,30 @@ class SyncManager(
             val localSongAudioFiles = mutableMapOf<String, File>()
             val localSongArtFiles = mutableMapOf<String, File>()
 
-            preFetchedSongs.forEach { entry ->
-                val audioFile = if (File(entry.localPath).isAbsolute && File(entry.localPath).exists()) File(entry.localPath) else File(songMediaLibraryDir, File(entry.localPath).name)
-                if (audioFile.exists() && audioFile.length() > 0L) {
-                    localSongAudioFiles[audioFile.name] = audioFile
-                }
-                entry.localArtPath?.let { path ->
-                    val artFile = if (File(path).isAbsolute && File(path).exists()) File(path) else File(songMediaArtDir, File(path).name)
-                    if (artFile.exists() && artFile.length() > 0L) {
-                        localSongArtFiles[artFile.name] = artFile
-                    }
-                }
-            }
-
             activeJournalsForPreScan.mapNotNull { it.songDetails }.forEach { song ->
-                song.localPreviewPath?.let { path ->
+                var previewPath = song.localPreviewPath
+                if (previewPath == null) {
+                    val match = preFetchedSongs.firstOrNull {
+                        it.title.trim().equals(song.title.trim(), ignoreCase = true) &&
+                        it.artistName.trim().equals(song.artistName.trim(), ignoreCase = true)
+                    }
+                    previewPath = match?.localPath
+                }
+                previewPath?.let { path ->
                     val audioFile = if (File(path).isAbsolute && File(path).exists()) File(path) else File(songMediaLibraryDir, File(path).name)
                     if (audioFile.exists() && audioFile.length() > 0L) {
                         localSongAudioFiles[audioFile.name] = audioFile
                     }
                 }
-                song.localThumbnailPath?.let { path ->
+                var artPath = song.localThumbnailPath
+                if (artPath == null) {
+                    val match = preFetchedSongs.firstOrNull {
+                        it.title.trim().equals(song.title.trim(), ignoreCase = true) &&
+                        it.artistName.trim().equals(song.artistName.trim(), ignoreCase = true)
+                    }
+                    artPath = match?.localArtPath
+                }
+                artPath?.let { path ->
                     val artFile = if (File(path).isAbsolute && File(path).exists()) File(path) else File(songMediaArtDir, File(path).name)
                     if (artFile.exists() && artFile.length() > 0L) {
                         localSongArtFiles[artFile.name] = artFile
@@ -1320,8 +1331,7 @@ class SyncManager(
                 val isPhysicallyOnCloud = remoteSongMediaMeta.containsKey(name) ||
                     remoteSongMediaMeta.containsKey(name.lowercase())
                 isPhysicallyOnCloud && (!f.exists() || f.length() == 0L || (
-                    (remoteMeta != null && remoteMeta.size > 0L && f.length() != remoteMeta.size) ||
-                    (remoteMeta != null && remoteMeta.hash.isNotBlank() && syncHashCache.getOrCompute(f) != remoteMeta.hash)
+                    remoteMeta != null && remoteMeta.size > 0L && f.length() != remoteMeta.size
                 ))
             }
 
@@ -1350,8 +1360,7 @@ class SyncManager(
                 val isPhysicallyOnCloud = remoteAudioMeta.containsKey(name) ||
                     remoteAudioMeta.containsKey(name.lowercase())
                 isPhysicallyOnCloud && (!f.exists() || f.length() == 0L || (
-                    (remoteMeta != null && remoteMeta.size > 0L && f.length() != remoteMeta.size) ||
-                    (remoteMeta != null && remoteMeta.hash.isNotBlank() && syncHashCache.getOrCompute(f) != remoteMeta.hash)
+                    remoteMeta != null && remoteMeta.size > 0L && f.length() != remoteMeta.size
                 ))
             }
 
@@ -1386,37 +1395,60 @@ class SyncManager(
             }
 
             AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "sync: starting download of ${toDownload.size} journals: ${toDownload.map { it.first }}")
-            toDownload.forEach { (id, remoteTime) ->
-                _status.value = SyncStatus.Syncing(
-                    progress = (completedOperations.toFloat() / totalOperations).coerceIn(0f, 0.99f),
-                    uploadCount = uploadCount,
-                    downloadCount = downloadCount,
-                    totalOperations = totalOperations,
-                    currentOperation = "Downloading update..."
-                )
-
-                downloadJournal(provider, id, remoteTime).onSuccess {
-                    localJournalsModified = true
-                    updateProgress("Downloading update...", isDownload = true)
-                }.onFailure {
-                    updateProgress("Downloading update...", isFailure = true)
+            coroutineScope {
+                toDownload.forEach { (id, remoteTime) ->
+                    launch {
+                        journalSemaphore.withPermit {
+                            downloadJournal(provider, id, remoteTime).onSuccess {
+                                localJournalsModified.set(true)
+                                updateProgress("Downloading update...", isDownload = true)
+                            }.onFailure {
+                                updateProgress("Downloading update...", isFailure = true)
+                            }
+                        }
+                    }
                 }
             }
 
             AppLogger.d(AppLogger.Category.SYNC, "SyncManager", "sync: starting upload of ${toUpload.size} journals: ${toUpload.map { it.id }}")
-            toUpload.forEach { journal ->
-                _status.value = SyncStatus.Syncing(
-                    progress = (completedOperations.toFloat() / totalOperations).coerceIn(0f, 0.99f),
-                    uploadCount = uploadCount,
-                    downloadCount = downloadCount,
-                    totalOperations = totalOperations,
-                    currentOperation = "Pushing changes..."
-                )
-
-                pushJournal(provider, journal, remoteJournalMeta[journal.id]?.rev ?: 0).onSuccess {
-                    updateProgress("Pushing changes...", isUpload = true)
-                }.onFailure {
-                    updateProgress("Pushing changes...", isFailure = true)
+            var uploadedSinceCheckpoint = 0
+            coroutineScope {
+                toUpload.forEach { journal ->
+                    launch {
+                        journalSemaphore.withPermit {
+                            pushJournal(provider, journal, remoteJournalMeta[journal.id]?.rev ?: 0).onSuccess {
+                                updateProgress("Pushing changes...", isUpload = true)
+                                val needCheckpoint = statusMutex.withLock {
+                                    uploadedSinceCheckpoint++
+                                    uploadedSinceCheckpoint % 1000 == 0
+                                }
+                                if (needCheckpoint) {
+                                    runCatching {
+                                        val partialJournals = journalRepo.getAllJournalsIncludeDeletedSync()
+                                        val partialManifest = createCurrentManifest(
+                                            provider = provider,
+                                            journals = partialJournals,
+                                            processedDeletedIds = emptyList(),
+                                            remoteDeletedIds = remoteDeletedIds,
+                                            existingJournalMeta = remoteJournalMeta,
+                                            confirmedCloudMedia = emptySet(),
+                                            confirmedCloudSongMedia = emptySet(),
+                                            confirmedCloudAudios = emptySet(),
+                                            sha256Cache = sha256Cache,
+                                            existingMediaMeta = remoteMediaMeta,
+                                            existingSongMediaMeta = remoteSongMediaMeta,
+                                            existingAudioMeta = remoteAudioMeta
+                                        )
+                                        provider.updateManifest(partialManifest)
+                                    }.onFailure { e ->
+                                        AppLogger.w(AppLogger.Category.SYNC, "SyncManager", "Checkpoint manifest update failed: ${e.message}")
+                                    }
+                                }
+                            }.onFailure {
+                                updateProgress("Pushing changes...", isFailure = true)
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1427,7 +1459,7 @@ class SyncManager(
                 emptyList()
             }
 
-            if (localJournalsModified) {
+            if (localJournalsModified.get()) {
                 allLocalJournals = journalRepo.getAllJournalsIncludeDeletedSync()
             }
             val currentLocalsForUpload = allLocalJournals
@@ -2039,7 +2071,10 @@ class SyncManager(
         confirmedCloudMedia: Set<String>,
         confirmedCloudSongMedia: Set<String>,
         confirmedCloudAudios: Set<String>,
-        sha256Cache: ConcurrentHashMap<String, String>? = null
+        sha256Cache: ConcurrentHashMap<String, String>? = null,
+        existingMediaMeta: Map<String, MediaSyncMeta>? = null,
+        existingSongMediaMeta: Map<String, MediaSyncMeta>? = null,
+        existingAudioMeta: Map<String, MediaSyncMeta>? = null
     ): SyncManifest {
         val total = journals.size
         val devId = syncPrefs.getDeviceId()
@@ -2054,35 +2089,50 @@ class SyncManager(
             updatedJournalMeta[j.id] = JournalSyncMeta(rev = newRev, contentHash = currentHash)
         }
 
-        val updatedMediaMeta = mutableMapOf<String, MediaSyncMeta>()
-        journals.flatMap { it.images }.map { File(it).name }.distinct().forEach { filename ->
-            val file = File(mediaDir, filename)
-            val isConfirmedOnCloud = confirmedCloudMedia.contains(filename.lowercase())
-            if (file.exists() && file.length() > 0L && isConfirmedOnCloud) {
-                val hash = syncHashCache.getOrCompute(file)
-                updatedMediaMeta[filename] = MediaSyncMeta(size = file.length(), hash = hash)
+        val updatedMediaMeta = if (existingMediaMeta != null) {
+            existingMediaMeta.toMutableMap()
+        } else {
+            val meta = mutableMapOf<String, MediaSyncMeta>()
+            journals.flatMap { it.images }.map { File(it).name }.distinct().forEach { filename ->
+                val file = File(mediaDir, filename)
+                val isConfirmedOnCloud = confirmedCloudMedia.contains(filename.lowercase())
+                if (file.exists() && file.length() > 0L && isConfirmedOnCloud) {
+                    val hash = syncHashCache.getOrCompute(file)
+                    meta[filename] = MediaSyncMeta(size = file.length(), hash = hash)
+                }
             }
+            meta
         }
 
-        val updatedSongMediaMeta = mutableMapOf<String, MediaSyncMeta>()
-        val libraryFiles = songMediaLibraryDir.listFiles() ?: emptyArray()
-        val artFiles = songMediaArtDir.listFiles() ?: emptyArray()
-        (libraryFiles + artFiles).forEach { file ->
-            val isConfirmedOnCloud = confirmedCloudSongMedia.contains(file.name.lowercase())
-            if (file.exists() && file.length() > 0L && isConfirmedOnCloud) {
-                val hash = syncHashCache.getOrCompute(file)
-                updatedSongMediaMeta[file.name] = MediaSyncMeta(size = file.length(), hash = hash)
+        val updatedSongMediaMeta = if (existingSongMediaMeta != null) {
+            existingSongMediaMeta.toMutableMap()
+        } else {
+            val meta = mutableMapOf<String, MediaSyncMeta>()
+            val libraryFiles = songMediaLibraryDir.listFiles() ?: emptyArray()
+            val artFiles = songMediaArtDir.listFiles() ?: emptyArray()
+            (libraryFiles + artFiles).forEach { file ->
+                val isConfirmedOnCloud = confirmedCloudSongMedia.contains(file.name.lowercase())
+                if (file.exists() && file.length() > 0L && isConfirmedOnCloud) {
+                    val hash = syncHashCache.getOrCompute(file)
+                    meta[file.name] = MediaSyncMeta(size = file.length(), hash = hash)
+                }
             }
+            meta
         }
 
-        val updatedAudioMeta = mutableMapOf<String, MediaSyncMeta>()
-        val audioFiles = audioDir.listFiles() ?: emptyArray()
-        audioFiles.forEach { file ->
-            val isConfirmedOnCloud = confirmedCloudAudios.contains(file.name.lowercase())
-            if (file.exists() && file.length() > 0L && isConfirmedOnCloud) {
-                val hash = syncHashCache.getOrCompute(file)
-                updatedAudioMeta[file.name] = MediaSyncMeta(size = file.length(), hash = hash)
+        val updatedAudioMeta = if (existingAudioMeta != null) {
+            existingAudioMeta.toMutableMap()
+        } else {
+            val meta = mutableMapOf<String, MediaSyncMeta>()
+            val audioFiles = audioDir.listFiles() ?: emptyArray()
+            audioFiles.forEach { file ->
+                val isConfirmedOnCloud = confirmedCloudAudios.contains(file.name.lowercase())
+                if (file.exists() && file.length() > 0L && isConfirmedOnCloud) {
+                    val hash = syncHashCache.getOrCompute(file)
+                    meta[file.name] = MediaSyncMeta(size = file.length(), hash = hash)
+                }
             }
+            meta
         }
 
         return SyncManifest(

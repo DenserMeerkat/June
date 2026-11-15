@@ -1,5 +1,6 @@
 package com.denser.june.core.sync
 
+import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.sync.SyncManager
 import com.denser.june.core.domain.sync.SyncManifest
 import com.denser.june.core.domain.sync.SyncStatus
@@ -18,6 +19,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 class SyncFaultToleranceTest : BaseSyncTest() {
 
@@ -227,7 +229,16 @@ class SyncFaultToleranceTest : BaseSyncTest() {
 
     @Test
     fun `album art upload failure on first sync is retried successfully on second sync`() = runTest {
-        harness.givenSongInLibrary("s1", "audio.mp3", artFilename = "art.jpg")
+        val audioFile = harness.givenSongInLibrary("s1", "audio.mp3", artFilename = "art.jpg")
+        val j1 = SyncFixtures.newJournal("j1", updatedAt = T0).copy(
+            songDetails = SongDetails(
+                title = "Title s1",
+                artistName = "Artist s1",
+                localPreviewPath = audioFile.absolutePath,
+                localThumbnailPath = File(harness.songMediaDir, "art/art.jpg").absolutePath
+            )
+        )
+        harness.repo.seed(j1)
 
         harness.cloud.failNextUploadSongMedia = true
 

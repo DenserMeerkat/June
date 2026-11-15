@@ -18,7 +18,10 @@ class FakeCloudProvider(override val name: String = "FakeCloud") : CloudProvider
     var manifest: SyncManifest? = null
 
     var failNextConnect = false
-    var failNextUpload = false
+    private val _failNextUpload = java.util.concurrent.atomic.AtomicBoolean(false)
+    var failNextUpload: Boolean
+        get() = _failNextUpload.get()
+        set(value) { _failNextUpload.set(value) }
     var failNextDownload = false
     var failNextDeleteJournal = false
     var failNextDeleteMedia = false
@@ -42,6 +45,10 @@ class FakeCloudProvider(override val name: String = "FakeCloud") : CloudProvider
     var uploadJournalCallCount = 0
     var downloadJournalCallCount = 0
     var uploadMediaCallCount = 0
+    var listMediaCallCount = 0
+    var listSongMediaCallCount = 0
+    var listAudiosCallCount = 0
+    var updateManifestCallCount = 0
 
     private val _isConnected = MutableStateFlow(true)
     override fun isConnected(): Flow<Boolean> = _isConnected
@@ -63,7 +70,7 @@ class FakeCloudProvider(override val name: String = "FakeCloud") : CloudProvider
     fun allJournalIds(): Set<String> = _journals.keys.toSet()
 
     override suspend fun uploadJournal(journal: Journal): Result<String> {
-        if (failNextUpload) { failNextUpload = false; return Result.failure(Exception("Upload failed: 500")) }
+        if (_failNextUpload.compareAndSet(true, false)) { return Result.failure(Exception("Upload failed: 500")) }
         uploadJournalCallCount++
         val now = System.currentTimeMillis()
         _journals[journal.id] = journal to now
@@ -141,6 +148,7 @@ class FakeCloudProvider(override val name: String = "FakeCloud") : CloudProvider
     }
 
     override suspend fun listMedia(): Result<List<String>> {
+        listMediaCallCount++
         return Result.success(_media.keys.map { it.substringAfterLast("/") })
     }
 
@@ -150,6 +158,7 @@ class FakeCloudProvider(override val name: String = "FakeCloud") : CloudProvider
     }
 
     override suspend fun updateManifest(manifest: SyncManifest): Result<Unit> {
+        updateManifestCallCount++
         if (simulateAuthRevocation) {
             _isConnected.value = false
             return Result.failure(Exception("401 Unauthorized: Authentication revoked"))
@@ -195,6 +204,7 @@ class FakeCloudProvider(override val name: String = "FakeCloud") : CloudProvider
     }
 
     override suspend fun listSongMedia(): Result<List<String>> {
+        listSongMediaCallCount++
         return Result.success(_songMedia.keys.toList())
     }
 
@@ -230,6 +240,7 @@ class FakeCloudProvider(override val name: String = "FakeCloud") : CloudProvider
     }
 
     override suspend fun listAudios(): Result<List<String>> {
+        listAudiosCallCount++
         return Result.success(_audios.keys.toList())
     }
 }

@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import com.denser.june.core.domain.sync.SyncGate
 import java.io.File
 import java.io.FileOutputStream
 import java.util.zip.ZipInputStream
@@ -25,7 +26,8 @@ class RestoreImpl(
     private val journalRepo: JournalRepository,
     private val songLibraryDao: SongLibraryDao,
     private val settingsBackupRepo: SettingsBackupRepo,
-    private val context: Context
+    private val context: Context,
+    private val syncGate: SyncGate = SyncGate()
 ) : RestoreRepo {
 
     companion object {
@@ -38,7 +40,8 @@ class RestoreImpl(
         onProgress: ((BackupOperationStatus.InProgress) -> Unit)?
     ): Result<BackupSummary> =
         withContext(Dispatchers.IO) {
-            return@withContext try {
+            syncGate.holdWhile {
+                try {
                 val mediaDir = File(context.filesDir, MEDIA_FOLDER).apply { if (!exists()) mkdirs() }
                 val audioDir = File(context.filesDir, "audios").apply { if (!exists()) mkdirs() }
                 val songLibraryDir = File(context.filesDir, "songs/library").apply { if (!exists()) mkdirs() }
@@ -182,7 +185,7 @@ class RestoreImpl(
 
                 if (journalsList.isEmpty() && !settingsRestored) {
                     AppLogger.e(AppLogger.Category.BACKUP, TAG, "No journals or settings found in backup file to restore")
-                    return@withContext Result.failure(RestoreException.InvalidFile)
+                    return@holdWhile Result.failure(RestoreException.InvalidFile)
                 }
 
                 val totalJournals = journalsList.size
@@ -261,6 +264,7 @@ class RestoreImpl(
                 Result.failure(RestoreException.InvalidFile)
             }
         }
+    }
 
     private fun remapMediaPaths(
         journal: Journal,

@@ -7,6 +7,7 @@ import com.denser.june.core.domain.logging.AppLogger
 import com.denser.june.core.domain.markdown.MarkdownEngine
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.domain.repository.JournalRepository
+import com.denser.june.core.domain.sync.SyncGate
 import com.denser.june.core.utils.FileUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,7 +17,8 @@ import java.util.zip.ZipInputStream
 
 class MarkdownImportImpl(
     private val journalRepo: JournalRepository,
-    private val context: Context
+    private val context: Context,
+    private val syncGate: SyncGate = SyncGate()
 ) : MarkdownImportRepo {
 
     companion object {
@@ -25,120 +27,124 @@ class MarkdownImportImpl(
     }
 
     override suspend fun importMarkdownFiles(uris: List<Uri>): Result<Int> = withContext(Dispatchers.IO) {
-        return@withContext try {
-            AppLogger.d(AppLogger.Category.BACKUP, TAG, "Starting markdown file import for ${uris.size} URIs")
-            var importedCount = 0
+        syncGate.holdWhile {
+            try {
+                AppLogger.d(AppLogger.Category.BACKUP, TAG, "Starting markdown file import for ${uris.size} URIs")
+                var importedCount = 0
 
-            for (uri in uris) {
-                try {
-                    val displayName = FileUtils.getDisplayName(context, uri)
-                    val contentString = context.contentResolver.openInputStream(uri)?.use { stream ->
-                        stream.bufferedReader(Charsets.UTF_8).readText()
-                    } ?: continue
+                for (uri in uris) {
+                    try {
+                        val displayName = FileUtils.getDisplayName(context, uri)
+                        val contentString = context.contentResolver.openInputStream(uri)?.use { stream ->
+                            stream.bufferedReader(Charsets.UTF_8).readText()
+                        } ?: continue
 
-                    val journal = MarkdownEngine.fromMarkdown(contentString, displayName)
+                        val journal = MarkdownEngine.fromMarkdown(contentString, displayName)
 
-                    val existing = journalRepo.getJournalById(journal.id)
+                        val existing = journalRepo.getJournalById(journal.id)
+                        val journalToSave = if (existing != null) {
+                            journal.copy(
+                                cloudId = existing.cloudId,
+                                syncedAt = existing.syncedAt,
+                                createdAt = existing.createdAt
+                            )
+                        } else {
+                            journal
+                        }
+
+                        journalRepo.insertJournal(journalToSave)
+                        importedCount++
+                        AppLogger.d(AppLogger.Category.BACKUP, TAG, "Successfully imported markdown journal: ${journalToSave.title} (ID: ${journalToSave.id})")
+                    } catch (e: Exception) {
+                        AppLogger.e(AppLogger.Category.BACKUP, TAG, "Failed to import markdown file from URI: $uri", e)
+                    }
+                }
+
+                if (importedCount > 0) {
+                    Result.success(importedCount)
+                } else {
+                    Result.failure(Exception("No valid Markdown files could be imported"))
+                }
+            } catch (e: Exception) {
+                AppLogger.e(AppLogger.Category.BACKUP, TAG, "Import failed with error", e)
+                Result.failure(e)
+            }
+        }
+    }
+
+    override suspend fun importMarkdownZip(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
+        syncGate.holdWhile {
+            try {
+                AppLogger.d(AppLogger.Category.BACKUP, TAG, "Starting markdown zip import from $uri")
+                val mediaDir = File(context.filesDir, MEDIA_FOLDER).apply { if (!exists()) mkdirs() }
+                val parsedJournals = mutableListOf<Journal>()
+                val extractedMediaMap = mutableMapOf<String, String>()
+
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    ZipInputStream(inputStream).use { zis ->
+                        var entry = zis.nextEntry
+                        while (entry != null) {
+                            val entryName = entry.name
+                            if (!entry.isDirectory) {
+                                if (entryName.startsWith("media/") || entryName.startsWith("journal_media/")) {
+                                    val originalFileName = File(entryName).name
+                                    val safeFileName = if (originalFileName.startsWith("media_")) {
+                                        originalFileName
+                                    } else {
+                                        "media_${System.currentTimeMillis()}_${(0..9999).random()}_$originalFileName"
+                                    }
+                                    val targetFile = File(mediaDir, safeFileName)
+                                    FileOutputStream(targetFile).use { fos ->
+                                        zis.copyTo(fos)
+                                    }
+                                    val absPath = targetFile.absolutePath
+                                    extractedMediaMap[entryName] = absPath
+                                    extractedMediaMap[entryName.removePrefix("media/").removePrefix("journal_media/").trimStart('/')] = absPath
+                                    extractedMediaMap["../$entryName"] = absPath
+                                    extractedMediaMap[originalFileName] = absPath
+                                } else if (entryName.endsWith(".md", ignoreCase = true) || entryName.endsWith(".markdown", ignoreCase = true)) {
+                                    val mdText = String(zis.readBytes(), Charsets.UTF_8)
+                                    val fileName = File(entryName).name
+                                    val journal = MarkdownEngine.fromMarkdown(mdText, fileName)
+                                    parsedJournals.add(journal)
+                                }
+                            }
+                            zis.closeEntry()
+                            entry = zis.nextEntry
+                        }
+                    }
+                }
+
+                if (parsedJournals.isEmpty()) {
+                    AppLogger.e(AppLogger.Category.BACKUP, TAG, "No markdown files found in ZIP archive")
+                    return@holdWhile Result.failure(Exception("No markdown files found in ZIP archive"))
+                }
+
+                AppLogger.d(AppLogger.Category.BACKUP, TAG, "Found ${parsedJournals.size} markdown journals in ZIP. Inserting into DB...")
+
+                var importedCount = 0
+                for (journal in parsedJournals) {
+                    val updatedJournal = remapMediaPaths(journal, extractedMediaMap, mediaDir)
+                    val existing = journalRepo.getJournalById(updatedJournal.id)
                     val journalToSave = if (existing != null) {
-                        journal.copy(
+                        updatedJournal.copy(
                             cloudId = existing.cloudId,
                             syncedAt = existing.syncedAt,
                             createdAt = existing.createdAt
                         )
                     } else {
-                        journal
+                        updatedJournal
                     }
-
                     journalRepo.insertJournal(journalToSave)
                     importedCount++
-                    AppLogger.d(AppLogger.Category.BACKUP, TAG, "Successfully imported markdown journal: ${journalToSave.title} (ID: ${journalToSave.id})")
-                } catch (e: Exception) {
-                    AppLogger.e(AppLogger.Category.BACKUP, TAG, "Failed to import markdown file from URI: $uri", e)
                 }
-            }
 
-            if (importedCount > 0) {
+                AppLogger.d(AppLogger.Category.BACKUP, TAG, "Markdown ZIP import completed. Imported: $importedCount")
                 Result.success(importedCount)
-            } else {
-                Result.failure(Exception("No valid Markdown files could be imported"))
+            } catch (e: Exception) {
+                AppLogger.e(AppLogger.Category.BACKUP, TAG, "Failed to import markdown ZIP", e)
+                Result.failure(e)
             }
-        } catch (e: Exception) {
-            AppLogger.e(AppLogger.Category.BACKUP, TAG, "Import failed with error", e)
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun importMarkdownZip(uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
-        return@withContext try {
-            AppLogger.d(AppLogger.Category.BACKUP, TAG, "Starting markdown zip import from $uri")
-            val mediaDir = File(context.filesDir, MEDIA_FOLDER).apply { if (!exists()) mkdirs() }
-            val parsedJournals = mutableListOf<Journal>()
-            val extractedMediaMap = mutableMapOf<String, String>()
-
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                ZipInputStream(inputStream).use { zis ->
-                    var entry = zis.nextEntry
-                    while (entry != null) {
-                        val entryName = entry.name
-                        if (!entry.isDirectory) {
-                            if (entryName.startsWith("media/") || entryName.startsWith("journal_media/")) {
-                                val originalFileName = File(entryName).name
-                                val safeFileName = if (originalFileName.startsWith("media_")) {
-                                    originalFileName
-                                } else {
-                                    "media_${System.currentTimeMillis()}_${(0..9999).random()}_$originalFileName"
-                                }
-                                val targetFile = File(mediaDir, safeFileName)
-                                FileOutputStream(targetFile).use { fos ->
-                                    zis.copyTo(fos)
-                                }
-                                val absPath = targetFile.absolutePath
-                                extractedMediaMap[entryName] = absPath
-                                extractedMediaMap[entryName.removePrefix("media/").removePrefix("journal_media/").trimStart('/')] = absPath
-                                extractedMediaMap["../$entryName"] = absPath
-                                extractedMediaMap[originalFileName] = absPath
-                            } else if (entryName.endsWith(".md", ignoreCase = true) || entryName.endsWith(".markdown", ignoreCase = true)) {
-                                val mdText = String(zis.readBytes(), Charsets.UTF_8)
-                                val fileName = File(entryName).name
-                                val journal = MarkdownEngine.fromMarkdown(mdText, fileName)
-                                parsedJournals.add(journal)
-                            }
-                        }
-                        zis.closeEntry()
-                        entry = zis.nextEntry
-                    }
-                }
-            }
-
-            if (parsedJournals.isEmpty()) {
-                AppLogger.e(AppLogger.Category.BACKUP, TAG, "No markdown files found in ZIP archive")
-                return@withContext Result.failure(Exception("No markdown files found in ZIP archive"))
-            }
-
-            AppLogger.d(AppLogger.Category.BACKUP, TAG, "Found ${parsedJournals.size} markdown journals in ZIP. Inserting into DB...")
-
-            var importedCount = 0
-            for (journal in parsedJournals) {
-                val updatedJournal = remapMediaPaths(journal, extractedMediaMap, mediaDir)
-                val existing = journalRepo.getJournalById(updatedJournal.id)
-                val journalToSave = if (existing != null) {
-                    updatedJournal.copy(
-                        cloudId = existing.cloudId,
-                        syncedAt = existing.syncedAt,
-                        createdAt = existing.createdAt
-                    )
-                } else {
-                    updatedJournal
-                }
-                journalRepo.insertJournal(journalToSave)
-                importedCount++
-            }
-
-            AppLogger.d(AppLogger.Category.BACKUP, TAG, "Markdown ZIP import completed. Imported: $importedCount")
-            Result.success(importedCount)
-        } catch (e: Exception) {
-            AppLogger.e(AppLogger.Category.BACKUP, TAG, "Failed to import markdown ZIP", e)
-            Result.failure(e)
         }
     }
 

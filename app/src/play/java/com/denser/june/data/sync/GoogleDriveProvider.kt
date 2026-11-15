@@ -64,6 +64,7 @@ class GoogleDriveProvider(
     private val journalFolderCache = java.util.concurrent.ConcurrentHashMap<String, String>()
     private val folderValidityCache = java.util.concurrent.ConcurrentHashMap<String, Long>()
     private val folderFilesCache = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.ConcurrentHashMap<String, String>>()
+    private val indexedFolders = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     private val _folderUrl = MutableStateFlow<String?>(null)
     override val folderUrl: Flow<String?> = _folderUrl.asStateFlow()
 
@@ -144,6 +145,7 @@ class GoogleDriveProvider(
             journalFolderCache.clear()
             folderValidityCache.clear()
             folderFilesCache.clear()
+            indexedFolders.clear()
             _folderUrl.value = null
             _isConnected.value = false
         } catch (e: Exception) {
@@ -180,6 +182,7 @@ class GoogleDriveProvider(
             journalFolderCache.clear()
             folderValidityCache.clear()
             folderFilesCache.clear()
+            indexedFolders.clear()
             _folderUrl.value = null
             syncPrefs.setGoogleDriveSyncFolderId(null)
             syncPrefs.setGoogleDriveJournalsFolderId(null)
@@ -377,6 +380,9 @@ class GoogleDriveProvider(
         if (cachedMap != null && cachedMap.containsKey(name)) {
             return@withContext cachedMap[name]
         }
+        if (parentFolderId in indexedFolders) {
+            return@withContext null
+        }
         val service = getDriveService() ?: return@withContext null
         try {
             val result = service.files().list()
@@ -416,9 +422,9 @@ class GoogleDriveProvider(
             }
             val mediaContent = ByteArrayContent(mimeType, content)
             val executedFile = if (fileId != null) {
-                service.files().update(fileId, metadata, mediaContent).execute()
+                service.files().update(fileId, metadata, mediaContent).setFields("id").execute()
             } else {
-                service.files().create(metadata, mediaContent).execute()
+                service.files().create(metadata, mediaContent).setFields("id").execute()
             }
             executedFile.id?.let { id ->
                 folderFilesCache.getOrPut(parentFolderId) { java.util.concurrent.ConcurrentHashMap() }[name] = id
@@ -441,9 +447,9 @@ class GoogleDriveProvider(
             }
             val mediaContent = com.google.api.client.http.FileContent(mimeType, file)
             val executedFile = if (fileId != null) {
-                service.files().update(fileId, metadata, mediaContent).execute()
+                service.files().update(fileId, metadata, mediaContent).setFields("id").execute()
             } else {
-                service.files().create(metadata, mediaContent).execute()
+                service.files().create(metadata, mediaContent).setFields("id").execute()
             }
             executedFile.id?.let { id ->
                 folderFilesCache.getOrPut(parentFolderId) { java.util.concurrent.ConcurrentHashMap() }[name] = id
@@ -600,6 +606,7 @@ class GoogleDriveProvider(
                 }
                 pageToken = result.nextPageToken
             } while (pageToken != null)
+            indexedFolders.add(folderId)
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)
@@ -628,6 +635,7 @@ class GoogleDriveProvider(
                 }
                 pageToken = result.nextPageToken
             } while (pageToken != null)
+            indexedFolders.add(mediaRootId)
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)
@@ -694,6 +702,7 @@ class GoogleDriveProvider(
                 }
                 pageToken = result.nextPageToken
             } while (pageToken != null)
+            indexedFolders.add(folderId)
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)
@@ -747,6 +756,7 @@ class GoogleDriveProvider(
                 }
                 pageToken = result.nextPageToken
             } while (pageToken != null)
+            indexedFolders.add(folderId)
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)

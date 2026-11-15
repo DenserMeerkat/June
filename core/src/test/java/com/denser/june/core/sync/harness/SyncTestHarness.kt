@@ -41,6 +41,8 @@ class SyncTestHarness {
     lateinit var songMediaDir: File
     lateinit var audioDir: File
     lateinit var syncDir: File
+    val syncGate = com.denser.june.core.domain.sync.SyncGate()
+    lateinit var syncScheduler: FakeSyncScheduler
     lateinit var syncManager: SyncManager
 
     fun setUp() {
@@ -53,19 +55,21 @@ class SyncTestHarness {
         songMediaDir = createTempDirectory("june_test_song_media").toFile()
         audioDir = createTempDirectory("june_test_audios").toFile()
         syncDir = createTempDirectory("june_test_sync").toFile()
+        syncScheduler = FakeSyncScheduler()
 
         syncManager = SyncManager(
             journalRepo = repo,
             syncPrefs = prefs,
             providers = mapOf("FakeCloud" to cloud),
             mediaDir = mediaDir,
-            syncScheduler = FakeSyncScheduler(),
+            syncScheduler = syncScheduler,
             applicationScope = CoroutineScope(testDispatcher),
             songLibraryDao = songDao,
             songMediaDir = songMediaDir,
             audioDir = audioDir,
             syncHashCache = com.denser.june.core.domain.sync.SyncHashCache(syncDir),
-            syncDir = syncDir
+            syncDir = syncDir,
+            syncGate = syncGate
         )
     }
 

@@ -131,4 +131,68 @@ class SyncPerformanceOptimizationsTest {
         // Verify cached hash is still valid and memoized
         assertEquals(cachedHash, harness.syncManager.syncHashCache.get(localMedia))
     }
+
+    @Test
+    fun `concurrent journal upload completes all items`() = runTest {
+        val count = 50
+        for (i in 1..count) {
+            harness.givenLocalOnlyJournal("journal-$i", updatedAt = T1 + i)
+        }
+        val result = harness.sync()
+        assertTrue("Sync must succeed for concurrent journal uploads", result.isSuccess)
+        assertEquals("All 50 journals must be uploaded to cloud", count, harness.cloud.uploadJournalCallCount)
+        for (i in 1..count) {
+            assertNotNull("Journal $i must exist on cloud", harness.cloud.getJournal("journal-$i"))
+            assertNotNull("Journal $i must have syncedAt set locally", harness.repo.db["journal-$i"]?.syncedAt)
+        }
+    }
+
+    @Test
+    fun `concurrent downloads preserve localJournalsModified flag and update local database`() = runTest {
+        val count = 5
+        for (i in 1..count) {
+            val remoteJ = SyncFixtures.newJournal("remote-$i", title = "Remote Journal $i", updatedAt = T1 + i)
+            harness.cloud.putJournal(remoteJ, modifiedAt = T1 + i)
+        }
+        val result = harness.sync()
+        assertTrue("Sync must succeed for concurrent journal downloads", result.isSuccess)
+        assertEquals("All 5 journals must be downloaded", count, harness.cloud.downloadJournalCallCount)
+        for (i in 1..count) {
+            assertNotNull("Journal remote-$i must exist locally", harness.repo.db["remote-$i"])
+        }
+    }
+
+    @Test
+    fun `listMedia, listSongMedia, and listAudios are called at most once during full sync cycle`() = runTest {
+        val localMedia = harness.givenMediaFileOnDisk("photo1.jpg", byteArrayOf(1, 2, 3))
+        val journal = SyncFixtures.syncedJournal("j1", updatedAt = T1, images = listOf(localMedia.absolutePath))
+        harness.repo.seed(journal)
+        harness.cloud.putJournal(journal, modifiedAt = T1)
+        harness.cloud.putMedia("j1", "photo1.jpg", byteArrayOf(1, 2, 3))
+        harness.cloud.manifest = SyncFixtures.manifest(
+            totalJournals = 1,
+            mediaMetadata = mapOf("photo1.jpg" to MediaSyncMeta(size = 3L, hash = FileUtils.computeSHA256(localMedia)))
+        )
+
+        val result = harness.sync()
+        assertTrue("Sync must succeed", result.isSuccess)
+        assertTrue("listMedia should be called at most once per sync", harness.cloud.listMediaCallCount <= 1)
+        assertTrue("listSongMedia should be called at most once per sync", harness.cloud.listSongMediaCallCount <= 1)
+        assertTrue("listAudios should be called at most once per sync", harness.cloud.listAudiosCallCount <= 1)
+    }
+
+    @Test
+    fun `checkpoint manifest written after 1000 journals`() = runTest {
+        val count = 1050
+        for (i in 1..count) {
+            harness.givenLocalOnlyJournal("ckpt-$i", updatedAt = T1 + i)
+        }
+        val result = harness.sync()
+        assertTrue("Sync must succeed for 1050 journals", result.isSuccess)
+        assertEquals("All 1050 journals uploaded", count, harness.cloud.uploadJournalCallCount)
+        assertTrue(
+            "Manifest should be written at least twice (1 checkpoint at 1000 + 1 final at end)",
+            harness.cloud.updateManifestCallCount >= 2
+        )
+    }
 }

@@ -59,14 +59,14 @@ class SyncSongMediaTest : BaseSyncTest() {
     }
 
     @Test
-    fun `library song without journal reference is uploaded to cloud`() = runTest {
+    fun `library song without journal reference is not uploaded to cloud`() = runTest {
         harness.givenSongInLibrary("orphan_song", "library_only.mp3", bytes = byteArrayOf(1, 2, 3))
         harness.givenSyncedJournal("j1", updatedAt = T1)
 
         val result = harness.sync()
 
         assertTrue(result.isSuccess)
-        assertTrue("Library song uploaded even without journal reference", harness.cloud.allSongMediaKeys().contains("library_only.mp3"))
+        assertFalse("Library song without journal reference must not be uploaded", harness.cloud.allSongMediaKeys().contains("library_only.mp3"))
     }
 
     @Test
@@ -93,8 +93,16 @@ class SyncSongMediaTest : BaseSyncTest() {
 
     @Test
     fun `song art file is uploaded alongside audio`() = runTest {
-        harness.givenSongInLibrary("song_with_art", "track.mp3", artFilename = "art.jpg", bytes = byteArrayOf(1, 2, 3))
-        harness.givenSyncedJournal("j1", updatedAt = T1)
+        val songFile = harness.givenSongInLibrary("song_with_art", "track.mp3", artFilename = "art.jpg", bytes = byteArrayOf(1, 2, 3))
+        val j1 = SyncFixtures.newJournal("j1", updatedAt = T1).copy(
+            songDetails = SongDetails(
+                title = "song_with_art",
+                artistName = "Artist",
+                localPreviewPath = songFile.absolutePath,
+                localThumbnailPath = File(harness.songMediaDir, "art/art.jpg").absolutePath
+            )
+        )
+        harness.repo.seed(j1)
 
         val result = harness.sync()
 
@@ -121,14 +129,14 @@ class SyncSongMediaTest : BaseSyncTest() {
     }
 
     @Test
-    fun `adding song after sync updates status to Dirty`() = runTest(harness.testDispatcher) {
+    fun `adding song after sync does not update status to Dirty unless attached to journal`() = runTest(harness.testDispatcher) {
         // Initial state: synced
         val result = harness.sync()
         assertTrue(result.isSuccess)
         testScheduler.advanceUntilIdle()
         assertEquals(SyncStatus.Success, harness.syncManager.status.value)
 
-        // User imports a new song into the library after last sync
+        // User imports a new song into the library after last sync (unattached)
         harness.givenSongInLibrary(
             id = "new_song",
             filename = "new_track.mp3",
@@ -137,9 +145,70 @@ class SyncSongMediaTest : BaseSyncTest() {
         )
         testScheduler.advanceUntilIdle()
 
-        // Verify status becomes Dirty
-        val status = harness.syncManager.status.value
-        assertEquals("Status must become Dirty after new song added to library", SyncStatus.Dirty, status)
+        // Verify status remains Success (not Dirty) because unattached song is not synced
+        assertEquals("Status remains Success when unattached song is added to library", SyncStatus.Success, harness.syncManager.status.value)
+
+        // Attaching song to a journal updates status to Dirty
+        val j = SyncFixtures.newJournal("j2", updatedAt = System.currentTimeMillis() + 20_000L).copy(
+            songDetails = SongDetails(
+                title = "new_song",
+                artistName = "Artist",
+                localPreviewPath = File(harness.songMediaDir, "library/new_track.mp3").absolutePath
+            )
+        )
+        harness.repo.seed(j)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("Status must become Dirty after song is attached to a journal", SyncStatus.Dirty, harness.syncManager.status.value)
+    }
+
+    @Test
+    fun `performAnalysis does not report unreferenced cloud songs as pending downloads`() = runTest {
+        // Cloud has an unreferenced song file (e.g., uploaded previously or previewed on another device)
+        harness.cloud.putSongMedia("orphan_remote.mp3", byteArrayOf(1, 2, 3, 4))
+        harness.cloud.manifest = com.denser.june.core.domain.sync.SyncManifest(
+            lastSyncTime = 1000L,
+            lastSyncDeviceId = "device1",
+            databaseVersion = 1,
+            schemaVersion = 5,
+            totalJournals = 0,
+            totalMedia = 0,
+            totalSongMedia = 1,
+            totalAudio = 0,
+            songMediaMetadata = mapOf("orphan_remote.mp3" to com.denser.june.core.domain.sync.MediaSyncMeta(size = 4L, hash = "abc"))
+        )
+
+        val analysis = harness.syncManager.performAnalysis().getOrThrow()
+
+        assertEquals("Pending song downloads must be 0 for unreferenced cloud songs", 0, analysis.pendingSongDownloadsCount)
+        assertTrue("Pending song download list must be empty", analysis.pendingSongDownloadsList.isEmpty())
+
+        val result = harness.sync()
+        assertTrue(result.isSuccess)
+        assertFalse("Unreferenced cloud song must not be downloaded", File(harness.songMediaDir, "library/orphan_remote.mp3").exists())
+    }
+
+    @Test
+    fun `performAnalysis reports cloud song as pending download when referenced by incoming journal`() = runTest {
+        harness.cloud.putSongMedia("attached_remote.mp3", byteArrayOf(10, 20, 30))
+        harness.givenCloudOnlyJournal(
+            "j_remote",
+            songDetails = SongDetails(
+                title = "Remote Track",
+                artistName = "Remote Artist",
+                localPreviewPath = "attached_remote.mp3"
+            ),
+            modifiedAt = T1
+        )
+
+        val analysis = harness.syncManager.performAnalysis().getOrThrow()
+
+        assertEquals("Pending song downloads must be 1 when referenced by incoming journal", 1, analysis.pendingSongDownloadsCount)
+        assertEquals("Remote Track — Remote Artist", analysis.pendingSongDownloadsList.first())
+
+        val result = harness.sync()
+        assertTrue(result.isSuccess)
+        assertTrue("Referenced song must be downloaded", File(harness.songMediaDir, "library/attached_remote.mp3").exists())
     }
 
     @Test

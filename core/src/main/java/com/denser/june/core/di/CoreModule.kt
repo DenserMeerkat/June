@@ -32,6 +32,7 @@ import com.denser.june.core.domain.reminder.ReminderScheduler
 import com.denser.june.core.data.reminder.ReminderSchedulerImpl
 import com.denser.june.core.domain.backup.ExportRepo
 import com.denser.june.core.domain.backup.RestoreRepo
+import com.denser.june.core.domain.sync.SyncGate
 import com.denser.june.core.domain.preferences.AutoBackupPreferences
 import com.denser.june.core.domain.preferences.EmojiPreferences
 import com.denser.june.core.domain.preferences.FontPreferences
@@ -65,6 +66,7 @@ val coreModule = module {
     single { get<JournalDatabase>().journalDao() }
     single { get<JournalDatabase>().songLibraryDao() }
 
+    singleOf(::SyncGate)
     singleOf(::ExportImpl).bind<ExportRepo>()
     singleOf(::RestoreImpl).bind<RestoreRepo>()
     singleOf(::SettingsBackupRepoImpl).bind<SettingsBackupRepo>()
@@ -87,7 +89,11 @@ val coreModule = module {
     singleOf(::AutoBackupManager)
 
     single {
+        val dispatcher = okhttp3.Dispatcher().apply {
+            maxRequestsPerHost = 10
+        }
         OkHttpClient.Builder()
+            .dispatcher(dispatcher)
             .addInterceptor(InternetInterceptor(get()))
             .build()
     }
@@ -127,7 +133,8 @@ val coreModule = module {
             songLibraryDao = get(),
             songMediaDir = File(context.filesDir, "songs"),
             audioDir = File(context.filesDir, "audios"),
-            syncHashCache = get()
+            syncHashCache = get(),
+            syncGate = get()
         )
     }
 }

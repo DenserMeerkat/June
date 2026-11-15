@@ -7,12 +7,14 @@ import com.denser.june.core.domain.importers.ImportSource
 import com.denser.june.core.domain.importers.ImportSummary
 import com.denser.june.core.domain.logging.AppLogger
 import com.denser.june.core.domain.repository.JournalRepository
+import com.denser.june.core.domain.sync.SyncGate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class AppImportImpl(
     private val journalRepo: JournalRepository,
-    private val context: Context
+    private val context: Context,
+    private val syncGate: SyncGate = SyncGate()
 ) : AppImportRepo {
 
     companion object {
@@ -28,18 +30,20 @@ class AppImportImpl(
         uri: Uri,
         onProgress: ((progress: Float, message: String) -> Unit)?
     ): Result<ImportSummary> = withContext(Dispatchers.IO) {
-        val targetApp = FormatSniffer.sniff(context, uri)
-            ?: return@withContext Result.failure(
-                IllegalArgumentException("Could not detect the journal app format for this file.")
-            )
+        syncGate.holdWhile {
+            val targetApp = FormatSniffer.sniff(context, uri)
+                ?: return@holdWhile Result.failure(
+                    IllegalArgumentException("Could not detect the journal app format for this file.")
+                )
 
-        AppLogger.d(AppLogger.Category.BACKUP, TAG, "Resolved import source: $targetApp for URI: $uri")
+            AppLogger.d(AppLogger.Category.BACKUP, TAG, "Resolved import source: $targetApp for URI: $uri")
 
-        return@withContext when (targetApp) {
-            ImportSource.DailyYou -> dailyYouImporter.import(uri, onProgress)
-            ImportSource.Diarium -> diariumImporter.import(uri, onProgress)
-            ImportSource.DayOne -> dayOneImporter.import(uri, onProgress)
-            ImportSource.StoryPad -> storyPadImporter.import(uri, onProgress)
+            when (targetApp) {
+                ImportSource.DailyYou -> dailyYouImporter.import(uri, onProgress)
+                ImportSource.Diarium -> diariumImporter.import(uri, onProgress)
+                ImportSource.DayOne -> dayOneImporter.import(uri, onProgress)
+                ImportSource.StoryPad -> storyPadImporter.import(uri, onProgress)
+            }
         }
     }
 }

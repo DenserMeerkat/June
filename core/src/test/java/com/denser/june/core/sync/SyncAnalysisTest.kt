@@ -60,7 +60,7 @@ class SyncAnalysisTest : BaseSyncTest() {
     }
 
     @Test
-    fun `analysis pendingSongDownloads includes unreferenced songs from cloud song pool`() = runTest {
+    fun `analysis pendingSongDownloads excludes unreferenced songs from cloud song pool`() = runTest {
         // Cloud has 2 songs in the cloud song library pool not attached to any active local journal
         harness.cloud.putSongMedia("library_song1.mp3", byteArrayOf(1, 2, 3))
         harness.cloud.putSongMedia("library_song2.mp3", byteArrayOf(4, 5, 6))
@@ -70,8 +70,8 @@ class SyncAnalysisTest : BaseSyncTest() {
 
         val analysis = harness.performAnalysis().getOrThrow()
 
-        assertEquals("Cloud songs in song pool must be counted in pendingSongDownloads", 2, analysis.pendingSongDownloadsCount)
-        assertEquals(2, analysis.pendingSongDownloadsList.size)
+        assertEquals("Cloud songs not attached to any journal must not be counted in pendingSongDownloads", 0, analysis.pendingSongDownloadsCount)
+        assertTrue("Pending song download list must be empty", analysis.pendingSongDownloadsList.isEmpty())
     }
 
     @Test
@@ -198,7 +198,16 @@ class SyncAnalysisTest : BaseSyncTest() {
     fun `analysis pendingSongUploads counts song with only un-synced album art as 1 and lists as Album Art`() = runTest {
         // Song audio already on cloud
         harness.givenCloudSongMedia("synced_audio.mp3", byteArrayOf(1, 2, 3))
-        harness.givenSongInLibrary("s1", "synced_audio.mp3", artFilename = "cover.jpg", bytes = byteArrayOf(1, 2, 3))
+        val audioFile = harness.givenSongInLibrary("s1", "synced_audio.mp3", artFilename = "cover.jpg", bytes = byteArrayOf(1, 2, 3))
+        val j = SyncFixtures.newJournal("j1", updatedAt = T1).copy(
+            songDetails = com.denser.june.core.domain.model.SongDetails(
+                title = "Title s1",
+                artistName = "Artist s1",
+                localPreviewPath = audioFile.absolutePath,
+                localThumbnailPath = java.io.File(harness.songMediaDir, "art/cover.jpg").absolutePath
+            )
+        )
+        harness.repo.seed(j)
 
         val analysis = harness.performAnalysis().getOrThrow()
 
@@ -209,7 +218,16 @@ class SyncAnalysisTest : BaseSyncTest() {
 
     @Test
     fun `analysis pendingSongUploads counts song with both audio and art as 1 song and lists both separately`() = runTest {
-        harness.givenSongInLibrary("s2", "new_audio.mp3", artFilename = "new_art.jpg")
+        val audioFile = harness.givenSongInLibrary("s2", "new_audio.mp3", artFilename = "new_art.jpg")
+        val j = SyncFixtures.newJournal("j2", updatedAt = T1).copy(
+            songDetails = com.denser.june.core.domain.model.SongDetails(
+                title = "Title s2",
+                artistName = "Artist s2",
+                localPreviewPath = audioFile.absolutePath,
+                localThumbnailPath = java.io.File(harness.songMediaDir, "art/new_art.jpg").absolutePath
+            )
+        )
+        harness.repo.seed(j)
 
         val analysis = harness.performAnalysis().getOrThrow()
 
