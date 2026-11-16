@@ -23,7 +23,9 @@ import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.model.SongSourceType
 import com.denser.june.core.media.storage.SongMediaStorage
 import com.denser.june.core.utils.toSongTimestamp
+import com.denser.june.presentation.components.JuneActionSheet
 import com.denser.june.presentation.components.JuneDropdownMenu
+import com.denser.june.presentation.components.JuneActionSheet
 import com.denser.june.presentation.components.JuneDropdownMenuItem
 import com.denser.june.presentation.components.RestrictedAsyncImage
 
@@ -41,25 +43,14 @@ fun LibrarySongRow(
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Remove Song?") },
-            text = { Text("Are you sure you want to remove \"${song.title}\" from your library?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDeleteConfirm = false
-                        onRemove()
-                    }
-                ) {
-                    Text(stringResource(R.string.action_remove))
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showDeleteConfirm = false }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            }
+        JuneActionSheet(
+            onDismiss = { showDeleteConfirm = false },
+            onConfirm = onRemove,
+            title = "Remove Song?",
+            description = "Are you sure you want to remove \"${song.title}\" from your library?",
+            confirmButtonText = stringResource(R.string.action_remove),
+            icon = R.drawable.delete_24px,
+            isDestructive = true
         )
     }
 

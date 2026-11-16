@@ -40,14 +40,12 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.sync.SyncStatus
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
-import com.denser.june.presentation.components.JuneConfirmationDialog
+import com.denser.june.presentation.components.JuneActionSheet
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -399,7 +397,8 @@ fun SyncScreen() {
                     rotationAngle = rotationAngle,
                     onToggleAdvanced = { syncVM.toggleAdvancedOptions() },
                     onAnalyze = { syncVM.analyzeSync() },
-                    onRepair = { syncVM.requestRepairSync() },
+                    onRebuildManifest = { syncVM.requestRebuildManifest() },
+                    onRepairSync = { syncVM.requestRepairSync() },
                     onViewDetails = { category ->
                         selectedCategoryForDetails = category
                         syncVM.setShowAnalysisDetails(true)
@@ -421,7 +420,7 @@ fun SyncScreen() {
 
         if (state.showProviderSwitchDialog) {
             val targetName = if (state.pendingProvider == "GoogleDrive") "Google Drive" else state.pendingProvider ?: "Cloud Target"
-            JuneConfirmationDialog(
+            JuneActionSheet(
                 onDismiss = { syncVM.dismissProviderSwitchDialog() },
                 onConfirm = { syncVM.confirmProviderSwitch() },
                 title = stringResource(R.string.switch_provider_title),
@@ -432,14 +431,26 @@ fun SyncScreen() {
             )
         }
 
+        if (state.showRebuildManifestConfirmationDialog) {
+            JuneActionSheet(
+                onDismiss = { syncVM.dismissRebuildManifestConfirmationDialog() },
+                onConfirm = { syncVM.confirmRebuildManifest(context) },
+                title = stringResource(R.string.rebuild_manifest),
+                description = stringResource(R.string.rebuild_manifest_desc),
+                confirmButtonText = stringResource(R.string.action_rebuild),
+                isDestructive = true,
+                icon = R.drawable.article_24px
+            )
+        }
+
         if (state.showRepairConfirmationDialog) {
-            JuneConfirmationDialog(
+            JuneActionSheet(
                 onDismiss = { syncVM.dismissRepairConfirmationDialog() },
                 onConfirm = { syncVM.confirmRepairSync(context) },
                 title = stringResource(R.string.repair_sync_title),
                 description = stringResource(R.string.repair_sync_desc),
                 confirmButtonText = stringResource(R.string.repair_sync),
-                isDestructive = false,
+                isDestructive = true,
                 icon = R.drawable.reset_wrench_24px
             )
         }

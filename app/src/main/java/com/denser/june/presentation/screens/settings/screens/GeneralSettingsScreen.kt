@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneTopAppBar
-import com.denser.june.presentation.components.JuneConfirmationDialog
+import com.denser.june.presentation.components.JuneActionSheet
 import com.denser.june.presentation.screens.settings.SettingsVM
 import com.denser.june.presentation.screens.settings.SettingsAction
 import com.denser.june.presentation.screens.settings.components.SettingSection
@@ -114,11 +114,13 @@ fun GeneralSettingsScreen() {
     }
 
     if (showDeleteDialog) {
-        JuneConfirmationDialog(
+        JuneActionSheet(
             title = stringResource(R.string.move_all_to_bin_title),
             description = stringResource(R.string.move_all_to_bin_desc),
             confirmText = stringResource(R.string.action_delete),
             confirmButtonText = stringResource(R.string.move_all_to_bin),
+            icon = R.drawable.delete_24px,
+            isDestructive = true,
             onDismiss = { showDeleteDialog = false },
             onConfirm = {
                 onAction(SettingsAction.OnDeleteJournals)

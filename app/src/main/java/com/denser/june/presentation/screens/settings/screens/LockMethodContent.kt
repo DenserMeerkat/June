@@ -20,7 +20,7 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.LockType
 import com.denser.june.core.utils.SecurityUtils
 import com.denser.june.presentation.components.JuneAppBarType
-import com.denser.june.presentation.components.JuneDialog
+import com.denser.june.presentation.components.JuneActionSheet
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.components.JuneBackButton
 import com.denser.june.presentation.components.plus.PlusSettingsItem
@@ -394,31 +394,18 @@ fun LockMethodContent(
         }
 
         if (pendingAction != null) {
-            JuneDialog(
-                onDismissRequest = { pendingAction = null },
+            JuneActionSheet(
+                onDismiss = { pendingAction = null },
+                onConfirm = {
+                    val action = pendingAction
+                    pendingAction = null
+                    action?.invoke()
+                },
                 title = stringResource(R.string.change_lock_title),
+                description = stringResource(R.string.switch_lock_warning),
+                confirmButtonText = stringResource(R.string.change),
                 icon = R.drawable.warning_24px,
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            val action = pendingAction
-                            pendingAction = null
-                            action?.invoke()
-                        }
-                    ) {
-                        Text(stringResource(R.string.change))
-                    }
-                },
-                dismissButton = {
-                    OutlinedButton(
-                        onClick = { pendingAction = null }
-                    ) {
-                        Text(stringResource(R.string.action_cancel))
-                    }
-                },
-                text = {
-                    Text(stringResource(R.string.switch_lock_warning))
-                }
+                isDestructive = true
             )
         }
     }

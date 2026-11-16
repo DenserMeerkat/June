@@ -16,6 +16,7 @@ import com.denser.june.core.media.compress.CompressUtils
 import com.denser.june.core.media.compress.model.CompressionPreset
 import com.denser.june.core.media.exif.ExifUtils
 import com.denser.june.core.media.storage.MediaStorageManager
+import com.denser.june.presentation.components.JuneActionSheet
 import com.denser.june.presentation.components.JuneDialog
 import com.denser.june.presentation.components.JuneDateTimePicker
 import com.denser.june.presentation.components.JuneDateTimePickerMode
@@ -178,33 +179,31 @@ fun EditorModals(
     }
 
     if (dialogState.showExitDialog) {
-        JuneDialog(
-            onDismissRequest = { dialogState.showExitDialog = false },
-            title = stringResource(R.string.save_entry),
-            icon = R.drawable.file_save_24px,
-            confirmButton = {
-                Button(onClick = {
-                    dialogState.showExitDialog = false
-                    val hasPlusStyling = (editorState.font != null || editorState.fontVariation != null || editorState.theme != null)
-                    if (!isPlus && hasPlusStyling) {
-                        dialogState.onPlusSaveExitAfter = true
-                        dialogState.showPlusSaveDialog = true
-                    } else {
-                        editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
-                        onAction(EditorAction.SaveJournal)
-                        onAction(EditorAction.NavigateBack)
-                    }
-                }) { Text(stringResource(R.string.action_save)) }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = {
-                    dialogState.showExitDialog = false
-                    editorState.images.forEach { CompressUtils.restoreUncompressedOriginalFile(context, it) }
-                    onAction(EditorAction.DiscardChanges)
+        JuneActionSheet(
+            onDismiss = { dialogState.showExitDialog = false },
+            onConfirm = {
+                val hasPlusStyling = (editorState.font != null || editorState.fontVariation != null || editorState.theme != null)
+                if (!isPlus && hasPlusStyling) {
+                    dialogState.onPlusSaveExitAfter = true
+                    dialogState.showPlusSaveDialog = true
+                } else {
+                    editorState.images.forEach { CompressUtils.cleanUncompressedOriginalFile(context, it) }
+                    onAction(EditorAction.SaveJournal)
                     onAction(EditorAction.NavigateBack)
-                }) { Text(stringResource(R.string.action_discard)) }
+                }
             },
-            text = { Text(stringResource(R.string.save_progress_message)) }
+            title = stringResource(R.string.save_entry),
+            description = stringResource(R.string.save_progress_message),
+            confirmButtonText = stringResource(R.string.action_save),
+            confirmIcon = R.drawable.file_save_24px,
+            dismissButtonText = stringResource(R.string.action_discard),
+            dismissIcon = R.drawable.close_24px,
+            onDismissAction = {
+                editorState.images.forEach { CompressUtils.restoreUncompressedOriginalFile(context, it) }
+                onAction(EditorAction.DiscardChanges)
+                onAction(EditorAction.NavigateBack)
+            },
+            icon = R.drawable.file_save_24px
         )
     }
 

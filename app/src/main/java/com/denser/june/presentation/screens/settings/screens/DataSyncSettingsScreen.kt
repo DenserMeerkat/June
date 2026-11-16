@@ -23,7 +23,7 @@ import com.denser.june.core.domain.backup.RestoreException
 import com.denser.june.presentation.components.BackupRestoreIndicator
 import com.denser.june.presentation.components.JuneAppBarType
 import com.denser.june.presentation.components.JuneBackButton
-import com.denser.june.presentation.components.JuneDialog
+import com.denser.june.presentation.components.JuneActionSheet
 import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.screens.settings.SettingsAction
@@ -656,48 +656,34 @@ fun DataSyncSettingsScreen() {
     }
 
     if (showRestoreWarning != null) {
-        JuneDialog(
-            onDismissRequest = { showRestoreWarning = null },
+        val uri = showRestoreWarning!!
+        JuneActionSheet(
+            onDismiss = { showRestoreWarning = null },
+            onConfirm = {
+                showRestoreWarning = null
+                onAction(SettingsAction.OnRestoreJournals(uri))
+            },
             title = stringResource(R.string.restore_backup_title),
+            description = stringResource(R.string.restore_warning_message),
+            confirmButtonText = stringResource(R.string.action_restore),
             icon = R.drawable.cloud_sync_24px,
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val uri = showRestoreWarning!!
-                        showRestoreWarning = null
-                        onAction(SettingsAction.OnRestoreJournals(uri))
-                    }
-                ) { Text(stringResource(R.string.action_restore)) }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showRestoreWarning = null }) { Text(stringResource(R.string.action_cancel)) }
-            },
-            text = {
-                Text(stringResource(R.string.restore_warning_message))
-            }
+            isDestructive = true
         )
     }
 
     if (pendingSettingsJsonToRestore != null) {
-        JuneDialog(
-            onDismissRequest = { pendingSettingsJsonToRestore = null },
+        val json = pendingSettingsJsonToRestore!!
+        JuneActionSheet(
+            onDismiss = { pendingSettingsJsonToRestore = null },
+            onConfirm = {
+                pendingSettingsJsonToRestore = null
+                onAction(SettingsAction.OnRestoreSettings(json))
+            },
             title = stringResource(R.string.restore_settings_title),
+            description = stringResource(R.string.restore_settings_desc),
+            confirmButtonText = stringResource(R.string.action_restore),
             icon = R.drawable.settings_24px,
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val json = pendingSettingsJsonToRestore!!
-                        pendingSettingsJsonToRestore = null
-                        onAction(SettingsAction.OnRestoreSettings(json))
-                    }
-                ) { Text(stringResource(R.string.action_restore)) }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { pendingSettingsJsonToRestore = null }) { Text(stringResource(R.string.action_cancel)) }
-            },
-            text = {
-                Text(stringResource(R.string.restore_settings_desc))
-            }
+            isDestructive = true
         )
     }
 }

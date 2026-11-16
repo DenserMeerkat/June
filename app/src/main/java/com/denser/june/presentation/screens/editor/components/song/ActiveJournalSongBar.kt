@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.utils.toSongDurationString
+import com.denser.june.presentation.components.JuneActionSheet
 import com.denser.june.presentation.components.ConnectedBarAction
 import com.denser.june.presentation.components.JuneConnectedActionBar
 import com.denser.june.presentation.components.RestrictedAsyncImage
@@ -46,25 +47,14 @@ fun ActiveJournalSongBar(
     )
 
     if (showRemoveConfirm) {
-        AlertDialog(
-            onDismissRequest = { showRemoveConfirm = false },
-            title = { Text("Remove from journal?") },
-            text = { Text("This will detach the song from this journal entry. The library copy stays unchanged.") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showRemoveConfirm = false
-                        onRemove()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    )
-                ) { Text(stringResource(R.string.action_remove)) }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showRemoveConfirm = false }) { Text(stringResource(R.string.action_cancel)) }
-            }
+        JuneActionSheet(
+            onDismiss = { showRemoveConfirm = false },
+            onConfirm = onRemove,
+            title = "Remove from journal?",
+            description = "This will detach the song from this journal entry. The library copy stays unchanged.",
+            confirmButtonText = stringResource(R.string.action_remove),
+            icon = R.drawable.delete_24px,
+            isDestructive = true
         )
     }
 

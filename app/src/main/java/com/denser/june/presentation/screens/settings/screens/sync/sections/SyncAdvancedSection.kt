@@ -5,15 +5,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -29,7 +22,6 @@ import com.denser.june.presentation.screens.settings.components.SettingsItem
 import com.denser.june.presentation.screens.settings.screens.sync.components.SyncAnalysisSection
 import com.denser.june.presentation.screens.settings.screens.sync.components.SyncCategory
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SyncAdvancedSection(
     isVisible: Boolean,
@@ -40,7 +32,8 @@ fun SyncAdvancedSection(
     rotationAngle: Float,
     onToggleAdvanced: () -> Unit,
     onAnalyze: () -> Unit,
-    onRepair: () -> Unit,
+    onRebuildManifest: () -> Unit,
+    onRepairSync: () -> Unit,
     onViewDetails: (SyncCategory?) -> Unit
 ) {
     AnimatedVisibility(
@@ -76,14 +69,40 @@ fun SyncAdvancedSection(
                 )
 
                 val isBusy = isAnalyzing || status is SyncStatus.Syncing || status is SyncStatus.Preparing
+
+                SettingsItem(
+                    title = stringResource(R.string.rebuild_manifest),
+                    leadingContent = {
+                        Icon(painterResource(R.drawable.article_24px), null)
+                    },
+                    trailingContent = {
+                        Icon(
+                            painterResource(R.drawable.warning_24px),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    },
+                    enabled = !isBusy,
+                    onClick = onRebuildManifest
+                )
+
                 SettingsItem(
                     title = stringResource(R.string.repair_sync),
                     subtitle = stringResource(R.string.repair_sync_short_desc),
                     leadingContent = {
                         Icon(painterResource(R.drawable.reset_wrench_24px), null)
                     },
+                    trailingContent = {
+                        Icon(
+                            painterResource(R.drawable.warning_24px),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    },
                     enabled = !isBusy,
-                    onClick = onRepair
+                    onClick = onRepairSync
                 )
             }
         }

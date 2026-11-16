@@ -29,10 +29,10 @@ import com.denser.june.presentation.components.JuneTopAppBar
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.components.journal.JournalCard
 import com.denser.june.presentation.components.journal.HighlightJournalCard
-import com.denser.june.presentation.components.JuneConfirmationDialog
+import com.denser.june.presentation.components.JuneActionSheet
 import com.denser.june.presentation.components.journal.DayJournalGroupData
 import com.denser.june.presentation.components.journal.ExportJournalSheet
-import com.denser.june.presentation.screens.home.components.DayJournalGroup
+import com.denser.june.presentation.screens.home.components.dayJournalGroup
 import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -156,19 +156,16 @@ fun BinScreen() {
                     }
                     dayGroups.forEach { dayGroup ->
                         if (dayGroup.journals.size > 1) {
-                            item(key = "day_group_${dayGroup.date}") {
-                                DayJournalGroup(
-                                    date = dayGroup.date,
-                                    journals = dayGroup.journals,
-                                    is24Hour = is24Hour,
-                                    allowMediaHighlight = true,
-                                    actionIcon = R.drawable.restore_from_trash_24px,
-                                    onActionClick = { journal -> binVM.restoreJournal(journal.id) },
-                                    onJournalClick = null,
-                                    onLongClick = { journal -> selectedJournalForOptions = journal },
-                                    modifier = Modifier.animateItem()
-                                )
-                            }
+                            dayJournalGroup(
+                                date = dayGroup.date,
+                                journals = dayGroup.journals,
+                                is24Hour = is24Hour,
+                                allowMediaHighlight = true,
+                                actionIcon = R.drawable.restore_from_trash_24px,
+                                onActionClick = { journal -> binVM.restoreJournal(journal.id) },
+                                onJournalClick = null,
+                                onLongClick = { journal -> selectedJournalForOptions = journal }
+                            )
                         } else {
                             val singleJournal = dayGroup.journals.first()
                             item(key = "single_journal_${singleJournal.id}") {
@@ -188,7 +185,7 @@ fun BinScreen() {
         }
 
         if (showEmptyBinDialog) {
-            JuneConfirmationDialog(
+            JuneActionSheet(
                 onDismiss = { showEmptyBinDialog = false },
                 onConfirm = { binVM.emptyBin() },
                 title = stringResource(R.string.empty_bin_title),
@@ -205,12 +202,11 @@ fun BinScreen() {
         }
 
         if (showRestoreAllDialog) {
-            JuneConfirmationDialog(
+            JuneActionSheet(
                 onDismiss = { showRestoreAllDialog = false },
                 onConfirm = { binVM.restoreAll() },
                 title = stringResource(R.string.restore_all_title),
                 description = stringResource(R.string.restore_all_desc),
-                confirmText = null,
                 confirmButtonText = stringResource(R.string.restore_all),
                 isDestructive = false,
                 icon = R.drawable.restore_from_trash_24px

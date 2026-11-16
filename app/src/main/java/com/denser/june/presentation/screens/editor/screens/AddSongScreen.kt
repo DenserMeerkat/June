@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.denser.june.presentation.components.JuneActionSheet
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.SongDetails
 import com.denser.june.core.domain.preferences.PrivacyPreferences
@@ -375,29 +376,20 @@ fun AddSongScreen(
         }
     ) { paddingValues ->
         if (showDeleteConfirm) {
-            AlertDialog(
-                onDismissRequest = { showDeleteConfirm = false },
-                title = { Text("Remove Song?") },
-                text = { Text("Are you sure you want to remove this song from your library?") },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            showDeleteConfirm = false
-                            activeEditingSong?.let {
-                                viewModel.onAction(EditorAction.RemoveLibrarySong(it))
-                            }
-                            activeEditingSong = null
-                            currentStep = AddSongStep.Library
-                        }
-                    ) {
-                        Text(stringResource(R.string.action_remove))
+            JuneActionSheet(
+                onDismiss = { showDeleteConfirm = false },
+                onConfirm = {
+                    activeEditingSong?.let {
+                        viewModel.onAction(EditorAction.RemoveLibrarySong(it))
                     }
+                    activeEditingSong = null
+                    currentStep = AddSongStep.Library
                 },
-                dismissButton = {
-                    OutlinedButton(onClick = { showDeleteConfirm = false }) {
-                        Text(stringResource(R.string.action_cancel))
-                    }
-                }
+                title = "Remove Song?",
+                description = "Are you sure you want to remove this song from your library?",
+                confirmButtonText = stringResource(R.string.action_remove),
+                icon = R.drawable.delete_24px,
+                isDestructive = true
             )
         }
 

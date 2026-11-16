@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TagCategory
 import com.denser.june.core.utils.TagUtils
-import com.denser.june.presentation.components.JuneDialog
+import com.denser.june.presentation.components.JuneActionSheet
 import com.denser.june.presentation.utils.TagUiUtils
 
 private enum class WarningType {
@@ -21,7 +21,7 @@ private enum class WarningType {
 }
 
 @Composable
-fun RenameTagDialog(
+fun RenameTagSheet(
     currentTagName: String,
     category: TagCategory,
     existingTags: List<String>,
@@ -46,12 +46,21 @@ fun RenameTagDialog(
         else -> WarningType.None
     }
 
-    JuneDialog(
-        onDismissRequest = onDismiss,
+    JuneActionSheet(
+        onDismiss = onDismiss,
+        onConfirm = { if (isValid) onRename(targetTag) },
         title = stringResource(R.string.rename_tag_title),
         icon = R.drawable.edit_24px,
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        confirmButtonText = if (isConflict) stringResource(R.string.merge_and_save) else stringResource(R.string.action_save),
+        confirmColor = if (isConflict) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
+        confirmIcon = if (isConflict) R.drawable.merge_type_24px else R.drawable.check_24px,
+        dismissIcon = R.drawable.close_24px,
+        confirmEnabled = isValid,
+        content = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         text = stringResource(R.string.name),
@@ -117,21 +126,6 @@ fun RenameTagDialog(
                     WarningType.None -> {}
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = { if (isValid) onRename(targetTag) },
-                enabled = isValid,
-                colors = if (isConflict) ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary
-                ) else ButtonDefaults.buttonColors()
-            ) {
-                Text(if (isConflict) stringResource(R.string.merge_and_save) else stringResource(R.string.action_save))
-            }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }
@@ -166,4 +160,22 @@ private fun WarningCard(
             )
         }
     }
+}
+
+@Deprecated("Use RenameTagSheet instead", ReplaceWith("RenameTagSheet(currentTagName, category, existingTags, onDismiss, onRename)"))
+@Composable
+fun RenameTagDialog(
+    currentTagName: String,
+    category: TagCategory,
+    existingTags: List<String>,
+    onDismiss: () -> Unit,
+    onRename: (String) -> Unit
+) {
+    RenameTagSheet(
+        currentTagName = currentTagName,
+        category = category,
+        existingTags = existingTags,
+        onDismiss = onDismiss,
+        onRename = onRename
+    )
 }

@@ -26,6 +26,7 @@ import com.denser.june.core.utils.TagUtils
 import com.denser.june.core.utils.toDayOfMonth
 import com.denser.june.core.utils.toFullDateTime
 import com.denser.june.core.utils.toShortMonth
+import com.denser.june.presentation.components.JuneActionContent
 import com.denser.june.presentation.plus.LocalIsPlus
 import com.denser.june.presentation.plus.LocalPlusSheetController
 import com.denser.june.presentation.theme.LocalSyncEnabled
@@ -139,51 +140,59 @@ fun JournalOptionsSheet(
                 }
 
                 JournalOptionsSheetMode.CONFIRM_LOCK -> {
-                    JournalConfirmationView(
-                        iconRes = if (journal.isLocked) R.drawable.lock_open_right_24px else R.drawable.lock_24px,
+                    JuneActionContent(
+                        icon = if (journal.isLocked) R.drawable.lock_open_right_24px else R.drawable.lock_24px,
                         title = stringResource(if (journal.isLocked) R.string.move_out_of_vault else R.string.move_to_vault),
-                        message = stringResource(if (journal.isLocked) R.string.move_out_of_vault_desc else R.string.move_to_vault_desc),
-                        confirmText = stringResource(if (journal.isLocked) R.string.move_out_of_vault else R.string.move_to_vault),
+                        description = stringResource(if (journal.isLocked) R.string.move_out_of_vault_desc else R.string.move_to_vault_desc),
+                        confirmButtonText = stringResource(if (journal.isLocked) R.string.move_out_of_vault else R.string.move_to_vault),
                         confirmColor = MaterialTheme.colorScheme.primary,
+                        confirmIcon = R.drawable.check_24px,
+                        dismissIcon = R.drawable.close_24px,
                         onConfirm = {
                             onToggleLock?.invoke()
                             onDismiss?.invoke()
                         },
-                        onCancel = { currentMode = JournalOptionsSheetMode.OPTIONS }
+                        onDismiss = { currentMode = JournalOptionsSheetMode.OPTIONS }
                     )
                 }
 
                 JournalOptionsSheetMode.CONFIRM_DELETE -> {
-                    JournalConfirmationView(
-                        iconRes = R.drawable.delete_24px,
+                    JuneActionContent(
+                        icon = R.drawable.delete_24px,
                         title = stringResource(R.string.move_to_bin),
-                        message = stringResource(R.string.move_to_bin_default_desc),
-                        confirmText = stringResource(R.string.move_to_bin),
+                        description = stringResource(R.string.move_to_bin_default_desc),
+                        confirmButtonText = stringResource(R.string.move_to_bin),
                         confirmColor = MaterialTheme.colorScheme.error,
+                        isDestructive = true,
+                        confirmIcon = R.drawable.check_24px,
+                        dismissIcon = R.drawable.close_24px,
                         onConfirm = {
                             onDeleteOrRestore()
                             onDismiss?.invoke()
                         },
-                        onCancel = { currentMode = JournalOptionsSheetMode.OPTIONS }
+                        onDismiss = { currentMode = JournalOptionsSheetMode.OPTIONS }
                     )
                 }
 
                 JournalOptionsSheetMode.CONFIRM_PERMANENT_DELETE -> {
-                    JournalConfirmationView(
-                        iconRes = R.drawable.delete_24px,
+                    JuneActionContent(
+                        icon = R.drawable.delete_24px,
                         title = stringResource(R.string.permanently_delete),
-                        message = if (isSyncEnabled) {
+                        description = if (isSyncEnabled) {
                             stringResource(R.string.delete_journal_sync_desc)
                         } else {
                             stringResource(R.string.delete_journal_local_desc)
                         },
-                        confirmText = stringResource(R.string.permanently_delete),
+                        confirmButtonText = stringResource(R.string.permanently_delete),
                         confirmColor = MaterialTheme.colorScheme.error,
+                        isDestructive = true,
+                        confirmIcon = R.drawable.check_24px,
+                        dismissIcon = R.drawable.close_24px,
                         onConfirm = {
                             onPermanentDelete?.invoke()
                             onDismiss?.invoke()
                         },
-                        onCancel = { currentMode = JournalOptionsSheetMode.OPTIONS }
+                        onDismiss = { currentMode = JournalOptionsSheetMode.OPTIONS }
                     )
                 }
             }

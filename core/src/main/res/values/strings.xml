@@ -158,6 +158,11 @@
     <string name="repair_sync">Repair Sync</string>
     <string name="repair_sync_desc">This will audit local database records, repair image paths, clean orphaned media files, and perform a full cloud revalidation pass. This may take longer than a standard sync.</string>
     <string name="repair_sync_title">Repair Sync &amp; Revalidate?</string>
+    <string name="rebuild_manifest">Rebuild manifest</string>
+    <string name="rebuild_manifest_desc">Re-indexes files in cloud storage and generates a new manifest. Device files are not affected.</string>
+    <string name="action_rebuild">Rebuild</string>
+    <string name="rebuild_manifest_success">Manifest rebuilt</string>
+    <string name="rebuild_manifest_failure">Failed to rebuild manifest</string>
     <string name="type_to_confirm">\n\nType \'%1$s\' below to confirm.</string>
     <string name="unknown_license">Unknown License</string>
     <string name="wrong_pin_try_again">Incorrect, try again</string>

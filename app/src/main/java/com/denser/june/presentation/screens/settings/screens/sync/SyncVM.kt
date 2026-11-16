@@ -2,6 +2,7 @@ package com.denser.june.presentation.screens.settings.screens.sync
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.denser.june.core.R
 import com.denser.june.core.domain.preferences.SyncPreferences
 import com.denser.june.core.domain.preferences.PrivacyPreferences
 import com.denser.june.core.domain.sync.SyncManager
@@ -9,7 +10,6 @@ import com.denser.june.core.domain.sync.SyncStatus
 import com.denser.june.core.domain.sync.SyncAnalysis
 import com.denser.june.core.domain.preferences.JournalPreferences
 import com.denser.june.core.domain.model.enums.TimeFormat
-import com.denser.june.core.domain.repository.JournalRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -43,8 +43,9 @@ data class SyncSettingsState(
     val isGoogleDriveConnected: Boolean = false,
     val showProviderSwitchDialog: Boolean = false,
     val pendingProvider: String? = null,
-    val showRepairConfirmationDialog: Boolean = false,
-    val folderUrl: String? = null
+    val folderUrl: String? = null,
+    val showRebuildManifestConfirmationDialog: Boolean = false,
+    val showRepairConfirmationDialog: Boolean = false
 )
 
 @OptIn(FlowPreview::class)
@@ -52,8 +53,7 @@ class SyncVM(
     private val syncPrefs: SyncPreferences,
     private val privacyPreferences: PrivacyPreferences,
     private val syncManager: SyncManager,
-    private val journalPrefs: JournalPreferences,
-    private val journalRepo: JournalRepository
+    private val journalPrefs: JournalPreferences
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -247,6 +247,27 @@ class SyncVM(
 
     fun stopSync() {
         syncManager.cancelSync()
+    }
+
+    fun requestRebuildManifest() {
+        if (!validateInputs()) return
+        _state.update { it.copy(showRebuildManifestConfirmationDialog = true) }
+    }
+
+    fun dismissRebuildManifestConfirmationDialog() {
+        _state.update { it.copy(showRebuildManifestConfirmationDialog = false) }
+    }
+
+    fun confirmRebuildManifest(context: android.content.Context) {
+        _state.update { it.copy(showRebuildManifestConfirmationDialog = false) }
+        viewModelScope.launch {
+            val result = syncManager.rebuildRemoteManifest()
+            if (result.isSuccess) {
+                _effect.emit(SyncEffect.ShowToast(context.getString(R.string.rebuild_manifest_success)))
+            } else {
+                _effect.emit(SyncEffect.ShowToast(context.getString(R.string.rebuild_manifest_failure)))
+            }
+        }
     }
 
     fun requestRepairSync() {

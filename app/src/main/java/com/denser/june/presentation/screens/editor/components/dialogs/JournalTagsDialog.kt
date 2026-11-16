@@ -29,7 +29,7 @@ import com.denser.june.core.R
 import com.denser.june.core.domain.model.enums.TagCategory
 import com.denser.june.core.utils.TagUtils
 import com.denser.june.presentation.components.JuneAppBarType
-import com.denser.june.presentation.components.JuneDialog
+import com.denser.june.presentation.components.JuneActionSheet
 import com.denser.june.presentation.components.JuneFloatingAction
 import com.denser.june.presentation.components.JuneFloatingActionBar
 import com.denser.june.presentation.components.JuneFullScreenDialog
@@ -77,24 +77,20 @@ fun JournalTagsDialog(
     }
 
     if (showExitDialog) {
-        JuneDialog(
-            onDismissRequest = { showExitDialog = false },
+        JuneActionSheet(
+            onDismiss = { showExitDialog = false },
+            onConfirm = {
+                onSaveTags(localTags)
+                onDismiss()
+            },
             title = stringResource(R.string.save_changes_title),
-            icon = R.drawable.file_save_24px,
-            confirmButton = {
-                Button(onClick = {
-                    showExitDialog = false
-                    onSaveTags(localTags)
-                    onDismiss()
-                }) { Text(stringResource(R.string.action_save)) }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = {
-                    showExitDialog = false
-                    onDismiss()
-                }) { Text(stringResource(R.string.action_discard)) }
-            },
-            text = { Text(stringResource(R.string.unsaved_tags_message)) }
+            description = stringResource(R.string.unsaved_tags_message),
+            confirmButtonText = stringResource(R.string.action_save),
+            confirmIcon = R.drawable.file_save_24px,
+            dismissButtonText = stringResource(R.string.action_discard),
+            dismissIcon = R.drawable.close_24px,
+            onDismissAction = { onDismiss() },
+            icon = R.drawable.file_save_24px
         )
     }
 
