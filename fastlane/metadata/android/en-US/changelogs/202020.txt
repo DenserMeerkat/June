@@ -1,0 +1,2 @@
+- Cloud sync optimizations for large libraries.
+- UI refinements and bug fixes.

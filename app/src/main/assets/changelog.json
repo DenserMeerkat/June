@@ -1,5 +1,12 @@
 [
   {
+    "version": "v2.2.2",
+    "changes": [
+      "Cloud sync optimizations for large libraries.",
+      "UI refinements and bug fixes."
+    ]
+  },
+  {
     "version": "v2.2.1",
     "changes": [
       "Optimized cloud sync throughput and bulk imports.",
