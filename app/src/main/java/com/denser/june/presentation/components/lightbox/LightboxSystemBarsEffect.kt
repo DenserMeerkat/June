@@ -33,20 +33,28 @@ fun LightboxSystemBarsEffect(
         insetsController?.isAppearanceLightStatusBars = !isDarkTheme
         insetsController?.isAppearanceLightNavigationBars = !isDarkTheme
 
+        val isHdrSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+            context.resources.configuration.isScreenHdr
+
         val originalColorMode = activity?.window?.colorMode ?: ActivityInfo.COLOR_MODE_DEFAULT
-        activity?.window?.colorMode = ActivityInfo.COLOR_MODE_HDR
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        if (isHdrSupported) {
             try {
-                activity?.window?.desiredHdrHeadroom = 10000.0f
+                activity?.window?.colorMode = ActivityInfo.COLOR_MODE_HDR
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                    activity?.window?.desiredHdrHeadroom = 3.0f
+                }
             } catch (_: Exception) {}
         }
+
         onDispose {
             insetsController?.isAppearanceLightStatusBars = prevLightStatus
             insetsController?.isAppearanceLightNavigationBars = prevLightNav
-            activity?.window?.colorMode = originalColorMode
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            if (isHdrSupported) {
                 try {
-                    activity?.window?.desiredHdrHeadroom = 0f
+                    activity?.window?.colorMode = originalColorMode
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                        activity?.window?.desiredHdrHeadroom = 0f
+                    }
                 } catch (_: Exception) {}
             }
         }
