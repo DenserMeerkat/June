@@ -45,6 +45,8 @@ import com.denser.june.core.domain.logging.AppLogger
 import com.denser.june.core.domain.sync.serialize
 import com.denser.june.core.domain.sync.deserializeJournal
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler
+import com.google.api.client.util.ExponentialBackOff
 
 class GoogleDriveProvider(
     private val context: Context,
@@ -86,11 +88,24 @@ class GoogleDriveProvider(
         credential.selectedAccount = account.account
 
         val transport = OkHttp3Transport(okHttpClient)
+
         driveService = Drive.Builder(
             transport,
-            GsonFactory.getDefaultInstance(),
-            credential
-        )
+            GsonFactory.getDefaultInstance()
+        ) { request ->
+            credential.initialize(request)
+            val backOff = ExponentialBackOff.Builder()
+                .setInitialIntervalMillis(500)
+                .setMaxIntervalMillis(5000)
+                .setMaxElapsedTimeMillis(30000)
+                .build()
+            val backOffHandler = HttpBackOffUnsuccessfulResponseHandler(backOff)
+                .setBackOffRequired { resp ->
+                    resp.statusCode == 429 || resp.statusCode == 403 || resp.statusCode in 500..599
+                }
+            request.unsuccessfulResponseHandler = backOffHandler
+            request.numberOfRetries = 4
+        }
         .setApplicationName("June")
         .build()
 

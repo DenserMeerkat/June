@@ -120,41 +120,23 @@ class DailyYouImporter(
                 return Result.failure(IllegalStateException("No entries found in Daily You export"))
             }
 
-            val existingJournals = journalRepo.getAllJournals()
-            val existingCache = existingJournals.associateBy { Pair(it.dateTime, it.title) }
-
-            var importedCount = 0
-            var updatedCount = 0
-            var skippedCount = 0
-            val errors = mutableListOf<String>()
-
-            parsedJournals.forEachIndexed { index, journal ->
-                try {
-                    when (ImporterHelper.saveOrUpdateJournal(journalRepo, journal, existingCache)) {
-                        ImportEntryResult.Inserted -> importedCount++
-                        ImportEntryResult.Updated -> updatedCount++
-                        ImportEntryResult.Skipped -> skippedCount++
-                    }
-                    onProgress?.invoke(
-                        (index + 1).toFloat() / parsedJournals.size,
-                        "Imported ${index + 1} of ${parsedJournals.size}"
-                    )
-                } catch (e: Exception) {
-                    errors.add("Failed to save entry ${journal.title}: ${e.message}")
-                }
-            }
+            val batchResult = ImporterHelper.processAndSaveBatch(
+                journalRepo = journalRepo,
+                incomingJournals = parsedJournals,
+                onProgress = onProgress
+            )
 
             Result.success(
                 ImportSummary(
                     source = ImportSource.DailyYou,
                     totalJournals = parsedJournals.size,
-                    importedJournals = importedCount,
-                    updatedJournals = updatedCount,
+                    importedJournals = batchResult.importedCount,
+                    updatedJournals = batchResult.updatedCount,
                     mediaExtracted = extractedMediaMap.size,
                     audiosExtracted = extractedAudioMap.size,
-                    skippedJournals = skippedCount,
+                    skippedJournals = batchResult.skippedCount,
                     versionWarning = versionWarning,
-                    errors = errors
+                    errors = batchResult.errors
                 )
             )
         } catch (e: Exception) {

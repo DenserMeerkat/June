@@ -56,6 +56,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import android.content.Context
 import com.denser.june.core.data.remote.InternetInterceptor
+import com.denser.june.core.data.remote.RateLimitRetryInterceptor
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -90,11 +91,19 @@ val coreModule = module {
 
     single {
         val dispatcher = okhttp3.Dispatcher().apply {
-            maxRequestsPerHost = 10
+            maxRequestsPerHost = 40
+            maxRequests = 64
         }
+        val connectionPool = okhttp3.ConnectionPool(
+            maxIdleConnections = 32,
+            keepAliveDuration = 5,
+            java.util.concurrent.TimeUnit.MINUTES
+        )
         OkHttpClient.Builder()
             .dispatcher(dispatcher)
+            .connectionPool(connectionPool)
             .addInterceptor(InternetInterceptor(get()))
+            .addInterceptor(RateLimitRetryInterceptor())
             .build()
     }
     singleOf(::SongLinkScraper)

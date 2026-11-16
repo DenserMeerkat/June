@@ -23,7 +23,7 @@ class SyncNotificationHelper(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 SYNC_CHANNEL_ID,
-                "Sync Status",
+                context.getString(R.string.cloud_sync),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Shows the progress of cloud sync operations"
@@ -57,74 +57,111 @@ class SyncNotificationHelper(private val context: Context) {
         )
     }
 
-    fun updateProgress(status: SyncStatus) {
+    private var lastProgressNotifyTime = 0L
+    private var lastReportedPercent = -1
+
+    fun showProgressNotification(progressPercent: Int, phaseText: String, isIndeterminate: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (!isIndeterminate && progressPercent < 100) {
+            if (now - lastProgressNotifyTime < 500L && progressPercent == lastReportedPercent) {
+                return
+            }
+            if (now - lastProgressNotifyTime < 350L) {
+                return
+            }
+        }
+        lastProgressNotifyTime = now
+        lastReportedPercent = progressPercent
+
         val pendingIntent = getPendingIntent()
         val stopPendingIntent = getStopPendingIntent()
+        val notification = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setContentTitle(context.getString(R.string.cloud_sync))
+            .setContentText(phaseText)
+            .setSubText(if (!isIndeterminate) "$progressPercent%" else null)
+            .setProgress(100, progressPercent.coerceIn(0, 100), isIndeterminate)
+            .setOngoing(true)
+            .setSilent(true)
+            .setOnlyAlertOnce(true)
+            .addAction(
+                R.drawable.close_24px,
+                context.getString(R.string.stop_sync),
+                stopPendingIntent
+            )
+            .apply {
+                if (pendingIntent != null) setContentIntent(pendingIntent)
+            }
+            .build()
+        notificationManager.notify(SYNC_PROGRESS_NOTIFICATION_ID, notification)
+    }
+
+    fun updateProgress(status: SyncStatus) {
         when (status) {
             is SyncStatus.Preparing -> {
-                val notification = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_stat_notification)
-                    .setContentTitle("Cloud Sync")
-                    .setContentText("Preparing...")
-                    .setProgress(100, 0, true)
-                    .setOngoing(true)
-                    .addAction(
-                        R.drawable.close_24px,
-                        "Stop",
-                        stopPendingIntent
-                    )
-                    .apply {
-                        if (pendingIntent != null) setContentIntent(pendingIntent)
-                    }
-                    .build()
-                notificationManager.notify(SYNC_NOTIFICATION_ID, notification)
+                lastReportedPercent = -1
+                showProgressNotification(0, "Preparing…", isIndeterminate = true)
             }
             is SyncStatus.Syncing -> {
-                val progressPercent = (status.progress * 100).toInt()
-                val notification = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_stat_notification)
-                    .setContentTitle("Cloud Sync")
-                    .setContentText(status.currentOperation)
-                    .setProgress(100, progressPercent, false)
-                    .setOngoing(true)
-                    .addAction(
-                        R.drawable.close_24px,
-                        "Stop",
-                        stopPendingIntent
-                    )
-                    .apply {
-                        if (pendingIntent != null) setContentIntent(pendingIntent)
-                    }
-                    .build()
-                notificationManager.notify(SYNC_NOTIFICATION_ID, notification)
+                val progressPercent = (status.progress * 100).toInt().coerceIn(0, 100)
+                val completed = status.uploadCount + status.downloadCount
+                val phaseText = if (status.totalOperations > 0) {
+                    "($completed/${status.totalOperations}) ${status.currentOperation}"
+                } else {
+                    status.currentOperation
+                }
+                showProgressNotification(progressPercent, phaseText, isIndeterminate = false)
+            }
+            is SyncStatus.Success -> {
+                showSuccessNotification()
+            }
+            is SyncStatus.Error -> {
+                showFailureNotification(status.message)
             }
             else -> {
-                // Other states are not handled as active progress updates
+                // Idle or other states
             }
         }
     }
 
     fun cancelProgressNotification() {
-        notificationManager.cancel(SYNC_NOTIFICATION_ID)
+        notificationManager.cancel(SYNC_PROGRESS_NOTIFICATION_ID)
     }
 
-    fun showFailureNotification(errorMessage: String) {
+    fun showSuccessNotification(message: String? = null) {
+        cancelProgressNotification()
         val pendingIntent = getPendingIntent()
         val notification = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_notification)
-            .setContentTitle("Sync failed")
+            .setContentTitle("Cloud Sync Complete")
+            .setContentText(message ?: "All journals and attachments are up to date")
+            .setAutoCancel(true)
+            .setSilent(true)
+            .apply {
+                if (pendingIntent != null) setContentIntent(pendingIntent)
+            }
+            .build()
+        notificationManager.notify(SYNC_RESULT_NOTIFICATION_ID, notification)
+    }
+
+    fun showFailureNotification(errorMessage: String) {
+        cancelProgressNotification()
+        val pendingIntent = getPendingIntent()
+        val notification = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_notification)
+            .setContentTitle("Cloud Sync Failed")
             .setContentText(errorMessage)
             .setAutoCancel(true)
             .apply {
                 if (pendingIntent != null) setContentIntent(pendingIntent)
             }
             .build()
-        notificationManager.notify(SYNC_FAILURE_NOTIFICATION_ID, notification)
+        notificationManager.notify(SYNC_RESULT_NOTIFICATION_ID, notification)
     }
 
     companion object {
         private const val SYNC_CHANNEL_ID = "sync_progress_channel"
-        private const val SYNC_NOTIFICATION_ID = 200
-        private const val SYNC_FAILURE_NOTIFICATION_ID = 201
+        private const val SYNC_PROGRESS_NOTIFICATION_ID = 200
+        private const val SYNC_RESULT_NOTIFICATION_ID = 201
     }
 }

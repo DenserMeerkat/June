@@ -53,27 +53,38 @@ class WebDAVProvider(
 
     private data class WebDavAuth(val baseUrl: String, val auth: String)
 
-    private suspend fun getAuth(): WebDavAuth? {
-        val url = syncPrefs.getWebDavUrl().first() ?: return null
-        val user = syncPrefs.getWebDavUsername().first() ?: ""
-        val pass = syncPrefs.getWebDavPassword().first() ?: ""
-        val auth = createAuthHeader(user, pass)
-        return WebDavAuth(url, auth)
-    }
+    @Volatile
+    private var cachedAuth: WebDavAuth? = null
 
-    private fun Request.Builder.webDavHeaders(auth: String, depth: String? = "0") = apply {
-        header("Authorization", auth)
+    private val userAgent: String by lazy {
         val versionName = try {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName
         } catch (e: Exception) {
             "Unknown"
         }
-        header("User-Agent", "June/$versionName (Android)")
+        "June/$versionName (Android)"
+    }
+
+    private suspend fun getAuth(): WebDavAuth? {
+        cachedAuth?.let { return it }
+        val url = syncPrefs.getWebDavUrl().first() ?: return null
+        val user = syncPrefs.getWebDavUsername().first() ?: ""
+        val pass = syncPrefs.getWebDavPassword().first() ?: ""
+        val auth = createAuthHeader(user, pass)
+        val authObj = WebDavAuth(url, auth)
+        cachedAuth = authObj
+        return authObj
+    }
+
+    private fun Request.Builder.webDavHeaders(auth: String, depth: String? = "0") = apply {
+        header("Authorization", auth)
+        header("User-Agent", userAgent)
         header("X-Requested-With", "XMLHttpRequest")
         depth?.let { header("Depth", it) }
     }
 
     override suspend fun connect(): Result<Unit> = withContext(Dispatchers.IO) {
+        cachedAuth = null
         AppLogger.d(AppLogger.Category.SYNC, "WebDAVProvider", "Connecting to WebDAV server...")
         val authInfo = getAuth()
         if (authInfo == null) {
@@ -205,6 +216,7 @@ class WebDAVProvider(
     override fun isConnected(): Flow<Boolean> = _isConnected
 
     override suspend fun disconnect() {
+        cachedAuth = null
         _isConnected.value = false
         syncPrefs.setSelectedProvider(null)
     }

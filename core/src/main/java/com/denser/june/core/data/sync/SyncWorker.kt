@@ -32,10 +32,10 @@ class SyncWorker(
                 AppLogger.d(AppLogger.Category.SYNC, "SyncWorker", "Starting SyncWorker doWork(). Full revalidation: $isFullRevalidation")
                 val result = syncManager.sync(isFullRevalidation)
                 statusCollector.cancel()
-                notificationHelper.cancelProgressNotification()
 
                 if (result.isSuccess) {
                     AppLogger.d(AppLogger.Category.SYNC, "SyncWorker", "SyncWorker completed successfully.")
+                    notificationHelper.showSuccessNotification()
                     Result.success()
                 } else {
                     val errorMsg = result.exceptionOrNull()?.message ?: "Unknown error"
@@ -45,7 +45,6 @@ class SyncWorker(
                 }
             } catch (e: Exception) {
                 statusCollector.cancel()
-                notificationHelper.cancelProgressNotification()
                 AppLogger.e(AppLogger.Category.SYNC, "SyncWorker", "SyncWorker encountered exception. Attempt: $runAttemptCount", e)
                 notificationHelper.showFailureNotification(e.message ?: "Unknown exception")
                 if (runAttemptCount < 3) Result.retry() else Result.failure()
@@ -82,7 +81,7 @@ class SyncWorker(
                 .build()
 
             WorkManager.getInstance(context)
-                .enqueueUniqueWork(WORK_NAME, ExistingWorkPolicy.REPLACE, request)
+                .enqueueUniqueWork(WORK_NAME, ExistingWorkPolicy.KEEP, request)
         }
     }
 }

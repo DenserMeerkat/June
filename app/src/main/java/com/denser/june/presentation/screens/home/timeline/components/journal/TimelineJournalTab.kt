@@ -49,10 +49,11 @@ fun TimelineJournalTab(
 
     LaunchedEffect(targetScrollDate) {
         if (targetScrollDate != null) {
-            val index = dayGroups.indexOfFirst { it.date == targetScrollDate }
-            if (index != -1) {
+            val groupIndex = dayGroups.indexOfFirst { it.date == targetScrollDate }
+            if (groupIndex != -1) {
                 highlightedDate = targetScrollDate
-                listState.animateScrollToItem(index)
+                val itemIndex = dayGroups.take(groupIndex).sumOf { it.journals.size }
+                listState.animateScrollToItem(itemIndex)
                 delay(1500.milliseconds)
                 highlightedDate = null
             }
@@ -67,44 +68,21 @@ fun TimelineJournalTab(
             state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = bottomPadding + 16.dp, top = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             dayGroups.forEach { dayGroup ->
-                if (dayGroup.journals.size > 1) {
-                    item(key = "day_group_${dayGroup.date}") {
-                        TimelineDayGroup(
-                            date = dayGroup.date,
-                            journals = dayGroup.journals,
-                            is24Hour = is24Hour,
-                            isHighlighted = dayGroup.date == highlightedDate,
-                            onToggleBookmark = { id -> onToggleBookmark?.invoke(id) },
-                            onJournalClick = { journal ->
-                                navigator.navigateTo(Route.Editor(journal.id), isSingleTop = true)
-                            },
-                            onLongClick = { journal -> onLongClick?.invoke(journal) },
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .animateItem()
-                        )
-                    }
-                } else {
-                    val singleJournal = dayGroup.journals.first()
-                    item(key = "single_journal_${singleJournal.id}") {
-                        TimelineJournalCard(
-                            journal = singleJournal,
-                            is24Hour = is24Hour,
-                            isHighlighted = dayGroup.date == highlightedDate,
-                            onToggleBookmark = { onToggleBookmark?.invoke(singleJournal.id) },
-                            onJournalClick = {
-                                navigator.navigateTo(Route.Editor(singleJournal.id), isSingleTop = true)
-                            },
-                            onLongClick = { onLongClick?.invoke(singleJournal) },
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .animateItem()
-                        )
-                    }
-                }
+                timelineDayGroup(
+                    date = dayGroup.date,
+                    journals = dayGroup.journals,
+                    is24Hour = is24Hour,
+                    isHighlighted = dayGroup.date == highlightedDate,
+                    onToggleBookmark = { id -> onToggleBookmark?.invoke(id) },
+                    onJournalClick = { journal ->
+                        navigator.navigateTo(Route.Editor(journal.id), isSingleTop = true)
+                    },
+                    onLongClick = { journal -> onLongClick?.invoke(journal) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
             }
         }
     }

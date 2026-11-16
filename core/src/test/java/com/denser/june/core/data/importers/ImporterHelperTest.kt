@@ -210,5 +210,81 @@ class ImporterHelperTest {
         assertEquals(1, updatedOriginal?.images?.size)
         assertNull("Must not insert under the different ID", repo.getJournalById("DIFFERENT-ID-123"))
     }
+
+    @Test
+    fun testProcessAndSaveBatchInsertsAndUpdatesCorrectly() = runTest {
+        val existing = Journal(
+            id = "EXISTING-1",
+            title = "Existing Title",
+            content = "Old Content",
+            createdAt = 1000L,
+            updatedAt = 1000L,
+            dateTime = 1000L,
+            isDraft = false
+        )
+        repo.insertJournal(existing)
+
+        val newJournal = Journal(
+            id = "NEW-1",
+            title = "New Title",
+            content = "New Content",
+            createdAt = 2000L,
+            updatedAt = 2000L,
+            dateTime = 2000L,
+            isDraft = false
+        )
+
+        val updatedJournal = existing.copy(
+            content = "Updated Content",
+            updatedAt = 3000L
+        )
+
+        val incomingList = listOf(newJournal, updatedJournal)
+        var progressCalled = false
+        val batchResult = ImporterHelper.processAndSaveBatch(
+            journalRepo = repo,
+            incomingJournals = incomingList,
+            chunkSize = 100,
+            onProgress = { _, _ -> progressCalled = true }
+        )
+
+        assertEquals(1, batchResult.importedCount)
+        assertEquals(1, batchResult.updatedCount)
+        assertEquals(0, batchResult.skippedCount)
+        assertTrue(progressCalled)
+        assertEquals(2, repo.getAllJournals().size)
+        assertEquals("Updated Content", repo.getJournalById("EXISTING-1")?.content)
+        assertEquals("New Content", repo.getJournalById("NEW-1")?.content)
+    }
+
+    @Test
+    fun testProcessAndSaveBatchLargeScalePerformance() = runTest {
+        val count = 5000
+        val incomingList = (1..count).map { i ->
+            Journal(
+                id = "BATCH-$i",
+                title = "Title $i",
+                content = "Content $i",
+                createdAt = 1000L + i,
+                updatedAt = 1000L + i,
+                dateTime = 1000L + i,
+                isDraft = false
+            )
+        }
+
+        val startTime = System.currentTimeMillis()
+        val batchResult = ImporterHelper.processAndSaveBatch(
+            journalRepo = repo,
+            incomingJournals = incomingList,
+            chunkSize = 500
+        )
+        val elapsedMs = System.currentTimeMillis() - startTime
+
+        assertEquals(count, batchResult.importedCount)
+        assertEquals(0, batchResult.updatedCount)
+        assertEquals(0, batchResult.skippedCount)
+        assertEquals(count, repo.getAllJournals().size)
+        assertTrue("5000 items batch processing should take less than 3000ms in memory, took: ${elapsedMs}ms", elapsedMs < 3000)
+    }
 }
 

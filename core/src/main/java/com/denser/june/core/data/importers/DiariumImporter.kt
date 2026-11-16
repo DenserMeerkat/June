@@ -66,46 +66,41 @@ class DiariumImporter(
             )
 
             try {
-                val parsed = parseDiariumDatabase(database)
-                val journals = parsed.journals
-                if (journals.isEmpty()) {
-                    return Result.failure(IllegalStateException("No entries found in Diarium database"))
+                val metadata = parseDiariumMetadataAndMedia(database)
+
+                val session = ImporterHelper.ImportSession(
+                    journalRepo = journalRepo,
+                    chunkSize = 500,
+                    onProgress = onProgress
+                )
+
+                val (totalCount, batchResult) = journalRepo.runInTransaction {
+                    session.init()
+                    streamAndSaveDiariumEntries(
+                        db = database,
+                        session = session,
+                        entryTagsMap = metadata.entryTagsMap,
+                        entryImagesMap = metadata.entryImagesMap,
+                        entryAudiosMap = metadata.entryAudiosMap,
+                        entryPrimaryColorMap = metadata.entryPrimaryColorMap,
+                        onProgress = onProgress
+                    )
                 }
 
-                val existingJournals = journalRepo.getAllJournals()
-                val existingCache = existingJournals.associateBy { Pair(it.dateTime, it.title) }
-
-                var importedCount = 0
-                var updatedCount = 0
-                var skippedCount = 0
-                val errors = mutableListOf<String>()
-
-                journals.forEachIndexed { index, journal ->
-                    try {
-                        when (ImporterHelper.saveOrUpdateJournal(journalRepo, journal, existingCache)) {
-                            ImportEntryResult.Inserted -> importedCount++
-                            ImportEntryResult.Updated -> updatedCount++
-                            ImportEntryResult.Skipped -> skippedCount++
-                        }
-                        onProgress?.invoke(
-                            (index + 1).toFloat() / journals.size,
-                            "Imported ${index + 1} of ${journals.size}"
-                        )
-                    } catch (e: Exception) {
-                        errors.add("Failed to save entry ${journal.title}: ${e.message}")
-                    }
+                if (totalCount == 0) {
+                    return Result.failure(IllegalStateException("No entries found in Diarium database"))
                 }
 
                 Result.success(
                     ImportSummary(
                         source = ImportSource.Diarium,
-                        totalJournals = journals.size,
-                        importedJournals = importedCount,
-                        updatedJournals = updatedCount,
-                        mediaExtracted = parsed.mediaCount,
-                        audiosExtracted = parsed.audioCount,
-                        skippedJournals = skippedCount,
-                        errors = errors
+                        totalJournals = totalCount,
+                        importedJournals = batchResult.importedCount,
+                        updatedJournals = batchResult.updatedCount,
+                        mediaExtracted = metadata.mediaCount,
+                        audiosExtracted = metadata.audioCount,
+                        skippedJournals = batchResult.skippedCount,
+                        errors = batchResult.errors
                     )
                 )
             } finally {
@@ -126,13 +121,17 @@ class DiariumImporter(
         val colorHex: String?
     )
 
-    private data class DiariumParseResult(
-        val journals: List<Journal>,
+    private data class DiariumMetadataResult(
+        val tagDefs: Map<Long, DiariumTagDef>,
+        val entryTagsMap: Map<Long, List<String>>,
+        val entryPrimaryColorMap: Map<Long, Int>,
+        val entryImagesMap: Map<Long, List<String>>,
+        val entryAudiosMap: Map<Long, List<JournalAudio>>,
         val mediaCount: Int,
         val audioCount: Int
     )
 
-    private fun parseDiariumDatabase(db: SQLiteDatabase): DiariumParseResult {
+    private fun parseDiariumMetadataAndMedia(db: SQLiteDatabase): DiariumMetadataResult {
         val tagDefs = mutableMapOf<Long, DiariumTagDef>()
         try {
             db.rawQuery("SELECT * FROM Tags", null).use { cursor ->
@@ -233,7 +232,34 @@ class DiariumImporter(
             }
         } catch (_: Exception) {}
 
-        val journals = mutableListOf<Journal>()
+        return DiariumMetadataResult(
+            tagDefs = tagDefs,
+            entryTagsMap = entryTagsMap,
+            entryPrimaryColorMap = entryPrimaryColorMap,
+            entryImagesMap = entryImagesMap,
+            entryAudiosMap = entryAudiosMap,
+            mediaCount = totalMediaCount,
+            audioCount = totalAudioCount
+        )
+    }
+
+    private suspend fun streamAndSaveDiariumEntries(
+        db: SQLiteDatabase,
+        session: ImporterHelper.ImportSession,
+        entryTagsMap: Map<Long, List<String>>,
+        entryImagesMap: Map<Long, List<String>>,
+        entryAudiosMap: Map<Long, List<JournalAudio>>,
+        entryPrimaryColorMap: Map<Long, Int>,
+        onProgress: ((Float, String) -> Unit)?
+    ): Pair<Int, ImportBatchResult> {
+        var totalCount = 0
+        val totalEntries = try {
+            db.rawQuery("SELECT count(*) FROM Entries", null).use { c ->
+                if (c.moveToNext()) c.getInt(0) else 0
+            }
+        } catch (_: Exception) { 0 }
+
+        val chunk = ArrayList<Journal>(500)
         db.rawQuery("SELECT * FROM Entries ORDER BY DiaryEntryId ASC", null).use { cursor ->
             val idIdx = cursor.getColumnIndex("DiaryEntryId")
             val headingIdx = cursor.getColumnIndex("Heading")
@@ -291,7 +317,7 @@ class DiariumImporter(
 
                 val deterministicId = ImporterHelper.generateDeterministicId(ImportSource.Diarium, "$diaryEntryId")
 
-                journals.add(
+                chunk.add(
                     Journal(
                         id = deterministicId,
                         title = title,
@@ -308,9 +334,27 @@ class DiariumImporter(
                         isDraft = false
                     )
                 )
+                totalCount++
+
+                if (chunk.size >= 500) {
+                    session.processChunk(chunk)
+                    chunk.clear()
+                    if (totalEntries > 0) {
+                        onProgress?.invoke(
+                            (totalCount.toFloat() / totalEntries).coerceIn(0f, 1f),
+                            "Imported $totalCount of $totalEntries"
+                        )
+                    }
+                }
             }
         }
 
-        return DiariumParseResult(journals, totalMediaCount, totalAudioCount)
+        if (chunk.isNotEmpty()) {
+            session.processChunk(chunk)
+            chunk.clear()
+        }
+
+        val batchResult = session.finish()
+        return Pair(totalCount, batchResult)
     }
 }

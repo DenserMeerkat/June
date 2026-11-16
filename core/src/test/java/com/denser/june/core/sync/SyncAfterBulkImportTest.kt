@@ -121,4 +121,28 @@ class SyncAfterBulkImportTest : BaseSyncTest() {
             assertNotNull(harness.cloud.getJournal("bulk-$i"))
         }
     }
+
+    @Test
+    fun `scaled bulk simulation with 3500 items uploads smoothly across multiple checkpoints`() = runTest {
+        harness.prefs.setSyncEnabled(true)
+        val count = 3500
+
+        harness.syncGate.holdWhile {
+            for (i in 1..count) {
+                harness.givenLocalOnlyJournal("scaled-$i", updatedAt = T1 + i)
+            }
+        }
+
+        val startTime = System.currentTimeMillis()
+        val result = harness.sync()
+        val durationMs = System.currentTimeMillis() - startTime
+
+        assertTrue("Bulk sync must succeed", result.isSuccess)
+        assertEquals("All 3500 items must be uploaded to cloud", count, harness.cloud.uploadJournalCallCount)
+        assertTrue(
+            "Manifest must be updated at least 4 times (checkpoints at 1000, 2000, 3000 + final)",
+            harness.cloud.updateManifestCallCount >= 4
+        )
+        assertTrue("Syncing 3500 items in memory with batching should take < 5000ms, took: ${durationMs}ms", durationMs < 5000)
+    }
 }

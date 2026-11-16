@@ -14,6 +14,8 @@ interface JournalRepository {
     ): Flow<List<Journal>>
 
     suspend fun getAllJournals(): List<Journal>
+    suspend fun getAllJournalMetadata(): List<com.denser.june.core.data.database.journal.JournalMetadataEntity>
+    suspend fun <R> runInTransaction(block: suspend () -> R): R
     suspend fun getJournalById(id: String): Journal?
     suspend fun getLatestJournal(): Journal?
     fun getJournalsByDateRange(startDate: Long, endDate: Long): Flow<List<Journal>>
@@ -22,6 +24,7 @@ interface JournalRepository {
     fun getLockedJournalsCount(): Flow<Int>
     
     suspend fun insertJournal(journal: Journal): String
+    suspend fun insertJournalsBatch(journals: List<Journal>)
     suspend fun softDeleteJournal(id: String)
     suspend fun restoreJournal(id: String)
     suspend fun hardDeleteJournal(id: String)
@@ -29,6 +32,7 @@ interface JournalRepository {
     suspend fun emptyBin()
     suspend fun restoreAllJournals()
     suspend fun updateJournal(journal: Journal)
+    suspend fun updateJournalsBatch(journals: List<Journal>)
 
     fun getDeletedJournals(): Flow<List<Journal>>
     suspend fun getJournalsToSync(threshold: Long): List<Journal>
@@ -36,6 +40,7 @@ interface JournalRepository {
     suspend fun getOldDeletedJournals(threshold: Long): List<Journal>
     
     suspend fun updateSyncStatus(id: String, cloudId: String, syncedAt: Long)
+    suspend fun updateSyncStatusBatch(updates: List<com.denser.june.core.domain.model.SyncStatusUpdate>)
     suspend fun resetAllSyncStatuses()
 
     suspend fun getAllTombstones(): List<String>

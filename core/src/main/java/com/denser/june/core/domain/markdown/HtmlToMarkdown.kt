@@ -9,6 +9,7 @@ object HtmlToMarkdown {
 
     fun convert(html: String?): String {
         if (html.isNullOrBlank()) return ""
+        if (!html.contains('<') && !html.contains('&')) return html.trim()
         val doc = Jsoup.parseBodyFragment(html)
         val body = doc.body()
         val sb = StringBuilder()

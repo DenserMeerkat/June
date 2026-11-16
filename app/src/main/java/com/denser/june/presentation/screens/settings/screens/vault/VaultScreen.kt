@@ -28,7 +28,7 @@ import com.denser.june.presentation.components.journal.DayJournalGroupData
 import com.denser.june.presentation.components.journal.ExportJournalSheet
 import com.denser.june.presentation.components.journal.HighlightJournalCard
 import com.denser.june.presentation.screens.settings.screens.lock.LockGate
-import com.denser.june.presentation.screens.home.components.DayJournalGroup
+import com.denser.june.presentation.screens.home.components.dayJournalGroup
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
 import com.denser.june.presentation.components.journal.JournalOptionsSheet
@@ -193,23 +193,20 @@ fun VaultScreen() {
 
                     dayGroups.forEach { dayGroup ->
                         if (dayGroup.journals.size > 1) {
-                            item(key = "day_group_${dayGroup.date}") {
-                                DayJournalGroup(
-                                    date = dayGroup.date,
-                                    journals = dayGroup.journals,
-                                    is24Hour = is24Hour,
-                                    allowMediaHighlight = true,
-                                    onToggleBookmark = vaultVM::toggleBookmark,
-                                    onJournalClick = { journal ->
-                                        keepVaultSessionUnlocked = true
-                                        navigator.navigateTo(Route.Editor(journalId = journal.id))
-                                    },
-                                    onLongClick = { journal ->
-                                        selectedJournalForOptions = journal
-                                    },
-                                    modifier = Modifier.animateItem()
-                                )
-                            }
+                            dayJournalGroup(
+                                date = dayGroup.date,
+                                journals = dayGroup.journals,
+                                is24Hour = is24Hour,
+                                allowMediaHighlight = true,
+                                onToggleBookmark = vaultVM::toggleBookmark,
+                                onJournalClick = { journal ->
+                                    keepVaultSessionUnlocked = true
+                                    navigator.navigateTo(Route.Editor(journalId = journal.id))
+                                },
+                                onLongClick = { journal ->
+                                    selectedJournalForOptions = journal
+                                }
+                            )
                         } else {
                             val singleJournal = dayGroup.journals.first()
                             item(key = "single_journal_${singleJournal.id}") {

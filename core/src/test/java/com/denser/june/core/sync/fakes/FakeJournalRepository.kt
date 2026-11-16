@@ -30,6 +30,22 @@ class FakeJournalRepository : JournalRepository {
     override suspend fun getAllJournals(): List<Journal> =
         db.values.filter { it.deletedAt == null }
 
+    override suspend fun getAllJournalMetadata(): List<com.denser.june.core.data.database.journal.JournalMetadataEntity> =
+        db.values.map {
+            com.denser.june.core.data.database.journal.JournalMetadataEntity(
+                id = it.id,
+                dateTime = it.dateTime,
+                title = it.title,
+                createdAt = it.createdAt,
+                updatedAt = it.updatedAt,
+                deletedAt = it.deletedAt,
+                syncedAt = it.syncedAt,
+                cloudId = it.cloudId
+            )
+        }
+
+    override suspend fun <R> runInTransaction(block: suspend () -> R): R = block()
+
     override suspend fun getJournalById(id: String): Journal? = db[id]
 
     override suspend fun getLatestJournal(): Journal? =
@@ -47,7 +63,16 @@ class FakeJournalRepository : JournalRepository {
         return journal.id
     }
 
+    override suspend fun insertJournalsBatch(journals: List<Journal>) {
+        journals.forEach { db[it.id] = it }
+        _journalFlow.value = db.values.filter { it.deletedAt == null }.toList()
+    }
+
     override suspend fun updateJournal(journal: Journal) { insertJournal(journal) }
+
+    override suspend fun updateJournalsBatch(journals: List<Journal>) {
+        insertJournalsBatch(journals)
+    }
 
     override suspend fun softDeleteJournal(id: String) {
         db[id]?.let {
@@ -99,6 +124,12 @@ class FakeJournalRepository : JournalRepository {
 
     override suspend fun updateSyncStatus(id: String, cloudId: String, syncedAt: Long) {
         db[id]?.let { db[id] = it.copy(cloudId = cloudId, syncedAt = syncedAt) }
+    }
+
+    override suspend fun updateSyncStatusBatch(updates: List<com.denser.june.core.domain.model.SyncStatusUpdate>) {
+        updates.forEach { update ->
+            db[update.id]?.let { db[update.id] = it.copy(cloudId = update.cloudId, syncedAt = update.syncedAt) }
+        }
     }
 
     override suspend fun resetAllSyncStatuses() {

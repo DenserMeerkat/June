@@ -101,4 +101,9 @@ class FakeSyncPreferences(
     var billingLoggingEnabled = false
     override fun getBillingLoggingEnabled(): Flow<Boolean> = _billingLogging
     override suspend fun setBillingLoggingEnabled(enabled: Boolean) { billingLoggingEnabled = enabled; _billingLogging.value = enabled }
+
+    private val _maxConcurrency = MutableStateFlow(SyncPreferences.DEFAULT_MAX_CONCURRENCY)
+    var maxConcurrency = SyncPreferences.DEFAULT_MAX_CONCURRENCY
+    override fun getMaxSyncConcurrency(): Flow<Int> = _maxConcurrency
+    override suspend fun setMaxSyncConcurrency(concurrency: Int) { maxConcurrency = concurrency; _maxConcurrency.value = concurrency }
 }

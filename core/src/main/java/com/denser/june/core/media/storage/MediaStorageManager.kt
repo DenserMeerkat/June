@@ -10,6 +10,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+data class CleanOrphanResult(val deletedFilesCount: Int, val freedBytes: Long)
+
 object MediaStorageManager {
 
     fun persistMedia(context: Context, uri: Uri): String? {
@@ -49,27 +51,32 @@ object MediaStorageManager {
         }
     }
 
-    fun cleanOrphanedFiles(context: Context, activePaths: List<String>) {
+    fun cleanOrphanedFiles(context: Context, activePaths: List<String>): CleanOrphanResult {
         val activeFileNames = activePaths.map { File(it).name }.toSet()
-        val mediaDir = File(context.filesDir, "media")
-        if (mediaDir.exists()) {
-            mediaDir.listFiles()?.forEach { file ->
-                if (file.name !in activeFileNames) {
-                    file.delete()
+        var deletedCount = 0
+        var freedBytes = 0L
+
+        fun processDirectory(dir: File) {
+            if (!dir.exists()) return
+            dir.listFiles()?.forEach { file ->
+                if (file.isFile && file.name !in activeFileNames) {
+                    val size = file.length()
+                    if (file.delete()) {
+                        deletedCount++
+                        freedBytes += size
+                    }
                 }
             }
         }
+
+        processDirectory(File(context.filesDir, "media"))
         val legacyDir = File(context.filesDir, "journal_media")
-        if (legacyDir.exists()) {
-            legacyDir.listFiles()?.forEach { file ->
-                if (file.name !in activeFileNames) {
-                    file.delete()
-                }
-            }
-            if (legacyDir.listFiles()?.isEmpty() == true) {
-                legacyDir.delete()
-            }
+        processDirectory(legacyDir)
+        if (legacyDir.exists() && legacyDir.listFiles()?.isEmpty() == true) {
+            legacyDir.delete()
         }
+
+        return CleanOrphanResult(deletedFilesCount = deletedCount, freedBytes = freedBytes)
     }
 
     fun migrateLegacyMediaStorage(context: Context) {

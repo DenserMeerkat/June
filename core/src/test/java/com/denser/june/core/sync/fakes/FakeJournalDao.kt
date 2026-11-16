@@ -19,6 +19,10 @@ class FakeJournalDao : JournalDao {
         journals[journal.id] = journal
     }
 
+    override suspend fun insertJournals(journals: List<JournalEntity>) {
+        journals.forEach { this.journals[it.id] = it }
+    }
+
     override suspend fun updateJournal(journal: JournalEntity) {
         journals[journal.id] = journal
     }
@@ -43,6 +47,20 @@ class FakeJournalDao : JournalDao {
 
     override suspend fun getAllJournalsIncludeDeletedSync(): List<JournalEntity> =
         journals.values.toList()
+
+    override suspend fun getAllJournalMetadata(): List<com.denser.june.core.data.database.journal.JournalMetadataEntity> =
+        journals.values.map {
+            com.denser.june.core.data.database.journal.JournalMetadataEntity(
+                id = it.id,
+                dateTime = it.dateTime,
+                title = it.title,
+                createdAt = it.createdAt,
+                updatedAt = it.updatedAt,
+                deletedAt = it.deletedAt,
+                syncedAt = it.syncedAt,
+                cloudId = it.cloudId
+            )
+        }
 
     override suspend fun getJournalById(id: String): JournalEntity? = journals[id]
 

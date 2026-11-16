@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.denser.june.core.domain.model.Journal
 import com.denser.june.core.utils.getDaysInMonthGrid
 import com.denser.june.presentation.components.DaysOfWeekHeader
+import com.denser.june.core.utils.toLocalDate
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -37,11 +38,7 @@ fun TimelineCalendarPage(
     val weeks = remember(daysInMonth) { daysInMonth.chunked(7) }
 
     val journalsByDate = remember(journals) {
-        journals.groupBy {
-            java.time.Instant.ofEpochMilli(it.dateTime)
-                .atZone(java.time.ZoneId.systemDefault())
-                .toLocalDate()
-        }
+        journals.groupBy { it.dateTime.toLocalDate() }
     }
 
     fun hasEntry(date: LocalDate?): Boolean {

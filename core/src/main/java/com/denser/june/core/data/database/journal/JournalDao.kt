@@ -6,12 +6,16 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.denser.june.core.domain.model.SyncStatusUpdate
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface JournalDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertJournal(journal: JournalEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertJournals(journals: List<JournalEntity>)
 
     @Update
     suspend fun updateJournal(journal: JournalEntity)
@@ -33,6 +37,9 @@ interface JournalDao {
 
     @Query("SELECT * FROM journals ORDER BY dateTime DESC, createdAt DESC")
     suspend fun getAllJournalsIncludeDeletedSync(): List<JournalEntity>
+
+    @Query("SELECT id, dateTime, title, createdAt, updatedAt, deletedAt, syncedAt, cloudId FROM journals")
+    suspend fun getAllJournalMetadata(): List<JournalMetadataEntity>
 
     @Query("SELECT * FROM journals WHERE id = :id")
     suspend fun getJournalById(id: String): JournalEntity?
@@ -238,6 +245,13 @@ interface JournalDao {
 
     @Query("UPDATE journals SET cloudId = :cloudId, syncedAt = :syncedAt WHERE id = :id")
     suspend fun updateSyncStatus(id: String, cloudId: String, syncedAt: Long)
+
+    @Transaction
+    suspend fun updateSyncStatusBatch(updates: List<SyncStatusUpdate>) {
+        updates.forEach { update ->
+            updateSyncStatus(update.id, update.cloudId, update.syncedAt)
+        }
+    }
 
     @Query("UPDATE journals SET cloudId = NULL, syncedAt = NULL")
     suspend fun resetAllSyncStatuses()

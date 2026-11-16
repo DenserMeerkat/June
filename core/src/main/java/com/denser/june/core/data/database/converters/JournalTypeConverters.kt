@@ -33,11 +33,13 @@ class JournalTypeConverters {
 
     @TypeConverter
     fun fromImagesList(value: List<String>): String {
+        if (value.isEmpty()) return "[]"
         return json.encodeToString(value)
     }
 
     @TypeConverter
     fun toImagesList(value: String): List<String> {
+        if (value.isEmpty() || value == "[]") return emptyList()
         return try {
             json.decodeFromString(value)
         } catch (e: Exception) {
@@ -79,11 +81,13 @@ class JournalTypeConverters {
 
     @TypeConverter
     fun fromAudiosList(value: List<JournalAudio>): String {
+        if (value.isEmpty()) return "[]"
         return json.encodeToString(value)
     }
 
     @TypeConverter
     fun toAudiosList(value: String): List<JournalAudio> {
+        if (value.isEmpty() || value == "[]") return emptyList()
         return try {
             json.decodeFromString(value)
         } catch (e: Exception) {

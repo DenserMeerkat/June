@@ -192,8 +192,16 @@ class TimelineVM(
                 delay(100)
             }
         }
+        @OptIn(ExperimentalCoroutinesApi::class)
         viewModelScope.launch {
-            journalsInMonth.collect {
+            _activeSong.flatMapLatest { song ->
+                val currentId = playingJournalId
+                if (song != null && currentId != null) {
+                    journalsInMonth
+                } else {
+                    emptyFlow()
+                }
+            }.collect {
                 val currentId = playingJournalId
                 if (_activeSong.value != null && currentId != null) {
                     withContext(Dispatchers.IO) {

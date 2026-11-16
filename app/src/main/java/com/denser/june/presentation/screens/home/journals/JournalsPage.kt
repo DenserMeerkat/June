@@ -26,7 +26,7 @@ import com.denser.june.core.utils.toLocalDate
 import com.denser.june.presentation.components.journal.DayJournalGroupData
 import com.denser.june.presentation.components.journal.ExportJournalSheet
 import com.denser.june.presentation.components.JunePlaceholderPage
-import com.denser.june.presentation.screens.home.components.DayJournalGroup
+import com.denser.june.presentation.screens.home.components.dayJournalGroup
 import com.denser.june.presentation.components.journal.JournalCard
 import com.denser.june.presentation.components.journal.JournalOptionsSheet
 import androidx.compose.ui.text.SpanStyle
@@ -224,7 +224,7 @@ fun JournalsPage(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 if (feedState.isLoading) {
                     item {
@@ -271,7 +271,9 @@ fun JournalsPage(
                         item(key = "header_recent") {
                             SectionHeader(
                                 title = stringResource(R.string.recent),
-                                modifier = Modifier.animateItem()
+                                modifier = Modifier
+                                    .padding(bottom = 6.dp)
+                                    .animateItem()
                             )
                         }
                     }
@@ -279,71 +281,32 @@ fun JournalsPage(
                     var hasShownMoreHeader = false
 
                     dayGroups.forEach { dayGroup ->
-                        val containsRecent = recentJournalId != null && dayGroup.journals.any { it.id == recentJournalId }
-                        val hasOtherJournals = if (containsRecent) dayGroup.journals.size > 1 else true
+                        val containsRecent = recentJournalId != null && dayGroup.journals.firstOrNull()?.id == recentJournalId
 
                         if (!isFilteringOrSearching && !hasShownMoreHeader && !containsRecent && recentJournalId != null) {
                             item(key = "header_more_${dayGroup.date}") {
                                 SectionHeader(
                                     title = stringResource(R.string.more_entries),
                                     modifier = Modifier
-                                        .padding(top = 8.dp)
+                                        .padding(top = 8.dp, bottom = 6.dp)
                                         .animateItem()
                                 )
                             }
                             hasShownMoreHeader = true
                         }
 
-                        if (dayGroup.journals.size > 1) {
-                            item(key = "day_group_${dayGroup.date}") {
-                                DayJournalGroup(
-                                    date = dayGroup.date,
-                                    journals = dayGroup.journals,
-                                    is24Hour = is24Hour,
-                                    recentJournalId = recentJournalId,
-                                    onToggleBookmark = { id -> viewModel.toggleBookmark(id) },
-                                    onJournalClick = { journal ->
-                                        navigator.navigateTo(Route.Editor(journal.id), isSingleTop = true)
-                                    },
-                                    onLongClick = { journal -> selectedJournalForOptions = journal },
-                                    modifier = Modifier
-                                        .padding(horizontal = 16.dp)
-                                        .animateItem()
-                                )
-                            }
-                        } else {
-                            val singleJournal = dayGroup.journals.first()
-                            item(key = "single_journal_${singleJournal.id}") {
-                                if (singleJournal.id == recentJournalId) {
-                                    HighlightJournalCard(
-                                        journal = singleJournal,
-                                        is24Hour = is24Hour,
-                                        onToggleBookmark = { viewModel.toggleBookmark(singleJournal.id) },
-                                        onJournalClick = {
-                                            navigator.navigateTo(Route.Editor(singleJournal.id), isSingleTop = true)
-                                        },
-                                        onLongClick = { selectedJournalForOptions = singleJournal },
-                                        modifier = Modifier
-                                            .padding(horizontal = 16.dp)
-                                            .animateItem()
-                                    )
-                                } else {
-                                    JournalCard(
-                                        journal = singleJournal,
-                                        is24Hour = is24Hour,
-                                        showDate = true,
-                                        onToggleBookmark = { viewModel.toggleBookmark(singleJournal.id) },
-                                        onJournalClick = {
-                                            navigator.navigateTo(Route.Editor(singleJournal.id), isSingleTop = true)
-                                        },
-                                        onLongClick = { selectedJournalForOptions = singleJournal },
-                                        modifier = Modifier
-                                            .padding(horizontal = 16.dp)
-                                            .animateItem()
-                                    )
-                                }
-                            }
-                        }
+                        dayJournalGroup(
+                            date = dayGroup.date,
+                            journals = dayGroup.journals,
+                            is24Hour = is24Hour,
+                            recentJournalId = recentJournalId,
+                            onToggleBookmark = { id -> viewModel.toggleBookmark(id) },
+                            onJournalClick = { journal ->
+                                navigator.navigateTo(Route.Editor(journal.id), isSingleTop = true)
+                            },
+                            onLongClick = { journal -> selectedJournalForOptions = journal },
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
                     }
                 }
                 item {

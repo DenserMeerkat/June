@@ -1,27 +1,23 @@
 package com.denser.june.core.data.repository
 
-import android.content.Context
 import androidx.room.withTransaction
 import com.denser.june.core.data.database.journal.JournalDao
 import com.denser.june.core.data.database.journal.JournalDatabase
 import com.denser.june.core.data.database.journal.TagEntity
 import com.denser.june.core.data.database.journal.JournalTagCrossRef
 import com.denser.june.core.data.database.journal.DeletedJournalTombstone
+import com.denser.june.core.data.database.journal.JournalMetadataEntity
 import com.denser.june.core.data.mappers.asDomain
 import com.denser.june.core.data.mappers.asEntity
-import com.denser.june.core.data.sync.SyncWorker
 import com.denser.june.core.domain.repository.JournalRepository
 import com.denser.june.core.domain.model.Journal
-import com.denser.june.core.domain.preferences.SyncPreferences
+import com.denser.june.core.domain.model.SyncStatusUpdate
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class JournalRepositoryImpl(
     private val journalDao: JournalDao,
-    private val journalDatabase: JournalDatabase? = null,
-    private val syncPrefs: SyncPreferences? = null,
-    private val context: Context? = null
+    private val journalDatabase: JournalDatabase? = null
 ) : JournalRepository {
 
     internal var transactionRunner: suspend (suspend () -> Unit) -> Unit = { block ->
@@ -55,6 +51,19 @@ class JournalRepositoryImpl(
         return journalDao.getAllJournalsSync().asDomain()
     }
 
+    override suspend fun getAllJournalMetadata(): List<JournalMetadataEntity> {
+        return journalDao.getAllJournalMetadata()
+    }
+
+    override suspend fun <R> runInTransaction(block: suspend () -> R): R {
+        val db = journalDatabase
+        return if (db != null) {
+            db.withTransaction { block() }
+        } else {
+            block()
+        }
+    }
+
     override suspend fun getJournalById(id: String): Journal? {
         return journalDao.getJournalById(id)?.asDomain()
     }
@@ -81,6 +90,28 @@ class JournalRepositoryImpl(
             replaceJournalTags(journalToInsert.id, journalToInsert.tags)
         }
         return journalToInsert.id
+    }
+
+    override suspend fun insertJournalsBatch(journals: List<Journal>) {
+        if (journals.isEmpty()) return
+        transactionRunner {
+            val entities = journals.map { j ->
+                val toInsert = if (j.id.isBlank()) j.copy(id = java.util.UUID.randomUUID().toString()) else j
+                toInsert.asEntity()
+            }
+            journalDao.insertJournals(entities)
+
+            val allTags = journals.flatMap { it.tags }.distinct().map { TagEntity(name = it) }
+            if (allTags.isNotEmpty()) {
+                journalDao.insertTags(allTags)
+            }
+            val allCrossRefs = journals.flatMap { j ->
+                j.tags.distinct().map { tag -> JournalTagCrossRef(id = j.id, tagName = tag) }
+            }
+            if (allCrossRefs.isNotEmpty()) {
+                journalDao.insertJournalTagCrossRefs(allCrossRefs)
+            }
+        }
     }
 
     override suspend fun softDeleteJournal(id: String) {
@@ -130,6 +161,16 @@ class JournalRepositoryImpl(
         transactionRunner {
             journalDao.updateJournal(journal.asEntity())
             replaceJournalTags(journal.id, journal.tags)
+        }
+    }
+
+    override suspend fun updateJournalsBatch(journals: List<Journal>) {
+        if (journals.isEmpty()) return
+        transactionRunner {
+            journalDao.updateJournals(journals.map { it.asEntity() })
+            journals.forEach { j ->
+                replaceJournalTags(j.id, j.tags)
+            }
         }
     }
 
@@ -256,6 +297,13 @@ class JournalRepositoryImpl(
 
     override suspend fun updateSyncStatus(id: String, cloudId: String, syncedAt: Long) {
         journalDao.updateSyncStatus(id, cloudId, syncedAt)
+    }
+
+    override suspend fun updateSyncStatusBatch(updates: List<SyncStatusUpdate>) {
+        if (updates.isEmpty()) return
+        transactionRunner {
+            journalDao.updateSyncStatusBatch(updates)
+        }
     }
 
     override suspend fun resetAllSyncStatuses() {

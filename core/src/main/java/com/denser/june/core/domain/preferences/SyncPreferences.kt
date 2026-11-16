@@ -67,4 +67,11 @@ interface SyncPreferences {
 
     fun getLastPurgeTime(): Flow<Long>
     suspend fun setLastPurgeTime(time: Long)
+
+    fun getMaxSyncConcurrency(): Flow<Int>
+    suspend fun setMaxSyncConcurrency(concurrency: Int)
+
+    companion object {
+        const val DEFAULT_MAX_CONCURRENCY = 12
+    }
 }

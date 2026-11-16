@@ -36,6 +36,7 @@ class SyncPreferencesImpl(
         private val databaseLoggingEnabled = booleanPreferencesKey("database_logging_enabled")
         private val billingLoggingEnabled = booleanPreferencesKey("billing_logging_enabled")
         private val developerModeEnabled = booleanPreferencesKey("developer_mode_enabled")
+        private val maxSyncConcurrency = intPreferencesKey("max_sync_concurrency")
     }
 
     override fun getLastSyncTime(): Flow<Long> = dataStore.data
@@ -198,6 +199,11 @@ class SyncPreferencesImpl(
     override fun getLastPurgeTime(): Flow<Long> = dataStore.data.map { it[lastPurgeTime] ?: 0L }
     override suspend fun setLastPurgeTime(time: Long) {
         dataStore.edit { it[lastPurgeTime] = time }
+    }
+
+    override fun getMaxSyncConcurrency(): Flow<Int> = dataStore.data.map { it[maxSyncConcurrency] ?: SyncPreferences.DEFAULT_MAX_CONCURRENCY }
+    override suspend fun setMaxSyncConcurrency(concurrency: Int) {
+        dataStore.edit { it[maxSyncConcurrency] = concurrency }
     }
 
     private fun <T> MutablePreferences.updateOrRemove(key: Preferences.Key<T>, value: T?) {

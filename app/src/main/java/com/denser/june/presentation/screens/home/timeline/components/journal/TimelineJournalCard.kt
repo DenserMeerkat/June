@@ -27,6 +27,8 @@ import com.denser.june.presentation.components.journal.JournalCardColors
 import com.denser.june.presentation.components.journal.JournalMetadataBadges
 import com.denser.june.presentation.components.journal.rememberJournalCardColors
 import com.denser.june.presentation.components.journal.rememberJournalDisplayTitle
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import com.denser.june.presentation.components.journal.rememberJournalGroupShape
 import com.denser.june.presentation.navigation.AppNavigator
 import com.denser.june.presentation.navigation.Route
@@ -128,47 +130,38 @@ fun TimelineJournalCard(
     }
 }
 
-@Composable
-fun TimelineDayGroup(
-    modifier: Modifier = Modifier,
+fun LazyListScope.timelineDayGroup(
     date: LocalDate,
     journals: List<Journal>,
     is24Hour: Boolean,
     isHighlighted: Boolean = false,
-    onToggleBookmark: (String) -> Unit,
+    onToggleBookmark: ((String) -> Unit)? = null,
     onJournalClick: ((Journal) -> Unit)? = null,
     onLongClick: (Journal) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val highlightBorderColor by animateColorAsState(
-        targetValue = if (isHighlighted) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-        } else {
-            Color.Transparent
-        },
-        animationSpec = tween(durationMillis = 600),
-        label = "day_group_highlight"
-    )
-
-    val groupShape = RoundedCornerShape(24.dp)
-
-    Column(
-        modifier = modifier
+    val totalCount = journals.size
+    itemsIndexed(
+        items = journals,
+        key = { _, journal -> journal.id }
+    ) { index, journal ->
+        val shape = rememberJournalGroupShape(index = index, totalCount = totalCount)
+        val isLast = index == totalCount - 1
+        val itemModifier = modifier
             .fillMaxWidth()
-            .border(width = 2.dp, color = highlightBorderColor, shape = groupShape),
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        journals.forEachIndexed { index, journal ->
-            val shape = rememberJournalGroupShape(index = index, totalCount = journals.size)
+            .padding(bottom = if (isLast) 6.dp else 0.dp)
+            .animateItem()
 
-            TimelineJournalCard(
-                journal = journal,
-                shape = shape,
-                is24Hour = is24Hour,
-                onToggleBookmark = { onToggleBookmark(journal.id) },
-                onJournalClick = onJournalClick?.let { { it(journal) } },
-                onLongClick = { onLongClick(journal) }
-            )
-        }
+        TimelineJournalCard(
+            journal = journal,
+            shape = shape,
+            is24Hour = is24Hour,
+            isHighlighted = isHighlighted,
+            onToggleBookmark = onToggleBookmark?.let { { it(journal.id) } },
+            onJournalClick = onJournalClick?.let { { it(journal) } },
+            onLongClick = { onLongClick(journal) },
+            modifier = itemModifier
+        )
     }
 }
 

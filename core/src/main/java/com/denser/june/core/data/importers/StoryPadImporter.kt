@@ -116,40 +116,22 @@ class StoryPadImporter(
                 return Result.failure(IllegalStateException("No entries found in StoryPad backup"))
             }
 
-            val existingJournals = journalRepo.getAllJournals()
-            val existingCache = existingJournals.associateBy { Pair(it.dateTime, it.title) }
-
-            var importedCount = 0
-            var updatedCount = 0
-            var skippedCount = 0
-            val errors = mutableListOf<String>()
-
-            journals.forEachIndexed { index, journal ->
-                try {
-                    when (ImporterHelper.saveOrUpdateJournal(journalRepo, journal, existingCache)) {
-                        ImportEntryResult.Inserted -> importedCount++
-                        ImportEntryResult.Updated -> updatedCount++
-                        ImportEntryResult.Skipped -> skippedCount++
-                    }
-                    onProgress?.invoke(
-                        (index + 1).toFloat() / journals.size,
-                        "Imported ${index + 1} of ${journals.size}"
-                    )
-                } catch (e: Exception) {
-                    errors.add("Failed to save entry ${journal.title}: ${e.message}")
-                }
-            }
+            val batchResult = ImporterHelper.processAndSaveBatch(
+                journalRepo = journalRepo,
+                incomingJournals = journals,
+                onProgress = onProgress
+            )
 
             Result.success(
                 ImportSummary(
                     source = ImportSource.StoryPad,
                     totalJournals = journals.size,
-                    importedJournals = importedCount,
-                    updatedJournals = updatedCount,
+                    importedJournals = batchResult.importedCount,
+                    updatedJournals = batchResult.updatedCount,
                     mediaExtracted = extractedMediaMap.values.distinct().size,
                     audiosExtracted = extractedAudioMap.values.distinct().size,
-                    skippedJournals = skippedCount,
-                    errors = errors
+                    skippedJournals = batchResult.skippedCount,
+                    errors = batchResult.errors
                 )
             )
         } catch (e: Exception) {
